@@ -1,148 +1,834 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#101124">
+<meta name="theme-color" content="#0d1020">
+<meta name="description" content="Nova AI helps entrepreneurs explore business ideas, create launch plans and prepare marketing content.">
 <title>NOVA AI — Build Your Future</title>
+
 <style>
-:root{--bg:#0d1020;--panel:#171b30;--line:#2b3150;--text:#f5f6ff;--muted:#a3accb;--blue:#7c83ff;--cyan:#48e0d0}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,sans-serif}
-header{padding:23px 18px;background:#13162a;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2}
-.brand{font-size:23px;font-weight:850;letter-spacing:1px}.brand span{color:var(--blue)}
-.tagline{font-size:12px;color:var(--muted);margin-top:3px}
-.layout{max-width:950px;margin:auto;padding:20px 15px 50px}
-h1{font-size:29px;line-height:1.2;margin:12px 0}
-h2{font-size:19px;margin:0 0 8px}
-p{color:var(--muted);line-height:1.55}
-.hero{padding:22px 0 15px}
-.eyebrow{color:var(--cyan);font-size:11px;font-weight:800;letter-spacing:2px}
-.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:20px 0}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:17px;min-width:0}
-.icon{font-size:25px;margin-bottom:10px}
-.card p{font-size:13px;margin:6px 0 14px}
-button{border:0;border-radius:9px;background:var(--blue);color:white;font-weight:750;padding:12px 14px;cursor:pointer;font-size:14px}
-button:active{transform:scale(.98)}
-.secondary{background:#292e4a}
-input,textarea,select{display:block;width:100%;background:#0e1223;border:1px solid #353c60;border-radius:9px;padding:12px;color:white;font:inherit;margin:9px 0 13px}
-textarea{min-height:100px;resize:vertical}
-label{font-size:13px;color:#d8dcf2;font-weight:650}
-.output{margin-top:15px;background:#101426;border:1px solid var(--line);padding:14px;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65}
-.hidden{display:none}
-.section{scroll-margin-top:100px;margin:20px 0}
-nav{display:flex;gap:8px;overflow-x:auto;padding-top:15px}
-nav a{color:#dbe0ff;text-decoration:none;white-space:nowrap;font-size:12px;padding:8px 10px;background:#222743;border-radius:8px}
-footer{text-align:center;color:var(--muted);font-size:12px;padding:25px 0}
-@media(min-width:650px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.hero{padding-top:35px}h1{font-size:38px}}
+:root {
+  --bg: #0d1020;
+  --panel: #171b30;
+  --panel2: #101426;
+  --line: #2b3150;
+  --text: #f5f6ff;
+  --muted: #a3accb;
+  --blue: #7c83ff;
+  --cyan: #48e0d0;
+  --success: #65e6a5;
+  --danger: #ff9292;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.6 system-ui, -apple-system, sans-serif;
+}
+
+button, input, textarea, select { font: inherit; }
+
+header {
+  padding: 18px;
+  background: rgba(19,22,42,.97);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(12px);
+}
+
+.header-inner {
+  max-width: 950px;
+  margin: auto;
+}
+
+.brand {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.brand span { color: var(--blue); }
+
+.tagline {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 1.2px;
+}
+
+nav {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-top: 14px;
+}
+
+nav a {
+  color: #dbe0ff;
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: 12px;
+  padding: 8px 12px;
+  background: #222743;
+  border-radius: 8px;
+}
+
+nav a:hover { background: #333b65; }
+
+.layout {
+  max-width: 950px;
+  margin: auto;
+  padding: 20px 15px 45px;
+}
+
+.hero { padding: 28px 0 18px; }
+
+.eyebrow {
+  color: var(--cyan);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+h1 {
+  font-size: clamp(30px, 6vw, 46px);
+  line-height: 1.15;
+  letter-spacing: -1px;
+  margin: 14px 0;
+}
+
+h1 span { color: var(--blue); }
+
+h2 {
+  font-size: 20px;
+  line-height: 1.35;
+  margin: 0 0 8px;
+}
+
+p {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.hero p {
+  max-width: 610px;
+  font-size: 16px;
+}
+
+button {
+  border: 0;
+  border-radius: 9px;
+  background: var(--blue);
+  color: white;
+  font-weight: 750;
+  padding: 12px 15px;
+  cursor: pointer;
+  transition: filter .2s, transform .2s;
+}
+
+button:hover { filter: brightness(1.12); }
+button:active { transform: scale(.98); }
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+}
+
+.secondary { background: #292e4a; }
+
+.cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  padding: 18px;
+  min-width: 0;
+}
+
+.card p { font-size: 13px; }
+
+.card .icon {
+  font-size: 27px;
+  margin-bottom: 8px;
+}
+
+.card button { margin-top: 5px; }
+
+.section {
+  scroll-margin-top: 145px;
+  margin: 22px 0;
+}
+
+.section > p { margin: 8px 0 18px; }
+
+label {
+  display: block;
+  font-size: 13px;
+  color: #d8dcf2;
+  font-weight: 700;
+  margin-top: 12px;
+}
+
+input, textarea, select {
+  display: block;
+  width: 100%;
+  background: #0e1223;
+  border: 1px solid #353c60;
+  border-radius: 9px;
+  padding: 12px;
+  color: white;
+  margin: 6px 0 13px;
+}
+
+select { min-height: 46px; }
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #858eaf;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--blue);
+}
+
+.action-row {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.output {
+  margin-top: 17px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  padding: 16px;
+  border-radius: 11px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.75;
+}
+
+.output-title {
+  color: var(--cyan);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  margin-bottom: 10px;
+}
+
+.hidden { display: none !important; }
+
+.small-note {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.status {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--success);
+}
+
+footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 28px 0;
+  border-top: 1px solid var(--line);
+  margin-top: 35px;
+}
+
+footer a { color: var(--cyan); }
+
+@media (min-width: 600px) {
+  .cards { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .hero { padding-top: 42px; }
+  .card { padding: 21px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; }
+}
 </style>
 </head>
+
 <body>
 <header>
-  <div class="brand">✦ NOVA <span>AI</span></div>
-  <div class="tagline">YOUR IDEAS. YOUR FUTURE. YOUR BUSINESS.</div>
-  <nav>
-    <a href="#home">Home</a>
-    <a href="#ideas">Ideas</a>
-    <a href="#planner">Launch planner</a>
-    <a href="#marketing">Marketing</a>
-  </nav>
+  <div class="header-inner">
+    <div class="brand">✦ NOVA <span>AI</span></div>
+    <div class="tagline">YOUR IDEAS. YOUR FUTURE. YOUR BUSINESS.</div>
+
+    <nav aria-label="Main navigation">
+      <a href="#home">Home</a>
+      <a href="#ideas">Ideas</a>
+      <a href="#planner">Launch planner</a>
+      <a href="#marketing">Marketing</a>
+    </nav>
+  </div>
 </header>
+
 <main class="layout">
+
   <section class="hero" id="home">
     <div class="eyebrow">WELCOME TO YOUR NEXT CHAPTER</div>
-    <h1>Turn your ideas into<br><span style="color:var(--blue)">real opportunities.</span></h1>
-    <p>Your business workspace for discovering ideas, planning your launch, and creating marketing content — all in one place.</p>
-    <button onclick="document.querySelector('#ideas').scrollIntoView({behavior:'smooth'})">Build my business →</button>
+    <h1>Turn your ideas into<br><span>real opportunities.</span></h1>
+
+    <p>
+      Your business workspace for discovering opportunities,
+      planning your launch and creating marketing content.
+      Start with what you have and take your next step.
+    </p>
+
+    <button type="button" onclick="go('ideas')">
+      Build my business →
+    </button>
   </section>
 
-  <div class="cards">
+  <section class="cards" aria-label="Nova AI tools">
     <article class="card">
-      <div class="icon">💡</div><h2>Idea Generator</h2>
-      <p>Explore business ideas that fit your goals and budget.</p>
-      <button onclick="go('ideas')">Explore ideas</button>
+      <div class="icon">💡</div>
+      <h2>Idea Generator</h2>
+      <p>Explore business ideas that fit your interests and budget.</p>
+      <button type="button" onclick="go('ideas')">Explore ideas</button>
     </article>
+
     <article class="card">
-      <div class="icon">🚀</div><h2>Launch Planner</h2>
-      <p>Turn an idea into practical next steps.</p>
-      <button onclick="go('planner')">Plan my launch</button>
+      <div class="icon">🚀</div>
+      <h2>Launch Planner</h2>
+      <p>Turn your business idea into a practical seven-day plan.</p>
+      <button type="button" onclick="go('planner')">Plan my launch</button>
     </article>
+
     <article class="card">
-      <div class="icon">📣</div><h2>Marketing Studio</h2>
-      <p>Create a first draft for your next promotion.</p>
-      <button onclick="go('marketing')">Create content</button>
+      <div class="icon">📣</div>
+      <h2>Marketing Studio</h2>
+      <p>Create promotional copy for your product or service.</p>
+      <button type="button" onclick="go('marketing')">Create content</button>
     </article>
-  </div>
+  </section>
+
+  <!-- TOOL 1: BUSINESS IDEA GENERATOR -->
 
   <section class="section card" id="ideas">
-    <div class="eyebrow">TOOL 01</div><h2>Business Idea Generator</h2>
-    <p>Choose your interests and available budget to generate a starting shortlist.</p>
+    <div class="eyebrow">TOOL 01</div>
+    <h2>Business Idea Generator</h2>
+    <p>
+      Choose an area and budget to receive tailored ideas,
+      practical first steps and a way to validate demand.
+    </p>
+
     <label for="interest">Business area</label>
     <select id="interest">
-      <option>Online services</option><option>Clothing and sneakers</option>
-      <option>Digital products</option><option>Education</option>
+      <option>Online services</option>
+      <option>Clothing and sneakers</option>
+      <option>Digital products</option>
+      <option>Education</option>
       <option>Food and local services</option>
     </select>
+
     <label for="budget">Starting budget (R)</label>
-    <input id="budget" type="number" min="0" value="0">
-    <button onclick="ideas()">Generate ideas</button>
+    <input id="budget" type="number" min="0" step="1" value="0"
+      inputmode="numeric" placeholder="Enter your budget">
+
+    <div class="action-row">
+      <button type="button" onclick="ideas()">Generate ideas</button>
+      <button type="button" class="secondary"
+        onclick="clearOutput('ideasOut')">Clear</button>
+    </div>
+
     <div id="ideasOut" class="output hidden" aria-live="polite"></div>
   </section>
 
+  <!-- TOOL 2: LAUNCH PLANNER -->
+
   <section class="section card" id="planner">
-    <div class="eyebrow">TOOL 02</div><h2>Business Launch Planner</h2>
-    <p>Get a simple action plan for your chosen business.</p>
+    <div class="eyebrow">TOOL 02</div>
+    <h2>Business Launch Planner</h2>
+    <p>
+      Get a plan based on the business you want to start
+      and the customers you want to serve.
+    </p>
+
     <label for="business">Your business idea</label>
-    <input id="business" placeholder="e.g. Social media adverts for shops">
+    <input id="business"
+      placeholder="e.g. Product adverts for sneaker shops"
+      maxlength="180">
+
     <label for="customer">Who will buy it?</label>
-    <input id="customer" placeholder="e.g. Local clothing sellers">
-    <button onclick="plan()">Create launch plan</button>
+    <input id="customer"
+      placeholder="e.g. Clothing and sneaker sellers in South Africa"
+      maxlength="180">
+
+    <div class="action-row">
+      <button type="button" onclick="plan()">Create launch plan</button>
+      <button type="button" class="secondary"
+        onclick="clearOutput('planOut')">Clear</button>
+    </div>
+
     <div id="planOut" class="output hidden" aria-live="polite"></div>
   </section>
 
+  <!-- TOOL 3: MARKETING STUDIO -->
+
   <section class="section card" id="marketing">
-    <div class="eyebrow">TOOL 03</div><h2>Marketing Studio</h2>
-    <p>Create a promotional text draft for a product or service.</p>
+    <div class="eyebrow">TOOL 03</div>
+    <h2>Marketing Studio</h2>
+    <p>
+      Draft clear promotional copy using your actual product,
+      target customer and offer.
+    </p>
+
     <label for="product">Product or service</label>
-    <input id="product" placeholder="e.g. Fresh sneaker collection">
+    <input id="product"
+      placeholder="e.g. Sneaker advert design service"
+      maxlength="180">
+
     <label for="audience">Target customer</label>
-    <input id="audience" placeholder="e.g. Sneaker lovers">
+    <input id="audience"
+      placeholder="e.g. Sneaker shop owners"
+      maxlength="180">
+
     <label for="offer">Offer or price (optional)</label>
-    <input id="offer" placeholder="e.g. From R299">
-    <button onclick="marketing()">Generate advert</button>
+    <input id="offer"
+      placeholder="e.g. 5 adverts for R250"
+      maxlength="120">
+
+    <label for="businessName">Business name (optional)</label>
+    <input id="businessName"
+      placeholder="e.g. Nova Creative Studio"
+      maxlength="100">
+
+    <label for="contact">Contact details (optional)</label>
+    <input id="contact"
+      placeholder="e.g. WhatsApp number or Instagram handle"
+      maxlength="120">
+
+    <div class="action-row">
+      <button type="button" onclick="marketing()">Generate advert</button>
+      <button type="button" class="secondary"
+        onclick="clearOutput('marketingOut')">Clear</button>
+    </div>
+
     <div id="marketingOut" class="output hidden" aria-live="polite"></div>
+
+    <p class="small-note">
+      Review every detail before publishing. Only use real prices,
+      genuine claims and contact details you are authorised to share.
+    </p>
   </section>
-  <footer>NOVA AI · An independent business-building project<br>Early prototype · Verify plans, costs and claims before acting.</footer>
+
+  <footer>
+    <strong>NOVA AI</strong> · An independent business-building project
+    <br>
+    Free browser-based prototype · No paid AI API required
+    <br><br>
+    Ideas and plans are suggestions, not guarantees of sales or income.
+    Verify demand, costs and applicable requirements before acting.
+  </footer>
+
 </main>
+
 <script>
-function go(id){document.getElementById(id).scrollIntoView({behavior:"smooth"})}
-function show(id,text){const e=document.getElementById(id);e.textContent=text;e.classList.remove("hidden")}
-function ideas(){
- const area=document.getElementById("interest").value;
- const b=Math.max(0,Number(document.getElementById("budget").value)||0);
- const options={
- "Online services":["Create product adverts for local businesses","Offer social media page setup","Write product descriptions for online sellers"],
- "Clothing and sneakers":["Create promotional posts for sneaker shops","Help sellers catalogue products online","Offer a pre-order interest-list service"],
- "Digital products":["Create printable planners","Design original activity worksheets","Build simple business templates"],
- "Education":["Offer beginner digital-skills tutoring","Create revision worksheets","Prepare study planners"],
- "Food and local services":["Create menus for local food sellers","Make promotional flyers for service providers","Set up a simple online enquiry page"]
- };
- show("ideasOut","YOUR STARTING SHORTLIST\n\n"+options[area].map((x,i)=>(i+1)+". "+x).join("\n")+"\n\nBUDGET: R"+b+"\n\nNEXT ACTION\nChoose one idea, speak to five potential customers, and ask what they would actually pay for. These are suggestions, not validated market research. Check any operating costs before making a commitment.");
+"use strict";
+
+/* SHARED HELPERS */
+
+function go(id) {
+  const element = document.getElementById(id);
+  if (element) {
+    element.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 }
-function plan(){
- const b=document.getElementById("business").value.trim();
- const c=document.getElementById("customer").value.trim();
- if(!b){show("planOut","Enter your business idea first.");return}
- show("planOut","YOUR LAUNCH PLAN\n\nBUSINESS: "+b+"\nTARGET CUSTOMER: "+(c||"Customers you identify through research")+"\n\nDAY 1 — Define one clear service and the problem it solves.\n\nDAY 2 — Research five potential customers and existing alternatives.\n\nDAY 3 — Create one sample that demonstrates your service.\n\nDAY 4 — Ask potential customers for honest feedback.\n\nDAY 5 — Offer a small, clearly priced pilot.\n\nDAY 6 — Deliver carefully and request feedback.\n\nDAY 7 — Review results, costs and next steps.\n\nKeep spending at R0 until you verify what is genuinely free and have evidence of demand.");
+
+function show(id, text) {
+  const element = document.getElementById(id);
+  element.textContent = text;
+  element.classList.remove("hidden");
+
+  const oldStatus = element.querySelector(".status");
+  if (oldStatus) oldStatus.remove();
+
+  const copyButton = document.createElement("button");
+  copyButton.type = "button";
+  copyButton.className = "secondary";
+  copyButton.style.marginTop = "14px";
+  copyButton.textContent = "Copy result";
+  copyButton.addEventListener("click", async function () {
+    try {
+      await navigator.clipboard.writeText(element.innerText.replace("Copy result", "").trim());
+      copyButton.textContent = "Copied!";
+    } catch (error) {
+      copyButton.textContent = "Select and copy the text";
+    }
+  });
+
+  element.appendChild(document.createElement("br"));
+  element.appendChild(copyButton);
 }
-function marketing(){
- const p=document.getElementById("product").value.trim();
- const a=document.getElementById("audience").value.trim();
- const o=document.getElementById("offer").value.trim();
- if(!p){show("marketingOut","Enter your product or service first.");return}
- show("marketingOut","✨ DISCOVER SOMETHING NEW!\n\nLooking for "+p+"?\n\n"+(a?"Made with "+a+" in mind. ":"")+"We're here to help you find what suits you.\n\n"+(o?"OFFER: "+o+"\n\n":"")+"📩 Message us to learn more and place an enquiry.\n\nYOUR NEXT STEP\nAdd your business name, real contact details, and a genuine product photo before publishing. Check that every claim and price is accurate.");
+
+function clearOutput(id) {
+  const element = document.getElementById(id);
+  element.textContent = "";
+  element.classList.add("hidden");
+}
+
+function getText(id) {
+  return document.getElementById(id).value.trim();
+}
+
+function formatRand(value) {
+  return Number(value).toLocaleString("en-ZA", {
+    maximumFractionDigits: 2
+  });
+}
+
+/* TOOL 1: BUSINESS IDEA GENERATOR */
+
+function ideas() {
+  const area = getText("interest");
+  const rawBudget = getText("budget");
+
+  if (rawBudget === "" || !Number.isFinite(Number(rawBudget)) ||
+      Number(rawBudget) < 0) {
+    show("ideasOut", "Please enter a valid budget of R0 or more.");
+    return;
+  }
+
+  const budget = Number(rawBudget);
+
+  const catalogue = {
+    "Online services": [
+      {
+        name: "Product advert creation",
+        first: "Create two original sample adverts and approach five local sellers."
+      },
+      {
+        name: "Social media page setup",
+        first: "Prepare a sample business profile and a simple setup checklist."
+      },
+      {
+        name: "Product description writing",
+        first: "Rewrite three sample product descriptions to demonstrate your service."
+      },
+      {
+        name: "Digital admin assistance",
+        first: "List three tasks you can confidently perform and ask local businesses which they need."
+      }
+    ],
+
+    "Clothing and sneakers": [
+      {
+        name: "Clothing and sneaker advert service",
+        first: "Design one sample advert and show it to five clothing or sneaker sellers."
+      },
+      {
+        name: "Online product catalogue setup",
+        first: "Create a sample catalogue using product information and images you have permission to use."
+      },
+      {
+        name: "Seller promotion packages",
+        first: "Prepare a sample promotional post and ask sellers what marketing help they need."
+      },
+      {
+        name: "Product description service",
+        first: "Write three sample listings with clear sizes, prices and product details."
+      }
+    ],
+
+    "Digital products": [
+      {
+        name: "Printable business planner",
+        first: "Create one original planner page and ask potential buyers for feedback."
+      },
+      {
+        name: "Original activity worksheets",
+        first: "Make three original sample pages and check demand before producing a full pack."
+      },
+      {
+        name: "Small business templates",
+        first: "Build one useful template and demonstrate how it could save a business time."
+      },
+      {
+        name: "Social media content calendar",
+        first: "Create a one-week sample calendar for a specific business niche."
+      }
+    ],
+
+    "Education": [
+      {
+        name: "Beginner digital-skills tutoring",
+        first: "Choose one skill, prepare a short demonstration and identify potential learners."
+      },
+      {
+        name: "Original revision worksheets",
+        first: "Create a sample worksheet for one topic and ask learners for feedback."
+      },
+      {
+        name: "Study planner creation",
+        first: "Make a weekly study planner and test whether students find it useful."
+      },
+      {
+        name: "Beginner technology guides",
+        first: "Write a simple original guide that solves one clearly defined problem."
+      }
+    ],
+
+    "Food and local services": [
+      {
+        name: "Menu and flyer design",
+        first: "Create a sample menu with clearly labelled demonstration details."
+      },
+      {
+        name: "Local service promotion",
+        first: "Prepare a sample advert for a local service provider."
+      },
+      {
+        name: "Online enquiry page setup",
+        first: "Build a demonstration page with clear service information and enquiry instructions."
+      },
+      {
+        name: "Digital menu assistance",
+        first: "Create a sample digital menu and ask food sellers whether it would help them."
+      }
+    ]
+  };
+
+  const options = catalogue[area] || catalogue["Online services"];
+
+  let result = "YOUR BUSINESS IDEA SHORTLIST\n\n";
+
+  options.forEach(function (item, index) {
+    result += (index + 1) + ". " + item.name + "\n";
+    result += "FIRST STEP: " + item.first + "\n\n";
+  });
+
+  result += "SELECTED AREA: " + area + "\n";
+  result += "AVAILABLE BUDGET: R" + formatRand(budget) + "\n\n";
+
+  if (budget === 0) {
+    result += "R0 STARTING STRATEGY\n";
+    result += "Start with a service you can deliver using tools you already have. ";
+    result += "Use original samples, approach potential customers directly and ";
+    result += "check that any tools you need are genuinely free. Do not promise ";
+    result += "paid features or spend money before validating demand.\n\n";
+  } else {
+    result += "BUDGET STRATEGY\n";
+    result += "Treat R" + formatRand(budget) + " as your maximum budget, not a spending target. ";
+    result += "Validate demand before buying anything and confirm actual costs first.\n\n";
+  }
+
+  result += "VALIDATE BEFORE INVESTING\n";
+  result += "Speak to five potential customers. Ask about their current problem, ";
+  result += "the alternatives they use and whether they would pay for your offer. ";
+  result += "These are ideas, not validated market research or guaranteed income.";
+
+  show("ideasOut", result);
+}
+
+/* TOOL 2: BUSINESS LAUNCH PLANNER */
+
+function plan() {
+  const business = getText("business");
+  const customer = getText("customer");
+
+  if (!business) {
+    show("planOut", "Enter your business idea first.");
+    document.getElementById("business").focus();
+    return;
+  }
+
+  const idea = business.toLowerCase();
+
+  let steps;
+  let measure;
+
+  if (/advert|design|flyer|graphic|social media|marketing/.test(idea)) {
+    steps = [
+      "Define one specific advert service, what the customer receives and how many revisions are included.",
+      "Identify five potential businesses that may need promotional content.",
+      "Create two original sample adverts using accurate product information.",
+      "Ask potential customers which sample is more useful and what they need.",
+      "Offer a small, clearly priced starter package without hidden charges.",
+      "Deliver agreed work, check the files and obtain approval before considering the job complete.",
+      "Review feedback, time spent, actual costs and whether the price is sustainable."
+    ];
+    measure = "Number of sellers contacted, replies received, genuine enquiries and paid orders.";
+  } else if (/clothing|sneaker|shoe|fashion|resell|product/.test(idea)) {
+    steps = [
+      "Decide which products or seller service you will offer and who it is for.",
+      "Research five potential buyers and compare similar offers.",
+      "Prepare a catalogue or sample listing with accurate product details.",
+      "Ask potential customers about styles, sizes, prices and buying concerns.",
+      "Test interest before purchasing stock or making commitments.",
+      "Respond honestly to enquiries and confirm availability before accepting payment.",
+      "Review genuine interest, actual costs, customer feedback and next steps."
+    ];
+    measure = "Customer enquiries, product interest, confirmed orders and actual costs.";
+  } else if (/tutor|education|worksheet|study|lesson|teach|course/.test(idea)) {
+    steps = [
+      "Choose one subject, skill level and specific learning outcome.",
+      "Identify five potential learners or people who arrange their learning.",
+      "Prepare a short original sample lesson or worksheet.",
+      "Ask for feedback on clarity, usefulness and difficulty.",
+      "Offer a small pilot with a clear scope and price, if appropriate.",
+      "Deliver the agreed session or material and request feedback.",
+      "Review learning feedback, preparation time and costs."
+    ];
+    measure = "Interested learners, completed sessions, feedback and time spent.";
+  } else if (/food|catering|baking|meal|restaurant|clean|barber|repair|local service/.test(idea)) {
+    steps = [
+      "Define the service, service area and problem you solve.",
+      "Speak to five potential local customers about their needs.",
+      "Prepare a sample menu, service list or demonstration.",
+      "Compare existing alternatives, prices and customer expectations.",
+      "Test interest with a clear offer before purchasing supplies.",
+      "Deliver only what you can safely and reliably provide.",
+      "Review customer feedback, actual expenses and applicable requirements."
+    ];
+    measure = "Customer enquiries, bookings, repeat interest and real expenses.";
+  } else {
+    steps = [
+      "Define the problem your business solves and one specific offer.",
+      "Identify five potential customers and research existing alternatives.",
+      "Create one small sample or demonstration of your offer.",
+      "Ask potential customers for honest feedback and evidence of interest.",
+      "Offer a small pilot with a clearly explained price, if appropriate.",
+      "Deliver the agreed work and request feedback.",
+      "Review demand, time spent, costs and your next steps."
+    ];
+    measure = "Potential customers contacted, genuine interest, feedback and actual costs.";
+  }
+
+  const target = customer ||
+    "People who experience the problem your business solves";
+
+  let result = "YOUR PERSONALIZED LAUNCH PLAN\n\n";
+  result += "BUSINESS: " + business + "\n";
+  result += "TARGET CUSTOMER: " + target + "\n\n";
+
+  steps.forEach(function (step, index) {
+    result += "DAY " + (index + 1) + "\n";
+    result += step + "\n\n";
+  });
+
+  result += "HOW TO MEASURE PROGRESS\n";
+  result += measure + "\n\n";
+
+  result += "R0 PRINCIPLE\n";
+  result += "Use tools you already have and verify costs before committing. ";
+  result += "A plan cannot guarantee customers, sales or income.";
+
+  show("planOut", result);
+}
+
+/* TOOL 3: MARKETING STUDIO */
+
+function marketing() {
+  const product = getText("product");
+  const audience = getText("audience");
+  const offer = getText("offer");
+  const businessName = getText("businessName");
+  const contact = getText("contact");
+
+  if (!product) {
+    show("marketingOut", "Enter your product or service first.");
+    document.getElementById("product").focus();
+    return;
+  }
+
+  const p = product.toLowerCase();
+
+  let headline;
+  let benefit;
+  let callToAction;
+
+  if (/advert|graphic|design|flyer|social media/.test(p)) {
+    headline = "GIVE YOUR BUSINESS A PROFESSIONAL LOOK";
+    benefit = "Promote your products and services with clear, eye-catching designs.";
+    callToAction = "Message us to discuss your advert requirements.";
+  } else if (/sneaker|shoe|footwear/.test(p)) {
+    headline = "YOUR NEXT FAVOURITE PAIR STARTS HERE";
+    benefit = "Explore the available styles and find an option that suits you.";
+    callToAction = "Message us to enquire about available styles and prices.";
+  } else if (/clothing|fashion|outfit|shirt|dress/.test(p)) {
+    headline = "FIND YOUR NEXT LOOK";
+    benefit = "Discover styles and choose pieces that suit your personal taste.";
+    callToAction = "Get in touch to ask about available options.";
+  } else if (/food|cake|baking|meal|restaurant/.test(p)) {
+    headline = "SOMETHING DELICIOUS COULD BE ON YOUR MENU";
+    benefit = "Explore the menu and enquire about available options.";
+    callToAction = "Message us for menu details and availability.";
+  } else if (/tutor|lesson|course|worksheet|education|study/.test(p)) {
+    headline = "TAKE THE NEXT STEP IN YOUR LEARNING";
+    benefit = "Explore learning resources or support that match your goals.";
+    callToAction = "Get in touch to discuss your learning needs.";
+  } else if (/clean|cleaning/.test(p)) {
+    headline = "A CLEANER SPACE STARTS WITH THE RIGHT SERVICE";
+    benefit = "Enquire about the service and available options for your space.";
+    callToAction = "Message us to discuss your requirements.";
+  } else {
+    headline = "DISCOVER " + product.toUpperCase();
+    benefit = "Find out more about the offer and whether it suits your needs.";
+    callToAction = "Send us a message to ask questions or make an enquiry.";
+  }
+
+  let result = "";
+
+  if (businessName) {
+    result += businessName.toUpperCase() + "\n\n";
+  }
+
+  result += headline + "\n\n";
+  result += product + "\n\n";
+  result += benefit + "\n\n";
+
+  if (audience) {
+    result += "IDEAL FOR: " + audience + "\n\n";
+  }
+
+  if (offer) {
+    result += "OFFER: " + offer + "\n\n";
+  }
+
+  result += callToAction + "\n";
+
+  if (contact) {
+    result += "\nCONTACT: " + contact + "\n";
+  }
+
+  result += "\nPUBLISHING CHECKLIST\n";
+  result += "Add a genuine product photo, confirm the price and availability, ";
+  result += "and check every claim before publishing. Only advertise offers ";
+  result += "you can actually honour.";
+
+  show("marketingOut", result);
 }
 </script>
+
 </body>
 </html>
+```
