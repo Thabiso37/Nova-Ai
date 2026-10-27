@@ -1,834 +1,739 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0d1020">
-<meta name="description" content="Nova AI helps entrepreneurs explore business ideas, create launch plans and prepare marketing content.">
-<title>NOVA AI — Build Your Future</title>
-
+<meta name="theme-color" content="#101526">
+<meta name="description" content="Nova AI Marketplace — discover products, shop smarter and sell online in South Africa.">
+<title>Nova AI Marketplace | Shop Smart. Sell More.</title>
 <style>
 :root {
-  --bg: #0d1020;
-  --panel: #171b30;
-  --panel2: #101426;
-  --line: #2b3150;
-  --text: #f5f6ff;
-  --muted: #a3accb;
-  --blue: #7c83ff;
-  --cyan: #48e0d0;
-  --success: #65e6a5;
-  --danger: #ff9292;
+  --bg:#f5f7fb;--surface:#fff;--ink:#171c2d;--muted:#70778b;
+  --primary:#6654f5;--primary-dark:#4b3bd2;--dark:#101526;
+  --line:#e8eaf2;--green:#16885e;--radius:17px;
 }
-
-* { box-sizing: border-box; }
-
-html { scroll-behavior: smooth; }
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font: 15px/1.6 system-ui, -apple-system, sans-serif;
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #b7b0ff;outline-offset:2px}
+.topbar{background:var(--dark);color:#fff;padding:10px 5%;text-align:center;font-size:12px}
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.header-inner{max-width:1250px;margin:auto;padding:14px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.logo{font-size:24px;font-weight:900;letter-spacing:-1px;white-space:nowrap}
+.logo span{color:var(--primary)}
+.search{flex:1;min-width:180px;display:flex;background:#f3f4f9;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.search input{min-width:0;flex:1;padding:12px;border:0;background:transparent;outline:none}
+.search button{border:0;background:var(--primary);color:#fff;padding:0 16px;font-weight:700}
+.header-actions{display:flex;gap:8px;align-items:center}
+.btn{border:0;border-radius:10px;padding:11px 15px;font-weight:750;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-light{background:#f0efff;color:var(--primary-dark)}
+.btn-outline{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.btn-danger{background:#fff0f0;color:#b52828}
+.btn-small{font-size:12px;padding:8px 10px}
+.container{max-width:1250px;margin:auto;padding:22px 20px}
+nav{display:flex;gap:9px;overflow-x:auto;padding:12px 20px;max-width:1250px;margin:auto}
+nav a{white-space:nowrap;font-size:13px;font-weight:700;color:#555d73;padding:8px 12px;border-radius:9px}
+nav a:hover{background:#f0efff;color:var(--primary)}
+.hero{background:linear-gradient(120deg,#171b38,#4031a5 65%,#8068ff);border-radius:25px;color:white;padding:38px;display:grid;grid-template-columns:1.4fr .8fr;gap:20px;align-items:center;overflow:hidden}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:2px;font-weight:800;color:#d5d0ff}
+.hero h1{font-size:clamp(30px,5vw,52px);line-height:1.07;letter-spacing:-2px;margin:14px 0}
+.hero p{color:#e0dfff;line-height:1.7;max-width:560px}
+.hero-art{font-size:100px;text-align:center;filter:drop-shadow(0 14px 18px #15112d66)}
+.hero-buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.hero .btn-light{background:white;color:#30228e}
+.hero .btn-outline{background:transparent;border-color:#aaa1ff;color:white}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+.stat{padding:16px;background:#fff;border:1px solid var(--line);border-radius:14px}
+.stat strong{font-size:22px;display:block}
+.stat span{color:var(--muted);font-size:12px}
+.section{margin-top:30px;scroll-margin-top:145px}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.section-head h2{margin:0;font-size:23px;letter-spacing:-.6px}
+.section-head p{margin:5px 0 0;color:var(--muted);font-size:13px}
+.categories{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px}
+.cat{border:1px solid var(--line);border-radius:14px;background:#fff;padding:15px 5px;text-align:center;color:var(--ink)}
+.cat:hover,.cat.active{border-color:var(--primary);background:#f0efff}
+.cat .emoji{font-size:27px;display:block;margin-bottom:7px}
+.cat span:last-child{font-size:11px;font-weight:750}
+.filters{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px}
+.filters input,.filters select,.field input,.field select,.field textarea{width:100%;padding:12px;border:1px solid #dfe2ed;border-radius:10px;background:#fff;color:var(--ink)}
+.filters select{width:auto;max-width:100%}
+.product-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
+.product{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;min-width:0;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s}
+.product:hover{transform:translateY(-3px);box-shadow:0 8px 25px #2424470d}
+.product-img{height:180px;background:#eeeff5;position:relative;overflow:hidden}
+.product-img img{width:100%;height:100%;object-fit:cover;display:block}
+.product-tag{position:absolute;top:10px;left:10px;background:#fff;padding:5px 8px;border-radius:7px;font-size:10px;font-weight:800}
+.product-body{padding:13px;display:flex;flex-direction:column;flex:1}
+.product-category{color:var(--primary);font-size:10px;text-transform:uppercase;letter-spacing:.6px;font-weight:850}
+.product h3{font-size:14px;line-height:1.4;margin:7px 0;overflow-wrap:anywhere}
+.product-desc{font-size:12px;line-height:1.5;color:var(--muted);margin:0 0 9px}
+.product-price{font-size:21px;font-weight:900;margin-top:auto}
+.product-seller{font-size:11px;color:var(--muted);margin:4px 0 12px}
+.product-actions{display:flex;gap:7px}
+.product-actions button{flex:1}
+.empty{padding:32px 15px;text-align:center;color:var(--muted);background:#fff;border:1px dashed #d8dbea;border-radius:15px;grid-column:1/-1}
+.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:12px;font-weight:800;margin-bottom:6px}
+.field textarea{resize:vertical;min-height:85px}
+.field small{display:block;color:var(--muted);font-size:11px;margin-top:5px}
+.panel h3{margin-top:0}
+.notice{background:#f1efff;border:1px solid #e0dcff;border-radius:12px;padding:12px;font-size:12px;line-height:1.6;color:#41349a;margin-bottom:15px}
+.success{color:var(--green);font-size:13px;margin-top:12px}
+.assistant{background:linear-gradient(120deg,#171b38,#31236f);color:#fff;border-radius:20px;padding:24px}
+.assistant h2{margin-top:0}
+.assistant p{color:#d8d5f5;font-size:13px;line-height:1.7}
+.assistant textarea{width:100%;min-height:90px;border-radius:11px;border:1px solid #595184;background:#211d46;color:#fff;padding:12px}
+.assistant textarea::placeholder{color:#c1bbdf}
+.assistant-output{margin-top:13px;background:#fff;color:var(--ink);border-radius:12px;padding:15px;white-space:pre-wrap;font-size:13px;line-height:1.65;overflow-wrap:anywhere}
+.assistant .btn-light{margin-top:10px}
+.cart-list{display:grid;gap:10px}
+.cart-item{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:12px 0}
+.cart-item h4{margin:0 0 5px;font-size:13px}
+.cart-item p{margin:0;color:var(--muted);font-size:12px}
+.cart-total{display:flex;justify-content:space-between;font-size:20px;font-weight:900;padding:17px 0}
+footer{background:var(--dark);color:#fff;margin-top:45px;padding:32px 20px}
+.footer-inner{max-width:1250px;margin:auto;display:flex;justify-content:space-between;gap:25px;flex-wrap:wrap}
+footer p{color:#b9bfd0;font-size:12px;line-height:1.7;max-width:520px}
+footer small{color:#a6abc0}
+.badge{display:inline-block;border-radius:99px;background:#e8fff5;color:#08774f;font-size:10px;font-weight:800;padding:5px 8px}
+hr{border:0;border-top:1px solid var(--line);margin:17px 0}
+.hidden{display:none!important}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#171b2d;color:white;padding:12px 18px;border-radius:12px;z-index:50;font-size:13px;box-shadow:0 8px 30px #0003;max-width:90%;text-align:center}
+@media(max-width:850px){
+ .categories{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .hero{padding:28px;grid-template-columns:1fr .5fr}
+ .hero-art{font-size:65px}
 }
-
-button, input, textarea, select { font: inherit; }
-
-header {
-  padding: 18px;
-  background: rgba(19,22,42,.97);
-  border-bottom: 1px solid var(--line);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  backdrop-filter: blur(12px);
-}
-
-.header-inner {
-  max-width: 950px;
-  margin: auto;
-}
-
-.brand {
-  font-size: 24px;
-  font-weight: 900;
-  letter-spacing: 1px;
-}
-
-.brand span { color: var(--blue); }
-
-.tagline {
-  color: var(--muted);
-  font-size: 11px;
-  letter-spacing: 1.2px;
-}
-
-nav {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-top: 14px;
-}
-
-nav a {
-  color: #dbe0ff;
-  text-decoration: none;
-  white-space: nowrap;
-  font-size: 12px;
-  padding: 8px 12px;
-  background: #222743;
-  border-radius: 8px;
-}
-
-nav a:hover { background: #333b65; }
-
-.layout {
-  max-width: 950px;
-  margin: auto;
-  padding: 20px 15px 45px;
-}
-
-.hero { padding: 28px 0 18px; }
-
-.eyebrow {
-  color: var(--cyan);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 2px;
-}
-
-h1 {
-  font-size: clamp(30px, 6vw, 46px);
-  line-height: 1.15;
-  letter-spacing: -1px;
-  margin: 14px 0;
-}
-
-h1 span { color: var(--blue); }
-
-h2 {
-  font-size: 20px;
-  line-height: 1.35;
-  margin: 0 0 8px;
-}
-
-p {
-  color: var(--muted);
-  line-height: 1.65;
-}
-
-.hero p {
-  max-width: 610px;
-  font-size: 16px;
-}
-
-button {
-  border: 0;
-  border-radius: 9px;
-  background: var(--blue);
-  color: white;
-  font-weight: 750;
-  padding: 12px 15px;
-  cursor: pointer;
-  transition: filter .2s, transform .2s;
-}
-
-button:hover { filter: brightness(1.12); }
-button:active { transform: scale(.98); }
-
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
-a:focus-visible {
-  outline: 2px solid var(--cyan);
-  outline-offset: 3px;
-}
-
-.secondary { background: #292e4a; }
-
-.cards {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-  margin: 24px 0;
-}
-
-.card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 15px;
-  padding: 18px;
-  min-width: 0;
-}
-
-.card p { font-size: 13px; }
-
-.card .icon {
-  font-size: 27px;
-  margin-bottom: 8px;
-}
-
-.card button { margin-top: 5px; }
-
-.section {
-  scroll-margin-top: 145px;
-  margin: 22px 0;
-}
-
-.section > p { margin: 8px 0 18px; }
-
-label {
-  display: block;
-  font-size: 13px;
-  color: #d8dcf2;
-  font-weight: 700;
-  margin-top: 12px;
-}
-
-input, textarea, select {
-  display: block;
-  width: 100%;
-  background: #0e1223;
-  border: 1px solid #353c60;
-  border-radius: 9px;
-  padding: 12px;
-  color: white;
-  margin: 6px 0 13px;
-}
-
-select { min-height: 46px; }
-
-textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
-input::placeholder, textarea::placeholder {
-  color: #858eaf;
-}
-
-input:focus, textarea:focus, select:focus {
-  border-color: var(--blue);
-}
-
-.action-row {
-  display: flex;
-  gap: 9px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-
-.output {
-  margin-top: 17px;
-  background: var(--panel2);
-  border: 1px solid var(--line);
-  padding: 16px;
-  border-radius: 11px;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  line-height: 1.75;
-}
-
-.output-title {
-  color: var(--cyan);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 1.5px;
-  margin-bottom: 10px;
-}
-
-.hidden { display: none !important; }
-
-.small-note {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.status {
-  margin-top: 10px;
-  font-size: 12px;
-  color: var(--success);
-}
-
-footer {
-  text-align: center;
-  color: var(--muted);
-  font-size: 12px;
-  padding: 28px 0;
-  border-top: 1px solid var(--line);
-  margin-top: 35px;
-}
-
-footer a { color: var(--cyan); }
-
-@media (min-width: 600px) {
-  .cards { grid-template-columns: repeat(3, minmax(0,1fr)); }
-  .hero { padding-top: 42px; }
-  .card { padding: 21px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after { transition: none !important; }
+@media(max-width:600px){
+ .header-inner{padding:12px;gap:10px}
+ .logo{font-size:22px}
+ .search{order:3;flex-basis:100%}
+ .header-actions{margin-left:auto}
+ .header-actions .btn{padding:9px;font-size:12px}
+ nav{padding:8px 12px}
+ .container{padding:15px 12px}
+ .hero{padding:23px 18px;grid-template-columns:1fr}
+ .hero-art{display:none}
+ .hero h1{font-size:36px}
+ .stats{gap:8px}
+ .stat{padding:12px 9px}
+ .stat strong{font-size:18px}
+ .stat span{font-size:10px}
+ .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .product-img{height:145px}
+ .product-body{padding:10px}
+ .product h3{font-size:13px}
+ .product-price{font-size:18px}
+ .product-actions .btn{padding:9px 5px;font-size:11px}
+ .two-col{grid-template-columns:1fr}
+ .panel{padding:16px}
+ .section-head h2{font-size:20px}
+ .filters select{flex:1;min-width:120px}
 }
 </style>
 </head>
-
 <body>
+
+<div class="topbar">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
+
 <header>
   <div class="header-inner">
-    <div class="brand">✦ NOVA <span>AI</span></div>
-    <div class="tagline">YOUR IDEAS. YOUR FUTURE. YOUR BUSINESS.</div>
-
-    <nav aria-label="Main navigation">
-      <a href="#home">Home</a>
-      <a href="#ideas">Ideas</a>
-      <a href="#planner">Launch planner</a>
-      <a href="#marketing">Marketing</a>
-    </nav>
+    <a class="logo" href="#" aria-label="Nova AI home">NOVA<span>AI</span></a>
+    <form class="search" id="searchForm">
+      <input id="searchInput" type="search" placeholder="Search products, brands or categories..." aria-label="Search products">
+      <button type="submit">Search</button>
+    </form>
+    <div class="header-actions">
+      <button class="btn btn-outline" onclick="scrollToSection('seller')">Sell</button>
+      <button class="btn btn-light" onclick="scrollToSection('cart')">🛒 <span id="cartCount">0</span></button>
+    </div>
   </div>
+  <nav>
+    <a href="#shop">Shop</a>
+    <a href="#categories">Categories</a>
+    <a href="#seller">Seller Portal</a>
+    <a href="#assistant">Nova AI</a>
+    <a href="#cart">My Cart</a>
+  </nav>
 </header>
 
-<main class="layout">
-
-  <section class="hero" id="home">
-    <div class="eyebrow">WELCOME TO YOUR NEXT CHAPTER</div>
-    <h1>Turn your ideas into<br><span>real opportunities.</span></h1>
-
-    <p>
-      Your business workspace for discovering opportunities,
-      planning your launch and creating marketing content.
-      Start with what you have and take your next step.
-    </p>
-
-    <button type="button" onclick="go('ideas')">
-      Build my business →
-    </button>
-  </section>
-
-  <section class="cards" aria-label="Nova AI tools">
-    <article class="card">
-      <div class="icon">💡</div>
-      <h2>Idea Generator</h2>
-      <p>Explore business ideas that fit your interests and budget.</p>
-      <button type="button" onclick="go('ideas')">Explore ideas</button>
-    </article>
-
-    <article class="card">
-      <div class="icon">🚀</div>
-      <h2>Launch Planner</h2>
-      <p>Turn your business idea into a practical seven-day plan.</p>
-      <button type="button" onclick="go('planner')">Plan my launch</button>
-    </article>
-
-    <article class="card">
-      <div class="icon">📣</div>
-      <h2>Marketing Studio</h2>
-      <p>Create promotional copy for your product or service.</p>
-      <button type="button" onclick="go('marketing')">Create content</button>
-    </article>
-  </section>
-
-  <!-- TOOL 1: BUSINESS IDEA GENERATOR -->
-
-  <section class="section card" id="ideas">
-    <div class="eyebrow">TOOL 01</div>
-    <h2>Business Idea Generator</h2>
-    <p>
-      Choose an area and budget to receive tailored ideas,
-      practical first steps and a way to validate demand.
-    </p>
-
-    <label for="interest">Business area</label>
-    <select id="interest">
-      <option>Online services</option>
-      <option>Clothing and sneakers</option>
-      <option>Digital products</option>
-      <option>Education</option>
-      <option>Food and local services</option>
-    </select>
-
-    <label for="budget">Starting budget (R)</label>
-    <input id="budget" type="number" min="0" step="1" value="0"
-      inputmode="numeric" placeholder="Enter your budget">
-
-    <div class="action-row">
-      <button type="button" onclick="ideas()">Generate ideas</button>
-      <button type="button" class="secondary"
-        onclick="clearOutput('ideasOut')">Clear</button>
+<main class="container">
+  <section class="hero">
+    <div>
+      <div class="eyebrow">YOUR MARKETPLACE. YOUR OPPORTUNITY.</div>
+      <h1>Discover more.<br>Shop smarter.</h1>
+      <p>Find everyday essentials, electronics, fashion, sneakers, beauty products and more. A marketplace where customers discover products and independent sellers grow.</p>
+      <div class="hero-buttons">
+        <button class="btn btn-light" onclick="scrollToSection('shop')">Explore products →</button>
+        <button class="btn btn-outline" onclick="scrollToSection('seller')">Start selling</button>
+      </div>
     </div>
-
-    <div id="ideasOut" class="output hidden" aria-live="polite"></div>
+    <div class="hero-art" aria-hidden="true">🛍️</div>
   </section>
 
-  <!-- TOOL 2: LAUNCH PLANNER -->
+  <section class="stats" aria-label="Marketplace overview">
+    <div class="stat"><strong id="productStat">0</strong><span>Products listed</span></div>
+    <div class="stat"><strong id="categoryStat">8</strong><span>Shopping categories</span></div>
+    <div class="stat"><strong>R0</strong><span>Listing fee in this demo</span></div>
+  </section>
 
-  <section class="section card" id="planner">
-    <div class="eyebrow">TOOL 02</div>
-    <h2>Business Launch Planner</h2>
-    <p>
-      Get a plan based on the business you want to start
-      and the customers you want to serve.
-    </p>
-
-    <label for="business">Your business idea</label>
-    <input id="business"
-      placeholder="e.g. Product adverts for sneaker shops"
-      maxlength="180">
-
-    <label for="customer">Who will buy it?</label>
-    <input id="customer"
-      placeholder="e.g. Clothing and sneaker sellers in South Africa"
-      maxlength="180">
-
-    <div class="action-row">
-      <button type="button" onclick="plan()">Create launch plan</button>
-      <button type="button" class="secondary"
-        onclick="clearOutput('planOut')">Clear</button>
+  <section class="section" id="categories">
+    <div class="section-head">
+      <div><h2>Shop by category</h2><p>Find what you need, all in one place.</p></div>
     </div>
-
-    <div id="planOut" class="output hidden" aria-live="polite"></div>
+    <div class="categories" id="categoryGrid"></div>
   </section>
 
-  <!-- TOOL 3: MARKETING STUDIO -->
-
-  <section class="section card" id="marketing">
-    <div class="eyebrow">TOOL 03</div>
-    <h2>Marketing Studio</h2>
-    <p>
-      Draft clear promotional copy using your actual product,
-      target customer and offer.
-    </p>
-
-    <label for="product">Product or service</label>
-    <input id="product"
-      placeholder="e.g. Sneaker advert design service"
-      maxlength="180">
-
-    <label for="audience">Target customer</label>
-    <input id="audience"
-      placeholder="e.g. Sneaker shop owners"
-      maxlength="180">
-
-    <label for="offer">Offer or price (optional)</label>
-    <input id="offer"
-      placeholder="e.g. 5 adverts for R250"
-      maxlength="120">
-
-    <label for="businessName">Business name (optional)</label>
-    <input id="businessName"
-      placeholder="e.g. Nova Creative Studio"
-      maxlength="100">
-
-    <label for="contact">Contact details (optional)</label>
-    <input id="contact"
-      placeholder="e.g. WhatsApp number or Instagram handle"
-      maxlength="120">
-
-    <div class="action-row">
-      <button type="button" onclick="marketing()">Generate advert</button>
-      <button type="button" class="secondary"
-        onclick="clearOutput('marketingOut')">Clear</button>
+  <section class="section" id="shop">
+    <div class="section-head">
+      <div><h2 id="shopHeading">Explore products</h2><p>Discover products from our demo catalogue.</p></div>
+      <span class="badge">DEMO MARKETPLACE</span>
     </div>
-
-    <div id="marketingOut" class="output hidden" aria-live="polite"></div>
-
-    <p class="small-note">
-      Review every detail before publishing. Only use real prices,
-      genuine claims and contact details you are authorised to share.
-    </p>
+    <div class="filters">
+      <select id="categoryFilter" aria-label="Filter by category"><option value="All">All categories</option></select>
+      <select id="sortFilter" aria-label="Sort products">
+        <option value="featured">Featured</option>
+        <option value="low">Price: low to high</option>
+        <option value="high">Price: high to low</option>
+        <option value="az">Name: A to Z</option>
+      </select>
+      <button class="btn btn-outline" onclick="resetFilters()">Reset filters</button>
+    </div>
+    <div class="product-grid" id="productGrid"></div>
   </section>
 
-  <footer>
-    <strong>NOVA AI</strong> · An independent business-building project
-    <br>
-    Free browser-based prototype · No paid AI API required
-    <br><br>
-    Ideas and plans are suggestions, not guarantees of sales or income.
-    Verify demand, costs and applicable requirements before acting.
-  </footer>
+  <section class="section" id="seller">
+    <div class="section-head">
+      <div><h2>Nova Seller Portal</h2><p>Showcase a product in the local demo catalogue.</p></div>
+    </div>
+    <div class="two-col">
+      <div class="panel">
+        <h3>📦 List a product</h3>
+        <div class="notice">This prototype saves your listing in this browser only. It will not automatically appear on another person's phone or create a real order.</div>
+        <form id="sellerForm">
+          <div class="field">
+            <label for="sellerName">Seller or business name *</label>
+            <input id="sellerName" maxlength="70" required placeholder="e.g. Mzansi Sneaker Store">
+          </div>
+          <div class="field">
+            <label for="productName">Product name *</label>
+            <input id="productName" maxlength="100" required placeholder="e.g. Everyday running sneakers">
+          </div>
+          <div class="field">
+            <label for="productCategory">Category *</label>
+            <select id="productCategory" required></select>
+          </div>
+          <div class="field">
+            <label for="productPrice">Price in rand (R) *</label>
+            <input id="productPrice" type="number" min="1" max="10000000" step="0.01" required placeholder="499.00">
+          </div>
+          <div class="field">
+            <label for="productImage">Product image URL (optional)</label>
+            <input id="productImage" type="url" maxlength="500" placeholder="https://example.com/product.jpg">
+            <small>Use an image link you have permission to use. Leave blank for a placeholder.</small>
+          </div>
+          <div class="field">
+            <label for="productDescription">Product description *</label>
+            <textarea id="productDescription" maxlength="500" required placeholder="Describe the product honestly, including size, condition and key details."></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit">+ Add demo listing</button>
+          <div id="sellerMessage" role="status" aria-live="polite"></div>
+        </form>
+      </div>
+      <div class="panel">
+        <h3>🚀 Seller checklist</h3>
+        <p style="color:var(--muted);font-size:13px;line-height:1.8">A good listing helps customers understand what you offer.</p>
+        <div class="notice">1. Use a clear product name.<br>2. Set an accurate price in rand.<br>3. Use your own product photos or authorised images.<br>4. Explain sizes, condition and delivery arrangements.<br>5. Respond to customer enquiries promptly.</div>
+        <h3>What this prototype can do</h3>
+        <p style="font-size:13px;line-height:1.9">✓ Add products to this browser's catalogue<br>✓ Show your listing in the shop<br>✓ Add demo products to a shopping cart<br>✓ Get basic AI-style listing suggestions</p>
+        <p style="font-size:12px;color:var(--muted);line-height:1.7">Real seller accounts, shared listings, secure checkout, payment settlement and delivery tracking must be connected in a later version.</p>
+        <button class="btn btn-light" onclick="scrollToSection('assistant')">Get listing tips from Nova AI →</button>
+      </div>
+    </div>
+  </section>
 
+  <section class="section" id="assistant">
+    <div class="assistant">
+      <div class="eyebrow">NOVA INTELLIGENCE</div>
+      <h2>Meet your shopping assistant ✨</h2>
+      <p>Describe what you need or ask for help writing a product listing. This free prototype uses local rules, not a connected live AI model.</p>
+      <label for="assistantInput" style="display:block;font-size:12px;font-weight:800;margin-bottom:7px">What can Nova help you find?</label>
+      <textarea id="assistantInput" placeholder="e.g. Find affordable electronics under R500, or help me describe my handmade bags."></textarea>
+      <button class="btn btn-light" onclick="askNova()">Ask Nova AI →</button>
+      <div class="assistant-output" id="assistantOutput" aria-live="polite">Hi! Tell me what you're shopping for, your budget, or which product you want help listing.</div>
+    </div>
+  </section>
+
+  <section class="section" id="cart">
+    <div class="section-head">
+      <div><h2>🛒 Your shopping cart</h2><p>Review your demo cart before continuing.</p></div>
+    </div>
+    <div class="panel">
+      <div id="cartItems" class="cart-list"></div>
+      <div class="cart-total"><span>Subtotal</span><span id="cartTotal">R0.00</span></div>
+      <div class="notice">Demo only: this cart does not reserve stock, calculate delivery, collect payment or submit an order to a seller.</div>
+      <button class="btn btn-primary" onclick="demoCheckout()">Continue (demo only)</button>
+      <button class="btn btn-outline" onclick="clearCart()">Clear cart</button>
+      <div id="checkoutMessage" role="status" aria-live="polite"></div>
+    </div>
+  </section>
 </main>
+
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="logo">NOVA<span>AI</span> MARKETPLACE</div>
+      <p>A marketplace prototype for South African shoppers and independent sellers. Built to start small and grow responsibly.</p>
+    </div>
+    <div>
+      <strong>Explore</strong>
+      <p><a href="#shop">Shop products</a><br><a href="#seller">Become a seller</a><br><a href="#assistant">Ask Nova AI</a></p>
+    </div>
+  </div>
+  <div class="footer-inner"><small>© <span id="year"></span> Nova AI · Free prototype · No paid AI API required</small></div>
+</footer>
+
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
 <script>
 "use strict";
 
-/* SHARED HELPERS */
+const CATEGORIES = [
+  {name:"Electronics",icon:"📱"},
+  {name:"Fashion",icon:"👕"},
+  {name:"Sneakers",icon:"👟"},
+  {name:"Home & Living",icon:"🏠"},
+  {name:"Beauty",icon:"✨"},
+  {name:"Sports",icon:"⚽"},
+  {name:"Groceries",icon:"🛒"},
+  {name:"Accessories",icon:"🎒"}
+];
 
-function go(id) {
-  const element = document.getElementById(id);
-  if (element) {
-    element.scrollIntoView({ behavior: "smooth", block: "start" });
+const DEMO_PRODUCTS = [
+  {id:"demo-1",name:"Wireless Bluetooth Headphones",category:"Electronics",price:349, seller:"Nova Demo Store",description:"Wireless listening for music, calls and everyday use. Check compatibility before buying.",image:"https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80",tag:"Popular"},
+  {id:"demo-2",name:"Everyday Casual T-Shirt",category:"Fashion",price:159,seller:"Nova Demo Store",description:"A versatile casual top. Confirm available sizes, colours and material with the seller.",image:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80",tag:"Everyday"},
+  {id:"demo-3",name:"Classic Street Sneakers",category:"Sneakers",price:599,seller:"Nova Demo Store",description:"Streetwear-inspired footwear. Check sizing, authenticity and availability before purchasing.",image:"https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80",tag:"Trending"},
+  {id:"demo-4",name:"Minimal Desk Lamp",category:"Home & Living",price:279,seller:"Nova Demo Store",description:"A simple lamp for a desk or bedside table. Confirm power requirements and dimensions.",image:"https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=700&q=80",tag:"Home"},
+  {id:"demo-5",name:"Daily Skincare Set",category:"Beauty",price:229,seller:"Nova Demo Store",description:"A sample skincare bundle. Check the ingredients, expiry date and suitability for your skin.",image:"https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=80",tag:"Self-care"},
+  {id:"demo-6",name:"Training Football",category:"Sports",price:199,seller:"Nova Demo Store",description:"A football for practice and recreational play. Confirm size and material before ordering.",image:"https://images.unsplash.com/photo-1614632537423-1e6c2e7e0c2b?auto=format&fit=crop&w=700&q=80",tag:"Active"},
+  {id:"demo-7",name:"Reusable Shopping Tote",category:"Accessories",price:89,seller:"Nova Demo Store",description:"A reusable carry bag for shopping and everyday essentials. Check dimensions and material.",image:"https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=700&q=80",tag:"Useful"},
+  {id:"demo-8",name:"Kitchen Storage Containers",category:"Home & Living",price:149,seller:"Nova Demo Store",description:"Storage containers for organising your kitchen. Confirm sizes, quantity and food-contact suitability.",image:"https://images.unsplash.com/photo-1490312278390-ab64016e0aa9?auto=format&fit=crop&w=700&q=80",tag:"Organise"},
+  {id:"demo-9",name:"Everyday Backpack",category:"Accessories",price:299,seller:"Nova Demo Store",description:"A practical bag for daily essentials. Check capacity, compartments and dimensions.",image:"https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=700&q=80",tag:"Daily"},
+  {id:"demo-10",name:"Home Workout Mat",category:"Sports",price:249,seller:"Nova Demo Store",description:"A mat for home workouts and stretching. Check thickness and dimensions before buying.",image:"https://images.unsplash.com/photo-1592432678016-e910b452f9a2?auto=format&fit=crop&w=700&q=80",tag:"Fitness"},
+  {id:"demo-11",name:"Smartphone Stand",category:"Electronics",price:99,seller:"Nova Demo Store",description:"A desk stand for compatible phones. Check device dimensions and adjustability.",image:"https://images.unsplash.com/photo-1586953208448-b95a79798f07?auto=format&fit=crop&w=700&q=80",tag:"Desk"},
+  {id:"demo-12",name:"Everyday Shoulder Bag",category:"Fashion",price:329,seller:"Nova Demo Store",description:"A versatile accessory for daily use. Confirm dimensions, materials and available colours.",image:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=700&q=80",tag:"Style"}
+];
+
+const STORAGE = {
+  products:"novaMarketplaceProductsV1",
+  cart:"novaMarketplaceCartV1"
+};
+
+let products = loadProducts();
+let cart = loadCart();
+let activeCategory = "All";
+
+function safeRead(key, fallback) {
+  try {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : fallback;
+  } catch (error) {
+    return fallback;
   }
 }
 
-function show(id, text) {
-  const element = document.getElementById(id);
-  element.textContent = text;
-  element.classList.remove("hidden");
+function loadProducts() {
+  const saved = safeRead(STORAGE.products, []);
+  if (!Array.isArray(saved)) return [...DEMO_PRODUCTS];
+  const clean = saved.filter(p =>
+    p && typeof p.id==="string" && typeof p.name==="string" &&
+    typeof p.category==="string" && Number.isFinite(Number(p.price))
+  );
+  return [...DEMO_PRODUCTS, ...clean.filter(p => !String(p.id).startsWith("demo-"))];
+}
 
-  const oldStatus = element.querySelector(".status");
-  if (oldStatus) oldStatus.remove();
+function loadCart() {
+  const saved = safeRead(STORAGE.cart, []);
+  return Array.isArray(saved)
+    ? saved.filter(i => i && typeof i.id==="string" && Number.isInteger(i.qty) && i.qty>0)
+    : [];
+}
 
-  const copyButton = document.createElement("button");
-  copyButton.type = "button";
-  copyButton.className = "secondary";
-  copyButton.style.marginTop = "14px";
-  copyButton.textContent = "Copy result";
-  copyButton.addEventListener("click", async function () {
-    try {
-      await navigator.clipboard.writeText(element.innerText.replace("Copy result", "").trim());
-      copyButton.textContent = "Copied!";
-    } catch (error) {
-      copyButton.textContent = "Select and copy the text";
-    }
+function saveProducts() {
+  try {
+    const userProducts = products.filter(p => !String(p.id).startsWith("demo-"));
+    localStorage.setItem(STORAGE.products, JSON.stringify(userProducts));
+  } catch (error) {
+    showToast("Browser storage is full or unavailable. Your listing may not be saved.");
+  }
+}
+
+function saveCart() {
+  try {
+    localStorage.setItem(STORAGE.cart, JSON.stringify(cart));
+  } catch (error) {
+    showToast("Could not save your cart in this browser.");
+  }
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[char]);
+}
+
+function money(value) {
+  return new Intl.NumberFormat("en-ZA", {
+    style:"currency",currency:"ZAR",minimumFractionDigits:2
+  }).format(Number(value)||0);
+}
+
+function categoryIcon(name) {
+  const found = CATEGORIES.find(c => c.name === name);
+  return found ? found.icon : "📦";
+}
+
+function safeImageURL(value) {
+  try {
+    const url = new URL(value);
+    if (url.protocol==="https:" || url.protocol==="http:") return url.href;
+  } catch (error) {}
+  return "";
+}
+
+function renderCategories() {
+  const grid = document.getElementById("categoryGrid");
+  grid.innerHTML = [
+    `<button class="cat ${activeCategory==="All"?"active":""}" data-category="All"><span class="emoji">🌐</span><span>All products</span></button>`,
+    ...CATEGORIES.map(c =>
+      `<button class="cat ${activeCategory===c.name?"active":""}" data-category="${escapeHTML(c.name)}"><span class="emoji">${c.icon}</span><span>${escapeHTML(c.name)}</span></button>`
+    )
+  ].join("");
+
+  grid.querySelectorAll("[data-category]").forEach(button => {
+    button.addEventListener("click", () => {
+      activeCategory = button.dataset.category;
+      document.getElementById("categoryFilter").value = activeCategory;
+      document.getElementById("shopHeading").textContent =
+        activeCategory==="All" ? "Explore products" : activeCategory;
+      renderCategories();
+      renderProducts();
+      scrollToSection("shop");
+    });
+  });
+}
+
+function renderProducts() {
+  const query = document.getElementById("searchInput").value.trim().toLowerCase();
+  const category = document.getElementById("categoryFilter").value;
+  const sort = document.getElementById("sortFilter").value;
+
+  let list = products.filter(p => {
+    const matchesCategory = category==="All" || p.category===category;
+    const searchable = [p.name,p.category,p.description,p.seller].join(" ").toLowerCase();
+    return matchesCategory && searchable.includes(query);
   });
 
-  element.appendChild(document.createElement("br"));
-  element.appendChild(copyButton);
+  if (sort==="low") list.sort((a,b)=>a.price-b.price);
+  if (sort==="high") list.sort((a,b)=>b.price-a.price);
+  if (sort==="az") list.sort((a,b)=>a.name.localeCompare(b.name));
+
+  const grid = document.getElementById("productGrid");
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty"><div style="font-size:35px">🔎</div><h3>No products found</h3><p>Try another search or category.</p><button class="btn btn-light" onclick="resetFilters()">Show all products</button></div>`;
+  } else {
+    grid.innerHTML = list.map(p => {
+      const image = safeImageURL(p.image || "");
+      return `
+        <article class="product">
+          <div class="product-img">
+            ${image ? `<img src="${escapeHTML(image)}" alt="${escapeHTML(p.name)}" loading="lazy" onerror="this.style.display='none'">` : ""}
+            <span class="product-tag">${escapeHTML(p.tag || "Marketplace")}</span>
+          </div>
+          <div class="product-body">
+            <div class="product-category">${escapeHTML(p.category)}</div>
+            <h3>${escapeHTML(p.name)}</h3>
+            <p class="product-desc">${escapeHTML(p.description)}</p>
+            <div class="product-price">${money(p.price)}</div>
+            <div class="product-seller">Seller: ${escapeHTML(p.seller || "Independent seller")}</div>
+            <div class="product-actions">
+              <button class="btn btn-primary btn-small" data-add="${escapeHTML(p.id)}">Add to cart</button>
+              <button class="btn btn-outline btn-small" data-info="${escapeHTML(p.id)}" aria-label="Get details for ${escapeHTML(p.name)}">Details</button>
+            </div>
+          </div>
+        </article>`;
+    }).join("");
+
+    grid.querySelectorAll("[data-add]").forEach(button =>
+      button.addEventListener("click", () => addToCart(button.dataset.add))
+    );
+    grid.querySelectorAll("[data-info]").forEach(button =>
+      button.addEventListener("click", () => showProductInfo(button.dataset.info))
+    );
+  }
+
+  document.getElementById("productStat").textContent = products.length;
+  document.getElementById("categoryStat").textContent = CATEGORIES.length;
 }
 
-function clearOutput(id) {
-  const element = document.getElementById(id);
-  element.textContent = "";
-  element.classList.add("hidden");
+function renderCategorySelects() {
+  const options = CATEGORIES.map(c =>
+    `<option value="${escapeHTML(c.name)}">${escapeHTML(c.name)}</option>`
+  ).join("");
+  document.getElementById("categoryFilter").innerHTML =
+    `<option value="All">All categories</option>` + options;
+  document.getElementById("productCategory").innerHTML = options;
 }
 
-function getText(id) {
-  return document.getElementById(id).value.trim();
+function resetFilters() {
+  document.getElementById("searchInput").value = "";
+  document.getElementById("categoryFilter").value = "All";
+  document.getElementById("sortFilter").value = "featured";
+  activeCategory = "All";
+  document.getElementById("shopHeading").textContent = "Explore products";
+  renderCategories();
+  renderProducts();
 }
 
-function formatRand(value) {
-  return Number(value).toLocaleString("en-ZA", {
-    maximumFractionDigits: 2
-  });
+function addToCart(id) {
+  const product = products.find(p => p.id===id);
+  if (!product) return;
+  const item = cart.find(i => i.id===id);
+  if (item) item.qty = Math.min(item.qty+1, 99);
+  else cart.push({id,qty:1});
+  saveCart();
+  renderCart();
+  showToast(product.name + " added to your demo cart.");
 }
 
-/* TOOL 1: BUSINESS IDEA GENERATOR */
+function showProductInfo(id) {
+  const p = products.find(product => product.id===id);
+  if (!p) return;
+  const output =
+    p.name + "\n\nCategory: " + p.category +
+    "\nPrice: " + money(p.price) +
+    "\nSeller: " + p.seller +
+    "\n\n" + p.description +
+    "\n\nThis is a demo listing. Confirm stock, product details, seller identity and delivery before making a real purchase.";
+  document.getElementById("assistantOutput").textContent = output;
+  scrollToSection("assistant");
+}
 
-function ideas() {
-  const area = getText("interest");
-  const rawBudget = getText("budget");
+function renderCart() {
+  const list = document.getElementById("cartItems");
+  cart = cart.filter(i => products.some(p => p.id===i.id));
+  const totalQty = cart.reduce((sum,i)=>sum+i.qty,0);
+  document.getElementById("cartCount").textContent = totalQty;
 
-  if (rawBudget === "" || !Number.isFinite(Number(rawBudget)) ||
-      Number(rawBudget) < 0) {
-    show("ideasOut", "Please enter a valid budget of R0 or more.");
+  if (!cart.length) {
+    list.innerHTML = `<div class="empty"><div style="font-size:34px">🛍️</div><h3>Your cart is empty</h3><p>Explore the catalogue and add something you like.</p><button class="btn btn-light" onclick="scrollToSection('shop')">Browse products</button></div>`;
+  } else {
+    list.innerHTML = cart.map(item => {
+      const p = products.find(product => product.id===item.id);
+      if (!p) return "";
+      return `<div class="cart-item">
+        <div><h4>${escapeHTML(p.name)}</h4><p>${money(p.price)} each · Qty ${item.qty}</p></div>
+        <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+          <button class="btn btn-outline btn-small" data-minus="${escapeHTML(item.id)}" aria-label="Remove one">−</button>
+          <button class="btn btn-outline btn-small" data-plus="${escapeHTML(item.id)}" aria-label="Add one">+</button>
+          <button class="btn btn-danger btn-small" data-remove="${escapeHTML(item.id)}">Remove</button>
+        </div>
+      </div>`;
+    }).join("");
+
+    list.querySelectorAll("[data-minus]").forEach(b => b.addEventListener("click",()=>changeQty(b.dataset.minus,-1)));
+    list.querySelectorAll("[data-plus]").forEach(b => b.addEventListener("click",()=>changeQty(b.dataset.plus,1)));
+    list.querySelectorAll("[data-remove]").forEach(b => b.addEventListener("click",()=>removeFromCart(b.dataset.remove)));
+  }
+
+  const total = cart.reduce((sum,item) => {
+    const p = products.find(product => product.id===item.id);
+    return sum + (p ? Number(p.price)*item.qty : 0);
+  },0);
+  document.getElementById("cartTotal").textContent = money(total);
+  saveCart();
+}
+
+function changeQty(id,amount) {
+  const item = cart.find(i=>i.id===id);
+  if (!item) return;
+  item.qty += amount;
+  if (item.qty<=0) cart = cart.filter(i=>i.id!==id);
+  if (item.qty>99) item.qty=99;
+  saveCart();
+  renderCart();
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(i=>i.id!==id);
+  saveCart();
+  renderCart();
+}
+
+function clearCart() {
+  cart = [];
+  saveCart();
+  renderCart();
+  document.getElementById("checkoutMessage").textContent = "";
+}
+
+function demoCheckout() {
+  const message = document.getElementById("checkoutMessage");
+  if (!cart.length) {
+    message.textContent = "Your cart is empty. Add products before continuing.";
+    return;
+  }
+  message.textContent = "Demo only: no order was placed and no payment was taken. A real checkout needs a secure backend, seller order management and a supported payment provider.";
+}
+
+document.getElementById("sellerForm").addEventListener("submit", function(event) {
+  event.preventDefault();
+
+  const seller = document.getElementById("sellerName").value.trim();
+  const name = document.getElementById("productName").value.trim();
+  const category = document.getElementById("productCategory").value;
+  const price = Number(document.getElementById("productPrice").value);
+  const description = document.getElementById("productDescription").value.trim();
+  const image = safeImageURL(document.getElementById("productImage").value.trim());
+
+  if (!seller || !name || !description || !CATEGORIES.some(c=>c.name===category) ||
+      !Number.isFinite(price) || price<1 || price>10000000) {
+    document.getElementById("sellerMessage").textContent = "Please check all required fields and enter a valid price.";
     return;
   }
 
-  const budget = Number(rawBudget);
-
-  const catalogue = {
-    "Online services": [
-      {
-        name: "Product advert creation",
-        first: "Create two original sample adverts and approach five local sellers."
-      },
-      {
-        name: "Social media page setup",
-        first: "Prepare a sample business profile and a simple setup checklist."
-      },
-      {
-        name: "Product description writing",
-        first: "Rewrite three sample product descriptions to demonstrate your service."
-      },
-      {
-        name: "Digital admin assistance",
-        first: "List three tasks you can confidently perform and ask local businesses which they need."
-      }
-    ],
-
-    "Clothing and sneakers": [
-      {
-        name: "Clothing and sneaker advert service",
-        first: "Design one sample advert and show it to five clothing or sneaker sellers."
-      },
-      {
-        name: "Online product catalogue setup",
-        first: "Create a sample catalogue using product information and images you have permission to use."
-      },
-      {
-        name: "Seller promotion packages",
-        first: "Prepare a sample promotional post and ask sellers what marketing help they need."
-      },
-      {
-        name: "Product description service",
-        first: "Write three sample listings with clear sizes, prices and product details."
-      }
-    ],
-
-    "Digital products": [
-      {
-        name: "Printable business planner",
-        first: "Create one original planner page and ask potential buyers for feedback."
-      },
-      {
-        name: "Original activity worksheets",
-        first: "Make three original sample pages and check demand before producing a full pack."
-      },
-      {
-        name: "Small business templates",
-        first: "Build one useful template and demonstrate how it could save a business time."
-      },
-      {
-        name: "Social media content calendar",
-        first: "Create a one-week sample calendar for a specific business niche."
-      }
-    ],
-
-    "Education": [
-      {
-        name: "Beginner digital-skills tutoring",
-        first: "Choose one skill, prepare a short demonstration and identify potential learners."
-      },
-      {
-        name: "Original revision worksheets",
-        first: "Create a sample worksheet for one topic and ask learners for feedback."
-      },
-      {
-        name: "Study planner creation",
-        first: "Make a weekly study planner and test whether students find it useful."
-      },
-      {
-        name: "Beginner technology guides",
-        first: "Write a simple original guide that solves one clearly defined problem."
-      }
-    ],
-
-    "Food and local services": [
-      {
-        name: "Menu and flyer design",
-        first: "Create a sample menu with clearly labelled demonstration details."
-      },
-      {
-        name: "Local service promotion",
-        first: "Prepare a sample advert for a local service provider."
-      },
-      {
-        name: "Online enquiry page setup",
-        first: "Build a demonstration page with clear service information and enquiry instructions."
-      },
-      {
-        name: "Digital menu assistance",
-        first: "Create a sample digital menu and ask food sellers whether it would help them."
-      }
-    ]
+  const product = {
+    id:"seller-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),
+    name,category,price,seller,description,image,tag:"New listing"
   };
 
-  const options = catalogue[area] || catalogue["Online services"];
+  products.push(product);
+  saveProducts();
+  renderProducts();
+  renderCategories();
+  document.getElementById("sellerMessage").innerHTML =
+    `<div class="success">Listing added to this browser's demo catalogue. It is not published to a shared marketplace.</div>`;
+  this.reset();
+  showToast("Your demo listing has been added.");
+  scrollToSection("shop");
+});
 
-  let result = "YOUR BUSINESS IDEA SHORTLIST\n\n";
-
-  options.forEach(function (item, index) {
-    result += (index + 1) + ". " + item.name + "\n";
-    result += "FIRST STEP: " + item.first + "\n\n";
-  });
-
-  result += "SELECTED AREA: " + area + "\n";
-  result += "AVAILABLE BUDGET: R" + formatRand(budget) + "\n\n";
-
-  if (budget === 0) {
-    result += "R0 STARTING STRATEGY\n";
-    result += "Start with a service you can deliver using tools you already have. ";
-    result += "Use original samples, approach potential customers directly and ";
-    result += "check that any tools you need are genuinely free. Do not promise ";
-    result += "paid features or spend money before validating demand.\n\n";
-  } else {
-    result += "BUDGET STRATEGY\n";
-    result += "Treat R" + formatRand(budget) + " as your maximum budget, not a spending target. ";
-    result += "Validate demand before buying anything and confirm actual costs first.\n\n";
-  }
-
-  result += "VALIDATE BEFORE INVESTING\n";
-  result += "Speak to five potential customers. Ask about their current problem, ";
-  result += "the alternatives they use and whether they would pay for your offer. ";
-  result += "These are ideas, not validated market research or guaranteed income.";
-
-  show("ideasOut", result);
-}
-
-/* TOOL 2: BUSINESS LAUNCH PLANNER */
-
-function plan() {
-  const business = getText("business");
-  const customer = getText("customer");
-
-  if (!business) {
-    show("planOut", "Enter your business idea first.");
-    document.getElementById("business").focus();
+function askNova() {
+  const input = document.getElementById("assistantInput").value.trim();
+  const output = document.getElementById("assistantOutput");
+  if (!input) {
+    output.textContent = "Tell me what you're looking for, your budget, or which product you want help listing.";
     return;
   }
 
-  const idea = business.toLowerCase();
+  const text = input.toLowerCase();
+  const budgetMatch = text.match(/(?:under|below|less than|max|budget(?: of)?|r)\s*r?\s*(\d+(?:[.,]\d+)?)/i);
+  const budget = budgetMatch ? Number(budgetMatch[1].replace(",",".")) : null;
 
-  let steps;
-  let measure;
+  const categoryKeywords = [
+    {category:"Electronics",words:["phone","laptop","computer","headphone","electronics","charger","tech","tablet"]},
+    {category:"Fashion",words:["clothes","clothing","shirt","dress","fashion","jeans","jacket"]},
+    {category:"Sneakers",words:["sneaker","shoe","shoes","trainers","footwear"]},
+    {category:"Home & Living",words:["home","kitchen","lamp","furniture","storage","house"]},
+    {category:"Beauty",words:["beauty","skincare","skin care","makeup","cosmetic","lotion"]},
+    {category:"Sports",words:["sport","football","fitness","workout","gym","training"]},
+    {category:"Groceries",words:["grocery","groceries","food","snack","pantry"]},
+    {category:"Accessories",words:["bag","backpack","accessory","accessories","wallet","tote"]}
+  ];
 
-  if (/advert|design|flyer|graphic|social media|marketing/.test(idea)) {
-    steps = [
-      "Define one specific advert service, what the customer receives and how many revisions are included.",
-      "Identify five potential businesses that may need promotional content.",
-      "Create two original sample adverts using accurate product information.",
-      "Ask potential customers which sample is more useful and what they need.",
-      "Offer a small, clearly priced starter package without hidden charges.",
-      "Deliver agreed work, check the files and obtain approval before considering the job complete.",
-      "Review feedback, time spent, actual costs and whether the price is sustainable."
-    ];
-    measure = "Number of sellers contacted, replies received, genuine enquiries and paid orders.";
-  } else if (/clothing|sneaker|shoe|fashion|resell|product/.test(idea)) {
-    steps = [
-      "Decide which products or seller service you will offer and who it is for.",
-      "Research five potential buyers and compare similar offers.",
-      "Prepare a catalogue or sample listing with accurate product details.",
-      "Ask potential customers about styles, sizes, prices and buying concerns.",
-      "Test interest before purchasing stock or making commitments.",
-      "Respond honestly to enquiries and confirm availability before accepting payment.",
-      "Review genuine interest, actual costs, customer feedback and next steps."
-    ];
-    measure = "Customer enquiries, product interest, confirmed orders and actual costs.";
-  } else if (/tutor|education|worksheet|study|lesson|teach|course/.test(idea)) {
-    steps = [
-      "Choose one subject, skill level and specific learning outcome.",
-      "Identify five potential learners or people who arrange their learning.",
-      "Prepare a short original sample lesson or worksheet.",
-      "Ask for feedback on clarity, usefulness and difficulty.",
-      "Offer a small pilot with a clear scope and price, if appropriate.",
-      "Deliver the agreed session or material and request feedback.",
-      "Review learning feedback, preparation time and costs."
-    ];
-    measure = "Interested learners, completed sessions, feedback and time spent.";
-  } else if (/food|catering|baking|meal|restaurant|clean|barber|repair|local service/.test(idea)) {
-    steps = [
-      "Define the service, service area and problem you solve.",
-      "Speak to five potential local customers about their needs.",
-      "Prepare a sample menu, service list or demonstration.",
-      "Compare existing alternatives, prices and customer expectations.",
-      "Test interest with a clear offer before purchasing supplies.",
-      "Deliver only what you can safely and reliably provide.",
-      "Review customer feedback, actual expenses and applicable requirements."
-    ];
-    measure = "Customer enquiries, bookings, repeat interest and real expenses.";
-  } else {
-    steps = [
-      "Define the problem your business solves and one specific offer.",
-      "Identify five potential customers and research existing alternatives.",
-      "Create one small sample or demonstration of your offer.",
-      "Ask potential customers for honest feedback and evidence of interest.",
-      "Offer a small pilot with a clearly explained price, if appropriate.",
-      "Deliver the agreed work and request feedback.",
-      "Review demand, time spent, costs and your next steps."
-    ];
-    measure = "Potential customers contacted, genuine interest, feedback and actual costs.";
-  }
-
-  const target = customer ||
-    "People who experience the problem your business solves";
-
-  let result = "YOUR PERSONALIZED LAUNCH PLAN\n\n";
-  result += "BUSINESS: " + business + "\n";
-  result += "TARGET CUSTOMER: " + target + "\n\n";
-
-  steps.forEach(function (step, index) {
-    result += "DAY " + (index + 1) + "\n";
-    result += step + "\n\n";
-  });
-
-  result += "HOW TO MEASURE PROGRESS\n";
-  result += measure + "\n\n";
-
-  result += "R0 PRINCIPLE\n";
-  result += "Use tools you already have and verify costs before committing. ";
-  result += "A plan cannot guarantee customers, sales or income.";
-
-  show("planOut", result);
-}
-
-/* TOOL 3: MARKETING STUDIO */
-
-function marketing() {
-  const product = getText("product");
-  const audience = getText("audience");
-  const offer = getText("offer");
-  const businessName = getText("businessName");
-  const contact = getText("contact");
-
-  if (!product) {
-    show("marketingOut", "Enter your product or service first.");
-    document.getElementById("product").focus();
-    return;
-  }
-
-  const p = product.toLowerCase();
-
-  let headline;
-  let benefit;
-  let callToAction;
-
-  if (/advert|graphic|design|flyer|social media/.test(p)) {
-    headline = "GIVE YOUR BUSINESS A PROFESSIONAL LOOK";
-    benefit = "Promote your products and services with clear, eye-catching designs.";
-    callToAction = "Message us to discuss your advert requirements.";
-  } else if (/sneaker|shoe|footwear/.test(p)) {
-    headline = "YOUR NEXT FAVOURITE PAIR STARTS HERE";
-    benefit = "Explore the available styles and find an option that suits you.";
-    callToAction = "Message us to enquire about available styles and prices.";
-  } else if (/clothing|fashion|outfit|shirt|dress/.test(p)) {
-    headline = "FIND YOUR NEXT LOOK";
-    benefit = "Discover styles and choose pieces that suit your personal taste.";
-    callToAction = "Get in touch to ask about available options.";
-  } else if (/food|cake|baking|meal|restaurant/.test(p)) {
-    headline = "SOMETHING DELICIOUS COULD BE ON YOUR MENU";
-    benefit = "Explore the menu and enquire about available options.";
-    callToAction = "Message us for menu details and availability.";
-  } else if (/tutor|lesson|course|worksheet|education|study/.test(p)) {
-    headline = "TAKE THE NEXT STEP IN YOUR LEARNING";
-    benefit = "Explore learning resources or support that match your goals.";
-    callToAction = "Get in touch to discuss your learning needs.";
-  } else if (/clean|cleaning/.test(p)) {
-    headline = "A CLEANER SPACE STARTS WITH THE RIGHT SERVICE";
-    benefit = "Enquire about the service and available options for your space.";
-    callToAction = "Message us to discuss your requirements.";
-  } else {
-    headline = "DISCOVER " + product.toUpperCase();
-    benefit = "Find out more about the offer and whether it suits your needs.";
-    callToAction = "Send us a message to ask questions or make an enquiry.";
-  }
+  const detected = categoryKeywords.find(group=>group.words.some(word=>text.includes(word)));
+  const isSellerHelp = /sell|seller|listing|describe|description|product title|advert|marketing|my product/.test(text);
+  const isCheap = /cheap|affordable|budget|low cost|lowest|under|below|less than/.test(text);
+  const matches = products.filter(p=>{
+    const categoryOK = !detected || p.category===detected.category;
+    const budgetOK = budget===null || p.price<=budget;
+    return categoryOK && budgetOK;
+  }).sort((a,b)=>a.price-b.price).slice(0,5);
 
   let result = "";
 
-  if (businessName) {
-    result += businessName.toUpperCase() + "\n\n";
+  if (isSellerHelp) {
+    const sample = products.find(p=>text.includes(p.name.toLowerCase()));
+    const name = sample ? sample.name : "your product";
+    result =
+      "NOVA SELLER COACH\n\n" +
+      "1. Use a clear title that says exactly what the product is.\n" +
+      "2. State the main benefit and important details.\n" +
+      "3. Include accurate size, condition, materials and what's included.\n" +
+      "4. Use your own clear photos or images you have permission to use.\n" +
+      "5. Set a fair price and explain delivery arrangements honestly.\n\n" +
+      "SAMPLE LISTING\n" +
+      "Title: " + name + "\n" +
+      "Description: Discover a product designed for everyday use. Review its specifications, available options and condition before ordering. Contact the seller to confirm current stock and delivery details.\n\n" +
+      "This is a template. Replace it with verified facts about your actual product.";
+  } else if (matches.length) {
+    result = "NOVA SHOPPING SUGGESTIONS\n\n";
+    if (detected) result += "Category: " + detected.category + "\n";
+    if (budget!==null) result += "Budget: " + money(budget) + "\n";
+    if (isCheap) result += "Sorted from the lowest displayed price.\n";
+    result += "\n" + matches.map((p,i)=>
+      (i+1)+". "+p.name+"\n   "+money(p.price)+" · "+p.category+"\n   Seller: "+p.seller
+    ).join("\n\n");
+    result += "\n\nThese are demo catalogue suggestions, not verified live offers. Check the product details, seller, stock and delivery before buying.";
+  } else {
+    result =
+      "LET'S FIND A GOOD MATCH\n\n" +
+      "I couldn't find a matching demo product for that request yet.\n\n" +
+      "Try telling me:\n" +
+      "• The product category you want.\n" +
+      "• Your maximum budget in rand.\n" +
+      "• Which features matter most.\n\n" +
+      "I can only recommend products currently in this demo catalogue. I don't have live access to external stores or current market prices.";
   }
 
-  result += headline + "\n\n";
-  result += product + "\n\n";
-  result += benefit + "\n\n";
-
-  if (audience) {
-    result += "IDEAL FOR: " + audience + "\n\n";
-  }
-
-  if (offer) {
-    result += "OFFER: " + offer + "\n\n";
-  }
-
-  result += callToAction + "\n";
-
-  if (contact) {
-    result += "\nCONTACT: " + contact + "\n";
-  }
-
-  result += "\nPUBLISHING CHECKLIST\n";
-  result += "Add a genuine product photo, confirm the price and availability, ";
-  result += "and check every claim before publishing. Only advertise offers ";
-  result += "you can actually honour.";
-
-  show("marketingOut", result);
+  output.textContent = result;
 }
-</script>
 
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+let toastTimer;
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.remove("hidden");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toast.classList.add("hidden"),2600);
+}
+
+document.getElementById("searchForm").addEventListener("submit", function(event) {
+  event.preventDefault();
+  renderProducts();
+  scrollToSection("shop");
+});
+
+document.getElementById("searchInput").addEventListener("input",renderProducts);
+document.getElementById("categoryFilter").addEventListener("change",function() {
+  activeCategory = this.value;
+  document.getElementById("shopHeading").textContent =
+    activeCategory==="All" ? "Explore products" : activeCategory;
+  renderCategories();
+  renderProducts();
+});
+document.getElementById("sortFilter").addEventListener("change",renderProducts);
+
+document.getElementById("year").textContent = new Date().getFullYear();
+
+renderCategorySelects();
+renderCategories();
+renderProducts();
+renderCart();
+</script>
 </body>
 </html>
-```
