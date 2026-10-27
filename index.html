@@ -1,1 +1,148 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101124">
+<title>NOVA AI — Build Your Future</title>
+<style>
+:root{--bg:#0d1020;--panel:#171b30;--line:#2b3150;--text:#f5f6ff;--muted:#a3accb;--blue:#7c83ff;--cyan:#48e0d0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,sans-serif}
+header{padding:23px 18px;background:#13162a;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2}
+.brand{font-size:23px;font-weight:850;letter-spacing:1px}.brand span{color:var(--blue)}
+.tagline{font-size:12px;color:var(--muted);margin-top:3px}
+.layout{max-width:950px;margin:auto;padding:20px 15px 50px}
+h1{font-size:29px;line-height:1.2;margin:12px 0}
+h2{font-size:19px;margin:0 0 8px}
+p{color:var(--muted);line-height:1.55}
+.hero{padding:22px 0 15px}
+.eyebrow{color:var(--cyan);font-size:11px;font-weight:800;letter-spacing:2px}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:20px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:17px;min-width:0}
+.icon{font-size:25px;margin-bottom:10px}
+.card p{font-size:13px;margin:6px 0 14px}
+button{border:0;border-radius:9px;background:var(--blue);color:white;font-weight:750;padding:12px 14px;cursor:pointer;font-size:14px}
+button:active{transform:scale(.98)}
+.secondary{background:#292e4a}
+input,textarea,select{display:block;width:100%;background:#0e1223;border:1px solid #353c60;border-radius:9px;padding:12px;color:white;font:inherit;margin:9px 0 13px}
+textarea{min-height:100px;resize:vertical}
+label{font-size:13px;color:#d8dcf2;font-weight:650}
+.output{margin-top:15px;background:#101426;border:1px solid var(--line);padding:14px;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65}
+.hidden{display:none}
+.section{scroll-margin-top:100px;margin:20px 0}
+nav{display:flex;gap:8px;overflow-x:auto;padding-top:15px}
+nav a{color:#dbe0ff;text-decoration:none;white-space:nowrap;font-size:12px;padding:8px 10px;background:#222743;border-radius:8px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:25px 0}
+@media(min-width:650px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.hero{padding-top:35px}h1{font-size:38px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">✦ NOVA <span>AI</span></div>
+  <div class="tagline">YOUR IDEAS. YOUR FUTURE. YOUR BUSINESS.</div>
+  <nav>
+    <a href="#home">Home</a>
+    <a href="#ideas">Ideas</a>
+    <a href="#planner">Launch planner</a>
+    <a href="#marketing">Marketing</a>
+  </nav>
+</header>
+<main class="layout">
+  <section class="hero" id="home">
+    <div class="eyebrow">WELCOME TO YOUR NEXT CHAPTER</div>
+    <h1>Turn your ideas into<br><span style="color:var(--blue)">real opportunities.</span></h1>
+    <p>Your business workspace for discovering ideas, planning your launch, and creating marketing content — all in one place.</p>
+    <button onclick="document.querySelector('#ideas').scrollIntoView({behavior:'smooth'})">Build my business →</button>
+  </section>
+
+  <div class="cards">
+    <article class="card">
+      <div class="icon">💡</div><h2>Idea Generator</h2>
+      <p>Explore business ideas that fit your goals and budget.</p>
+      <button onclick="go('ideas')">Explore ideas</button>
+    </article>
+    <article class="card">
+      <div class="icon">🚀</div><h2>Launch Planner</h2>
+      <p>Turn an idea into practical next steps.</p>
+      <button onclick="go('planner')">Plan my launch</button>
+    </article>
+    <article class="card">
+      <div class="icon">📣</div><h2>Marketing Studio</h2>
+      <p>Create a first draft for your next promotion.</p>
+      <button onclick="go('marketing')">Create content</button>
+    </article>
+  </div>
+
+  <section class="section card" id="ideas">
+    <div class="eyebrow">TOOL 01</div><h2>Business Idea Generator</h2>
+    <p>Choose your interests and available budget to generate a starting shortlist.</p>
+    <label for="interest">Business area</label>
+    <select id="interest">
+      <option>Online services</option><option>Clothing and sneakers</option>
+      <option>Digital products</option><option>Education</option>
+      <option>Food and local services</option>
+    </select>
+    <label for="budget">Starting budget (R)</label>
+    <input id="budget" type="number" min="0" value="0">
+    <button onclick="ideas()">Generate ideas</button>
+    <div id="ideasOut" class="output hidden" aria-live="polite"></div>
+  </section>
+
+  <section class="section card" id="planner">
+    <div class="eyebrow">TOOL 02</div><h2>Business Launch Planner</h2>
+    <p>Get a simple action plan for your chosen business.</p>
+    <label for="business">Your business idea</label>
+    <input id="business" placeholder="e.g. Social media adverts for shops">
+    <label for="customer">Who will buy it?</label>
+    <input id="customer" placeholder="e.g. Local clothing sellers">
+    <button onclick="plan()">Create launch plan</button>
+    <div id="planOut" class="output hidden" aria-live="polite"></div>
+  </section>
+
+  <section class="section card" id="marketing">
+    <div class="eyebrow">TOOL 03</div><h2>Marketing Studio</h2>
+    <p>Create a promotional text draft for a product or service.</p>
+    <label for="product">Product or service</label>
+    <input id="product" placeholder="e.g. Fresh sneaker collection">
+    <label for="audience">Target customer</label>
+    <input id="audience" placeholder="e.g. Sneaker lovers">
+    <label for="offer">Offer or price (optional)</label>
+    <input id="offer" placeholder="e.g. From R299">
+    <button onclick="marketing()">Generate advert</button>
+    <div id="marketingOut" class="output hidden" aria-live="polite"></div>
+  </section>
+  <footer>NOVA AI · An independent business-building project<br>Early prototype · Verify plans, costs and claims before acting.</footer>
+</main>
+<script>
+function go(id){document.getElementById(id).scrollIntoView({behavior:"smooth"})}
+function show(id,text){const e=document.getElementById(id);e.textContent=text;e.classList.remove("hidden")}
+function ideas(){
+ const area=document.getElementById("interest").value;
+ const b=Math.max(0,Number(document.getElementById("budget").value)||0);
+ const options={
+ "Online services":["Create product adverts for local businesses","Offer social media page setup","Write product descriptions for online sellers"],
+ "Clothing and sneakers":["Create promotional posts for sneaker shops","Help sellers catalogue products online","Offer a pre-order interest-list service"],
+ "Digital products":["Create printable planners","Design original activity worksheets","Build simple business templates"],
+ "Education":["Offer beginner digital-skills tutoring","Create revision worksheets","Prepare study planners"],
+ "Food and local services":["Create menus for local food sellers","Make promotional flyers for service providers","Set up a simple online enquiry page"]
+ };
+ show("ideasOut","YOUR STARTING SHORTLIST\n\n"+options[area].map((x,i)=>(i+1)+". "+x).join("\n")+"\n\nBUDGET: R"+b+"\n\nNEXT ACTION\nChoose one idea, speak to five potential customers, and ask what they would actually pay for. These are suggestions, not validated market research. Check any operating costs before making a commitment.");
+}
+function plan(){
+ const b=document.getElementById("business").value.trim();
+ const c=document.getElementById("customer").value.trim();
+ if(!b){show("planOut","Enter your business idea first.");return}
+ show("planOut","YOUR LAUNCH PLAN\n\nBUSINESS: "+b+"\nTARGET CUSTOMER: "+(c||"Customers you identify through research")+"\n\nDAY 1 — Define one clear service and the problem it solves.\n\nDAY 2 — Research five potential customers and existing alternatives.\n\nDAY 3 — Create one sample that demonstrates your service.\n\nDAY 4 — Ask potential customers for honest feedback.\n\nDAY 5 — Offer a small, clearly priced pilot.\n\nDAY 6 — Deliver carefully and request feedback.\n\nDAY 7 — Review results, costs and next steps.\n\nKeep spending at R0 until you verify what is genuinely free and have evidence of demand.");
+}
+function marketing(){
+ const p=document.getElementById("product").value.trim();
+ const a=document.getElementById("audience").value.trim();
+ const o=document.getElementById("offer").value.trim();
+ if(!p){show("marketingOut","Enter your product or service first.");return}
+ show("marketingOut","✨ DISCOVER SOMETHING NEW!\n\nLooking for "+p+"?\n\n"+(a?"Made with "+a+" in mind. ":"")+"We're here to help you find what suits you.\n\n"+(o?"OFFER: "+o+"\n\n":"")+"📩 Message us to learn more and place an enquiry.\n\nYOUR NEXT STEP\nAdd your business name, real contact details, and a genuine product photo before publishing. Check that every claim and price is accurate.");
+}
+</script>
+</body>
+</html>
