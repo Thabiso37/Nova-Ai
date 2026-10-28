@@ -675,6 +675,57 @@ async function loadMyProducts() {
 }
 
 
+async function loadSellerOrders() {
+  const msg = document.getElementById("sellerOrdersMsg");
+  const box = document.getElementById("sellerOrdersList");
+  const btn = document.getElementById("loadSellerOrders");
+
+  if (!user) {
+    msg.textContent = "Please sign in to view seller orders.";
+    box.innerHTML = "";
+    return;
+  }
+
+  msg.textContent = "Loading your orders...";
+  box.innerHTML = "";
+  btn.disabled = true;
+
+  try {
+    const { data, error } = await sb.rpc("get_my_seller_orders");
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      msg.textContent = "No orders found for your products yet.";
+      return;
+    }
+
+    msg.textContent = "Orders found: " + data.length;
+
+    box.innerHTML = data.map(o => `
+      <div class="panel" style="margin:10px 0">
+        <h4>${esc(o.product_name)}</h4>
+        <p><b>Order reference:</b> ${esc(o.order_id)}</p>
+        <p><b>Customer:</b> ${esc(o.customer_name)}</p>
+        <p><b>Phone:</b> ${esc(o.customer_phone)}</p>
+        <p><b>Delivery address:</b> ${esc(o.delivery_address)}</p>
+        <p><b>Quantity:</b> ${esc(o.quantity)}</p>
+        <p><b>Unit price:</b> ${cash(o.unit_price)}</p>
+        <p><b>Item total:</b> ${cash(o.line_total)}</p>
+        <p><b>Order status:</b> ${esc(o.order_status)}</p>
+        <p><b>Payment status:</b> ${esc(o.payment_status)}</p>
+        <p class="muted">${esc(o.order_created_at)}</p>
+      </div>
+    `).join("");
+  } catch (err) {
+    msg.textContent = "Could not load seller orders: " + err.message;
+    box.innerHTML = "";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.getElementById("loadSellerOrders")
+  .addEventListener("click", loadSellerOrders);
 async function editMyProduct(id) {
   const { data: rows, error } = await sb
     .from("Products")
