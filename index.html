@@ -417,8 +417,9 @@ document.getElementById("sellerForm").onsubmit = async e => {
 
     e.target.reset();
     message("sellerMsg", "Product published successfully!");
-    await loadShared();
-    go("shop");
+await loadShared();
+await loadMyProducts();
+go("shop");
 
   } catch (err) {
     message("sellerMsg", "Publishing failed: " + err.message, true);
