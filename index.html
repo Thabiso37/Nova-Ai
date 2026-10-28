@@ -305,7 +305,13 @@ else{updateUser(null);message("authMsg","You have signed out.")}
 document.getElementById("sellerForm").onsubmit=async e=>{
 e.preventDefault();
 if(!user){message("sellerMsg","Please sign in before publishing.",true);return}
-let{data:s}=await sb.auth.getSession(),u=s?.session?.user;
+let { data: authData, error: authError } = await sb.auth.getUser();
+let u = authData?.user;
+if (authError || !u) {
+  updateUser(null);
+  message("sellerMsg", "Your session could not be verified. Please sign in again.", true);
+  return;
+}
 if(!u){updateUser(null);message("sellerMsg","Your session expired. Please sign in again.",true);return}
 let seller=document.getElementById("sellerName").value.trim(),name=document.getElementById("productName").value.trim(),category=document.getElementById("category").value,price=Number(document.getElementById("price").value),description=document.getElementById("description").value.trim(),image=safeImg(document.getElementById("image").value.trim());
 if(!seller||!name||!description||!Number.isFinite(price)||price<1){message("sellerMsg","Check all required fields and enter a valid price.",true);return}
