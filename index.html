@@ -466,6 +466,119 @@ initCategories();
 render();
 renderCart();
 loadShared();
+async function loadMyProducts() {
+  const box = document.getElementById("myProductsList");
+  const msg = document.getElementById("myProductsMsg");
+
+  if (!user) {
+    msg.textContent = "Please sign in to manage your products.";
+    box.innerHTML = "";
+    return;
+  }
+
+  msg.textContent = "Loading your products…";
+
+  const { data, error } = await sb
+    .from("Products")
+    .select("id,name,description,price,category,seller_id")
+    .eq("seller_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    msg.textContent = "Could not load products: " + error.message;
+    box.innerHTML = "";
+    return;
+  }
+
+  msg.textContent = data.length
+    ? "Your published products: " + data.length
+    : "You haven't published any products yet.";
+
+  box.innerHTML = data.map(p => `
+    <div class="panel" style="margin:10px 0">
+      <h4>${esc(p.name)}</h4>
+      <p>${esc(p.category)} · ${cash(p.price)}</p>
+      <p>${esc(p.description || "")}</p>
+      <button class="btn light" data-edit-product="${esc(p.id)}">Edit</button>
+      <button class="btn outline" data-delete-product="${esc(p.id)}">Delete</button>
+    </div>
+  `).join("");
+
+  box.querySelectorAll("[data-edit-product]").forEach(b => {
+    b.onclick = () => editMyProduct(b.dataset.editProduct);
+  });
+
+  box.querySelectorAll("[data-delete-product]").forEach(b => {
+    b.onclick = () => deleteMyProduct(b.dataset.deleteProduct);
+  });
+}
+
+async function editMyProduct(id) {
+  const { data: rows, error } = await sb
+    .from("Products")
+    .select("id,name,description,price")
+    .eq("id", id)
+    .eq("seller_id", user.id);
+
+  if (error || !rows || !rows.length) {
+    alert("Product not found or you do not have permission to edit it.");
+    return;
+  }
+
+  const p = rows[0];
+  const name = prompt("Product name:", p.name);
+  if (name === null) return;
+
+  const priceText = prompt("Price in rand:", p.price);
+  if (priceText === null) return;
+
+  const price = Number(priceText);
+  if (!name.trim() || !Number.isFinite(price) || price < 1) {
+    alert("Enter a product name and a valid price.");
+    return;
+  }
+
+  const description = prompt("Product description:", p.description || "");
+  if (description === null) return;
+
+  const { error: updateError } = await sb
+    .from("Products")
+    .update({
+      name: name.trim(),
+      price,
+      description: description.trim()
+    })
+    .eq("id", id)
+    .eq("seller_id", user.id);
+
+  if (updateError) {
+    alert("Update failed: " + updateError.message);
+    return;
+  }
+
+  alert("Product updated.");
+  await loadShared();
+  await loadMyProducts();
+}
+
+async function deleteMyProduct(id) {
+  if (!user || !confirm("Delete this product permanently?")) return;
+
+  const { error } = await sb
+    .from("Products")
+    .delete()
+    .eq("id", id)
+    .eq("seller_id", user.id);
+
+  if (error) {
+    alert("Delete failed: " + error.message);
+    return;
+  }
+
+  alert("Product deleted.");
+  await loadShared();
+  await loadMyProducts();
+}
 </script>
 </body>
 </html>
