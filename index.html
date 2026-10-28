@@ -310,7 +310,15 @@ if(!u){updateUser(null);message("sellerMsg","Your session expired. Please sign i
 let seller=document.getElementById("sellerName").value.trim(),name=document.getElementById("productName").value.trim(),category=document.getElementById("category").value,price=Number(document.getElementById("price").value),description=document.getElementById("description").value.trim(),image=safeImg(document.getElementById("image").value.trim());
 if(!seller||!name||!description||!Number.isFinite(price)||price<1){message("sellerMsg","Check all required fields and enter a valid price.",true);return}
 let b=document.getElementById("publish");b.disabled=true;b.textContent="Publishing…";
-let{error}=await sb.from("Products").insert({name,description,price,category,image_url:image||null,seller_name:seller});
+let{error}=await sb.from("Products").insert({
+  name,
+  description,
+  price,
+  category,
+  image_url:image||null,
+  seller_name:seller,
+  seller_id:u.id
+});
 b.disabled=false;b.textContent="Publish shared listing";
 if(error){message("sellerMsg","Could not publish: "+error.message,true);return}
 e.target.reset();message("sellerMsg","Listing published to the shared marketplace.");await loadShared();go("shop");
