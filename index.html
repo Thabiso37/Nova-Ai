@@ -198,9 +198,42 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 <div class="panel">
 <div id="cartItems"></div>
 <div class="total"><span>Total</span><span id="total">R0.00</span></div>
+
 <button class="btn outline" onclick="clearCart()">Clear cart</button>
-<button class="btn primary" onclick="checkout()">Continue</button>
-<div id="checkoutMsg" class="msg"></div>
+<button class="btn primary" onclick="checkout()">Continue to checkout</button>
+
+<div id="checkoutMsg" class="msg" aria-live="polite"></div>
+
+<form id="checkoutForm" class="hidden">
+  <h3>Customer details</h3>
+  <p class="muted">Sign in using your NOVAAI account before placing an order.</p>
+
+  <div class="field">
+    <label for="customerName">Full name *</label>
+    <input id="customerName" maxlength="100" required>
+  </div>
+
+  <div class="field">
+    <label for="customerPhone">Phone number *</label>
+    <input id="customerPhone" type="tel" maxlength="30"
+      autocomplete="tel" required>
+  </div>
+
+  <div class="field">
+    <label for="deliveryAddress">Delivery address *</label>
+    <textarea id="deliveryAddress" maxlength="500"
+      autocomplete="street-address" required></textarea>
+  </div>
+
+  <p class="notice">
+    Orders are submitted for seller confirmation.
+    No online payment is taken at this stage.
+  </p>
+
+  <button class="btn primary" id="placeOrderBtn" type="submit">
+    Place order
+  </button>
+</form>
 </div>
 </section>
 </main>
