@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -142,9 +143,7 @@ hr{border:0;border-top:1px solid var(--line);margin:17px 0}
 </style>
 </head>
 <body>
-
 <div class="topbar">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
-
 <header>
   <div class="header-inner">
     <a class="logo" href="#" aria-label="Nova AI home">NOVA<span>AI</span></a>
@@ -165,7 +164,6 @@ hr{border:0;border-top:1px solid var(--line);margin:17px 0}
     <a href="#cart">My Cart</a>
   </nav>
 </header>
-
 <main class="container">
   <section class="hero">
     <div>
@@ -179,20 +177,17 @@ hr{border:0;border-top:1px solid var(--line);margin:17px 0}
     </div>
     <div class="hero-art" aria-hidden="true">🛍️</div>
   </section>
-
   <section class="stats" aria-label="Marketplace overview">
     <div class="stat"><strong id="productStat">0</strong><span>Products listed</span></div>
     <div class="stat"><strong id="categoryStat">8</strong><span>Shopping categories</span></div>
     <div class="stat"><strong>R0</strong><span>Listing fee in this demo</span></div>
   </section>
-
   <section class="section" id="categories">
     <div class="section-head">
       <div><h2>Shop by category</h2><p>Find what you need, all in one place.</p></div>
     </div>
     <div class="categories" id="categoryGrid"></div>
   </section>
-
   <section class="section" id="shop">
     <div class="section-head">
       <div><h2 id="shopHeading">Explore products</h2><p>Discover products from our demo catalogue.</p></div>
@@ -210,7 +205,6 @@ hr{border:0;border-top:1px solid var(--line);margin:17px 0}
     </div>
     <div class="product-grid" id="productGrid"></div>
   </section>
-
   <section class="section" id="seller">
     <div class="section-head">
       <div><h2>Nova Seller Portal</h2><p>Showcase a product in the local demo catalogue.</p></div>
@@ -260,7 +254,6 @@ hr{border:0;border-top:1px solid var(--line);margin:17px 0}
       </div>
     </div>
   </section>
-
   <section class="section" id="assistant">
     <div class="assistant">
       <div class="eyebrow">NOVA INTELLIGENCE</div>
@@ -272,7 +265,6 @@ hr{border:0;border-top:1px solid var(--line);margin:17px 0}
       <div class="assistant-output" id="assistantOutput" aria-live="polite">Hi! Tell me what you're shopping for, your budget, or which product you want help listing.</div>
     </div>
   </section>
-
   <section class="section" id="cart">
     <div class="section-head">
       <div><h2>🛒 Your shopping cart</h2><p>Review your demo cart before continuing.</p></div>
@@ -287,7 +279,6 @@ hr{border:0;border-top:1px solid var(--line);margin:17px 0}
     </div>
   </section>
 </main>
-
 <footer>
   <div class="footer-inner">
     <div>
@@ -301,9 +292,7 @@ hr{border:0;border-top:1px solid var(--line);margin:17px 0}
   </div>
   <div class="footer-inner"><small>© <span id="year"></span> Nova AI · Free prototype · No paid AI API required</small></div>
 </footer>
-
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-
 <script>
 "use strict";
 
@@ -319,7 +308,7 @@ const CATEGORIES = [
 ];
 
 const DEMO_PRODUCTS = [
-  {id:"demo-1",name:"Wireless Bluetooth Headphones",category:"Electronics",price:349, seller:"Nova Demo Store",description:"Wireless listening for music, calls and everyday use. Check compatibility before buying.",image:"https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80",tag:"Popular"},
+  {id:"demo-1",name:"Wireless Bluetooth Headphones",category:"Electronics",price:349,seller:"Nova Demo Store",description:"Wireless listening for music, calls and everyday use. Check compatibility before buying.",image:"https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80",tag:"Popular"},
   {id:"demo-2",name:"Everyday Casual T-Shirt",category:"Fashion",price:159,seller:"Nova Demo Store",description:"A versatile casual top. Confirm available sizes, colours and material with the seller.",image:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80",tag:"Everyday"},
   {id:"demo-3",name:"Classic Street Sneakers",category:"Sneakers",price:599,seller:"Nova Demo Store",description:"Streetwear-inspired footwear. Check sizing, authenticity and availability before purchasing.",image:"https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80",tag:"Trending"},
   {id:"demo-4",name:"Minimal Desk Lamp",category:"Home & Living",price:279,seller:"Nova Demo Store",description:"A simple lamp for a desk or bedside table. Confirm power requirements and dimensions.",image:"https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=700&q=80",tag:"Home"},
@@ -342,27 +331,27 @@ let products = loadProducts();
 let cart = loadCart();
 let activeCategory = "All";
 
-function safeRead(key, fallback) {
+function safeRead(key,fallback) {
   try {
     const value = localStorage.getItem(key);
     return value ? JSON.parse(value) : fallback;
-  } catch (error) {
+  } catch(error) {
     return fallback;
   }
 }
 
 function loadProducts() {
-  const saved = safeRead(STORAGE.products, []);
+  const saved = safeRead(STORAGE.products,[]);
   if (!Array.isArray(saved)) return [...DEMO_PRODUCTS];
   const clean = saved.filter(p =>
     p && typeof p.id==="string" && typeof p.name==="string" &&
     typeof p.category==="string" && Number.isFinite(Number(p.price))
   );
-  return [...DEMO_PRODUCTS, ...clean.filter(p => !String(p.id).startsWith("demo-"))];
+  return [...DEMO_PRODUCTS,...clean.filter(p => !String(p.id).startsWith("demo-"))];
 }
 
 function loadCart() {
-  const saved = safeRead(STORAGE.cart, []);
+  const saved = safeRead(STORAGE.cart,[]);
   return Array.isArray(saved)
     ? saved.filter(i => i && typeof i.id==="string" && Number.isInteger(i.qty) && i.qty>0)
     : [];
@@ -371,34 +360,34 @@ function loadCart() {
 function saveProducts() {
   try {
     const userProducts = products.filter(p => !String(p.id).startsWith("demo-"));
-    localStorage.setItem(STORAGE.products, JSON.stringify(userProducts));
-  } catch (error) {
+    localStorage.setItem(STORAGE.products,JSON.stringify(userProducts));
+  } catch(error) {
     showToast("Browser storage is full or unavailable. Your listing may not be saved.");
   }
 }
 
 function saveCart() {
   try {
-    localStorage.setItem(STORAGE.cart, JSON.stringify(cart));
-  } catch (error) {
+    localStorage.setItem(STORAGE.cart,JSON.stringify(cart));
+  } catch(error) {
     showToast("Could not save your cart in this browser.");
   }
 }
 
 function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, char => ({
+  return String(value ?? "").replace(/[&<>"']/g,char => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   })[char]);
 }
 
 function money(value) {
-  return new Intl.NumberFormat("en-ZA", {
+  return new Intl.NumberFormat("en-ZA",{
     style:"currency",currency:"ZAR",minimumFractionDigits:2
   }).format(Number(value)||0);
 }
 
 function categoryIcon(name) {
-  const found = CATEGORIES.find(c => c.name === name);
+  const found = CATEGORIES.find(c => c.name===name);
   return found ? found.icon : "📦";
 }
 
@@ -406,7 +395,7 @@ function safeImageURL(value) {
   try {
     const url = new URL(value);
     if (url.protocol==="https:" || url.protocol==="http:") return url.href;
-  } catch (error) {}
+  } catch(error) {}
   return "";
 }
 
@@ -420,7 +409,7 @@ function renderCategories() {
   ].join("");
 
   grid.querySelectorAll("[data-category]").forEach(button => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click",() => {
       activeCategory = button.dataset.category;
       document.getElementById("categoryFilter").value = activeCategory;
       document.getElementById("shopHeading").textContent =
@@ -474,10 +463,10 @@ function renderProducts() {
     }).join("");
 
     grid.querySelectorAll("[data-add]").forEach(button =>
-      button.addEventListener("click", () => addToCart(button.dataset.add))
+      button.addEventListener("click",() => addToCart(button.dataset.add))
     );
     grid.querySelectorAll("[data-info]").forEach(button =>
-      button.addEventListener("click", () => showProductInfo(button.dataset.info))
+      button.addEventListener("click",() => showProductInfo(button.dataset.info))
     );
   }
 
@@ -508,7 +497,7 @@ function addToCart(id) {
   const product = products.find(p => p.id===id);
   if (!product) return;
   const item = cart.find(i => i.id===id);
-  if (item) item.qty = Math.min(item.qty+1, 99);
+  if (item) item.qty = Math.min(item.qty+1,99);
   else cart.push({id,qty:1});
   saveCart();
   renderCart();
@@ -595,7 +584,7 @@ function demoCheckout() {
   message.textContent = "Demo only: no order was placed and no payment was taken. A real checkout needs a secure backend, seller order management and a supported payment provider.";
 }
 
-document.getElementById("sellerForm").addEventListener("submit", function(event) {
+document.getElementById("sellerForm").addEventListener("submit",function(event) {
   event.preventDefault();
 
   const seller = document.getElementById("sellerName").value.trim();
@@ -712,7 +701,7 @@ function showToast(message) {
   toastTimer = setTimeout(()=>toast.classList.add("hidden"),2600);
 }
 
-document.getElementById("searchForm").addEventListener("submit", function(event) {
+document.getElementById("searchForm").addEventListener("submit",function(event) {
   event.preventDefault();
   renderProducts();
   scrollToSection("shop");
@@ -734,8 +723,10 @@ renderCategorySelects();
 renderCategories();
 renderProducts();
 renderCart();
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
+<script>
   const NOVA_SUPABASE_URL = 'https://nxplffvklkopwfjaqexo.supabase.co';
   const NOVA_SUPABASE_KEY = 'sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ';
 
