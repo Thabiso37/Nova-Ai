@@ -1,739 +1,334 @@
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#101526">
-<meta name="description" content="Nova AI Marketplace — discover products, shop smarter and sell online in South Africa.">
-<title>Nova AI Marketplace | Shop Smart. Sell More.</title>
+<title>NOVAAI | South African Marketplace</title>
 <style>
-:root {
-  --bg:#f5f7fb;--surface:#fff;--ink:#171c2d;--muted:#70778b;
-  --primary:#6654f5;--primary-dark:#4b3bd2;--dark:#101526;
-  --line:#e8eaf2;--green:#16885e;--radius:17px;
-}
+:root{--bg:#f5f7fb;--ink:#171c2d;--muted:#70778b;--p:#6654f5;--dark:#101526;--line:#e8eaf2}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Arial,sans-serif}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 a{color:inherit;text-decoration:none}
-button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #b7b0ff;outline-offset:2px}
-.topbar{background:var(--dark);color:#fff;padding:10px 5%;text-align:center;font-size:12px}
-header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
-.header-inner{max-width:1250px;margin:auto;padding:14px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
-.logo{font-size:24px;font-weight:900;letter-spacing:-1px;white-space:nowrap}
-.logo span{color:var(--primary)}
-.search{flex:1;min-width:180px;display:flex;background:#f3f4f9;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
-.search input{min-width:0;flex:1;padding:12px;border:0;background:transparent;outline:none}
-.search button{border:0;background:var(--primary);color:#fff;padding:0 16px;font-weight:700}
-.header-actions{display:flex;gap:8px;align-items:center}
-.btn{border:0;border-radius:10px;padding:11px 15px;font-weight:750;display:inline-flex;align-items:center;justify-content:center;gap:7px}
-.btn-primary{background:var(--primary);color:#fff}
-.btn-primary:hover{background:var(--primary-dark)}
-.btn-light{background:#f0efff;color:var(--primary-dark)}
-.btn-outline{background:#fff;border:1px solid var(--line);color:var(--ink)}
-.btn-danger{background:#fff0f0;color:#b52828}
-.btn-small{font-size:12px;padding:8px 10px}
-.container{max-width:1250px;margin:auto;padding:22px 20px}
-nav{display:flex;gap:9px;overflow-x:auto;padding:12px 20px;max-width:1250px;margin:auto}
-nav a{white-space:nowrap;font-size:13px;font-weight:700;color:#555d73;padding:8px 12px;border-radius:9px}
-nav a:hover{background:#f0efff;color:var(--primary)}
-.hero{background:linear-gradient(120deg,#171b38,#4031a5 65%,#8068ff);border-radius:25px;color:white;padding:38px;display:grid;grid-template-columns:1.4fr .8fr;gap:20px;align-items:center;overflow:hidden}
-.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:2px;font-weight:800;color:#d5d0ff}
-.hero h1{font-size:clamp(30px,5vw,52px);line-height:1.07;letter-spacing:-2px;margin:14px 0}
-.hero p{color:#e0dfff;line-height:1.7;max-width:560px}
-.hero-art{font-size:100px;text-align:center;filter:drop-shadow(0 14px 18px #15112d66)}
-.hero-buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
-.hero .btn-light{background:white;color:#30228e}
-.hero .btn-outline{background:transparent;border-color:#aaa1ff;color:white}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
-.stat{padding:16px;background:#fff;border:1px solid var(--line);border-radius:14px}
+.top{background:var(--dark);color:white;text-align:center;padding:10px;font-size:12px}
+header{background:white;position:sticky;top:0;z-index:5;border-bottom:1px solid var(--line)}
+.head,nav,main,.foot{max-width:1200px;margin:auto;padding:15px 20px}
+.head{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.logo{font-size:24px;font-weight:900}
+.logo span{color:var(--p)}
+.search{display:flex;flex:1;min-width:200px}
+.search input{flex:1;min-width:0}
+.search input,input,select,textarea{padding:11px;border:1px solid #dfe2ed;border-radius:9px}
+.btn{border:0;border-radius:9px;padding:11px 14px;font-weight:750}
+.primary{background:var(--p);color:white}
+.light{background:#f0efff;color:#4939cc}
+.outline{background:white;border:1px solid var(--line)}
+nav{display:flex;gap:16px;overflow:auto;padding-top:0;padding-bottom:12px;font-size:13px;font-weight:700}
+.hero{background:linear-gradient(120deg,#171b38,#4031a5 65%,#8068ff);border-radius:22px;color:white;padding:35px;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.hero h1{font-size:clamp(32px,5vw,52px);line-height:1.1;margin:12px 0}
+.hero p{line-height:1.7;max-width:650px;color:#e0dfff}
+.hero-art{font-size:85px}
+.stats,.two{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+.stat,.panel{background:white;border:1px solid var(--line);border-radius:15px;padding:17px}
 .stat strong{font-size:22px;display:block}
-.stat span{color:var(--muted);font-size:12px}
-.section{margin-top:30px;scroll-margin-top:145px}
-.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
-.section-head h2{margin:0;font-size:23px;letter-spacing:-.6px}
-.section-head p{margin:5px 0 0;color:var(--muted);font-size:13px}
-.categories{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px}
-.cat{border:1px solid var(--line);border-radius:14px;background:#fff;padding:15px 5px;text-align:center;color:var(--ink)}
-.cat:hover,.cat.active{border-color:var(--primary);background:#f0efff}
-.cat .emoji{font-size:27px;display:block;margin-bottom:7px}
-.cat span:last-child{font-size:11px;font-weight:750}
-.filters{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px}
-.filters input,.filters select,.field input,.field select,.field textarea{width:100%;padding:12px;border:1px solid #dfe2ed;border-radius:10px;background:#fff;color:var(--ink)}
-.filters select{width:auto;max-width:100%}
-.product-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
-.product{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;min-width:0;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s}
-.product:hover{transform:translateY(-3px);box-shadow:0 8px 25px #2424470d}
-.product-img{height:180px;background:#eeeff5;position:relative;overflow:hidden}
-.product-img img{width:100%;height:100%;object-fit:cover;display:block}
-.product-tag{position:absolute;top:10px;left:10px;background:#fff;padding:5px 8px;border-radius:7px;font-size:10px;font-weight:800}
-.product-body{padding:13px;display:flex;flex-direction:column;flex:1}
-.product-category{color:var(--primary);font-size:10px;text-transform:uppercase;letter-spacing:.6px;font-weight:850}
-.product h3{font-size:14px;line-height:1.4;margin:7px 0;overflow-wrap:anywhere}
-.product-desc{font-size:12px;line-height:1.5;color:var(--muted);margin:0 0 9px}
-.product-price{font-size:21px;font-weight:900;margin-top:auto}
-.product-seller{font-size:11px;color:var(--muted);margin:4px 0 12px}
-.product-actions{display:flex;gap:7px}
-.product-actions button{flex:1}
-.empty{padding:32px 15px;text-align:center;color:var(--muted);background:#fff;border:1px dashed #d8dbea;border-radius:15px;grid-column:1/-1}
-.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.field{margin-bottom:13px}
-.field label{display:block;font-size:12px;font-weight:800;margin-bottom:6px}
-.field textarea{resize:vertical;min-height:85px}
-.field small{display:block;color:var(--muted);font-size:11px;margin-top:5px}
-.panel h3{margin-top:0}
-.notice{background:#f1efff;border:1px solid #e0dcff;border-radius:12px;padding:12px;font-size:12px;line-height:1.6;color:#41349a;margin-bottom:15px}
-.success{color:var(--green);font-size:13px;margin-top:12px}
-.assistant{background:linear-gradient(120deg,#171b38,#31236f);color:#fff;border-radius:20px;padding:24px}
-.assistant h2{margin-top:0}
-.assistant p{color:#d8d5f5;font-size:13px;line-height:1.7}
-.assistant textarea{width:100%;min-height:90px;border-radius:11px;border:1px solid #595184;background:#211d46;color:#fff;padding:12px}
-.assistant textarea::placeholder{color:#c1bbdf}
-.assistant-output{margin-top:13px;background:#fff;color:var(--ink);border-radius:12px;padding:15px;white-space:pre-wrap;font-size:13px;line-height:1.65;overflow-wrap:anywhere}
-.assistant .btn-light{margin-top:10px}
-.cart-list{display:grid;gap:10px}
-.cart-item{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:12px 0}
-.cart-item h4{margin:0 0 5px;font-size:13px}
-.cart-item p{margin:0;color:var(--muted);font-size:12px}
-.cart-total{display:flex;justify-content:space-between;font-size:20px;font-weight:900;padding:17px 0}
-footer{background:var(--dark);color:#fff;margin-top:45px;padding:32px 20px}
-.footer-inner{max-width:1250px;margin:auto;display:flex;justify-content:space-between;gap:25px;flex-wrap:wrap}
-footer p{color:#b9bfd0;font-size:12px;line-height:1.7;max-width:520px}
-footer small{color:#a6abc0}
-.badge{display:inline-block;border-radius:99px;background:#e8fff5;color:#08774f;font-size:10px;font-weight:800;padding:5px 8px}
-hr{border:0;border-top:1px solid var(--line);margin:17px 0}
+.stat span,.muted{color:var(--muted);font-size:12px}
+.section{margin-top:28px;scroll-margin-top:140px}
+.section h2{margin:0 0 5px}
+.section-head{margin-bottom:14px}
+.cats{display:grid;grid-template-columns:repeat(8,1fr);gap:9px}
+.cat{background:white;border:1px solid var(--line);border-radius:12px;padding:12px 4px;text-align:center}
+.cat span{display:block}
+.cat .emoji{font-size:24px;margin-bottom:5px}
+.cat.active{border-color:var(--p);background:#f0efff}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.product{background:white;border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.prodimg{height:160px;background:#eee}
+.prodimg img{width:100%;height:100%;object-fit:cover}
+.prodbody{padding:12px;display:flex;flex:1;flex-direction:column}
+.prodbody h3{font-size:14px;margin:7px 0}
+.prodbody p{font-size:12px;color:var(--muted);line-height:1.5}
+.price{font-size:20px;font-weight:900;margin-top:auto}
+.actions{display:flex;gap:6px;margin-top:10px}
+.actions button{flex:1;padding:8px 5px;font-size:12px}
+.two{grid-template-columns:1fr 1fr}
+.field{margin:12px 0}
+.field label{display:block;font-size:12px;font-weight:800;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%}
+textarea{min-height:85px}
+.notice{padding:12px;background:#f0efff;border:1px solid #e0dcff;border-radius:10px;font-size:12px;line-height:1.6;color:#41349a}
+.msg{font-size:13px;margin-top:10px}
+.error{color:#b52828}
+.success{color:#16885e}
 .hidden{display:none!important}
-.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#171b2d;color:white;padding:12px 18px;border-radius:12px;z-index:50;font-size:13px;box-shadow:0 8px 30px #0003;max-width:90%;text-align:center}
-@media(max-width:850px){
- .categories{grid-template-columns:repeat(4,minmax(0,1fr))}
- .product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
- .hero{padding:28px;grid-template-columns:1fr .5fr}
- .hero-art{font-size:65px}
-}
-@media(max-width:600px){
- .header-inner{padding:12px;gap:10px}
- .logo{font-size:22px}
- .search{order:3;flex-basis:100%}
- .header-actions{margin-left:auto}
- .header-actions .btn{padding:9px;font-size:12px}
- nav{padding:8px 12px}
- .container{padding:15px 12px}
- .hero{padding:23px 18px;grid-template-columns:1fr}
- .hero-art{display:none}
- .hero h1{font-size:36px}
- .stats{gap:8px}
- .stat{padding:12px 9px}
- .stat strong{font-size:18px}
- .stat span{font-size:10px}
- .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
- .product-img{height:145px}
- .product-body{padding:10px}
- .product h3{font-size:13px}
- .product-price{font-size:18px}
- .product-actions .btn{padding:9px 5px;font-size:11px}
- .two-col{grid-template-columns:1fr}
- .panel{padding:16px}
- .section-head h2{font-size:20px}
- .filters select{flex:1;min-width:120px}
-}
+.cartitem{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.total{display:flex;justify-content:space-between;font-size:20px;font-weight:900;padding:15px 0}
+.assistant{background:linear-gradient(120deg,#171b38,#31236f);color:white;border-radius:18px;padding:22px}
+.assistant textarea{width:100%;background:#211d46;color:white}
+.out{background:white;color:var(--ink);padding:13px;border-radius:10px;margin-top:10px;white-space:pre-wrap;font-size:13px}
+footer{background:var(--dark);color:white;margin-top:40px;padding:28px 20px}
+footer .foot{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
+.badge{font-size:11px;background:#e8fff5;color:#08774f;border-radius:20px;padding:6px 9px}
+.toast{position:fixed;bottom:15px;left:50%;transform:translateX(-50%);background:#171b2d;color:white;padding:12px 16px;border-radius:10px;z-index:10}
+@media(max-width:800px){.cats{grid-template-columns:repeat(4,1fr)}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hero-art{font-size:60px}}
+@media(max-width:560px){.head,main,nav{padding-left:12px;padding-right:12px}.search{order:3;flex-basis:100%}.hero{padding:23px}.hero-art{display:none}.stats{gap:7px}.stat{padding:10px}.stat strong{font-size:18px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.prodimg{height:130px}.two{grid-template-columns:1fr}.cats{gap:6px}.cat{font-size:11px}}
 </style>
 </head>
 <body>
-<div class="topbar">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
+<div class="top">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
 <header>
-  <div class="header-inner">
-    <a class="logo" href="#" aria-label="Nova AI home">NOVA<span>AI</span></a>
-    <form class="search" id="searchForm">
-      <input id="searchInput" type="search" placeholder="Search products, brands or categories..." aria-label="Search products">
-      <button type="submit">Search</button>
-    </form>
-    <div class="header-actions">
-      <button class="btn btn-outline" onclick="scrollToSection('seller')">Sell</button>
-      <button class="btn btn-light" onclick="scrollToSection('cart')">🛒 <span id="cartCount">0</span></button>
-    </div>
-  </div>
-  <nav>
-    <a href="#shop">Shop</a>
-    <a href="#categories">Categories</a>
-    <a href="#seller">Seller Portal</a>
-    <a href="#assistant">Nova AI</a>
-    <a href="#cart">My Cart</a>
-  </nav>
+<div class="head">
+<a class="logo" href="#">NOVA<span>AI</span></a>
+<form class="search" id="searchForm">
+<input id="search" placeholder="Search products, brands or categories…">
+<button class="btn primary">Search</button>
+</form>
+<button class="btn outline" onclick="go('seller')">Sell</button>
+<button class="btn light" onclick="go('cart')">🛒 <span id="count">0</span></button>
+</div>
+<nav>
+<a href="#shop">Shop</a><a href="#categories">Categories</a>
+<a href="#seller">Seller Portal</a><a href="#assistant">Nova AI</a><a href="#cart">My Cart</a>
+</nav>
 </header>
-<main class="container">
-  <section class="hero">
-    <div>
-      <div class="eyebrow">YOUR MARKETPLACE. YOUR OPPORTUNITY.</div>
-      <h1>Discover more.<br>Shop smarter.</h1>
-      <p>Find everyday essentials, electronics, fashion, sneakers, beauty products and more. A marketplace where customers discover products and independent sellers grow.</p>
-      <div class="hero-buttons">
-        <button class="btn btn-light" onclick="scrollToSection('shop')">Explore products →</button>
-        <button class="btn btn-outline" onclick="scrollToSection('seller')">Start selling</button>
-      </div>
-    </div>
-    <div class="hero-art" aria-hidden="true">🛍️</div>
-  </section>
-  <section class="stats" aria-label="Marketplace overview">
-    <div class="stat"><strong id="productStat">0</strong><span>Products listed</span></div>
-    <div class="stat"><strong id="categoryStat">8</strong><span>Shopping categories</span></div>
-    <div class="stat"><strong>R0</strong><span>Listing fee in this demo</span></div>
-  </section>
-  <section class="section" id="categories">
-    <div class="section-head">
-      <div><h2>Shop by category</h2><p>Find what you need, all in one place.</p></div>
-    </div>
-    <div class="categories" id="categoryGrid"></div>
-  </section>
-  <section class="section" id="shop">
-    <div class="section-head">
-      <div><h2 id="shopHeading">Explore products</h2><p>Discover products from our demo catalogue.</p></div>
-      <span class="badge">DEMO MARKETPLACE</span>
-    </div>
-    <div class="filters">
-      <select id="categoryFilter" aria-label="Filter by category"><option value="All">All categories</option></select>
-      <select id="sortFilter" aria-label="Sort products">
-        <option value="featured">Featured</option>
-        <option value="low">Price: low to high</option>
-        <option value="high">Price: high to low</option>
-        <option value="az">Name: A to Z</option>
-      </select>
-      <button class="btn btn-outline" onclick="resetFilters()">Reset filters</button>
-    </div>
-    <div class="product-grid" id="productGrid"></div>
-  </section>
-  <section class="section" id="seller">
-    <div class="section-head">
-      <div><h2>Nova Seller Portal</h2><p>Showcase a product in the local demo catalogue.</p></div>
-    </div>
-    <div class="two-col">
-      <div class="panel">
-        <h3>📦 List a product</h3>
-        <div class="notice">This prototype saves your listing in this browser only. It will not automatically appear on another person's phone or create a real order.</div>
-        <form id="sellerForm">
-          <div class="field">
-            <label for="sellerName">Seller or business name *</label>
-            <input id="sellerName" maxlength="70" required placeholder="e.g. Mzansi Sneaker Store">
-          </div>
-          <div class="field">
-            <label for="productName">Product name *</label>
-            <input id="productName" maxlength="100" required placeholder="e.g. Everyday running sneakers">
-          </div>
-          <div class="field">
-            <label for="productCategory">Category *</label>
-            <select id="productCategory" required></select>
-          </div>
-          <div class="field">
-            <label for="productPrice">Price in rand (R) *</label>
-            <input id="productPrice" type="number" min="1" max="10000000" step="0.01" required placeholder="499.00">
-          </div>
-          <div class="field">
-            <label for="productImage">Product image URL (optional)</label>
-            <input id="productImage" type="url" maxlength="500" placeholder="https://example.com/product.jpg">
-            <small>Use an image link you have permission to use. Leave blank for a placeholder.</small>
-          </div>
-          <div class="field">
-            <label for="productDescription">Product description *</label>
-            <textarea id="productDescription" maxlength="500" required placeholder="Describe the product honestly, including size, condition and key details."></textarea>
-          </div>
-          <button class="btn btn-primary" type="submit">+ Add demo listing</button>
-          <div id="sellerMessage" role="status" aria-live="polite"></div>
-        </form>
-      </div>
-      <div class="panel">
-        <h3>🚀 Seller checklist</h3>
-        <p style="color:var(--muted);font-size:13px;line-height:1.8">A good listing helps customers understand what you offer.</p>
-        <div class="notice">1. Use a clear product name.<br>2. Set an accurate price in rand.<br>3. Use your own product photos or authorised images.<br>4. Explain sizes, condition and delivery arrangements.<br>5. Respond to customer enquiries promptly.</div>
-        <h3>What this prototype can do</h3>
-        <p style="font-size:13px;line-height:1.9">✓ Add products to this browser's catalogue<br>✓ Show your listing in the shop<br>✓ Add demo products to a shopping cart<br>✓ Get basic AI-style listing suggestions</p>
-        <p style="font-size:12px;color:var(--muted);line-height:1.7">Real seller accounts, shared listings, secure checkout, payment settlement and delivery tracking must be connected in a later version.</p>
-        <button class="btn btn-light" onclick="scrollToSection('assistant')">Get listing tips from Nova AI →</button>
-      </div>
-    </div>
-  </section>
-  <section class="section" id="assistant">
-    <div class="assistant">
-      <div class="eyebrow">NOVA INTELLIGENCE</div>
-      <h2>Meet your shopping assistant ✨</h2>
-      <p>Describe what you need or ask for help writing a product listing. This free prototype uses local rules, not a connected live AI model.</p>
-      <label for="assistantInput" style="display:block;font-size:12px;font-weight:800;margin-bottom:7px">What can Nova help you find?</label>
-      <textarea id="assistantInput" placeholder="e.g. Find affordable electronics under R500, or help me describe my handmade bags."></textarea>
-      <button class="btn btn-light" onclick="askNova()">Ask Nova AI →</button>
-      <div class="assistant-output" id="assistantOutput" aria-live="polite">Hi! Tell me what you're shopping for, your budget, or which product you want help listing.</div>
-    </div>
-  </section>
-  <section class="section" id="cart">
-    <div class="section-head">
-      <div><h2>🛒 Your shopping cart</h2><p>Review your demo cart before continuing.</p></div>
-    </div>
-    <div class="panel">
-      <div id="cartItems" class="cart-list"></div>
-      <div class="cart-total"><span>Subtotal</span><span id="cartTotal">R0.00</span></div>
-      <div class="notice">Demo only: this cart does not reserve stock, calculate delivery, collect payment or submit an order to a seller.</div>
-      <button class="btn btn-primary" onclick="demoCheckout()">Continue (demo only)</button>
-      <button class="btn btn-outline" onclick="clearCart()">Clear cart</button>
-      <div id="checkoutMessage" role="status" aria-live="polite"></div>
-    </div>
-  </section>
+<main>
+<section class="hero">
+<div>
+<div style="color:#d5d0ff;letter-spacing:2px">YOUR MARKETPLACE. YOUR OPPORTUNITY.</div>
+<h1>Discover more.<br>Shop smarter.</h1>
+<p>Find everyday essentials, electronics, fashion, sneakers, beauty products and more. A marketplace where customers discover products and independent sellers grow.</p>
+<button class="btn light" onclick="go('shop')">Explore products →</button>
+<button class="btn outline" onclick="go('seller')">Start selling</button>
+</div><div class="hero-art">🛍️</div>
+</section>
+<section class="stats">
+<div class="stat"><strong id="productCount">0</strong><span>Products listed</span></div>
+<div class="stat"><strong>8</strong><span>Shopping categories</span></div>
+<div class="stat"><strong>R0</strong><span>Listing fee in this demo</span></div>
+</section>
+<section id="categories" class="section">
+<div class="section-head"><h2>Shop by category</h2><span class="muted">Find what you need, all in one place.</span></div>
+<div id="cats" class="cats"></div>
+</section>
+<section id="shop" class="section">
+<div class="section-head">
+<h2>Explore products</h2>
+<p class="muted" id="catalogueMessage">Demo products plus shared seller listings.</p>
+<span class="badge" id="dbStatus">CONNECTING</span>
+</div>
+<div class="filters">
+<select id="filter"><option>All</option></select>
+<select id="sort">
+<option value="featured">Featured</option><option value="low">Price: low to high</option>
+<option value="high">Price: high to low</option><option value="az">Name: A to Z</option>
+</select>
+<button class="btn outline" onclick="resetFilters()">Reset filters</button>
+</div>
+<div id="products" class="grid"></div>
+</section>
+<section id="seller" class="section">
+<h2>Nova Seller Portal</h2>
+<p class="muted">Create an account or sign in to publish shared listings.</p>
+<div class="two">
+<div class="panel">
+<h3>🔐 Seller account</h3>
+<div class="notice">After creating an account, check your inbox and confirm your email before signing in. Never share your password.</div>
+<div id="signedOut">
+<form id="authForm">
+<div class="field"><label for="email">Email address</label><input id="email" type="email" autocomplete="email" required placeholder="you@example.com"></div>
+<div class="field"><label for="password">Password (at least 6 characters)</label><input id="password" type="password" minlength="6" autocomplete="current-password" required></div>
+<button class="btn primary" type="submit">Sign in</button>
+<button class="btn outline" type="button" id="signup">Create account</button>
+<div id="authMsg" class="msg" aria-live="polite"></div>
+</form>
+</div>
+<div id="signedIn" class="hidden">
+<p>Signed in as <strong id="userEmail"></strong></p>
+<button class="btn outline" id="signout">Sign out</button>
+<div id="userMsg" class="msg"></div>
+</div>
+<hr><h3>📦 List a product</h3>
+<form id="sellerForm">
+<div class="field"><label for="sellerName">Seller or business name *</label><input id="sellerName" maxlength="70" required placeholder="Mzansi Sneaker Store"></div>
+<div class="field"><label for="productName">Product name *</label><input id="productName" maxlength="100" required></div>
+<div class="field"><label for="category">Category *</label><select id="category" required></select></div>
+<div class="field"><label for="price">Price in rand (R) *</label><input id="price" type="number" min="1" max="10000000" step=".01" required></div>
+<div class="field"><label for="image">Product image URL (optional)</label><input id="image" type="url" maxlength="500" placeholder="https://example.com/photo.jpg"></div>
+<div class="field"><label for="description">Product description *</label><textarea id="description" maxlength="500" required></textarea></div>
+<button class="btn primary" id="publish" disabled>Sign in to publish</button>
+<div id="sellerMsg" class="msg" aria-live="polite"></div>
+</form>
+</div>
+<div class="panel">
+<h3>🚀 Seller checklist</h3>
+<div class="notice">1. Use a clear product name.<br>2. Set an accurate price in rand.<br>3. Use photos you own or are authorised to use.<br>4. Explain size, condition and delivery arrangements honestly.</div>
+<h3>What works in this prototype</h3>
+<p class="muted">✓ Browse demo products<br>✓ Seller email sign-up and sign-in<br>✓ Publish shared products through Supabase<br>✓ Read shared listings on other devices<br>✓ Local demo cart</p>
+<p class="muted">Checkout, payments, delivery, refunds and seller verification are not implemented yet.</p>
+</div>
+</div>
+</section>
+<section id="assistant" class="section assistant">
+<h2>Meet your shopping assistant ✨</h2>
+<p>This prototype uses simple built-in rules, not a connected live AI model.</p>
+<textarea id="question" placeholder="Try: Find sneakers under R700, or help me write a product advert."></textarea>
+<button class="btn light" onclick="askNova()">Ask Nova AI</button>
+<div id="answer" class="out">Hello! Ask me to find products within a budget or get basic seller tips.</div>
+</section>
+<section id="cart" class="section">
+<h2>🛒 Your shopping cart</h2>
+<p class="muted">Review your demo cart before continuing.</p>
+<div class="panel">
+<div id="cartItems"></div>
+<div class="total"><span>Total</span><span id="total">R0.00</span></div>
+<button class="btn outline" onclick="clearCart()">Clear cart</button>
+<button class="btn primary" onclick="checkout()">Continue</button>
+<div id="checkoutMsg" class="msg"></div>
+</div>
+</section>
 </main>
 <footer>
-  <div class="footer-inner">
-    <div>
-      <div class="logo">NOVA<span>AI</span> MARKETPLACE</div>
-      <p>A marketplace prototype for South African shoppers and independent sellers. Built to start small and grow responsibly.</p>
-    </div>
-    <div>
-      <strong>Explore</strong>
-      <p><a href="#shop">Shop products</a><br><a href="#seller">Become a seller</a><br><a href="#assistant">Ask Nova AI</a></p>
-    </div>
-  </div>
-  <div class="footer-inner"><small>© <span id="year"></span> Nova AI · Free prototype · No paid AI API required</small></div>
+<div class="foot">
+<div><div class="logo">NOVA<span>AI</span> MARKETPLACE</div><p>A marketplace prototype for South African shoppers and independent sellers. Confirm seller details before paying.</p></div>
+<div><strong>Shop smart. Sell more.</strong><p>© <span id="year"></span> NOVAAI. Built for South Africa.</p></div>
+</div>
 </footer>
-<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script>
-"use strict";
-
-const CATEGORIES = [
-  {name:"Electronics",icon:"📱"},
-  {name:"Fashion",icon:"👕"},
-  {name:"Sneakers",icon:"👟"},
-  {name:"Home & Living",icon:"🏠"},
-  {name:"Beauty",icon:"✨"},
-  {name:"Sports",icon:"⚽"},
-  {name:"Groceries",icon:"🛒"},
-  {name:"Accessories",icon:"🎒"}
-];
-
-const DEMO_PRODUCTS = [
-  {id:"demo-1",name:"Wireless Bluetooth Headphones",category:"Electronics",price:349,seller:"Nova Demo Store",description:"Wireless listening for music, calls and everyday use. Check compatibility before buying.",image:"https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80",tag:"Popular"},
-  {id:"demo-2",name:"Everyday Casual T-Shirt",category:"Fashion",price:159,seller:"Nova Demo Store",description:"A versatile casual top. Confirm available sizes, colours and material with the seller.",image:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80",tag:"Everyday"},
-  {id:"demo-3",name:"Classic Street Sneakers",category:"Sneakers",price:599,seller:"Nova Demo Store",description:"Streetwear-inspired footwear. Check sizing, authenticity and availability before purchasing.",image:"https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80",tag:"Trending"},
-  {id:"demo-4",name:"Minimal Desk Lamp",category:"Home & Living",price:279,seller:"Nova Demo Store",description:"A simple lamp for a desk or bedside table. Confirm power requirements and dimensions.",image:"https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=700&q=80",tag:"Home"},
-  {id:"demo-5",name:"Daily Skincare Set",category:"Beauty",price:229,seller:"Nova Demo Store",description:"A sample skincare bundle. Check the ingredients, expiry date and suitability for your skin.",image:"https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=80",tag:"Self-care"},
-  {id:"demo-6",name:"Training Football",category:"Sports",price:199,seller:"Nova Demo Store",description:"A football for practice and recreational play. Confirm size and material before ordering.",image:"https://images.unsplash.com/photo-1614632537423-1e6c2e7e0c2b?auto=format&fit=crop&w=700&q=80",tag:"Active"},
-  {id:"demo-7",name:"Reusable Shopping Tote",category:"Accessories",price:89,seller:"Nova Demo Store",description:"A reusable carry bag for shopping and everyday essentials. Check dimensions and material.",image:"https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=700&q=80",tag:"Useful"},
-  {id:"demo-8",name:"Kitchen Storage Containers",category:"Home & Living",price:149,seller:"Nova Demo Store",description:"Storage containers for organising your kitchen. Confirm sizes, quantity and food-contact suitability.",image:"https://images.unsplash.com/photo-1490312278390-ab64016e0aa9?auto=format&fit=crop&w=700&q=80",tag:"Organise"},
-  {id:"demo-9",name:"Everyday Backpack",category:"Accessories",price:299,seller:"Nova Demo Store",description:"A practical bag for daily essentials. Check capacity, compartments and dimensions.",image:"https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=700&q=80",tag:"Daily"},
-  {id:"demo-10",name:"Home Workout Mat",category:"Sports",price:249,seller:"Nova Demo Store",description:"A mat for home workouts and stretching. Check thickness and dimensions before buying.",image:"https://images.unsplash.com/photo-1592432678016-e910b452f9a2?auto=format&fit=crop&w=700&q=80",tag:"Fitness"},
-  {id:"demo-11",name:"Smartphone Stand",category:"Electronics",price:99,seller:"Nova Demo Store",description:"A desk stand for compatible phones. Check device dimensions and adjustability.",image:"https://images.unsplash.com/photo-1586953208448-b95a79798f07?auto=format&fit=crop&w=700&q=80",tag:"Desk"},
-  {id:"demo-12",name:"Everyday Shoulder Bag",category:"Fashion",price:329,seller:"Nova Demo Store",description:"A versatile accessory for daily use. Confirm dimensions, materials and available colours.",image:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=700&q=80",tag:"Style"}
-];
-
-const STORAGE = {
-  products:"novaMarketplaceProductsV1",
-  cart:"novaMarketplaceCartV1"
-};
-
-let products = loadProducts();
-let cart = loadCart();
-let activeCategory = "All";
-
-function safeRead(key,fallback) {
-  try {
-    const value = localStorage.getItem(key);
-    return value ? JSON.parse(value) : fallback;
-  } catch(error) {
-    return fallback;
-  }
-}
-
-function loadProducts() {
-  const saved = safeRead(STORAGE.products,[]);
-  if (!Array.isArray(saved)) return [...DEMO_PRODUCTS];
-  const clean = saved.filter(p =>
-    p && typeof p.id==="string" && typeof p.name==="string" &&
-    typeof p.category==="string" && Number.isFinite(Number(p.price))
-  );
-  return [...DEMO_PRODUCTS,...clean.filter(p => !String(p.id).startsWith("demo-"))];
-}
-
-function loadCart() {
-  const saved = safeRead(STORAGE.cart,[]);
-  return Array.isArray(saved)
-    ? saved.filter(i => i && typeof i.id==="string" && Number.isInteger(i.qty) && i.qty>0)
-    : [];
-}
-
-function saveProducts() {
-  try {
-    const userProducts = products.filter(p => !String(p.id).startsWith("demo-"));
-    localStorage.setItem(STORAGE.products,JSON.stringify(userProducts));
-  } catch(error) {
-    showToast("Browser storage is full or unavailable. Your listing may not be saved.");
-  }
-}
-
-function saveCart() {
-  try {
-    localStorage.setItem(STORAGE.cart,JSON.stringify(cart));
-  } catch(error) {
-    showToast("Could not save your cart in this browser.");
-  }
-}
-
-function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g,char => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  })[char]);
-}
-
-function money(value) {
-  return new Intl.NumberFormat("en-ZA",{
-    style:"currency",currency:"ZAR",minimumFractionDigits:2
-  }).format(Number(value)||0);
-}
-
-function categoryIcon(name) {
-  const found = CATEGORIES.find(c => c.name===name);
-  return found ? found.icon : "📦";
-}
-
-function safeImageURL(value) {
-  try {
-    const url = new URL(value);
-    if (url.protocol==="https:" || url.protocol==="http:") return url.href;
-  } catch(error) {}
-  return "";
-}
-
-function renderCategories() {
-  const grid = document.getElementById("categoryGrid");
-  grid.innerHTML = [
-    `<button class="cat ${activeCategory==="All"?"active":""}" data-category="All"><span class="emoji">🌐</span><span>All products</span></button>`,
-    ...CATEGORIES.map(c =>
-      `<button class="cat ${activeCategory===c.name?"active":""}" data-category="${escapeHTML(c.name)}"><span class="emoji">${c.icon}</span><span>${escapeHTML(c.name)}</span></button>`
-    )
-  ].join("");
-
-  grid.querySelectorAll("[data-category]").forEach(button => {
-    button.addEventListener("click",() => {
-      activeCategory = button.dataset.category;
-      document.getElementById("categoryFilter").value = activeCategory;
-      document.getElementById("shopHeading").textContent =
-        activeCategory==="All" ? "Explore products" : activeCategory;
-      renderCategories();
-      renderProducts();
-      scrollToSection("shop");
-    });
-  });
-}
-
-function renderProducts() {
-  const query = document.getElementById("searchInput").value.trim().toLowerCase();
-  const category = document.getElementById("categoryFilter").value;
-  const sort = document.getElementById("sortFilter").value;
-
-  let list = products.filter(p => {
-    const matchesCategory = category==="All" || p.category===category;
-    const searchable = [p.name,p.category,p.description,p.seller].join(" ").toLowerCase();
-    return matchesCategory && searchable.includes(query);
-  });
-
-  if (sort==="low") list.sort((a,b)=>a.price-b.price);
-  if (sort==="high") list.sort((a,b)=>b.price-a.price);
-  if (sort==="az") list.sort((a,b)=>a.name.localeCompare(b.name));
-
-  const grid = document.getElementById("productGrid");
-  if (!list.length) {
-    grid.innerHTML = `<div class="empty"><div style="font-size:35px">🔎</div><h3>No products found</h3><p>Try another search or category.</p><button class="btn btn-light" onclick="resetFilters()">Show all products</button></div>`;
-  } else {
-    grid.innerHTML = list.map(p => {
-      const image = safeImageURL(p.image || "");
-      return `
-        <article class="product">
-          <div class="product-img">
-            ${image ? `<img src="${escapeHTML(image)}" alt="${escapeHTML(p.name)}" loading="lazy" onerror="this.style.display='none'">` : ""}
-            <span class="product-tag">${escapeHTML(p.tag || "Marketplace")}</span>
-          </div>
-          <div class="product-body">
-            <div class="product-category">${escapeHTML(p.category)}</div>
-            <h3>${escapeHTML(p.name)}</h3>
-            <p class="product-desc">${escapeHTML(p.description)}</p>
-            <div class="product-price">${money(p.price)}</div>
-            <div class="product-seller">Seller: ${escapeHTML(p.seller || "Independent seller")}</div>
-            <div class="product-actions">
-              <button class="btn btn-primary btn-small" data-add="${escapeHTML(p.id)}">Add to cart</button>
-              <button class="btn btn-outline btn-small" data-info="${escapeHTML(p.id)}" aria-label="Get details for ${escapeHTML(p.name)}">Details</button>
-            </div>
-          </div>
-        </article>`;
-    }).join("");
-
-    grid.querySelectorAll("[data-add]").forEach(button =>
-      button.addEventListener("click",() => addToCart(button.dataset.add))
-    );
-    grid.querySelectorAll("[data-info]").forEach(button =>
-      button.addEventListener("click",() => showProductInfo(button.dataset.info))
-    );
-  }
-
-  document.getElementById("productStat").textContent = products.length;
-  document.getElementById("categoryStat").textContent = CATEGORIES.length;
-}
-
-function renderCategorySelects() {
-  const options = CATEGORIES.map(c =>
-    `<option value="${escapeHTML(c.name)}">${escapeHTML(c.name)}</option>`
-  ).join("");
-  document.getElementById("categoryFilter").innerHTML =
-    `<option value="All">All categories</option>` + options;
-  document.getElementById("productCategory").innerHTML = options;
-}
-
-function resetFilters() {
-  document.getElementById("searchInput").value = "";
-  document.getElementById("categoryFilter").value = "All";
-  document.getElementById("sortFilter").value = "featured";
-  activeCategory = "All";
-  document.getElementById("shopHeading").textContent = "Explore products";
-  renderCategories();
-  renderProducts();
-}
-
-function addToCart(id) {
-  const product = products.find(p => p.id===id);
-  if (!product) return;
-  const item = cart.find(i => i.id===id);
-  if (item) item.qty = Math.min(item.qty+1,99);
-  else cart.push({id,qty:1});
-  saveCart();
-  renderCart();
-  showToast(product.name + " added to your demo cart.");
-}
-
-function showProductInfo(id) {
-  const p = products.find(product => product.id===id);
-  if (!p) return;
-  const output =
-    p.name + "\n\nCategory: " + p.category +
-    "\nPrice: " + money(p.price) +
-    "\nSeller: " + p.seller +
-    "\n\n" + p.description +
-    "\n\nThis is a demo listing. Confirm stock, product details, seller identity and delivery before making a real purchase.";
-  document.getElementById("assistantOutput").textContent = output;
-  scrollToSection("assistant");
-}
-
-function renderCart() {
-  const list = document.getElementById("cartItems");
-  cart = cart.filter(i => products.some(p => p.id===i.id));
-  const totalQty = cart.reduce((sum,i)=>sum+i.qty,0);
-  document.getElementById("cartCount").textContent = totalQty;
-
-  if (!cart.length) {
-    list.innerHTML = `<div class="empty"><div style="font-size:34px">🛍️</div><h3>Your cart is empty</h3><p>Explore the catalogue and add something you like.</p><button class="btn btn-light" onclick="scrollToSection('shop')">Browse products</button></div>`;
-  } else {
-    list.innerHTML = cart.map(item => {
-      const p = products.find(product => product.id===item.id);
-      if (!p) return "";
-      return `<div class="cart-item">
-        <div><h4>${escapeHTML(p.name)}</h4><p>${money(p.price)} each · Qty ${item.qty}</p></div>
-        <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
-          <button class="btn btn-outline btn-small" data-minus="${escapeHTML(item.id)}" aria-label="Remove one">−</button>
-          <button class="btn btn-outline btn-small" data-plus="${escapeHTML(item.id)}" aria-label="Add one">+</button>
-          <button class="btn btn-danger btn-small" data-remove="${escapeHTML(item.id)}">Remove</button>
-        </div>
-      </div>`;
-    }).join("");
-
-    list.querySelectorAll("[data-minus]").forEach(b => b.addEventListener("click",()=>changeQty(b.dataset.minus,-1)));
-    list.querySelectorAll("[data-plus]").forEach(b => b.addEventListener("click",()=>changeQty(b.dataset.plus,1)));
-    list.querySelectorAll("[data-remove]").forEach(b => b.addEventListener("click",()=>removeFromCart(b.dataset.remove)));
-  }
-
-  const total = cart.reduce((sum,item) => {
-    const p = products.find(product => product.id===item.id);
-    return sum + (p ? Number(p.price)*item.qty : 0);
-  },0);
-  document.getElementById("cartTotal").textContent = money(total);
-  saveCart();
-}
-
-function changeQty(id,amount) {
-  const item = cart.find(i=>i.id===id);
-  if (!item) return;
-  item.qty += amount;
-  if (item.qty<=0) cart = cart.filter(i=>i.id!==id);
-  if (item.qty>99) item.qty=99;
-  saveCart();
-  renderCart();
-}
-
-function removeFromCart(id) {
-  cart = cart.filter(i=>i.id!==id);
-  saveCart();
-  renderCart();
-}
-
-function clearCart() {
-  cart = [];
-  saveCart();
-  renderCart();
-  document.getElementById("checkoutMessage").textContent = "";
-}
-
-function demoCheckout() {
-  const message = document.getElementById("checkoutMessage");
-  if (!cart.length) {
-    message.textContent = "Your cart is empty. Add products before continuing.";
-    return;
-  }
-  message.textContent = "Demo only: no order was placed and no payment was taken. A real checkout needs a secure backend, seller order management and a supported payment provider.";
-}
-
-document.getElementById("sellerForm").addEventListener("submit",function(event) {
-  event.preventDefault();
-
-  const seller = document.getElementById("sellerName").value.trim();
-  const name = document.getElementById("productName").value.trim();
-  const category = document.getElementById("productCategory").value;
-  const price = Number(document.getElementById("productPrice").value);
-  const description = document.getElementById("productDescription").value.trim();
-  const image = safeImageURL(document.getElementById("productImage").value.trim());
-
-  if (!seller || !name || !description || !CATEGORIES.some(c=>c.name===category) ||
-      !Number.isFinite(price) || price<1 || price>10000000) {
-    document.getElementById("sellerMessage").textContent = "Please check all required fields and enter a valid price.";
-    return;
-  }
-
-  const product = {
-    id:"seller-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),
-    name,category,price,seller,description,image,tag:"New listing"
-  };
-
-  products.push(product);
-  saveProducts();
-  renderProducts();
-  renderCategories();
-  document.getElementById("sellerMessage").innerHTML =
-    `<div class="success">Listing added to this browser's demo catalogue. It is not published to a shared marketplace.</div>`;
-  this.reset();
-  showToast("Your demo listing has been added.");
-  scrollToSection("shop");
-});
-
-function askNova() {
-  const input = document.getElementById("assistantInput").value.trim();
-  const output = document.getElementById("assistantOutput");
-  if (!input) {
-    output.textContent = "Tell me what you're looking for, your budget, or which product you want help listing.";
-    return;
-  }
-
-  const text = input.toLowerCase();
-  const budgetMatch = text.match(/(?:under|below|less than|max|budget(?: of)?|r)\s*r?\s*(\d+(?:[.,]\d+)?)/i);
-  const budget = budgetMatch ? Number(budgetMatch[1].replace(",",".")) : null;
-
-  const categoryKeywords = [
-    {category:"Electronics",words:["phone","laptop","computer","headphone","electronics","charger","tech","tablet"]},
-    {category:"Fashion",words:["clothes","clothing","shirt","dress","fashion","jeans","jacket"]},
-    {category:"Sneakers",words:["sneaker","shoe","shoes","trainers","footwear"]},
-    {category:"Home & Living",words:["home","kitchen","lamp","furniture","storage","house"]},
-    {category:"Beauty",words:["beauty","skincare","skin care","makeup","cosmetic","lotion"]},
-    {category:"Sports",words:["sport","football","fitness","workout","gym","training"]},
-    {category:"Groceries",words:["grocery","groceries","food","snack","pantry"]},
-    {category:"Accessories",words:["bag","backpack","accessory","accessories","wallet","tote"]}
-  ];
-
-  const detected = categoryKeywords.find(group=>group.words.some(word=>text.includes(word)));
-  const isSellerHelp = /sell|seller|listing|describe|description|product title|advert|marketing|my product/.test(text);
-  const isCheap = /cheap|affordable|budget|low cost|lowest|under|below|less than/.test(text);
-  const matches = products.filter(p=>{
-    const categoryOK = !detected || p.category===detected.category;
-    const budgetOK = budget===null || p.price<=budget;
-    return categoryOK && budgetOK;
-  }).sort((a,b)=>a.price-b.price).slice(0,5);
-
-  let result = "";
-
-  if (isSellerHelp) {
-    const sample = products.find(p=>text.includes(p.name.toLowerCase()));
-    const name = sample ? sample.name : "your product";
-    result =
-      "NOVA SELLER COACH\n\n" +
-      "1. Use a clear title that says exactly what the product is.\n" +
-      "2. State the main benefit and important details.\n" +
-      "3. Include accurate size, condition, materials and what's included.\n" +
-      "4. Use your own clear photos or images you have permission to use.\n" +
-      "5. Set a fair price and explain delivery arrangements honestly.\n\n" +
-      "SAMPLE LISTING\n" +
-      "Title: " + name + "\n" +
-      "Description: Discover a product designed for everyday use. Review its specifications, available options and condition before ordering. Contact the seller to confirm current stock and delivery details.\n\n" +
-      "This is a template. Replace it with verified facts about your actual product.";
-  } else if (matches.length) {
-    result = "NOVA SHOPPING SUGGESTIONS\n\n";
-    if (detected) result += "Category: " + detected.category + "\n";
-    if (budget!==null) result += "Budget: " + money(budget) + "\n";
-    if (isCheap) result += "Sorted from the lowest displayed price.\n";
-    result += "\n" + matches.map((p,i)=>
-      (i+1)+". "+p.name+"\n   "+money(p.price)+" · "+p.category+"\n   Seller: "+p.seller
-    ).join("\n\n");
-    result += "\n\nThese are demo catalogue suggestions, not verified live offers. Check the product details, seller, stock and delivery before buying.";
-  } else {
-    result =
-      "LET'S FIND A GOOD MATCH\n\n" +
-      "I couldn't find a matching demo product for that request yet.\n\n" +
-      "Try telling me:\n" +
-      "• The product category you want.\n" +
-      "• Your maximum budget in rand.\n" +
-      "• Which features matter most.\n\n" +
-      "I can only recommend products currently in this demo catalogue. I don't have live access to external stores or current market prices.";
-  }
-
-  output.textContent = result;
-}
-
-function scrollToSection(id) {
-  const el = document.getElementById(id);
-  if (el) el.scrollIntoView({behavior:"smooth",block:"start"});
-}
-
-let toastTimer;
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  toast.textContent = message;
-  toast.classList.remove("hidden");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>toast.classList.add("hidden"),2600);
-}
-
-document.getElementById("searchForm").addEventListener("submit",function(event) {
-  event.preventDefault();
-  renderProducts();
-  scrollToSection("shop");
-});
-
-document.getElementById("searchInput").addEventListener("input",renderProducts);
-document.getElementById("categoryFilter").addEventListener("change",function() {
-  activeCategory = this.value;
-  document.getElementById("shopHeading").textContent =
-    activeCategory==="All" ? "Explore products" : activeCategory;
-  renderCategories();
-  renderProducts();
-});
-document.getElementById("sortFilter").addEventListener("change",renderProducts);
-
-document.getElementById("year").textContent = new Date().getFullYear();
-
-renderCategorySelects();
-renderCategories();
-renderProducts();
-renderCart();
-</script>
-
+<div id="toast" class="toast hidden"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  const NOVA_SUPABASE_URL = 'https://nxplffvklkopwfjaqexo.supabase.co';
-  const NOVA_SUPABASE_KEY = 'sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ';
-
-  const novaSupabase = window.supabase.createClient(
-    NOVA_SUPABASE_URL,
-    NOVA_SUPABASE_KEY
-  );
+"use strict";
+const sb=window.supabase.createClient("https://nxplffvklkopwfjaqexo.supabase.co","sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ");
+const C=[["Electronics","📱"],["Fashion","👕"],["Sneakers","👟"],["Home & Living","🏠"],["Beauty","✨"],["Sports","⚽"],["Groceries","🛒"],["Accessories","🎒"]];
+const demo=[
+["demo-1","Wireless Bluetooth Headphones","Electronics",349,"Nova Demo Store","Wireless listening for music, calls and everyday use.","https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"],
+["demo-2","Everyday Casual T-Shirt","Fashion",159,"Nova Demo Store","A versatile casual top. Confirm sizes and colours with the seller.","https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80"],
+["demo-3","Classic Street Sneakers","Sneakers",599,"Nova Demo Store","Streetwear-inspired footwear. Check sizing and authenticity.","https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80"],
+["demo-4","Minimal Desk Lamp","Home & Living",279,"Nova Demo Store","A simple lamp for a desk or bedside table.","https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=700&q=80"],
+["demo-5","Daily Skincare Set","Beauty",229,"Nova Demo Store","A sample skincare bundle. Check ingredients and expiry date.","https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=80"],
+["demo-6","Training Football","Sports",199,"Nova Demo Store","A football for practice and recreational play.","https://images.unsplash.com/photo-1614632537423-1e6c2e7e0c2b?auto=format&fit=crop&w=700&q=80"],
+["demo-7","Reusable Shopping Tote","Accessories",89,"Nova Demo Store","A reusable carry bag for shopping and everyday essentials.","https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=700&q=80"],
+["demo-8","Kitchen Storage Containers","Home & Living",149,"Nova Demo Store","Storage containers for organising your kitchen.","https://images.unsplash.com/photo-1490312278390-ab64016e0aa9?auto=format&fit=crop&w=700&q=80"],
+["demo-9","Everyday Backpack","Accessories",299,"Nova Demo Store","A practical bag for daily essentials.","https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=700&q=80"],
+["demo-10","Home Workout Mat","Sports",249,"Nova Demo Store","A mat for home workouts and stretching.","https://images.unsplash.com/photo-1592432678016-e910b452f9a2?auto=format&fit=crop&w=700&q=80"],
+["demo-11","Smartphone Stand","Electronics",99,"Nova Demo Store","A desk stand for compatible phones.","https://images.unsplash.com/photo-1586953208448-b95a79798f07?auto=format&fit=crop&w=700&q=80"],
+["demo-12","Everyday Shoulder Bag","Fashion",329,"Nova Demo Store","A versatile accessory for daily use.","https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=700&q=80"]
+];
+let products=demo.map(a=>({id:a[0],name:a[1],category:a[2],price:a[3],seller:a[4],description:a[5],image:a[6],tag:"Demo"}));
+let cart=readCart(),active="All",user=null;
+function readCart(){try{return JSON.parse(localStorage.getItem("novaMarketplaceCartV1")||"[]")}catch(e){return []}}
+function saveCart(){try{localStorage.setItem("novaMarketplaceCartV1",JSON.stringify(cart))}catch(e){}}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function cash(n){return new Intl.NumberFormat("en-ZA",{style:"currency",currency:"ZAR"}).format(Number(n)||0)}
+function safeImg(s){try{let u=new URL(s);return ["http:","https:"].includes(u.protocol)?u.href:""}catch(e){return ""}}
+function go(id){document.getElementById(id).scrollIntoView({behavior:"smooth"})}
+function message(id,s,bad=false){let e=document.getElementById(id);e.textContent=s;e.className="msg "+(bad?"error":"success")}
+function initCategories(){
+document.getElementById("cats").innerHTML=[["All","🌐"],...C].map(([n,ic])=>`<button class="cat ${active===n?"active":""}" data-cat="${esc(n)}"><span class="emoji">${ic}</span><span>${esc(n==="All"?"All products":n)}</span></button>`).join("");
+document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{active=b.dataset.cat;document.getElementById("filter").value=active;initCategories();render();go("shop")});
+document.getElementById("filter").innerHTML='<option>All</option>'+C.map(([n])=>`<option>${esc(n)}</option>`).join("");
+document.getElementById("category").innerHTML=C.map(([n])=>`<option>${esc(n)}</option>`).join("");
+}
+function render(){
+let q=document.getElementById("search").value.toLowerCase(),cat=document.getElementById("filter").value,sort=document.getElementById("sort").value;
+let list=products.filter(p=>(cat==="All"||p.category===cat)&&[p.name,p.category,p.description,p.seller].join(" ").toLowerCase().includes(q));
+if(sort==="low")list.sort((a,b)=>a.price-b.price);
+if(sort==="high")list.sort((a,b)=>b.price-a.price);
+if(sort==="az")list.sort((a,b)=>a.name.localeCompare(b.name));
+document.getElementById("productCount").textContent=products.length;
+document.getElementById("products").innerHTML=list.length?list.map(p=>`<article class="product"><div class="prodimg">${safeImg(p.image)?`<img loading="lazy" src="${esc(safeImg(p.image))}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}</div><div class="prodbody"><small style="color:#6654f5;font-weight:800">${esc(p.category)}</small><h3>${esc(p.name)}</h3><p>${esc(p.description)}</p><div class="price">${cash(p.price)}</div><p>Seller: ${esc(p.seller)}</p><div class="actions"><button class="btn primary" data-add="${esc(p.id)}">Add to cart</button><button class="btn outline" data-info="${esc(p.id)}">Details</button></div></div></article>`).join(""):'<div class="panel">No products found. Try another search or category.</div>';
+document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add(b.dataset.add));
+document.querySelectorAll("[data-info]").forEach(b=>b.onclick=()=>{let p=products.find(x=>x.id===b.dataset.info);document.getElementById("answer").textContent=p.name+"\n"+cash(p.price)+" · "+p.category+"\nSeller: "+p.seller+"\n\n"+p.description;go("assistant")});
+}
+function resetFilters(){document.getElementById("search").value="";document.getElementById("filter").value="All";document.getElementById("sort").value="featured";active="All";initCategories();render()}
+function add(id){let p=products.find(x=>x.id===id);let i=cart.find(x=>x.id===id);if(i)i.qty++;else cart.push({id,qty:1});saveCart();renderCart();toast(p.name+" added to cart.")}
+function renderCart(){
+cart=cart.filter(i=>products.some(p=>p.id===i.id));
+document.getElementById("count").textContent=cart.reduce((s,i)=>s+i.qty,0);
+document.getElementById("cartItems").innerHTML=cart.length?cart.map(i=>{let p=products.find(x=>x.id===i.id);return`<div class="cartitem"><div><b>${esc(p.name)}</b><p class="muted">${cash(p.price)} each · Qty ${i.qty}</p></div><div><button class="btn outline" data-dec="${esc(i.id)}">−</button> <button class="btn outline" data-inc="${esc(i.id)}">+</button> <button class="btn outline" data-rem="${esc(i.id)}">Remove</button></div></div>`}).join(""):'<p class="muted">Your cart is empty. Browse products and add something you like.</p>';
+document.getElementById("total").textContent=cash(cart.reduce((s,i)=>s+(products.find(p=>p.id===i.id)?.price||0)*i.qty,0));
+document.querySelectorAll("[data-dec]").forEach(b=>b.onclick=()=>qty(b.dataset.dec,-1));
+document.querySelectorAll("[data-inc]").forEach(b=>b.onclick=()=>qty(b.dataset.inc,1));
+document.querySelectorAll("[data-rem]").forEach(b=>b.onclick=()=>{cart=cart.filter(i=>i.id!==b.dataset.rem);saveCart();renderCart()});
+saveCart();
+}
+function qty(id,n){let i=cart.find(x=>x.id===id);if(!i)return;i.qty+=n;if(i.qty<1)cart=cart.filter(x=>x.id!==id);saveCart();renderCart()}
+function clearCart(){cart=[];saveCart();renderCart();document.getElementById("checkoutMsg").textContent=""}
+function checkout(){document.getElementById("checkoutMsg").textContent=cart.length?"Demo only: no order was placed and no payment was taken.":"Your cart is empty."}
+function toast(s){let t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2400)}
+async function loadShared(){
+try{
+let{data,error}=await sb.from("Products").select("id,name,description,price,category,image_url,seller_name").order("created_at",{ascending:false});
+if(error)throw error;
+products=[...demo.map(a=>({id:a[0],name:a[1],category:a[2],price:a[3],seller:a[4],description:a[5],image:a[6],tag:"Demo"})),...(data||[]).map(r=>({id:"db-"+r.id,dbId:r.id,name:r.name,category:r.category,price:Number(r.price),seller:r.seller_name||"Independent seller",description:r.description||"",image:r.image_url||""}))];
+document.getElementById("dbStatus").textContent="SUPABASE CONNECTED";
+document.getElementById("catalogueMessage").textContent="Demo products plus listings shared through Supabase.";
+render();renderCart();
+}catch(e){
+console.error(e);
+document.getElementById("dbStatus").textContent="DATABASE CHECK NEEDED";
+document.getElementById("catalogueMessage").textContent="Demo catalogue is available; shared listings could not be loaded. Check Supabase table and policies.";
+render();
+}
+}
+function updateUser(u){
+user=u;
+document.getElementById("signedOut").classList.toggle("hidden",!!u);
+document.getElementById("signedIn").classList.toggle("hidden",!u);
+document.getElementById("userEmail").textContent=u?.email||"";
+document.getElementById("publish").disabled=!u;
+document.getElementById("publish").textContent=u?"Publish shared listing":"Sign in to publish";
+}
+document.getElementById("authForm").onsubmit=async e=>{
+e.preventDefault();message("authMsg","Signing in…");
+let{data,error}=await sb.auth.signInWithPassword({email:document.getElementById("email").value.trim(),password:document.getElementById("password").value});
+if(error){message("authMsg",error.message,true);return}
+updateUser(data.user);message("userMsg","Signed in successfully.");
+};
+document.getElementById("signup").onclick=async()=>{
+let email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;
+if(!email||password.length<6){message("authMsg","Enter a valid email and password of at least 6 characters.",true);return}
+message("authMsg","Creating account…");
+let{data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});
+if(error){message("authMsg",error.message,true);return}
+if(data.session){updateUser(data.user);message("userMsg","Account created and signed in.")}
+else message("authMsg","Account request submitted. Check your email and confirm your address, then return here to sign in.");
+};
+document.getElementById("signout").onclick=async()=>{
+let{error}=await sb.auth.signOut();
+if(error)message("userMsg",error.message,true);
+else{updateUser(null);message("authMsg","You have signed out.")}
+};
+document.getElementById("sellerForm").onsubmit=async e=>{
+e.preventDefault();
+if(!user){message("sellerMsg","Please sign in before publishing.",true);return}
+let{data:s}=await sb.auth.getSession(),u=s?.session?.user;
+if(!u){updateUser(null);message("sellerMsg","Your session expired. Please sign in again.",true);return}
+let seller=document.getElementById("sellerName").value.trim(),name=document.getElementById("productName").value.trim(),category=document.getElementById("category").value,price=Number(document.getElementById("price").value),description=document.getElementById("description").value.trim(),image=safeImg(document.getElementById("image").value.trim());
+if(!seller||!name||!description||!Number.isFinite(price)||price<1){message("sellerMsg","Check all required fields and enter a valid price.",true);return}
+let b=document.getElementById("publish");b.disabled=true;b.textContent="Publishing…";
+let{error}=await sb.from("Products").insert({name,description,price,category,image_url:image||null,seller_name:seller});
+b.disabled=false;b.textContent="Publish shared listing";
+if(error){message("sellerMsg","Could not publish: "+error.message,true);return}
+e.target.reset();message("sellerMsg","Listing published to the shared marketplace.");await loadShared();go("shop");
+};
+sb.auth.getSession().then(({data})=>updateUser(data.session?.user||null));
+sb.auth.onAuthStateChange((_event,session)=>updateUser(session?.user||null));
+document.getElementById("searchForm").onsubmit=e=>{e.preventDefault();render();go("shop")};
+document.getElementById("search").oninput=render;
+document.getElementById("filter").onchange=e=>{active=e.target.value;initCategories();render()};
+document.getElementById("sort").onchange=render;
+function askNova(){
+let q=document.getElementById("question").value.toLowerCase();
+let budgetMatch=q.match(/(?:under|below|less than|budget|r)\s*r?\s*(\d+)/),budget=budgetMatch?Number(budgetMatch[1]):null;
+let list=products.filter(p=>(!C.some(([n])=>q.includes(n.toLowerCase()))||q.includes(p.category.toLowerCase()))&&(budget===null||p.price<=budget)).sort((a,b)=>a.price-b.price).slice(0,5);
+document.getElementById("answer").textContent=/sell|listing|describe|advert/.test(q)?"NOVA SELLER COACH\nUse a clear title, describe accurate features and condition, use authorised photos, set a fair price, and explain delivery honestly.":list.length?list.map((p,i)=>`${i+1}. ${p.name} — ${cash(p.price)} (${p.category})`).join("\n"):"I couldn't find a matching item. Try a product category and budget in rand.";
+}
+document.getElementById("year").textContent=new Date().getFullYear();
+initCategories();render();renderCart();loadShared();
 </script>
 </body>
 </html>
