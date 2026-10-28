@@ -303,7 +303,40 @@ saveCart();
 }
 function qty(id,n){let i=cart.find(x=>x.id===id);if(!i)return;i.qty+=n;if(i.qty<1)cart=cart.filter(x=>x.id!==id);saveCart();renderCart()}
 function clearCart(){cart=[];saveCart();renderCart();document.getElementById("checkoutMsg").textContent=""}
-function checkout(){document.getElementById("checkoutMsg").textContent=cart.length?"Demo only: no order was placed and no payment was taken.":"Your cart is empty."}
+function checkout(){
+  const form = document.getElementById("checkoutForm");
+
+  if (!cart.length) {
+    form.classList.add("hidden");
+    message("checkoutMsg", "Your cart is empty.", true);
+    return;
+  }
+
+  if (!user) {
+    form.classList.add("hidden");
+    message("checkoutMsg", "Please sign in using the Seller Portal, then return to your cart.", true);
+    return;
+  }
+
+  const invalidItems = cart.filter(item => {
+    const product = products.find(p => p.id === item.id);
+    return !product || !product.dbId;
+  });
+
+  if (invalidItems.length) {
+    form.classList.add("hidden");
+    message(
+      "checkoutMsg",
+      "Your cart contains demo products. Remove them and add real products published by sellers before ordering.",
+      true
+    );
+    return;
+  }
+
+  form.classList.remove("hidden");
+  message("checkoutMsg", "Enter your name, phone number and delivery address below.");
+  form.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 function toast(s){let t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2400)}
 async function loadShared(){
 try{
