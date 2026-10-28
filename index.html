@@ -157,7 +157,15 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 <div class="field"><label for="productName">Product name *</label><input id="productName" maxlength="100" required></div>
 <div class="field"><label for="category">Category *</label><select id="category" required></select></div>
 <div class="field"><label for="price">Price in rand (R) *</label><input id="price" type="number" min="1" max="10000000" step=".01" required></div>
-<div class="field"><label for="image">Product image URL (optional)</label><input id="image" type="url" maxlength="500" placeholder="https://example.com/photo.jpg"></div>
+<div class="field">
+  <label for="photoFile">Upload product photo from your phone (optional)</label>
+  <input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp">
+  <p class="muted">Choose a JPG, PNG or WebP photo from your gallery.</p>
+</div>
+<div class="field">
+  <label for="image">Or use a product image URL (optional)</label>
+  <input id="image" type="url" maxlength="500" placeholder="https://example.com/photo.jpg">
+</div>
 <div class="field"><label for="description">Product description *</label><textarea id="description" maxlength="500" required></textarea></div>
 <button class="btn primary" id="publish" disabled>Sign in to publish</button>
 <div id="sellerMsg" class="msg" aria-live="polite"></div>
