@@ -337,7 +337,71 @@ function checkout(){
   message("checkoutMsg", "Enter your name, phone number and delivery address below.");
   form.scrollIntoView({ behavior: "smooth", block: "start" });
 }
-function toast(s){let t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2400)}
+document.getElementById("checkoutForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const btn = document.getElementById("placeOrderBtn");
+
+  if (!cart.length) {
+    message("checkoutMsg", "Your cart is empty.", true);
+    return;
+  }
+
+  const items = cart.map(item => {
+    const p = products.find(x => x.id === item.id);
+    if (!p || !p.dbId) return null;
+
+    return {
+      product_id: Number(p.dbId),
+      quantity: Number(item.qty)
+    };
+  });
+
+  if (items.some(item =>
+    !item ||
+    !Number.isSafeInteger(item.product_id) ||
+    !Number.isSafeInteger(item.quantity) ||
+    item.quantity < 1
+  )) {
+    message("checkoutMsg", "Remove demo products and add real seller listings before ordering.", true);
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Submitting order…";
+
+  try {
+    const { data: authData, error: authError } = await sb.auth.getUser();
+
+    if (authError || !authData.user) {
+      throw new Error("Please sign in again before ordering.");
+    }
+
+    const { data, error } = await sb.rpc("place_novaai_order", {
+      p_customer_name: document.getElementById("customerName").value.trim(),
+      p_customer_phone: document.getElementById("customerPhone").value.trim(),
+      p_delivery_address: document.getElementById("deliveryAddress").value.trim(),
+      p_items: items
+    });
+
+    if (error) throw error;
+
+    cart = [];
+    saveCart();
+    renderCart();
+
+    document.getElementById("checkoutForm").reset();
+    document.getElementById("checkoutForm").classList.add("hidden");
+
+    message("checkoutMsg", "Order submitted successfully! Reference: " + data + ". No payment has been taken.");
+  } catch (err) {
+    message("checkoutMsg", "Order failed: " + err.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Place order";
+  }
+});
+  function toast(s){let t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2400)}
 async function loadShared(){
 try{
 let{data,error}=await sb.from("Products").select("id,name,description,price,category,image_url,seller_name").order("created_at",{ascending:false});
