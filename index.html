@@ -439,8 +439,11 @@ function updateUser(u){
   document.getElementById("publish").disabled=!u;
   document.getElementById("publish").textContent=u?"Publish shared listing":"Sign in to publish";
 
+  
   if (u) {
     loadMyProducts();
+    const ordersMsg = document.getElementById("sellerOrdersMsg");
+    if (ordersMsg) loadSellerOrders();
   } else {
     const box = document.getElementById("myProductsList");
     const msg = document.getElementById("myProductsMsg");
