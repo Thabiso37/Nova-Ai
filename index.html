@@ -287,13 +287,25 @@ document.getElementById("catalogueMessage").textContent="Demo catalogue is avail
 render();
 }
 }
+
 function updateUser(u){
-user=u;
-document.getElementById("signedOut").classList.toggle("hidden",!!u);
-document.getElementById("signedIn").classList.toggle("hidden",!u);
-document.getElementById("userEmail").textContent=u?.email||"";
-document.getElementById("publish").disabled=!u;
-document.getElementById("publish").textContent=u?"Publish shared listing":"Sign in to publish";
+  user=u;
+  document.getElementById("signedOut").classList.toggle("hidden",!!u);
+  document.getElementById("signedIn").classList.toggle("hidden",!u);
+  document.getElementById("userEmail").textContent=u?.email||"";
+  document.getElementById("publish").disabled=!u;
+  document.getElementById("publish").textContent=u?"Publish shared listing":"Sign in to publish";
+
+  if (u) {
+    loadMyProducts();
+  } else {
+    const box = document.getElementById("myProductsList");
+    const msg = document.getElementById("myProductsMsg");
+    if (box && msg) {
+      box.innerHTML = "";
+      msg.textContent = "Please sign in to manage your products.";
+    }
+  }
 }
 document.getElementById("authForm").onsubmit=async e=>{
 e.preventDefault();message("authMsg","Signing in…");
