@@ -310,47 +310,162 @@ let{error}=await sb.auth.signOut();
 if(error)message("userMsg",error.message,true);
 else{updateUser(null);message("authMsg","You have signed out.")}
 };
-document.getElementById("sellerForm").onsubmit=async e=>{
-e.preventDefault();
-if(!user){message("sellerMsg","Please sign in before publishing.",true);return}
-let { data: authData, error: authError } = await sb.auth.getUser();
-let u = authData?.user;
-if (authError || !u) {
-  updateUser(null);
-  message("sellerMsg", "Your session could not be verified. Please sign in again.", true);
-  return;
-}
-if(!u){updateUser(null);message("sellerMsg","Your session expired. Please sign in again.",true);return}
-let seller=document.getElementById("sellerName").value.trim(),name=document.getElementById("productName").value.trim(),category=document.getElementById("category").value,price=Number(document.getElementById("price").value),description=document.getElementById("description").value.trim(),image=safeImg(document.getElementById("image").value.trim());
-if(!seller||!name||!description||!Number.isFinite(price)||price<1){message("sellerMsg","Check all required fields and enter a valid price.",true);return}
-let b=document.getElementById("publish");b.disabled=true;b.textContent="Publishing…";
-let{error}=await sb.from("Products").insert({
-  name,
-  description,
-  price,
-  category,
-  image_url:image||null,
-  seller_name:seller,
-  seller_id:u.id
-});
-b.disabled=false;b.textContent="Publish shared listing";
-if(error){message("sellerMsg","Could not publish: "+error.message,true);return}
-e.target.reset();message("sellerMsg","Listing published to the shared marketplace.");await loadShared();go("shop");
+
+document.getElementById("sellerForm").onsubmit = async e => {
+  e.preventDefault();
+
+  if (!user) {
+    message("sellerMsg", "Please sign in before publishing.", true);
+    return;
+  }
+
+  const { data: authData, error: authError } = await sb.auth.getUser();
+  const u = authData?.user;
+
+  if (authError || !u) {
+    updateUser(null);
+    message("sellerMsg", "Please sign in again.", true);
+    return;
+  }
+
+  const seller = document.getElementById("sellerName").value.trim();
+  const name = document.getElementById("productName").value.trim();
+  const category = document.getElementById("category").value;
+  const price = Number(document.getElementById("price").value);
+  const description = document.getElementById("description").value.trim();
+  const image = safeImg(document.getElementById("image").value.trim());
+  const file = document.getElementById("photoFile").files[0];
+
+  if (file && image) {
+    message("sellerMsg", "Choose a photo OR an image URL, not both.", true);
+    return;
+  }
+
+  if (!seller || !name || !description || !Number.isFinite(price) || price < 1) {
+    message("sellerMsg", "Check all required fields and enter a valid price.", true);
+    return;
+  }
+
+  const b = document.getElementById("publish");
+  b.disabled = true;
+  b.textContent = "Publishing…";
+
+  let uploadedImage = image;
+
+  try {
+    if (file) {
+      const types = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp"
+      };
+
+      if (!types[file.type]) {
+        throw new Error("Choose a JPG, PNG, or WebP photo.");
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("Photo must be smaller than 5 MB.");
+      }
+
+      const path = u.id + "/" + Date.now() + "." + types[file.type];
+
+      const { error: uploadError } = await sb.storage
+        .from("Nova AI")
+        .upload(path, file, {
+          contentType: file.type,
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = sb.storage
+        .from("Nova AI")
+        .getPublicUrl(path);
+
+      uploadedImage = publicData.publicUrl;
+    }
+
+    const { error } = await sb.from("Products").insert({
+      name,
+      description,
+      price,
+      category,
+      image_url: uploadedImage || null,
+      seller_name: seller,
+      seller_id: u.id
+    });
+
+    if (error) throw error;
+
+    e.target.reset();
+    message("sellerMsg", "Product published successfully!");
+    await loadShared();
+    go("shop");
+
+  } catch (err) {
+    message("sellerMsg", "Publishing failed: " + err.message, true);
+  } finally {
+    b.disabled = false;
+    b.textContent = "Publish shared listing";
+  }
 };
-sb.auth.getSession().then(({data})=>updateUser(data.session?.user||null));
-sb.auth.onAuthStateChange((_event,session)=>updateUser(session?.user||null));
-document.getElementById("searchForm").onsubmit=e=>{e.preventDefault();render();go("shop")};
+sb.auth.getSession().then(({data})=>
+  updateUser(data.session?.user||null)
+);
+
+sb.auth.onAuthStateChange((_event,session)=>
+  updateUser(session?.user||null)
+);
+
+document.getElementById("searchForm").onsubmit=e=>{
+  e.preventDefault();
+  render();
+  go("shop");
+};
+
 document.getElementById("search").oninput=render;
-document.getElementById("filter").onchange=e=>{active=e.target.value;initCategories();render()};
+
+document.getElementById("filter").onchange=e=>{
+  active=e.target.value;
+  initCategories();
+  render();
+};
+
 document.getElementById("sort").onchange=render;
+
 function askNova(){
-let q=document.getElementById("question").value.toLowerCase();
-let budgetMatch=q.match(/(?:under|below|less than|budget|r)\s*r?\s*(\d+)/),budget=budgetMatch?Number(budgetMatch[1]):null;
-let list=products.filter(p=>(!C.some(([n])=>q.includes(n.toLowerCase()))||q.includes(p.category.toLowerCase()))&&(budget===null||p.price<=budget)).sort((a,b)=>a.price-b.price).slice(0,5);
-document.getElementById("answer").textContent=/sell|listing|describe|advert/.test(q)?"NOVA SELLER COACH\nUse a clear title, describe accurate features and condition, use authorised photos, set a fair price, and explain delivery honestly.":list.length?list.map((p,i)=>`${i+1}. ${p.name} — ${cash(p.price)} (${p.category})`).join("\n"):"I couldn't find a matching item. Try a product category and budget in rand.";
+  let q=document.getElementById("question").value.toLowerCase();
+
+  let budgetMatch=q.match(/(?:under|below|less than|budget|r)\s*r?\s*(\d+)/);
+  let budget=budgetMatch?Number(budgetMatch[1]):null;
+
+  let list=products
+    .filter(p=>
+      (!C.some(([n])=>q.includes(n.toLowerCase()))||
+      q.includes(p.category.toLowerCase()))&&
+      (budget===null||p.price<=budget)
+    )
+    .sort((a,b)=>a.price-b.price)
+    .slice(0,5);
+
+  document.getElementById("answer").textContent=
+    /sell|listing|describe|advert/.test(q)
+    ?"NOVA SELLER COACH\nUse a clear title, describe accurate features and condition, use authorised photos, set a fair price, and explain delivery honestly."
+    :list.length
+      ?list.map((p,i)=>
+        `${i+1}. ${p.name} — ${cash(p.price)} (${p.category})`
+      ).join("\n")
+      :"I couldn't find a matching item. Try a product category and budget in rand.";
 }
-document.getElementById("year").textContent=new Date().getFullYear();
-initCategories();render();renderCart();loadShared();
+
+document.getElementById("year").textContent=
+  new Date().getFullYear();
+
+initCategories();
+render();
+renderCart();
+loadShared();
 </script>
 </body>
 </html>
