@@ -553,9 +553,31 @@ if(sort==="low")list.sort((a,b)=>a.price-b.price);
 if(sort==="high")list.sort((a,b)=>b.price-a.price);
 if(sort==="az")list.sort((a,b)=>a.name.localeCompare(b.name));
 document.getElementById("productCount").textContent=products.length;
-document.getElementById("products").innerHTML=list.length?list.map(p=>`<article class="product"><div class="prodimg">${safeImg(p.image)?`<img loading="lazy" src="${esc(safeImg(p.image))}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}</div><div class="prodbody"><small style="color:#6654f5;font-weight:800">${esc(p.category)}</small><h3>${esc(p.name)}</h3><p>${esc(p.description)}</p><div class="price">${cash(p.price)}</div><p>Seller: ${esc(p.seller)}</p><div class="actions"><button class="btn primary" data-add="${esc(p.id)}">Add to cart</button><button class="btn outline" data-info="${esc(p.id)}">Details</button></div></div></article>`).join(""):'<div class="panel">No products found. Try another search or category.</div>';
+document.getElementById("products").innerHTML=list.length?list.map(p=>`<article class="product">
+<div class="prodimg" style="position:relative"><button type="button" class="wishlist-btn" data-wishlist="${esc(p.id)}" aria-label="Add to wishlist" style="position:absolute;top:10px;right:10px;z-index:2;width:38px;height:38px;border:1px solid #e1e6ee;border-radius:50%;background:#fff;font-size:22px;cursor:pointer">♡</button>
+${safeImg(p.image)?`<img loading="lazy" src="${esc(safeImg(p.image))}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}</div><div class="prodbody"><small style="color:#6654f5;font-weight:800">${esc(p.category)}</small><h3>${esc(p.name)}</h3><p>${esc(p.description)}</p><div class="price">${cash(p.price)}</div><p>Seller: ${esc(p.seller)}</p><div class="actions"><button class="btn primary" data-add="${esc(p.id)}">Add to cart</button><button class="btn outline" data-info="${esc(p.id)}">Details</button></div></div></article>`).join(""):'<div class="panel">No products found. Try another search or category.</div>';
 document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add(b.dataset.add));
+let savedWishlist=JSON.parse(localStorage.getItem("novaWishlist")||"[]");
+document.querySelectorAll("[data-wishlist]").forEach(b=>{
+  if(savedWishlist.includes(b.dataset.wishlist)){
+    b.textContent="♥";
+    b.style.color="#e11d48";
+  }
+  b.onclick=()=>{
+    let wishlist=JSON.parse(localStorage.getItem("novaWishlist")||"[]");
+    const id=b.dataset.wishlist;
 
+    if(wishlist.includes(id)){
+      wishlist=wishlist.filter(x=>x!==id);
+    }else{
+      wishlist.push(id);
+    }
+
+    localStorage.setItem("novaWishlist",JSON.stringify(wishlist));
+    b.textContent=wishlist.includes(id)?"♥":"♡";
+    b.style.color=wishlist.includes(id)?"#e11d48":"#17345b";
+  };
+});
 document.querySelectorAll("[data-info]").forEach(b=>{
   b.onclick=()=>{
     const p=products.find(x=>x.id===b.dataset.info);
