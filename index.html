@@ -76,9 +76,92 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 .toast{position:fixed;bottom:15px;left:50%;transform:translateX(-50%);background:#171b2d;color:white;padding:12px 16px;border-radius:10px;z-index:10}
 @media(max-width:800px){.cats{grid-template-columns:repeat(4,1fr)}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hero-art{font-size:60px}}
 @media(max-width:560px){.head,main,nav{padding-left:12px;padding-right:12px}.search{order:3;flex-basis:100%}.hero{padding:23px}.hero-art{display:none}.stats{gap:7px}.stat{padding:10px}.stat strong{font-size:18px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.prodimg{height:130px}.two{grid-template-columns:1fr}.cats{gap:6px}.cat{font-size:11px}}
+
+.product-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 18, 35, .65);
+}
+.product-modal.open {
+  display: flex;
+}
+.product-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #fff;
+  color: #171b2d;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+.product-modal-image {
+  width: 100%;
+  height: 220px;
+  object-fit: contain;
+  background: #f5f6fb;
+}
+.product-modal-content {
+  padding: 20px;
+}
+.product-modal-price {
+  color: #5145e5;
+  font-size: 25px;
+  font-weight: 800;
+  margin: 10px 0;
+}
+.product-modal-meta {
+  color: #666b7a;
+  font-size: 13px;
+  margin: 8px 0;
+}
+.product-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: white;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px #0002;
+}
+.product-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+.product-modal-actions button {
+  flex: 1;
+}
 </style>
 </head>
 <body>
+ 
+<div id="productModal" class="product-modal" role="dialog" aria-modal="true" aria-labelledby="modalProductName">
+  <div class="product-modal-card">
+    <button type="button" class="product-modal-close" id="closeProductModal" aria-label="Close">×</button>
+    <img id="modalProductImage" class="product-modal-image" alt="Product image">
+    <div class="product-modal-content">
+      <h2 id="modalProductName">Product name</h2>
+      <div id="modalProductPrice" class="product-modal-price"></div>
+      <div id="modalProductMeta" class="product-modal-meta"></div>
+      <p id="modalProductDescription"></p>
+      <div class="product-modal-actions">
+        <button type="button" class="btn primary" id="modalAddToCart">Add to cart</button>
+        <button type="button" class="btn outline" id="modalContinueShopping">Continue shopping</button>
+      </div>
+    </div>
+  </div>
+</div> 
 <div class="top">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
 <header>
 <div class="head">
@@ -327,20 +410,32 @@ if(sort==="az")list.sort((a,b)=>a.name.localeCompare(b.name));
 document.getElementById("productCount").textContent=products.length;
 document.getElementById("products").innerHTML=list.length?list.map(p=>`<article class="product"><div class="prodimg">${safeImg(p.image)?`<img loading="lazy" src="${esc(safeImg(p.image))}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}</div><div class="prodbody"><small style="color:#6654f5;font-weight:800">${esc(p.category)}</small><h3>${esc(p.name)}</h3><p>${esc(p.description)}</p><div class="price">${cash(p.price)}</div><p>Seller: ${esc(p.seller)}</p><div class="actions"><button class="btn primary" data-add="${esc(p.id)}">Add to cart</button><button class="btn outline" data-info="${esc(p.id)}">Details</button></div></div></article>`).join(""):'<div class="panel">No products found. Try another search or category.</div>';
 document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add(b.dataset.add));
+
 document.querySelectorAll("[data-info]").forEach(b=>{
   b.onclick=()=>{
     const p=products.find(x=>x.id===b.dataset.info);
     if(!p)return;
 
-    alert(
-      p.name+"\n"+
-      cash(p.price)+" · "+p.category+
-      "\nSeller: "+p.seller+
-      "\n\n"+p.description
-    );
+    document.getElementById("modalProductName").textContent=p.name;
+    document.getElementById("modalProductPrice").textContent=cash(p.price);
+    document.getElementById("modalProductMeta").textContent=
+      p.category+" · Seller: "+p.seller;
+    document.getElementById("modalProductDescription").textContent=p.description;
+
+    const img=document.getElementById("modalProductImage");
+    const imageUrl=safeImg(p.image);
+    img.style.display=imageUrl?"block":"none";
+    if(imageUrl)img.src=imageUrl;
+    else img.removeAttribute("src");
+
+    document.getElementById("modalAddToCart").onclick=()=>{
+      add(p.id);
+      document.getElementById("productModal").classList.remove("open");
+    };
+
+    document.getElementById("productModal").classList.add("open");
   };
 });
-}
 function resetFilters(){document.getElementById("search").value="";document.getElementById("filter").value="All";document.getElementById("sort").value="featured";active="All";initCategories();render()}
 function add(id){let p=products.find(x=>x.id===id);let i=cart.find(x=>x.id===id);if(i)i.qty++;else cart.push({id,qty:1});saveCart();renderCart();toast(p.name+" added to cart.")}
 function renderCart(){
@@ -1011,6 +1106,21 @@ if (!user) {
 
 document.getElementById("loadCustomerOrders")
   .addEventListener("click", loadCustomerOrders);
+
+function closeProductModal(){
+  document.getElementById("productModal").classList.remove("open");
+}
+
+document.getElementById("closeProductModal").onclick=closeProductModal;
+document.getElementById("modalContinueShopping").onclick=closeProductModal;
+
+document.getElementById("productModal").onclick=function(e){
+  if(e.target===this)closeProductModal();
+};
+
+document.addEventListener("keydown",function(e){
+  if(e.key==="Escape")closeProductModal();
+});
 </script>
 </body>
 </html>
