@@ -601,13 +601,22 @@ go("shop");
     b.textContent = "Publish shared listing";
   }
 };
-sb.auth.getSession().then(({data})=>
-  updateUser(data.session?.user||null)
-);
+let sessionReady = false;
 
-sb.auth.onAuthStateChange((_event,session)=>
-  updateUser(session?.user||null)
-);
+const sessionPromise = sb.auth.getSession().then(({ data, error }) => {
+  if (error) throw error;
+
+  updateUser(data?.session?.user || null);
+  sessionReady = true;
+}).catch(err => {
+  console.error("Session error:", err.message);
+  sessionReady = true;
+});
+
+sb.auth.onAuthStateChange((_event, session) => {
+  updateUser(session?.user || null);
+  sessionReady = true;
+});
 
 document.getElementById("searchForm").onsubmit=e=>{
   e.preventDefault();
@@ -896,11 +905,24 @@ async function loadCustomerOrders() {
   const box = document.getElementById("customerOrdersList");
   const btn = document.getElementById("loadCustomerOrders");
 
-  if (!user) {
-    msg.textContent = "Please sign in to view your orders.";
-    box.innerHTML = "";
+  
+if (!sessionReady) {
+  msg.textContent = "Checking your sign-in session...";
+  try {
+    await sessionPromise;
+  } catch (err) {
+    msg.textContent =
+      "Could not check your sign-in session. Please refresh and try again.";
     return;
   }
+}
+
+
+if (!user) {
+  msg.textContent = "Please sign in to view your orders.";
+  box.innerHTML = "";
+  return;
+}
 
   btn.disabled = true;
   msg.textContent = "Loading your orders...";
