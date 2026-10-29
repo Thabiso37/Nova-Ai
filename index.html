@@ -504,6 +504,11 @@ header {
     <div id="customerOrdersList"></div>
   </div>
 </section>
+
+<section id="wishlist" class="panel" style="margin:24px 0">
+  <h2>❤️ My Wishlist</h2>
+  <p>Your saved products will appear here.</p>
+</section>
 </main>
 <footer>
 <div class="foot">
@@ -573,9 +578,10 @@ document.querySelectorAll("[data-wishlist]").forEach(b=>{
       wishlist.push(id);
     }
 
-    localStorage.setItem("novaWishlist",JSON.stringify(wishlist));
-    b.textContent=wishlist.includes(id)?"♥":"♡";
-    b.style.color=wishlist.includes(id)?"#e11d48":"#17345b";
+ localStorage.setItem("novaWishlist",JSON.stringify(wishlist));
+b.textContent=wishlist.includes(id)?"♥":"♡";
+b.style.color=wishlist.includes(id)?"#e11d48":"#17345b";
+renderWishlist();
   };
 });
 document.querySelectorAll("[data-info]").forEach(b=>{
@@ -605,7 +611,48 @@ document.querySelectorAll("[data-info]").forEach(b=>{
 });
 }
   
-function resetFilters(){document.getElementById("search").value="";document.getElementById("filter").value="All";document.getElementById("sort").value="featured";active="All";initCategories();render()}
+
+function renderWishlist(){
+  const section = document.getElementById("wishlist");
+  if(!section) return;
+
+  const saved = JSON.parse(localStorage.getItem("novaWishlist") || "[]");
+  const favourites = saved
+    .map(id => products.find(p => String(p.id) === String(id)))
+    .filter(Boolean);
+
+  section.innerHTML = `
+    <h2>❤️ My Wishlist</h2>
+    ${favourites.length ? favourites.map(p => `
+      <div class="panel" style="margin:10px 0">
+        <h3>${esc(p.name)}</h3>
+        <p>${cash(p.price)}</p>
+        <button class="btn primary" data-wish-add="${esc(p.id)}">Add to cart</button>
+        <button class="btn outline" data-wish-remove="${esc(p.id)}">Remove</button>
+      </div>
+    `).join("") : `
+      <p>Your wishlist is empty. Tap a heart on a product to save it.</p>
+      <a href="#shop">Continue shopping</a>
+    `}
+  `;
+
+  section.querySelectorAll("[data-wish-add]").forEach(b => {
+    b.onclick = () => add(b.dataset.wishAdd);
+  });
+
+  section.querySelectorAll("[data-wish-remove]").forEach(b => {
+    b.onclick = () => {
+      const id = b.dataset.wishRemove;
+      const savedNow = JSON.parse(localStorage.getItem("novaWishlist") || "[]");
+      localStorage.setItem("novaWishlist", JSON.stringify(
+        savedNow.filter(x => String(x) !== String(id))
+      ));
+      render();
+      renderWishlist();
+    };
+  });
+}
+  function resetFilters(){document.getElementById("search").value="";document.getElementById("filter").value="All";document.getElementById("sort").value="featured";active="All";initCategories();render()}
 function add(id){let p=products.find(x=>x.id===id);let i=cart.find(x=>x.id===id);if(i)i.qty++;else cart.push({id,qty:1});saveCart();renderCart();toast(p.name+" added to cart.")}
 function renderCart(){
 cart=cart.filter(i=>products.some(p=>p.id===i.id));
@@ -1290,6 +1337,8 @@ document.getElementById("productModal").onclick=function(e){
 document.addEventListener("keydown",function(e){
   if(e.key==="Escape")closeProductModal();
 });
+
+  renderWishlist();
 </script>
 </body>
 </html>
