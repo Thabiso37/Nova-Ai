@@ -249,6 +249,32 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 </form>
 </div>
 </section>
+<section id="customerOrders" class="section">
+  <h2>📦 My Orders</h2>
+  <p class="muted">
+    Track orders placed using your signed-in NOVAAI account.
+  </p>
+
+  <div class="panel">
+    <button
+      class="btn primary"
+      type="button"
+      id="loadCustomerOrders"
+    >
+      View my orders
+    </button>
+
+    <div
+      id="customerOrdersMsg"
+      class="msg"
+      aria-live="polite"
+    >
+      Sign in to view your orders.
+    </div>
+
+    <div id="customerOrdersList"></div>
+  </div>
+</section>
 </main>
 <footer>
 <div class="foot">
