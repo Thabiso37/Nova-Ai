@@ -729,6 +729,39 @@ async function loadSellerOrders() {
 
 document.getElementById("loadSellerOrders")
   .addEventListener("click", loadSellerOrders);
+  
+async function saveSellerOrderStatus(orderId) {
+  const select = document.getElementById("status-" + orderId);
+  const msg = document.getElementById("sellerOrdersMsg");
+
+  if (!user || !select) {
+    msg.textContent = "Please sign in first.";
+    return;
+  }
+
+  const newStatus = select.value;
+  select.disabled = true;
+  msg.textContent = "Saving order status...";
+
+  try {
+    const { error } = await sb.rpc(
+      "update_my_seller_order_status",
+      {
+        p_order_id: orderId,
+        p_status: newStatus
+      }
+    );
+
+    if (error) throw error;
+
+    msg.textContent = "Order status updated successfully.";
+    await loadSellerOrders();
+  } catch (err) {
+    msg.textContent = "Could not update order status: " + err.message;
+    select.disabled = false;
+  }
+}
+
 async function editMyProduct(id) {
   const { data: rows, error } = await sb
     .from("Products")
