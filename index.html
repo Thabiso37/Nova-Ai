@@ -436,6 +436,8 @@ document.querySelectorAll("[data-info]").forEach(b=>{
     document.getElementById("productModal").classList.add("open");
   };
 });
+}
+  
 function resetFilters(){document.getElementById("search").value="";document.getElementById("filter").value="All";document.getElementById("sort").value="featured";active="All";initCategories();render()}
 function add(id){let p=products.find(x=>x.id===id);let i=cart.find(x=>x.id===id);if(i)i.qty++;else cart.push({id,qty:1});saveCart();renderCart();toast(p.name+" added to cart.")}
 function renderCart(){
