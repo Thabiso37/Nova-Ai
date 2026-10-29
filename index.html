@@ -889,6 +889,80 @@ async function deleteMyProduct(id) {
   await loadShared();
   await loadMyProducts();
 }
+  
+async function loadCustomerOrders() {
+  const msg = document.getElementById("customerOrdersMsg");
+  const box = document.getElementById("customerOrdersList");
+  const btn = document.getElementById("loadCustomerOrders");
+
+  if (!user) {
+    msg.textContent = "Please sign in to view your orders.";
+    box.innerHTML = "";
+    return;
+  }
+
+  btn.disabled = true;
+  msg.textContent = "Loading your orders...";
+  box.innerHTML = "";
+
+  try {
+    const { data: orders, error } = await sb
+      .from("orders")
+      .select("id,order_status,payment_status,total_amount,created_at")
+      .eq("customer_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    if (!orders || orders.length === 0) {
+      msg.textContent = "You have no orders yet.";
+      return;
+    }
+
+    const ids = orders.map(o => o.id);
+
+    const { data: items, error: itemsError } = await sb
+      .from("order_items")
+      .select("order_id,product_name,quantity,unit_price")
+      .in("order_id", ids);
+
+    if (itemsError) throw itemsError;
+
+    box.innerHTML = orders.map(o => {
+      const orderItems = (items || []).filter(
+        item => item.order_id === o.id
+      );
+
+      return `
+        <div class="panel" style="margin:10px 0">
+          <h3>Order ${esc(o.id)}</h3>
+          <p><b>Date:</b> ${esc(new Date(o.created_at).toLocaleString())}</p>
+          <p><b>Order status:</b> ${esc(o.order_status)}</p>
+          <p><b>Payment status:</b> ${esc(o.payment_status)}</p>
+          <p><b>Order total:</b> ${cash(o.total_amount)}</p>
+          <h4>Items</h4>
+          ${orderItems.map(item => `
+            <p>
+              ${esc(item.product_name)}
+              × ${esc(item.quantity)}
+              — ${cash(item.unit_price)}
+            </p>
+          `).join("")}
+        </div>
+      `;
+    }).join("");
+
+    msg.textContent = "Your orders have loaded successfully.";
+  } catch (err) {
+    console.error("Customer orders error:", err);
+    msg.textContent = "Could not load orders: " + err.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.getElementById("loadCustomerOrders")
+  .addEventListener("click", loadCustomerOrders);
 </script>
 </body>
 </html>
