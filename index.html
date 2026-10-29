@@ -823,8 +823,20 @@ async function saveSellerOrderStatus(orderId) {
     }
 
         await loadSellerOrders();
-    msg.textContent =
-      "Order list refreshed. Check the status shown above.";
+
+const updatedSelect = document.getElementById("status-" + orderId);
+
+if (updatedSelect) {
+  updatedSelect.value = newStatus;
+  updatedSelect.disabled = false;
+}
+
+msg.textContent =
+  "SUCCESS: Order status saved as " +
+  newStatus.charAt(0).toUpperCase() +
+  newStatus.slice(1) +
+  ".";
+msg.className = "msg success";
   } catch (err) {
     console.error("Could not save order status:", err);
     msg.textContent =
