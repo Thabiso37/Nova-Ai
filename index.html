@@ -714,7 +714,16 @@ async function loadSellerOrders() {
         <p><b>Quantity:</b> ${esc(o.quantity)}</p>
         <p><b>Unit price:</b> ${cash(o.unit_price)}</p>
         <p><b>Item total:</b> ${cash(o.line_total)}</p>
-        <p><b>Order status:</b> ${esc(o.order_status)}</p>
+        <p><b>Order status:</b></p>
+<select id="status-${esc(o.order_id)}">
+  ${["pending","accepted","rejected","processing","shipped","delivered","cancelled"].map(s =>
+    `<option value="${s}" ${o.order_status === s ? "selected" : ""}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
+  ).join("")}
+</select>
+<button class="btn" type="button"
+  onclick="saveSellerOrderStatus('${esc(o.order_id)}')">
+  Save status
+</button>
         <p><b>Payment status:</b> ${esc(o.payment_status)}</p>
         <p class="muted">${esc(o.order_created_at)}</p>
       </div>
