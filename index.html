@@ -786,8 +786,9 @@ async function saveSellerOrderStatus(orderId) {
         "Status saved, but the order could not be reloaded.";
     }
 
-    await loadSellerOrders();
-
+        await loadSellerOrders();
+    msg.textContent =
+      "Order list refreshed. Check the status shown above.";
   } catch (err) {
     console.error("Could not save order status:", err);
     msg.textContent =
