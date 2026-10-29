@@ -327,7 +327,19 @@ if(sort==="az")list.sort((a,b)=>a.name.localeCompare(b.name));
 document.getElementById("productCount").textContent=products.length;
 document.getElementById("products").innerHTML=list.length?list.map(p=>`<article class="product"><div class="prodimg">${safeImg(p.image)?`<img loading="lazy" src="${esc(safeImg(p.image))}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}</div><div class="prodbody"><small style="color:#6654f5;font-weight:800">${esc(p.category)}</small><h3>${esc(p.name)}</h3><p>${esc(p.description)}</p><div class="price">${cash(p.price)}</div><p>Seller: ${esc(p.seller)}</p><div class="actions"><button class="btn primary" data-add="${esc(p.id)}">Add to cart</button><button class="btn outline" data-info="${esc(p.id)}">Details</button></div></div></article>`).join(""):'<div class="panel">No products found. Try another search or category.</div>';
 document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add(b.dataset.add));
-document.querySelectorAll("[data-info]").forEach(b=>b.onclick=()=>{let p=products.find(x=>x.id===b.dataset.info);document.getElementById("answer").textContent=p.name+"\n"+cash(p.price)+" · "+p.category+"\nSeller: "+p.seller+"\n\n"+p.description;go("assistant")});
+document.querySelectorAll("[data-info]").forEach(b=>{
+  b.onclick=()=>{
+    const p=products.find(x=>x.id===b.dataset.info);
+    if(!p)return;
+
+    alert(
+      p.name+"\n"+
+      cash(p.price)+" · "+p.category+
+      "\nSeller: "+p.seller+
+      "\n\n"+p.description
+    );
+  };
+});
 }
 function resetFilters(){document.getElementById("search").value="";document.getElementById("filter").value="All";document.getElementById("sort").value="featured";active="All";initCategories();render()}
 function add(id){let p=products.find(x=>x.id===id);let i=cart.find(x=>x.id===id);if(i)i.qty++;else cart.push({id,qty:1});saveCart();renderCart();toast(p.name+" added to cart.")}
