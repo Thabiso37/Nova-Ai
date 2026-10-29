@@ -788,7 +788,8 @@ async function saveSellerOrderStatus(orderId) {
   const newStatus = select.value;
   select.disabled = true;
   msg.textContent = "Saving status: " + newStatus + "...";
-
+  
+alert("Save button clicked. Selected status: " + newStatus);
   try {
     const { data, error } = await sb.rpc(
       "update_my_seller_order_status",
