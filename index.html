@@ -739,21 +739,22 @@ async function loadSellerOrders() {
 document.getElementById("loadSellerOrders")
   .addEventListener("click", loadSellerOrders);
   
+
 async function saveSellerOrderStatus(orderId) {
   const select = document.getElementById("status-" + orderId);
   const msg = document.getElementById("sellerOrdersMsg");
 
   if (!user || !select) {
-    msg.textContent = "Please sign in first.";
+    msg.textContent = "Please sign in and select an order status.";
     return;
   }
 
   const newStatus = select.value;
   select.disabled = true;
-  msg.textContent = "Saving order status...";
+  msg.textContent = "Saving status: " + newStatus + "...";
 
   try {
-    const { error } = await sb.rpc(
+    const { data, error } = await sb.rpc(
       "update_my_seller_order_status",
       {
         p_order_id: orderId,
@@ -761,12 +762,36 @@ async function saveSellerOrderStatus(orderId) {
       }
     );
 
-    if (error) throw error;
+    if (error) {
+      console.error("Status update error:", error);
+      throw error;
+    }
 
-    msg.textContent = "Order status updated successfully.";
+    msg.textContent = "Saved. Checking the database status...";
+
+    const { data: orders, error: readError } =
+      await sb.rpc("get_my_seller_orders");
+
+    if (readError) throw readError;
+
+    const updatedOrder = orders?.find(
+      o => o.order_id === orderId
+    );
+
+    if (updatedOrder) {
+      msg.textContent =
+        "Database status: " + updatedOrder.order_status;
+    } else {
+      msg.textContent =
+        "Status saved, but the order could not be reloaded.";
+    }
+
     await loadSellerOrders();
+
   } catch (err) {
-    msg.textContent = "Could not update order status: " + err.message;
+    console.error("Could not save order status:", err);
+    msg.textContent =
+      "Save failed: " + (err.message || String(err));
     select.disabled = false;
   }
 }
