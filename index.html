@@ -142,6 +142,151 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 .product-modal-actions button {
   flex: 1;
 }
+  
+:root {
+  --p: #174ea6;
+  --dark: #10284b;
+  --bg: #f4f6f9;
+  --line: #e1e6ee;
+}
+
+.top {
+  background: #10284b;
+  font-weight: 700;
+  letter-spacing: .3px;
+}
+
+header {
+  box-shadow: 0 3px 12px rgba(20, 40, 70, .06);
+}
+
+.logo {
+  letter-spacing: -1px;
+}
+
+.logo span {
+  color: #f5b900;
+}
+
+.search input {
+  border-radius: 9px 0 0 9px;
+  background: #f8faff;
+}
+
+.search .btn {
+  border-radius: 0 9px 9px 0;
+}
+
+.primary {
+  background: #174ea6;
+}
+
+.light {
+  background: #fff2bd;
+  color: #17345b;
+}
+
+.hero {
+  background: linear-gradient(120deg, #10284b, #174ea6 72%, #3878cf);
+  box-shadow: 0 8px 24px rgba(16, 40, 75, .12);
+}
+
+.cat {
+  transition: transform .18s, box-shadow .18s;
+}
+
+.cat:active {
+  transform: scale(.97);
+}
+
+.product {
+  border-radius: 12px;
+  border: 1px solid #e0e5ed;
+  box-shadow: 0 2px 7px rgba(20, 40, 70, .035);
+  transition: box-shadow .2s, transform .2s;
+}
+
+.product:hover {
+  box-shadow: 0 7px 20px rgba(20, 40, 70, .10);
+}
+
+.prodimg {
+  height: 190px;
+  background: #fff;
+  padding: 10px;
+}
+
+.prodimg img {
+  object-fit: contain;
+  transition: transform .2s;
+}
+
+.product:hover .prodimg img {
+  transform: scale(1.035);
+}
+
+.prodbody {
+  padding: 14px;
+}
+
+.prodbody h3 {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.prodbody p {
+  line-height: 1.55;
+}
+
+.price {
+  color: #17345b;
+  font-size: 21px;
+  margin-top: auto;
+}
+
+.actions button {
+  min-height: 40px;
+}
+
+.actions .primary {
+  background: #174ea6;
+}
+
+.product-modal-price {
+  color: #174ea6;
+}
+
+@media (max-width: 560px) {
+  .prodimg {
+    height: 145px;
+    padding: 7px;
+  }
+
+  .prodbody {
+    padding: 10px;
+  }
+
+  .prodbody h3 {
+    font-size: 13px;
+  }
+
+  .price {
+    font-size: 19px;
+  }
+
+  .actions {
+    gap: 5px;
+  }
+
+  .actions button {
+    font-size: 11px;
+    padding: 9px 3px;
+  }
+
+  .hero {
+    border-radius: 15px;
+  }
+}
 </style>
 </head>
 <body>
