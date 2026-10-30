@@ -7,6 +7,16 @@
 <meta name="theme-color" content="#101526">
 <title>NOVAAI | South African Marketplace</title>
 <style>
+  body.wishlist-view main > *:not(#wishlist) {
+  display: none !important;
+}
+
+body.wishlist-view #wishlist {
+  display: block !important;
+  min-height: 70vh;
+  margin: 24px auto !important;
+  max-width: 900px;
+}
 :root{--bg:#f5f7fb;--ink:#171c2d;--muted:#70778b;--p:#6654f5;--dark:#101526;--line:#e8eaf2}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Arial,sans-serif}
@@ -663,6 +673,15 @@ function go(id){
   const section = document.getElementById(id);
 
   if (!section) return;
+
+  if (id === "wishlist") {
+    document.body.classList.add("wishlist-view");
+    renderWishlist();
+    section.scrollIntoView({behavior:"smooth"});
+    return;
+  }
+
+  document.body.classList.remove("wishlist-view");
 
   if (id === "seller") {
     section.style.display = "block";
@@ -1518,7 +1537,7 @@ document.addEventListener("keydown",function(e){
 }
 </style>
 <nav class="mobile-bottom-nav">
-  <button onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <button onclick="go('shop')">
     🏠<span>Home</span>
   </button>
   <button onclick="go('categories')">
@@ -1527,8 +1546,8 @@ document.addEventListener("keydown",function(e){
   <button class="nav-ai" onclick="go('assistant')">
     🤖<span>Nova AI</span>
   </button>
-  <button onclick="document.getElementById('wishlist').scrollIntoView({behavior:'smooth'})">
-    ❤️<span>Wishlist</span>
+  <button onclick="go('wishlist')">
+  ❤️<span>Wishlist</span>
 </button>
   <button onclick="window.location.href='seller.html'">
     🏷️<span>Sell</span>
