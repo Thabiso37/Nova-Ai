@@ -1673,6 +1673,23 @@ const changeButton = document.getElementById("changeLocation");
 
 let buyerCoordinates = null;
 
+  locationDisplay.style.cursor = "pointer";
+
+locationDisplay.addEventListener("click", function () {
+  if (!buyerCoordinates) {
+    alert("Please press Use GPS first.");
+    return;
+  }
+
+  const lat = buyerCoordinates.latitude;
+  const lng = buyerCoordinates.longitude;
+
+  const mapsUrl =
+    "https://www.google.com/maps/search/?api=1&query=" +
+    lat + "," + lng;
+
+  window.open(mapsUrl, "_blank");
+});
 gpsButton.addEventListener("click", function () {
   if (!navigator.geolocation) {
     locationDisplay.textContent = "📍 GPS is not supported";
