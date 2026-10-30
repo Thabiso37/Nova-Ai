@@ -431,14 +431,7 @@ header {
     <button type="button" onclick="alert('Location selection coming soon.')">Change</button>
   </div>
 
-  <nav>
-    <a href="#shop">Shop</a>
-    <a href="#categories">Categories</a>
-    <a href="#seller">Sell</a>
-    <a href="#assistant">Nova AI</a>
-    <a href="#customerOrders">My Orders</a>
-    <a href="#wishlist">❤️ My Wishlist</a>
-  </nav>
+  
 </header>
 <main>
 <section class="hero">
@@ -659,7 +652,17 @@ function saveCart(){try{localStorage.setItem("novaMarketplaceCartV1",JSON.string
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function cash(n){return new Intl.NumberFormat("en-ZA",{style:"currency",currency:"ZAR"}).format(Number(n)||0)}
 function safeImg(s){try{let u=new URL(s);return ["http:","https:"].includes(u.protocol)?u.href:""}catch(e){return ""}}
-function go(id){document.getElementById(id).scrollIntoView({behavior:"smooth"})}
+function go(id){
+  const section = document.getElementById(id);
+
+  if (!section) return;
+
+  if (id === "seller") {
+    section.style.display = "block";
+  }
+
+  section.scrollIntoView({behavior:"smooth"});
+}
 function message(id,s,bad=false){let e=document.getElementById(id);e.textContent=s;e.className="msg "+(bad?"error":"success")}
 function initCategories(){
 document.getElementById("cats").innerHTML=[["All","🌐"],...C].map(([n,ic])=>`<button class="cat ${active===n?"active":""}" data-cat="${esc(n)}"><span class="emoji">${ic}</span><span>${esc(n==="All"?"All products":n)}</span></button>`).join("");
