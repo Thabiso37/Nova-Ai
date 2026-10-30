@@ -1527,9 +1527,9 @@ document.addEventListener("keydown",function(e){
   <button class="nav-ai" onclick="go('assistant')">
     🤖<span>Nova AI</span>
   </button>
-  <button onclick="go('wishlist')">
+  <button onclick="document.getElementById('wishlist').scrollIntoView({behavior:'smooth'})">
     ❤️<span>Wishlist</span>
-  </button>
+</button>
   <button onclick="window.location.href='seller.html'">
     🏷️<span>Sell</span>
 </button>
