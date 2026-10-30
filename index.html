@@ -784,7 +784,17 @@ document.getElementById("category").innerHTML=C.map(([n])=>`<option>${esc(n)}</o
 }
 function render(){
 let q=document.getElementById("search").value.toLowerCase(),cat=document.getElementById("filter").value,sort=document.getElementById("sort").value;
-let list=products.filter(p=>(cat==="All"||p.category===cat)&&[p.name,p.category,p.description,p.seller].join(" ").toLowerCase().includes(q));
+let list=products.filter(p=>{
+  const categoryMatch =
+    cat==="All" ||
+    (cat==="Clothing Shoes & Accessories"
+      ? ["Fashion","Sneakers","Accessories"].includes(p.category)
+      : p.category===cat);
+
+  return categoryMatch &&
+    [p.name,p.category,p.description,p.seller]
+      .join(" ").toLowerCase().includes(q);
+});
 if(sort==="low")list.sort((a,b)=>a.price-b.price);
 if(sort==="high")list.sort((a,b)=>b.price-a.price);
 if(sort==="az")list.sort((a,b)=>a.name.localeCompare(b.name));
