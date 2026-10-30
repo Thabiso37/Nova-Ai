@@ -495,9 +495,9 @@ header {
   </div>
 
   <div class="delivery-bar">
-    <span>📍 Deliver to: <strong>Sonderwater</strong></span>
-    <button type="button" onclick="alert('Location selection coming soon.')">Change</button>
-  </div>
+  <span id="buyerLocation">📍 Deliver to: Location not selected</span>
+  <button type="button" id="useMyLocation">📍 Use my location</button>
+</div>
 
   
 </header>
@@ -1655,6 +1655,31 @@ body.categories-view #categories {
     🏷️<span>Sell</span>
 </button>
 </nav>
+<script>
+document.getElementById("useMyLocation").addEventListener("click", function () {
+  const display = document.getElementById("buyerLocation");
 
+  if (!navigator.geolocation) {
+    display.textContent = "📍 Location is not supported by this browser";
+    return;
+  }
+
+  display.textContent = "📍 Finding your location...";
+
+  navigator.geolocation.getCurrentPosition(
+    function (position) {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+
+      display.textContent =
+        "📍 Location detected (" +
+        lat.toFixed(4) + ", " + lon.toFixed(4) + ")";
+    },
+    function () {
+      display.textContent = "📍 Location not available. Please allow permission.";
+    }
+  );
+});
+</script>
 </body>
 </html>
