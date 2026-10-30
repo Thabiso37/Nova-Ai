@@ -157,7 +157,48 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 }
 
 header {
+  background: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid #e8edf5;
   box-shadow: 0 3px 12px rgba(20, 40, 70, .06);
+}
+
+.new-header .head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.new-header .logo {
+  color: #174ea6;
+  font-size: 25px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  white-space: nowrap;
+}
+
+.new-header .logo span {
+  color: #f5b900;
+}
+
+.delivery-bar {
+  max-width: 1200px;
+  margin: auto;
+  padding: 8px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  border-top: 1px solid #f0f2f6;
+}
+
+.delivery-bar button {
+  border: 0;
+  background: none;
+  color: #174ea6;
+  font-weight: 700;
 }
 
 .logo {
@@ -308,22 +349,37 @@ header {
   </div>
 </div> 
 <div class="top">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
-<header>
-<div class="head">
-<a class="logo" href="#">NOVA<span>AI</span></a>
-<form class="search" id="searchForm">
-<input id="search" placeholder="Search products, brands or categories…">
-<button class="btn primary">Search</button>
-</form>
-<button class="btn outline" onclick="go('seller')">Sell</button>
-<button class="btn light" onclick="go('cart')">🛒 <span id="count">0</span></button>
-</div>
-<nav>
-<a href="#shop">Shop</a><a href="#categories">Categories</a>
-<a href="#seller">Seller Portal</a><a href="#assistant">Nova AI</a><a href="#cart">My Cart</a>
-<a href="#customerOrders">My Orders</a>
-<a href="#wishlist">❤️ My Wishlist</a>
-</nav>
+<header class="new-header">
+  <div class="head">
+    <a class="logo" href="#">NOVA<span>AI</span></a>
+
+    <form class="search" id="searchForm">
+      <input id="search" placeholder="Search products, brands or categories…">
+      <button class="btn primary" type="submit">🔍</button>
+    </form>
+
+    <button class="btn outline" onclick="go('cart')">
+      🛒 <span id="count">0</span>
+    </button>
+
+    <button class="btn outline" onclick="go('seller')" aria-label="Account">
+      👤
+    </button>
+  </div>
+
+  <div class="delivery-bar">
+    <span>📍 Deliver to: <strong>Sonderwater</strong></span>
+    <button type="button" onclick="alert('Location selection coming soon.')">Change</button>
+  </div>
+
+  <nav>
+    <a href="#shop">Shop</a>
+    <a href="#categories">Categories</a>
+    <a href="#seller">Sell</a>
+    <a href="#assistant">Nova AI</a>
+    <a href="#customerOrders">My Orders</a>
+    <a href="#wishlist">❤️ My Wishlist</a>
+  </nav>
 </header>
 <main>
 <section class="hero">
