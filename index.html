@@ -495,8 +495,19 @@ header {
   </div>
 
   <div class="delivery-bar">
-  <span id="buyerLocation">📍 Deliver to: Location not selected</span>
-  <button type="button" id="useMyLocation">📍 Use my location</button>
+  <span id="buyerLocation">
+    📍 Deliver to: Your current location
+  </span>
+
+  <div>
+    <button type="button" id="useMyLocation">
+      📍 Use GPS
+    </button>
+
+    <button type="button" id="changeLocation">
+      Change
+    </button>
+  </div>
 </div>
 
   
@@ -1656,29 +1667,50 @@ body.categories-view #categories {
 </button>
 </nav>
 <script>
-document.getElementById("useMyLocation").addEventListener("click", function () {
-  const display = document.getElementById("buyerLocation");
+const locationDisplay = document.getElementById("buyerLocation");
+const gpsButton = document.getElementById("useMyLocation");
+const changeButton = document.getElementById("changeLocation");
 
+let buyerCoordinates = null;
+
+gpsButton.addEventListener("click", function () {
   if (!navigator.geolocation) {
-    display.textContent = "📍 Location is not supported by this browser";
+    locationDisplay.textContent = "📍 GPS is not supported";
     return;
   }
 
-  display.textContent = "📍 Finding your location...";
+  locationDisplay.textContent = "📍 Finding your location...";
 
   navigator.geolocation.getCurrentPosition(
     function (position) {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
+      buyerCoordinates = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+      };
 
-      display.textContent =
-        "📍 Location detected (" +
-        lat.toFixed(4) + ", " + lon.toFixed(4) + ")";
+      locationDisplay.textContent =
+        "📍 Deliver to: Your current location";
     },
     function () {
-      display.textContent = "📍 Location not available. Please allow permission.";
+      locationDisplay.textContent =
+        "📍 Location unavailable. Check your permission.";
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 60000
     }
   );
+});
+
+changeButton.addEventListener("click", function () {
+  const town = prompt("Enter your town or suburb:");
+
+  if (town && town.trim()) {
+    buyerCoordinates = null;
+    locationDisplay.textContent =
+      "📍 Deliver to: " + town.trim();
+  }
 });
 </script>
 </body>
