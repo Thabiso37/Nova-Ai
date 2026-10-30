@@ -1682,30 +1682,33 @@ gpsButton.addEventListener("click", function () {
   locationDisplay.textContent = "📍 Finding your location...";
 
   navigator.geolocation.getCurrentPosition(
-    function (position) {
-      buyerCoordinates = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude
-      };
+  function (position) {
+    buyerCoordinates = {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude
+    };
 
-      locationDisplay.textContent =
-        "📍 Deliver to: Your current location";
-    },function (error) {
-  if (error.code === 1) {
-    locationDisplay.textContent = "📍 Permission denied";
-  } else if (error.code === 2) {
-    locationDisplay.textContent = "📍 GPS position unavailable";
-  } else if (error.code === 3) {
-    locationDisplay.textContent = "📍 GPS request timed out";
-  } else {
-    locationDisplay.textContent = "📍 GPS error: " + error.message;
+    locationDisplay.textContent =
+      "📍 Your GPS: " +
+      position.coords.latitude.toFixed(5) + ", " +
+      position.coords.longitude.toFixed(5);
+  },
+  function (error) {
+    if (error.code === 1) {
+      locationDisplay.textContent = "📍 Permission denied";
+    } else if (error.code === 2) {
+      locationDisplay.textContent = "📍 GPS position unavailable";
+    } else if (error.code === 3) {
+      locationDisplay.textContent = "📍 GPS request timed out";
+    } else {
+      locationDisplay.textContent = "📍 GPS error: " + error.message;
+    }
+  },
+  {
+    enableHighAccuracy: false,
+    timeout: 30000,
+    maximumAge: 60000
   }
-},
-    {
-  enableHighAccuracy: false,
-  timeout: 30000,
-  maximumAge: 60000
-}
   );
 });
 
