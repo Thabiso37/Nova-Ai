@@ -328,6 +328,35 @@ header {
     border-radius: 15px;
   }
 }
+  
+.cats {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 12px 4px 18px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.cats::-webkit-scrollbar {
+  display: none;
+}
+
+.cat {
+  flex: 0 0 105px;
+  min-height: 105px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background: #ffffff;
+  border: 1px solid #e4eaf2;
+  border-radius: 16px;
+  text-align: center;
+  scroll-snap-align: start;
+  box-shadow: 0 2px 8px rgba(20, 40, 70, .05);
+}
 </style>
 </head>
 <body>
