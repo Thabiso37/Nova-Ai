@@ -663,8 +663,17 @@ function go(id){document.getElementById(id).scrollIntoView({behavior:"smooth"})}
 function message(id,s,bad=false){let e=document.getElementById(id);e.textContent=s;e.className="msg "+(bad?"error":"success")}
 function initCategories(){
 document.getElementById("cats").innerHTML=[["All","🌐"],...C].map(([n,ic])=>`<button class="cat ${active===n?"active":""}" data-cat="${esc(n)}"><span class="emoji">${ic}</span><span>${esc(n==="All"?"All products":n)}</span></button>`).join("");
-document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{active=b.dataset.cat;document.getElementById("filter").value=active;initCategories();render();go("shop")});
+document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{
+  active=b.dataset.cat;
+  document.getElementById("filter").value=active;
+  document.getElementById("search").value="";
+  initCategories();
+  render();
+  go("shop");
+};
+});
 document.getElementById("filter").innerHTML='<option>All</option>'+C.map(([n])=>`<option>${esc(n)}</option>`).join("");
+document.getElementById("filter").value=active;
 document.getElementById("category").innerHTML=C.map(([n])=>`<option>${esc(n)}</option>`).join("");
 }
 function render(){
