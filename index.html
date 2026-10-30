@@ -38,9 +38,39 @@ nav{display:flex;gap:16px;overflow:auto;padding-top:0;padding-bottom:12px;font-s
 .section{margin-top:28px;scroll-margin-top:140px}
 .section h2{margin:0 0 5px}
 .section-head{margin-bottom:14px}
-.cats{display:grid;grid-template-columns:repeat(8,1fr);gap:9px}
-.cat{background:white;border:1px solid var(--line);border-radius:12px;padding:12px 4px;text-align:center}
-.cat span{display:block}
+.cats {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 12px 4px 18px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.cats::-webkit-scrollbar {
+  display: none;
+}
+
+.cat {
+  flex: 0 0 105px;
+  min-height: 105px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  padding: 10px;
+  text-align: center;
+  scroll-snap-align: start;
+  box-shadow: 0 2px 8px rgba(20, 40, 70, .05);
+}
+
+.cat span {
+  display: block;
+}
 .cat .emoji{font-size:24px;margin-bottom:5px}
 .cat.active{border-color:var(--p);background:#f0efff}
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
