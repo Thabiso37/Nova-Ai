@@ -746,6 +746,8 @@ function go(id){
 
   if (!section) return;
 
+  document.body.classList.remove("wishlist-view", "categories-view");
+
   if (id === "wishlist") {
     document.body.classList.add("wishlist-view");
     renderWishlist();
@@ -753,7 +755,11 @@ function go(id){
     return;
   }
 
-  document.body.classList.remove("wishlist-view");
+  if (id === "categories") {
+    document.body.classList.add("categories-view");
+    section.scrollIntoView({behavior:"smooth"});
+    return;
+  }
 
   if (id === "seller") {
     section.style.display = "block";
@@ -1607,6 +1613,17 @@ document.addEventListener("keydown",function(e){
     padding-bottom: 75px;
   }
 }
+body.categories-view main > *:not(#categories) {
+  display: none !important;
+}
+
+body.categories-view #categories {
+  display: block !important;
+  min-height: 70vh;
+  margin: 24px auto !important;
+  max-width: 900px;
+}
+
 </style>
 <nav class="mobile-bottom-nav">
   <button onclick="go('shop')">
