@@ -7,6 +7,52 @@
 <meta name="theme-color" content="#101526">
 <title>NOVAAI | South African Marketplace</title>
 <style>
+#cats.cats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+#cats .cat {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 58px;
+  padding: 10px;
+  background: #fff;
+  color: #202638;
+  border: 1px solid #e8eaf0;
+  border-radius: 12px;
+  text-align: left;
+  box-shadow: 0 2px 6px rgba(0,0,0,.04);
+}
+
+#cats .cat .emoji {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f5fa;
+  border-radius: 9px;
+  font-size: 20px;
+}
+
+#cats .cat.active {
+  border-color: #6478e8;
+  background: #f5f6ff;
+}
+
+#cats .cat span:last-child {
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+  
 #wishlist {
   display: none;
 }
@@ -652,7 +698,28 @@ header {
 <script>
 "use strict";
 const sb=window.supabase.createClient("https://nxplffvklkopwfjaqexo.supabase.co","sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ");
-const C=[["Electronics","📱"],["Fashion","👕"],["Sneakers","👟"],["Home & Living","🏠"],["Beauty","✨"],["Sports","⚽"],["Groceries","🛒"],["Accessories","🎒"]];
+const C=[
+["Auto","🚗"],
+["Luggage & Travel","🧳"],
+["Baby & Toddler","👶"],
+["Movies & Series","🎬"],
+["Beauty","💄"],
+["Music","🎵"],
+["Books","📚"],
+["Office & Stationery","🖊️"],
+["Cellphones","📱"],
+["Personal Care","🧴"],
+["Derma Skincare","🧖"],
+["Pets","🐾"],
+["Clothing Shoes & Accessories","👕"],
+["Photography","📷"],
+["Computers & Laptops","💻"],
+["Small Appliances","🔌"],
+["Garden Pool & Patio","🌿"],
+["Toys & Games","🧸"],
+["Groceries","🛒"],
+["TV Audio & Video","📺"]
+];
 const demo=[
 ["demo-1","Wireless Bluetooth Headphones","Electronics",349,"Nova Demo Store","Wireless listening for music, calls and everyday use.","https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"],
 ["demo-2","Everyday Casual T-Shirt","Fashion",159,"Nova Demo Store","A versatile casual top. Confirm sizes and colours with the seller.","https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80"],
