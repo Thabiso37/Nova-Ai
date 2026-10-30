@@ -668,9 +668,8 @@ document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{
   document.getElementById("filter").value=active;
   document.getElementById("search").value="";
   initCategories();
-  render();
+    render();
   go("shop");
-};
 });
 document.getElementById("filter").innerHTML='<option>All</option>'+C.map(([n])=>`<option>${esc(n)}</option>`).join("");
 document.getElementById("filter").value=active;
