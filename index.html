@@ -1739,5 +1739,97 @@ changeButton.addEventListener("click", function () {
   }
 });
 </script>
+
+<style>
+.nova-product-page {
+  max-width: 520px;
+  border-radius: 14px;
+}
+
+.nova-product-photo {
+  background: #fff;
+  padding: 12px;
+  border-bottom: 1px solid #e5e8ee;
+}
+
+.nova-product-page .product-modal-image {
+  height: 280px;
+  object-fit: contain;
+}
+
+.nova-product-page .product-modal-content {
+  padding: 18px;
+}
+
+.nova-product-label {
+  color: #174ea6;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.nova-product-page h2 {
+  font-size: 21px;
+  line-height: 1.4;
+  margin: 8px 0;
+}
+
+.nova-product-page .product-modal-meta {
+  color: #174ea6;
+  font-weight: 700;
+}
+
+.nova-delivery {
+  background: #f0f7f2;
+  border-left: 4px solid #16834b;
+  padding: 12px;
+  margin-top: 18px;
+  font-size: 13px;
+}
+
+.nova-delivery p {
+  margin-bottom: 0;
+}
+
+.nova-location {
+  padding: 15px 0;
+  border-bottom: 1px solid #e5e8ee;
+  font-size: 13px;
+}
+
+.nova-price-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 0;
+  font-size: 15px;
+}
+
+.nova-price-area strong {
+  font-size: 25px;
+  color: #17345b;
+}
+
+.nova-product-page .product-modal-actions {
+  flex-direction: column;
+}
+
+.nova-product-page #modalAddToCart {
+  background: #16834b;
+  border-radius: 30px;
+  padding: 15px;
+}
+
+@media(max-width:560px) {
+  .nova-product-page {
+    max-height: 94vh;
+  }
+
+  .nova-product-page .product-modal-image {
+    height: 240px;
+  }
+}
+</style>
+
 </body>
 </html>
