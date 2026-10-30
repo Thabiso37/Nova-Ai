@@ -7,7 +7,11 @@
 <meta name="theme-color" content="#101526">
 <title>NOVAAI | South African Marketplace</title>
 <style>
-  body.wishlist-view main > *:not(#wishlist) {
+#wishlist {
+  display: none;
+}
+
+body.wishlist-view main > *:not(#wishlist) {
   display: none !important;
 }
 
@@ -17,6 +21,7 @@ body.wishlist-view #wishlist {
   margin: 24px auto !important;
   max-width: 900px;
 }
+
 :root{--bg:#f5f7fb;--ink:#171c2d;--muted:#70778b;--p:#6654f5;--dark:#101526;--line:#e8eaf2}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Arial,sans-serif}
