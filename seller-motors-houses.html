@@ -4,245 +4,85 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#101526">
-<title>NOVAAI | Secure Motors & Property Marketplace</title>
+<title>NOVAAI | South Africa's Multi-Marketplace</title>
 <style>
 :root{--bg:#f5f7fb;--ink:#171c2d;--muted:#70778b;--p:#174ea6;--dark:#10284b;--line:#e1e6ee}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Arial,sans-serif}
-button,input,select,textarea{font:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Arial,sans-serif;padding-bottom:75px}
+button,input,select{font:inherit}
 button{cursor:pointer}
 a{color:inherit;text-decoration:none}
-.top{background:var(--dark);color:white;text-align:center;padding:10px;font-size:12px;font-weight:700}
+.top{background:var(--dark);color:white;text-align:center;padding:8px;font-size:11px;font-weight:700}
 header{background:white;position:sticky;top:0;z-index:5;border-bottom:1px solid var(--line);box-shadow:0 3px 12px rgba(20,40,70,.06)}
-.head,main,.foot{max-width:1200px;margin:auto;padding:15px 20px}
+.head,main,.foot{max-width:1200px;margin:auto;padding:12px 16px}
 .head{display:flex;justify-content:space-between;align-items:center}
-.logo{font-size:25px;font-weight:900;letter-spacing:-1px}
+.logo{font-size:24px;font-weight:900;letter-spacing:-1px}
 .logo span{color:#f5b900}
-.btn{border:0;border-radius:9px;padding:11px 14px;font-weight:750}
+.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:750}
 .primary{background:var(--p);color:white}
 .outline{background:white;border:1px solid var(--line)}
-.section{margin-top:28px}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.panel{background:white;border:1px solid var(--line);border-radius:15px;padding:20px;box-shadow:0 2px 7px rgba(20,40,70,.035)}
-.field{margin:12px 0}
-.field label{display:block;font-size:12px;font-weight:800;margin-bottom:5px}
-.field input,.field select,.field textarea{width:100%;padding:11px;border:1px solid #dfe2ed;border-radius:9px;background:#f8faff}
-textarea{min-height:85px}
-.notice{padding:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;font-size:12px;line-height:1.6;color:#991b1b}
-.msg{font-size:13px;margin-top:10px}
-.error{color:#b52828}
-.success{color:#16885e}
-.hidden{display:none!important}
-.muted{color:var(--muted);font-size:12px}
-footer{background:var(--dark);color:white;margin-top:40px;padding:28px 20px}
-footer .foot{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
-footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
-@media(max-width:768px){.two{grid-template-columns:1fr}}
+
+.search-bar{display:flex;gap:8px;margin:12px 0}
+.search-bar input{flex:1;padding:12px;border:1px solid #dfe2ed;border-radius:10px;background:#f8faff;font-size:14px}
+.search-bar button{background:var(--p);color:white;border:0;padding:0 16px;border-radius:10px}
+
+.hero{background:linear-gradient(135deg,var(--dark),var(--p));color:white;border-radius:16px;padding:24px;margin:15px 0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0}
+.stat-card{background:white;border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+.stat-card h3{margin:0;font-size:18px;color:var(--p)}
+.stat-card p{margin:4px 0 0;font-size:11px;color:var(--muted)}
+
+/* Bottom Nav - Direct Market Cycle */
+.bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:white;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:8px 4px;z-index:100}
+.nav-item{flex:1;text-align:center;font-size:10px;color:var(--muted);text-decoration:none;font-weight:600}
+.nav-item.active{color:var(--p)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:15px;margin-top:15px}
+.panel{background:white;border:1px solid var(--line);border-radius:14px;padding:15px}
+.msg{font-size:13px;text-align:center;padding:20px;color:var(--muted)}
 </style>
 </head>
 <body>
 
-<div class="top">🛡️ NOVA AI TRUST SHIELD · MOTORS & PROPERTY MARKETPLACE & PORTAL</div>
+<div class="top">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
 <header>
   <div class="head">
-    <a class="logo" href="index.html">NOVA<span>AI</span> ASSETS</a>
-    <div style="display:flex;gap:10px;">
-      <a class="btn outline" href="index.html">← Retail Marketplace</a>
-    </div>
+    <a class="logo" href="index.html">NOVA<span>AI</span></a>
+    <div style="font-size:12px;font-weight:bold;color:var(--muted);" id="activeMarketBadge">🛍️ Retail Market</div>
   </div>
 </header>
 
 <main>
-<!-- PUBLIC MARKETPLACE BROWSING SECTION -->
-<section class="section">
-  <h2>🚗🏠 Browse Verified Cars & Property</h2>
-  <p class="muted">Explore verified vehicles, houses for sale, and properties to rent from biometric-bound agents and dealers.</p>
-  
-  <div style="display:flex;gap:10px;margin:15px 0;flex-wrap:wrap;">
-    <button class="btn primary" onclick="filterMarket('all')">All Assets</button>
-    <button class="btn outline" onclick="filterMarket('Motors & Vehicles')">Cars</button>
-    <button class="btn outline" onclick="filterMarket('Property For Sale')">Properties For Sale</button>
-    <button class="btn outline" onclick="filterMarket('Property To Rent')">Properties To Rent</button>
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search products, brands, cars or property...">
+    <button id="searchBtn">🔍</button>
   </div>
 
-  <div id="publicAssetList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-top:20px;">
-    <p class="muted">Loading verified listings...</p>
-  </div>
-</section>
-
-<hr style="margin:40px 0;border:0;border-top:1px solid var(--line)">
-
-<!-- AGENT & DEALER SUBMISSION PORTAL -->
-<section class="section">
-<h2>Dealer & Agent Secure Portal</h2>
-<p class="muted">Strict biometric face capture, phone fingerprinting, and manual admin verification required for all vehicle dealers and real estate agents.</p>
-
-<div class="two">
-  <div class="panel">
-    <h3>🔐 Agent & Dealer Verification</h3>
-    <div class="notice">
-      <strong>Zero-Tolerance Security:</strong> Every seller must complete live webcam face verification and phone hardware binding. Accounts remain pending until reviewed and approved by Nova AI administration.
-    </div>
-    
-    <div id="signedOut">
-      <form id="authForm">
-        <div class="field">
-          <label for="email">Email address *</label>
-          <input id="email" type="email" autocomplete="email" required placeholder="agent@example.com">
-        </div>
-        <div class="field">
-          <label for="password">Password (at least 6 characters) *</label>
-          <input id="password" type="password" minlength="6" autocomplete="current-password" required>
-        </div>
-        <div class="field">
-          <label for="sellerRealName">Full Legal Name / Agency *</label>
-          <input id="sellerRealName" required placeholder="Mandla Properties & Cars">
-        </div>
-        <div class="field">
-          <label for="sellerPhone">Active Mobile Number *</label>
-          <input id="sellerPhone" type="tel" required placeholder="0820000000">
-        </div>
-
-        <!-- Face Verification Section -->
-        <div class="field" style="background:#f8faff;padding:12px;border:1px dashed #174ea6;border-radius:10px;text-align:center;">
-          <label style="margin-bottom:8px;">📸 Mandatory Biometric Face Scan *</label>
-          <video id="webcam" autoplay playsinline width="100%" style="max-height:180px;border-radius:8px;background:#000;display:none;object-fit:cover;margin-bottom:8px;"></video>
-          <canvas id="snapshotCanvas" style="display:none;"></canvas>
-          <img id="facePreview" style="max-height:140px;border-radius:8px;display:none;margin:0 auto 8px;" alt="Face scan preview">
-          <div style="display:flex;gap:8px;justify-content:center;">
-            <button type="button" class="btn outline" id="startCameraBtn" style="font-size:12px;padding:8px 12px;">Turn on Camera</button>
-            <button type="button" class="btn primary" id="captureFaceBtn" style="font-size:12px;padding:8px 12px;display:none;">Capture Face Scan</button>
-          </div>
-          <div id="faceStatus" class="muted" style="margin-top:6px;font-weight:bold;color:#b52828;">Face scan snapshot required for account submission.</div>
-        </div>
-
-        <div class="field" style="display:flex;align-items:center;gap:8px;font-size:12px;margin-top:10px;">
-          <input type="checkbox" id="novaTrustAgree" required style="width:auto;">
-          <label for="novaTrustAgree" style="margin:0;font-weight:normal;cursor:pointer;">I accept biometric liability, anti-fraud rules, and manual admin verification terms.</label>
-        </div>
-        <button class="btn primary" type="submit" style="margin-top:12px;">Sign in securely</button>
-        <button class="btn outline" type="button" id="signup" style="margin-top:8px;">Submit for admin verification</button>
-        <div id="authMsg" class="msg" aria-live="polite"></div>
-      </form>
-    </div>
-
-    <div id="signedIn" class="hidden">
-      <p>Signed in as <strong id="userEmail"></strong></p>
-      <div id="approvalStatusBox" class="notice" style="background:#fffbeb;border-color:#fde68a;color:#92400e;margin:12px 0;">
-        ⏳ <strong>Status: Pending Admin Approval</strong><br>
-        Your face scan and phone fingerprint have been securely logged. An administrator will review and approve your account within 5 minutes.
-      </div>
-      <button class="btn outline" id="signout">Sign out</button>
-      <div id="userMsg" class="msg"></div>
-    </div>
-
-    <hr style="margin:20px 0;border:0;border-top:1px solid var(--line)">
-
-    <h3>🏠🚗 Publish Asset Listing (Cars or Property Rentals/Sales)</h3>
-    <form id="sellerForm">
-      <div class="field">
-        <label for="sellerName">Dealership or Agency Name *</label>
-        <input id="sellerName" maxlength="70" required placeholder="Pretoria Prime Assets">
-      </div>
-
-      <div class="field">
-        <label for="assetCategory">Select Asset Category *</label>
-        <select id="assetCategory" required>
-          <option value="Motors & Vehicles">🚗 Motors & Vehicles (Cars)</option>
-          <option value="Property For Sale">🏠 Property For Sale</option>
-          <option value="Property To Rent">🔑 Property To Rent</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="productName">Asset Title (e.g., VW Golf 7 GTI / 3 Bed House in Hatfield) *</label>
-        <input id="productName" maxlength="100" required placeholder="3 Bedroom Modern Townhouse">
-      </div>
-      
-      <!-- CAR SPECIFIC FIELDS -->
-      <div id="carFields">
-        <div class="two">
-          <div class="field">
-            <label for="carYear">Vehicle Year *</label>
-            <input id="carYear" type="number" min="1950" max="2030" placeholder="2021">
-          </div>
-          <div class="field">
-            <label for="carMileage">Mileage (km) *</label>
-            <input id="carMileage" type="number" min="0" max="1000000" placeholder="65000">
-          </div>
-        </div>
-      </div>
-
-      <!-- PROPERTY SPECIFIC FIELDS (Hidden by default) -->
-      <div id="propertyFields" class="hidden">
-        <div class="two">
-          <div class="field">
-            <label for="propBedrooms">Bedrooms *</label>
-            <input id="propBedrooms" type="number" min="0" max="20" placeholder="3">
-          </div>
-          <div class="field">
-            <label for="propBathrooms">Bathrooms *</label>
-            <input id="propBathrooms" type="number" min="0" max="20" step="0.5" placeholder="2">
-          </div>
-        </div>
-        <div class="field">
-          <label for="propLocation">Suburb / Location *</label>
-          <input id="propLocation" placeholder="Hatfield, Pretoria">
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="price">Price / Monthly Rent in Rand (R) *</label>
-        <input id="price" type="number" min="1" max="100000000" step=".01" required placeholder="8500">
-      </div>
-
-      <div class="field">
-        <label for="photoFiles">Upload up to 6 photos *</label>
-        <input id="photoFiles" type="file" accept="image/jpeg,image/png,image/webp" multiple required>
-      </div>
-
-      <div class="field">
-        <label for="description">Detailed Description & Terms *</label>
-        <textarea id="description" maxlength="500" required placeholder="Describe condition, deposit terms, availability, features..."></textarea>
-      </div>
-
-      <button class="btn primary" id="publish" disabled>Pending admin approval</button>
-      <div id="sellerMsg" class="msg" aria-live="polite"></div>
-    </form>
-
-    <hr style="margin:20px 0;border:0;border-top:1px solid var(--line)">
-
-    <h3>📋 My Asset Listings</h3>
-    <div id="myProductsMsg" class="msg">Sign in to view your listings.</div>
-    <div id="myProductsList"></div>
+  <div class="hero">
+    <h2 style="margin:0 0 8px;">Your Marketplace. Your Opportunity.</h2>
+    <p style="margin:0;font-size:13px;opacity:.9;">Discover verified retail goods, pre-owned cars, and residential properties across South Africa.</p>
   </div>
 
-  <div class="panel">
-    <h3>🛡️ Secure Asset Marketplace Rules</h3>
-    <div class="notice" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">
-      <strong>High-Value Asset Safety:</strong><br>
-      1. <strong>Biometric Binding:</strong> Every property agent and car dealer is verified via face scan and hardware fingerprint.<br>
-      2. <strong>Zero Scams:</strong> No fake rentals or ghost cars allowed.<br>
-      3. <strong>Admin Control:</strong> Instant manual vetting on your R0 budget.
-    </div>
-    <h3>Market Features</h3>
-    <p class="muted">
-      ✓ Combined public marketplace & seller portal<br>
-      ✓ Dynamic forms for Cars & Properties<br>
-      ✓ Multi-photo gallery uploads (up to 6 photos)<br>
-      ✓ Nova AI Biometric Shield & Admin Workflow
-    </p>
+  <div class="stats">
+    <div class="stat-card"><h3 id="statCount">0</h3><p>Active Listings</p></div>
+    <div class="stat-card"><h3>3</h3><p>Active Markets</p></div>
+    <div class="stat-card"><h3>R0</h3><p>Listing Fee</p></div>
   </div>
-</div>
-</section>
+
+  <h3 id="marketTitle" style="margin-top:24px;">🛍️ Retail Products & Brands</h3>
+  <div id="productGrid" class="grid">
+    <div class="msg">Loading marketplace listings...</div>
+  </div>
 </main>
 
-<footer>
-<div class="foot">
-  <div><div class="logo">NOVA<span>AI</span> ASSETS</div><p>Protected automotive and real estate marketplace for South Africa.</p></div>
-  <div><strong>Trust & Verification.</strong><p>© <span id="year"></span> NOVAAI.</p></div>
-</div>
-</footer>
+<!-- BOTTOM NAVIGATION BAR WITH DIRECT MARKETS & SELL -->
+<nav class="bottom-nav">
+  <a href="#" onclick="switchMarket('retail'); return false;" class="nav-item active" id="navRetail">🛍️<br>Retail</a>
+  <a href="#" onclick="switchMarket('motors'); return false;" class="nav-item" id="navMotors">🚗<br>Motors</a>
+  <a href="#" onclick="switchMarket('property'); return false;" class="nav-item" id="navProperty">🏠<br>Property</a>
+  <a href="seller.html" class="nav-item">🏷️<br>Retail Sell</a>
+  <a href="seller-motors-property.html" class="nav-item" style="color:var(--p);">🚗🔑<br>Asset Sell</a>
+</nav>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -251,324 +91,100 @@ const sb = window.supabase.createClient("https://nxplffvklkopwfjaqexo.supabase.c
 
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function cash(n){return new Intl.NumberFormat("en-ZA",{style:"currency",currency:"ZAR"}).format(Number(n)||0)}
-function message(id,s,bad=false){let e=document.getElementById(id);e.textContent=s;e.className="msg "+(bad?"error":"success")}
 
-function getDeviceFingerprint() {
-  const nav = window.navigator;
-  const screen = window.screen;
-  const rawData = [
-    nav.userAgent, nav.language, screen.colorDepth,
-    screen.width + "x" + screen.height, new Date().getTimezoneOffset(),
-    nav.hardwareConcurrency || "unknown", nav.maxTouchPoints || 0, nav.platform || "unknown"
-  ].join("||");
+let currentMarket = 'retail';
 
-  let hash = 0;
-  for (let i = 0; i < rawData.length; i++) {
-    hash = ((hash << 5) - hash) + rawData.charCodeAt(i);
-    hash |= 0;
-  }
-  return "dev_" + Math.abs(hash).toString(36);
-}
+async function loadListings(marketType, searchQuery = '') {
+  const grid = document.getElementById('productGrid');
+  grid.innerHTML = "<div class='msg'>Loading listings...</div>";
 
-// Load Public Marketplace Assets
-async function loadPublicAssets(categoryFilter = 'all') {
-  const container = document.getElementById('publicAssetList');
-  container.innerHTML = "<p class='muted'>Loading verified listings...</p>";
+  let query = sb.from("Products").select("*").order("created_at", { ascending: false });
 
-  let query = sb.from("Products").select("*").in("category", ["Motors & Vehicles", "Property For Sale", "Property To Rent"]).order("created_at", { ascending: false });
-  
-  if (categoryFilter !== 'all') {
-    query = query.eq("category", categoryFilter);
+  if (marketType === 'retail') {
+    query = query.eq("category", "General");
+  } else if (marketType === 'motors') {
+    query = query.eq("category", "Motors & Vehicles");
+  } else if (marketType === 'property') {
+    query = query.in("category", ["Property For Sale", "Property To Rent"]);
   }
 
   const { data, error } = await query;
 
   if (error) {
-    container.innerHTML = "<p class='error'>Failed to load listings: " + esc(error.message) + "</p>";
+    grid.innerHTML = "<div class='msg' style='color:#b52828'>Failed to load: " + esc(error.message) + "</div>";
     return;
   }
 
-  if (!data || data.length === 0) {
-    container.innerHTML = "<p class='muted'>No verified listings found in this category yet.</p>";
+  let filtered = data || [];
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filtered = filtered.filter(item => 
+      (item.name && item.name.toLowerCase().includes(q)) ||
+      (item.description && item.description.toLowerCase().includes(q)) ||
+      (item.seller_name && item.seller_name.toLowerCase().includes(q))
+    );
+  }
+
+  document.getElementById('statCount').textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = "<div class='msg'>No listings found in this market category.</div>";
     return;
   }
 
-  container.innerHTML = data.map(item => `
-    <div class="panel" style="display:flex;flex-direction:column;justify-content:space-between;box-shadow:none;border:1px solid var(--line);">
-      <div>
-        ${item.image_url ? `<img src="${esc(item.image_url)}" alt="Asset" style="width:100%;height:160px;object-fit:cover;border-radius:8px;margin-bottom:10px;">` : ''}
-        <span style="font-size:11px;background:#f0fdf4;color:#166534;padding:3px 8px;border-radius:6px;font-weight:bold;">${esc(item.category)}</span>
-        <h4 style="margin:8px 0 4px;">${esc(item.name)}</h4>
-        <p style="font-size:16px;font-weight:bold;color:#174ea6;margin:0 0 8px;">${cash(item.price)}</p>
-        <p style="font-size:12px;color:#70778b;white-space:pre-line;max-height:80px;overflow:hidden;">${esc(item.description)}</p>
-      </div>
-      <div style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px;display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:11px;color:#70778b;">Dealer/Agent: <strong>${esc(item.seller_name || 'Verified')}</strong></span>
-        <button class="btn primary" style="padding:6px 12px;font-size:11px;" onclick="alert('Contact dealer/agent securely via verified profile.')">View Details</button>
+  grid.innerHTML = filtered.map(item => `
+    <div class="panel">
+      ${item.image_url ? `<img src="${esc(item.image_url)}" alt="Product" style="width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:10px;">` : ''}
+      <span style="font-size:10px;background:#eef2ff;color:#174ea6;padding:2px 6px;border-radius:4px;font-weight:bold;">${esc(item.category)}</span>
+      <h4 style="margin:6px 0 4px;font-size:15px;">${esc(item.name)}</h4>
+      <p style="font-size:16px;font-weight:bold;color:#174ea6;margin:0 0 6px;">${cash(item.price)}</p>
+      <p style="font-size:11px;color:var(--muted);white-space:pre-line;max-height:60px;overflow:hidden;">${esc(item.description)}</p>
+      <div style="margin-top:10px;border-top:1px solid var(--line);padding-top:6px;display:flex;justify-content:space-between;align-items:center;font-size:11px;">
+        <span>Seller: <strong>${esc(item.seller_name || 'Verified')}</strong></span>
+        <button class="primary btn" style="padding:4px 10px;font-size:11px;" onclick="alert('Contact seller securely via verified profile.')">View</button>
       </div>
     </div>
   `).join("");
 }
 
-function filterMarket(cat) {
-  loadPublicAssets(cat);
-}
-
-// Toggle form fields based on asset category selection
-const assetCategorySelect = document.getElementById("assetCategory");
-const carFields = document.getElementById("carFields");
-const propertyFields = document.getElementById("propertyFields");
-
-assetCategorySelect.onchange = () => {
-  const val = assetCategorySelect.value;
-  if (val === "Motors & Vehicles") {
-    carFields.classList.remove("hidden");
-    propertyFields.classList.add("hidden");
-  } else {
-    carFields.classList.add("hidden");
-    propertyFields.classList.remove("hidden");
-  }
-};
-
-let capturedFaceBlob = null;
-const video = document.getElementById("webcam");
-const snapshotCanvas = document.getElementById("snapshotCanvas");
-const facePreview = document.getElementById("facePreview");
-const startCameraBtn = document.getElementById("startCameraBtn");
-const captureFaceBtn = document.getElementById("captureFaceBtn");
-const faceStatus = document.getElementById("faceStatus");
-
-startCameraBtn.onclick = async () => {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-    video.srcObject = stream;
-    video.style.display = "block";
-    startCameraBtn.style.display = "none";
-    captureFaceBtn.style.display = "inline-block";
-    faceStatus.textContent = "Position your face in front of the camera and tap Capture.";
-    faceStatus.style.color = "#174ea6";
-  } catch (err) {
-    faceStatus.textContent = "Camera access denied or unavailable: " + err.message;
-    faceStatus.style.color = "#b52828";
-  }
-};
-
-captureFaceBtn.onclick = () => {
-  snapshotCanvas.width = video.videoWidth || 320;
-  snapshotCanvas.height = video.videoHeight || 240;
-  const ctx = snapshotCanvas.getContext("2d");
-  ctx.drawImage(video, 0, 0, snapshotCanvas.width, snapshotCanvas.height);
+function switchMarket(market) {
+  currentMarket = market;
+  document.querySelectorAll('.bottom-nav .nav-item').forEach(t => t.classList.remove('active'));
   
-  snapshotCanvas.toBlob(blob => {
-    capturedFaceBlob = blob;
-    facePreview.src = URL.createObjectURL(blob);
-    facePreview.style.display = "block";
-    video.style.display = "none";
-    captureFaceBtn.style.display = "none";
-    
-    const stream = video.srcObject;
-    if (stream) stream.getTracks().forEach(track => track.stop());
-    
-    faceStatus.textContent = "✔ Biometric face scan captured successfully!";
-    faceStatus.style.color = "#16885e";
-  }, "image/jpeg", 0.85);
-};
+  const title = document.getElementById('marketTitle');
+  const badge = document.getElementById('activeMarketBadge');
 
-document.getElementById("year").textContent = new Date().getFullYear();
-
-let user = null;
-
-async function updateUser(u) {
-  user = u;
-  document.getElementById("signedOut").classList.toggle("hidden", !!u);
-  document.getElementById("signedIn").classList.toggle("hidden", !u);
-  document.getElementById("userEmail").textContent = u?.email || "";
-  
-  if (u) {
-    const isApproved = u.user_metadata?.approved === true;
-    const pubBtn = document.getElementById("publish");
-    const statusBox = document.getElementById("approvalStatusBox");
-
-    if (isApproved) {
-      pubBtn.disabled = false;
-      pubBtn.textContent = "Publish verified asset listing";
-      statusBox.style.background = "#f0fdf4";
-      statusBox.style.borderColor = "#bbf7d0";
-      statusBox.style.color = "#166534";
-      statusBox.innerHTML = "✔ <strong>Status: Approved by Admin</strong><br>Your agent/dealer account is verified and fully active.";
-      loadMyProducts();
-    } else {
-      pubBtn.disabled = true;
-      pubBtn.textContent = "Pending admin approval";
-      statusBox.style.background = "#fffbeb";
-      statusBox.style.borderColor = "#fde68a";
-      statusBox.style.color = "#92400e";
-      statusBox.innerHTML = "⏳ <strong>Status: Pending Admin Approval</strong><br>Your face scan and phone fingerprint are logged. An admin will review and approve your account within 5 minutes.";
-    }
-  } else {
-    document.getElementById("myProductsList").innerHTML = "";
-    document.getElementById("myProductsMsg").textContent = "Please sign in to view your listings.";
+  if (market === 'retail') {
+    document.getElementById('navRetail').classList.add('active');
+    title.textContent = "🛍️ Retail Products & Brands";
+    badge.textContent = "🛍️ Retail Market";
+  } else if (market === 'motors') {
+    document.getElementById('navMotors').classList.add('active');
+    title.textContent = "🚗 Motors & Vehicles";
+    badge.textContent = "🚗 Motors Market";
+  } else if (market === 'property') {
+    document.getElementById('navProperty').classList.add('active');
+    title.textContent = "🏠 Properties For Sale & Rent";
+    badge.textContent = "🏠 Property Market";
   }
+
+  loadListings(market);
 }
 
-document.getElementById("authForm").onsubmit = async e => {
-  e.preventDefault();
-  message("authMsg", "Signing in securely…");
-  let { data, error } = await sb.auth.signInWithPassword({
-    email: document.getElementById("email").value.trim(),
-    password: document.getElementById("password").value
-  });
-  if (error) { message("authMsg", error.message, true); return; }
-  updateUser(data.user);
-  message("userMsg", "Signed in successfully.");
+document.getElementById('searchBtn').onclick = () => {
+  const q = document.getElementById('searchInput').value.trim();
+  loadListings(currentMarket, q);
 };
 
-document.getElementById("signup").onclick = async () => {
-  let email = document.getElementById("email").value.trim();
-  let password = document.getElementById("password").value;
-  let realName = document.getElementById("sellerRealName").value.trim();
-  let phone = document.getElementById("sellerPhone").value.trim();
-  const agree = document.getElementById("novaTrustAgree");
-
-  if (agree && !agree.checked) { message("authMsg", "You must agree to biometric terms.", true); return; }
-  if (!email || password.length < 6 || !realName || !phone) { message("authMsg", "Please fill in all required text fields.", true); return; }
-  if (!capturedFaceBlob) { message("authMsg", "Biometric face verification snapshot is mandatory.", true); return; }
-
-  const deviceHash = getDeviceFingerprint();
-  message("authMsg", "Submitting verification details…");
-  
-  try {
-    let { data, error } = await sb.auth.signUp({ 
-      email, password, 
-      options: { data: { full_name: realName, phone: phone, device_fingerprint: deviceHash, approved: false } } 
-    });
-    if (error) throw error;
-
-    const u = data.user || data.session?.user;
-    if (u && capturedFaceBlob) {
-      const facePath = u.id + "/face_verification_asset_" + Date.now() + ".jpg";
-      await sb.storage.from("Nova AI").upload(facePath, capturedFaceBlob, { contentType: "image/jpeg", upsert: true });
-    }
-
-    if (data.session) { updateUser(u); message("userMsg", "Account submitted successfully. Waiting for admin approval."); } 
-    else { message("authMsg", "Account submitted for admin review. Sign in once approved."); }
-  } catch (err) {
-    message("authMsg", "Sign up failed: " + err.message, true);
+document.getElementById('searchInput').onkeypress = (e) => {
+  if (e.key === 'Enter') {
+    const q = document.getElementById('searchInput').value.trim();
+    loadListings(currentMarket, q);
   }
 };
 
-document.getElementById("signout").onclick = async () => {
-  let { error } = await sb.auth.signOut();
-  if (error) message("userMsg", error.message, true);
-  else { updateUser(null); message("authMsg", "You have signed out."); }
-};
-
-document.getElementById("sellerForm").onsubmit = async e => {
-  e.preventDefault();
-  if (!user) { message("sellerMsg", "Please sign in before publishing.", true); return; }
-  if (user.user_metadata?.approved !== true) { message("sellerMsg", "Your account is pending admin approval.", true); return; }
-
-  const seller = document.getElementById("sellerName").value.trim();
-  const category = document.getElementById("assetCategory").value;
-  const name = document.getElementById("productName").value.trim();
-  const price = Number(document.getElementById("price").value);
-  const rawDesc = document.getElementById("description").value.trim();
-  const files = document.getElementById("photoFiles").files;
-
-  if (!seller || !name || !rawDesc || !Number.isFinite(price) || price < 1) {
-    message("sellerMsg", "Please check all required fields.", true);
-    return;
-  }
-  if (!files || files.length === 0) {
-    message("sellerMsg", "At least one photo is required.", true);
-    return;
-  }
-
-  let description = rawDesc;
-  if (category === "Motors & Vehicles") {
-    const year = document.getElementById("carYear").value;
-    const mileage = document.getElementById("carMileage").value;
-    description = `[VEHICLE | YEAR: ${year} | MILEAGE: ${mileage}km]\n\n${rawDesc}`;
-  } else {
-    const beds = document.getElementById("propBedrooms").value;
-    const baths = document.getElementById("propBathrooms").value;
-    const loc = document.getElementById("propLocation").value;
-    description = `[PROPERTY: ${category.toUpperCase()} | LOCATION: ${loc} | BEDS: ${beds} | BATHS: ${baths}]\n\n${rawDesc}`;
-  }
-
-  const b = document.getElementById("publish");
-  b.disabled = true;
-  b.textContent = "Publishing asset…";
-
-  try {
-    let uploadedImages = [];
-    const limit = Math.min(files.length, 6);
-    for (let i = 0; i < limit; i++) {
-      const file = files[i];
-      const types = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"};
-      if (!types[file.type]) continue;
-      const path = user.id + "/asset_" + Date.now() + "_" + i + "." + types[file.type];
-      const { error: uploadError } = await sb.storage.from("Nova AI").upload(path, file, { contentType: file.type, upsert: false });
-      if (!uploadError) {
-        const { data: publicData } = sb.storage.from("Nova AI").getPublicUrl(path);
-        if (publicData?.publicUrl) uploadedImages.push(publicData.publicUrl);
-      }
-    }
-
-    const { error } = await sb.from("Products").insert({
-      name, description, price, category,
-      image_url: uploadedImages[0] || "",
-      images: uploadedImages,
-      seller_name: seller,
-      seller_id: user.id
-    });
-    if (error) throw error;
-
-    e.target.reset();
-    document.getElementById("facePreview").style.display = "none";
-    capturedFaceBlob = null;
-    message("sellerMsg", "Asset listed successfully with " + uploadedImages.length + " photo(s)!");
-    loadMyProducts();
-    loadPublicAssets();
-  } catch (err) {
-    message("sellerMsg", "Publishing failed: " + err.message, true);
-  } finally {
-    b.disabled = false;
-    b.textContent = "Publish verified asset listing";
-  }
-};
-
-async function loadMyProducts() {
-  const box = document.getElementById("myProductsList");
-  const msg = document.getElementById("myProductsMsg");
-  if (!user) { msg.textContent = "Please sign in."; box.innerHTML = ""; return; }
-  msg.textContent = "Loading your listings…";
-  const { data, error } = await sb.from("Products").select("id,name,description,price,category").eq("seller_id", user.id).in("category", ["Motors & Vehicles", "Property For Sale", "Property To Rent"]).order("created_at", { ascending: false });
-  if (error) { msg.textContent = "Could not load listings: " + error.message; box.innerHTML = ""; return; }
-  msg.textContent = data.length ? "Your asset listings: " + data.length : "No listings found.";
-  box.innerHTML = data.map(p => `
-    <div class="panel" style="margin:10px 0;box-shadow:none;border:1px solid var(--line)">
-      <h4>${esc(p.name)}</h4>
-      <p>${esc(p.category)} · ${cash(p.price)}</p>
-      <button class="btn outline" style="padding:6px 10px;font-size:12px" onclick="deleteMyProduct('${esc(p.id)}')">Delete</button>
-    </div>
-  `).join("");
-}
-
-async function deleteMyProduct(id) {
-  if (!user || !confirm("Delete this listing permanently?")) return;
-  const { error } = await sb.from("Products").delete().eq("id", id).eq("seller_id", user.id);
-  if (error) { alert("Delete failed: " + error.message); return; }
-  alert("Listing deleted.");
-  loadMyProducts();
-  loadPublicAssets();
-}
-
-sb.auth.getSession().then(({ data }) => { updateUser(data?.session?.user || null); });
-sb.auth.onAuthStateChange((_e, session) => { updateUser(session?.user || null); });
-
-// Initial load of public marketplace items
-loadPublicAssets();
+// Initial load
+loadListings('retail');
 </script>
 
 </body>
