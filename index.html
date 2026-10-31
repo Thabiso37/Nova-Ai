@@ -335,6 +335,8 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
     </form>
     <button class="btn outline" onclick="go('cart')">🛒 <span id="count">0</span></button>
     <button class="btn outline" onclick="window.location.href='seller.html'" aria-label="Account">👤</button>
+    <!-- RETAIL MARKET BADGE PLACED IN TOP HEADER AREA -->
+    <a href="seller.html" style="font-size: 13px; font-weight: 700; color: #174ea6; background: #f0f4f9; padding: 8px 12px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 5px; border: 1px solid #d1dced;">🛍️ Retail Market</a>
   </div>
   <div class="delivery-bar">
     <span id="buyerLocation">📍 Deliver to: Your current location</span>
@@ -697,13 +699,13 @@ body.categories-view main > *:not(#categories) { display: none !important; }
 body.categories-view #categories { display: block !important; min-height: 70vh; margin: 24px auto !important; max-width: 900px; }
 </style>
 
-<!-- BOTTOM NAVIGATION BAR WITH RETAIL PLACED IN THE SECOND POSITION -->
+<!-- BOTTOM NAVIGATION BAR WITHOUT RETAIL -->
 <nav class="mobile-bottom-nav">
   <button onclick="go('shop')">🏠<span>Home</span></button>
-  <button onclick="window.location.href='seller.html'">🛍️<span>Retail</span></button>
   <button onclick="go('categories')">☰<span>Categories</span></button>
   <a href="seller-motors-houses.html" style="color:#d97706;">🚗🔑<span>Motors/Prop</span></a>
   <button onclick="go('wishlist')">❤️<span>Wishlist</span></button>
+  <button onclick="window.location.href='seller.html'">🏷️<span>Retail Sell</span></button>
 </nav>
 
 <script>
