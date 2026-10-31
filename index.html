@@ -339,7 +339,7 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
   <div id="lightboxDots" class="lightbox-dots"></div>
 </div>
 
-<div class="top">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
+<div class="top">🇿🇦 NOVA AI TRUST SHIELD · SECURE BRAND-VERIFIED RETAIL MARKETPLACE</div>
 <header class="new-header">
   <div class="head">
     <a class="logo" href="#">NOVA<span>AI</span></a>
@@ -401,13 +401,14 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
 </section>
 
 <section id="retailMarketPage" class="section panel">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
     <div>
       <h2>🛍️ Official Retail Market</h2>
-      <p class="muted">Shop authentic products directly from major verified brands like Nike, Puma, Pick n Pay, and more.</p>
+      <p class="muted">Authentic products directly from major verified brands like Nike, Puma, Pick n Pay, and more.</p>
     </div>
     <button class="btn primary" onclick="closeRetailMarketPage()">← Back to Marketplace</button>
   </div>
+  <div class="trust-badge-box" style="margin-bottom: 20px;"><span>🛡️ Verified Corporate Retail Partners · 100% Authentic Guarantee</span></div>
   <div id="retailProductsGrid" class="grid"></div>
 </section>
 
@@ -705,7 +706,7 @@ function clearCart(){cart=[];saveCart();renderCart();}
 function checkout(){
   const form = document.getElementById("checkoutForm");
   if (!cart.length) { message("checkoutMsg", "Your cart is empty.", true); return; }
-  form.classList.remove("hidden");
+  form.classList.print ? form.classList.print() : form.classList.remove("hidden");
   form.scrollIntoView({ behavior: "smooth" });
 }
 
