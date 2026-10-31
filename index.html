@@ -335,8 +335,8 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
     </form>
     <button class="btn outline" onclick="go('cart')">🛒 <span id="count">0</span></button>
     <button class="btn outline" onclick="window.location.href='seller.html'" aria-label="Account">👤</button>
-    <!-- RETAIL MARKET BADGE LINKING TO THE MAIN RETAIL MARKET SECTION -->
-    <button type="button" onclick="go('shop')" style="font-size: 13px; font-weight: 700; color: #174ea6; background: #f0f4f9; padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; gap: 5px; border: 1px solid #d1dced; cursor: pointer;">🛍️ Retail Market</button>
+    <!-- RETAIL MARKET BUTTON FILTERING FOR REAL BRANDS -->
+    <button type="button" onclick="filterByRetailBrands()" style="font-size: 13px; font-weight: 700; color: #174ea6; background: #f0f4f9; padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; gap: 5px; border: 1px solid #d1dced; cursor: pointer;">🛍️ Retail Market</button>
   </div>
   <div class="delivery-bar">
     <span id="buyerLocation">📍 Deliver to: Your current location</span>
@@ -466,12 +466,11 @@ const C=[
 ["Property To Rent","🔑"]
 ];
 const demo=[
-["demo-1","Wireless Bluetooth Headphones","Electronics",349,"Nova Demo Store","Wireless listening for music, calls and everyday use.","https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"],
-["demo-2","Everyday Casual T-Shirt","Fashion",159,"Nova Demo Store","A versatile casual top. Confirm sizes and colours with the seller.","https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80"],
-["demo-3","Classic Street Sneakers","Sneakers",599,"Nova Demo Store","Streetwear-inspired footwear. Check sizing and authenticity.","https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80"],
-["demo-4","Minimal Desk Lamp","Home & Living",279,"Nova Demo Store","A simple lamp for a desk or bedside table.","https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=700&q=80"],
-["demo-5","Daily Skincare Set","Beauty",229,"Nova Demo Store","A sample skincare bundle. Check ingredients and expiry date.","https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=80"],
-["demo-6","Training Football","Sports",199,"Nova Demo Store","A football for practice and recreational play.","https://images.unsplash.com/photo-1614632537423-1e6c2e7e0c2b?auto=format&fit=crop&w=700&q=80"]
+["demo-1","Nike Air Max Trainer","Clothing Shoes & Accessories",1899,"Nike Official Store","Official Nike athletic footwear and streetwear.","https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80"],
+["demo-2","Puma Running Hoodie","Clothing Shoes & Accessories",899,"Puma Retail","Comfortable activewear hoodie designed for peak performance.","https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80"],
+["demo-3","Pick n Pay Grocery Basket Bundle","Groceries",450,"Pick n Pay Hyper","Household essentials and grocery bundle pack.","https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=700&q=80"],
+["demo-4","Wireless Bluetooth Headphones","Electronics",349,"Nova Demo Store","Wireless listening for music, calls and everyday use.","https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"],
+["demo-5","Minimal Desk Lamp","Home & Living",279,"Nova Demo Store","A simple lamp for a desk or bedside table.","https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=700&q=80"]
 ];
 let products=demo.map(a=>({id:a[0],name:a[1],category:a[2],price:a[3],seller:a[4],description:a[5],images:[a[6]],tag:"Demo"}));
 let cart=readCart(),active="All",user=null;
@@ -497,6 +496,19 @@ function go(id){
   }
   section.scrollIntoView({behavior:"smooth"});
 }
+
+function filterByRetailBrands() {
+  document.getElementById("search").value = "";
+  document.getElementById("filter").value = "All";
+  active = "All";
+  initCategories();
+  
+  // Filter products matching major retail stores like Nike, Puma, Pick n Pay
+  const retailList = products.filter(p => /nike|puma|pick n pay/i.test(p.seller));
+  renderCustomList(retailList.length ? retailList : products);
+  go("shop");
+}
+
 function message(id,s,bad=false){let e=document.getElementById(id);e.textContent=s;e.className="msg "+(bad?"error":"success")}
 function initCategories(){
 document.getElementById("cats").innerHTML=[["All","🌐"],...C].map(([n,ic])=>`<button class="cat ${active===n?"active":""}" data-cat="${esc(n)}"><span class="emoji">${ic}</span><span>${esc(n==="All"?"All products":n)}</span></button>`).join("");
@@ -511,33 +523,25 @@ document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{
 document.getElementById("filter").innerHTML='<option>All</option>'+C.map(([n])=>`<option>${esc(n)}</option>`).join("");
 document.getElementById("filter").value=active;
 }
-function render(){
-let q=document.getElementById("search").value.toLowerCase(),cat=document.getElementById("filter").value,sort=document.getElementById("sort").value;
-let list=products.filter(p=>{
-  const categoryMatch = (cat==="All" || p.category===cat);
-  return categoryMatch && [p.name,p.category,p.description,p.seller].join(" ").toLowerCase().includes(q);
-});
-if(sort==="low")list.sort((a,b)=>a.price-b.price);
-if(sort==="high")list.sort((a,b)=>b.price-a.price);
-if(sort==="az")list.sort((a,b)=>a.name.localeCompare(b.name));
-document.getElementById("productCount").textContent=products.length;
 
-document.getElementById("products").innerHTML=list.length?list.map(p=>{
-  const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
-  const firstImg = safeImg(imgList[0]);
-  const hash = String(p.id).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  const discountVal = (hash % 40) + 10;
-  const soldCount = (hash % 450) + 25;
-  const isBestseller = hash % 3 === 0;
+function renderCustomList(list) {
+  document.getElementById("productCount").textContent = list.length;
+  document.getElementById("products").innerHTML = list.length ? list.map(p => {
+    const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
+    const firstImg = safeImg(imgList[0]);
+    const hash = String(p.id).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    const discountVal = (hash % 40) + 10;
+    const soldCount = (hash % 450) + 25;
+    const isBestseller = hash % 3 === 0;
 
-  return `<article class="product">
+    return `<article class="product">
 <div class="prodimg" style="position:relative">
   <button type="button" class="wishlist-btn" data-wishlist="${esc(p.id)}" aria-label="Add to wishlist" style="position:absolute;top:10px;right:10px;z-index:2;width:34px;height:34px;border:1px solid #e1e6ee;border-radius:50%;background:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.1)">♡</button>
   <span class="shein-discount-badge">-${discountVal}%</span>
   ${firstImg?`<img loading="lazy" src="${esc(firstImg)}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}
 </div>
 <div class="prodbody">
-  ${isBestseller ? `<span class="shein-bestseller">🔥 Bestseller</span>` : `<small style="color:#6654f5;font-weight:800">${esc(p.category)}</small>`}
+  <small style="color:#08774f;font-weight:800">${esc(p.seller)}</small>
   <h3>${esc(p.name)}</h3>
   <div class="shein-rating-row"><span class="shein-stars">★★★★★</span><span>(${soldCount}+ sold)</span></div>
   <div class="price">${cash(p.price)}</div>
@@ -547,62 +551,77 @@ document.getElementById("products").innerHTML=list.length?list.map(p=>{
   </div>
 </div>
 </article>`;
-}).join(""):'<div class="panel">No products found. Try another search or category.</div>';
+  }).join("") : '<div class="panel">No retail products found.</div>';
+  bindProductEvents();
+}
 
-document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add(b.dataset.add));
-let savedWishlist=JSON.parse(localStorage.getItem("novaWishlist")||"[]");
-document.querySelectorAll("[data-wishlist]").forEach(b=>{
-  if(savedWishlist.includes(b.dataset.wishlist)){
-    b.textContent="♥";
-    b.style.color="#e11d48";
-  }
-  b.onclick=()=>{
-    let wishlist=JSON.parse(localStorage.getItem("novaWishlist")||"[]");
-    const id=b.dataset.wishlist;
-    if(wishlist.includes(id)){wishlist=wishlist.filter(x=>x!==id);}else{wishlist.push(id);}
-    localStorage.setItem("novaWishlist",JSON.stringify(wishlist));
-    b.textContent=wishlist.includes(id)?"♥":"♡";
-    b.style.color=wishlist.includes(id)?"#e11d48":"#17345b";
-    renderWishlist();
-  };
-});
+function render(){
+  let q=document.getElementById("search").value.toLowerCase(),cat=document.getElementById("filter").value,sort=document.getElementById("sort").value;
+  let list=products.filter(p=>{
+    const categoryMatch = (cat==="All" || p.category===cat);
+    return categoryMatch && [p.name,p.category,p.description,p.seller].join(" ").toLowerCase().includes(q);
+  });
+  if(sort==="low")list.sort((a,b)=>a.price-b.price);
+  if(sort==="high")list.sort((a,b)=>b.price-a.price);
+  if(sort==="az")list.sort((a,b)=>a.name.localeCompare(b.name));
+  renderCustomList(list);
+}
 
-document.querySelectorAll("[data-info]").forEach(b => {
-  b.onclick = () => {
-    const p = products.find(x => x.id === b.dataset.info);
-    if (!p) return;
-    const modal = document.getElementById("productModal");
-    const galleryScroll = document.getElementById("modalGalleryScroll");
-    const dotsContainer = document.getElementById("galleryDots");
-    const lightbox = document.getElementById("fullscreenLightbox");
-    const lightboxScroll = document.getElementById("lightboxScroll");
-    const lightboxDots = document.getElementById("lightboxDots");
-
-    document.getElementById("modalProductName").textContent = p.name;
-    document.getElementById("modalProductPrice").textContent = cash(p.price);
-    document.getElementById("modalProductBrand").textContent = p.seller ? p.seller.toLowerCase() : "novaaibadge";
-
-    const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
-    const galleryImages = imgList.map(url => safeImg(url)).filter(Boolean);
-
-    galleryScroll.innerHTML = galleryImages.length ? galleryImages.map(img => `<div class="nova-gallery-slide"><img src="${esc(img)}" alt="Product photo"></div>`).join("") : `<div class="nova-gallery-slide"><div class="muted">No image available</div></div>`;
-    dotsContainer.innerHTML = galleryImages.map((_, i) => `<span class="nova-gallery-dot ${i === 0 ? 'active' : ''}"></span>`).join("");
-
-    lightboxScroll.innerHTML = galleryImages.length ? galleryImages.map(img => `<div class="lightbox-slide"><img src="${esc(img)}" alt="Fullscreen photo"></div>`).join("") : `<div class="lightbox-slide"><div class="muted" style="color:white">No image available</div></div>`;
-    lightboxDots.innerHTML = galleryImages.map((_, i) => `<span class="lightbox-dot ${i === 0 ? 'active' : ''}"></span>`).join("");
-
-    document.getElementById("openLightboxBtn").onclick = () => lightbox.classList.add("open");
-    document.getElementById("closeLightboxBtn").onclick = () => lightbox.classList.remove("open");
-    lightbox.onclick = (e) => { if (e.target === lightbox) lightbox.classList.remove("open"); };
-
-    document.getElementById("modalAddToCart").onclick = () => {
-      add(p.id);
-      modal.classList.remove("open");
-      lightbox.classList.remove("open");
+function bindProductEvents() {
+  document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add(b.dataset.add));
+  let savedWishlist=JSON.parse(localStorage.getItem("novaWishlist")||"[]");
+  document.querySelectorAll("[data-wishlist]").forEach(b=>{
+    if(savedWishlist.includes(b.dataset.wishlist)){
+      b.textContent="♥";
+      b.style.color="#e11d48";
+    }
+    b.onclick=()=>{
+      let wishlist=JSON.parse(localStorage.getItem("novaWishlist")||"[]");
+      const id=b.dataset.wishlist;
+      if(wishlist.includes(id)){wishlist=wishlist.filter(x=>x!==id);}else{wishlist.push(id);}
+      localStorage.setItem("novaWishlist",JSON.stringify(wishlist));
+      b.textContent=wishlist.includes(id)?"♥":"♡";
+      b.style.color=wishlist.includes(id)?"#e11d48":"#17345b";
+      renderWishlist();
     };
-    modal.classList.add("open");
-  };
-});
+  });
+
+  document.querySelectorAll("[data-info]").forEach(b => {
+    b.onclick = () => {
+      const p = products.find(x => x.id === b.dataset.info);
+      if (!p) return;
+      const modal = document.getElementById("productModal");
+      const galleryScroll = document.getElementById("modalGalleryScroll");
+      const dotsContainer = document.getElementById("galleryDots");
+      const lightbox = document.getElementById("fullscreenLightbox");
+      const lightboxScroll = document.getElementById("lightboxScroll");
+      const lightboxDots = document.getElementById("lightboxDots");
+
+      document.getElementById("modalProductName").textContent = p.name;
+      document.getElementById("modalProductPrice").textContent = cash(p.price);
+      document.getElementById("modalProductBrand").textContent = p.seller ? p.seller.toLowerCase() : "novaaibadge";
+
+      const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
+      const galleryImages = imgList.map(url => safeImg(url)).filter(Boolean);
+
+      galleryScroll.innerHTML = galleryImages.length ? galleryImages.map(img => `<div class="nova-gallery-slide"><img src="${esc(img)}" alt="Product photo"></div>`).join("") : `<div class="nova-gallery-slide"><div class="muted">No image available</div></div>`;
+      dotsContainer.innerHTML = galleryImages.map((_, i) => `<span class="nova-gallery-dot ${i === 0 ? 'active' : ''}"></span>`).join("");
+
+      lightboxScroll.innerHTML = galleryImages.length ? galleryImages.map(img => `<div class="lightbox-slide"><img src="${esc(img)}" alt="Fullscreen photo"></div>`).join("") : `<div class="lightbox-slide"><div class="muted" style="color:white">No image available</div></div>`;
+      lightboxDots.innerHTML = galleryImages.map((_, i) => `<span class="lightbox-dot ${i === 0 ? 'active' : ''}"></span>`).join("");
+
+      document.getElementById("openLightboxBtn").onclick = () => lightbox.classList.add("open");
+      document.getElementById("closeLightboxBtn").onclick = () => lightbox.classList.remove("open");
+      lightbox.onclick = (e) => { if (e.target === lightbox) lightbox.classList.remove("open"); };
+
+      document.getElementById("modalAddToCart").onclick = () => {
+        add(p.id);
+        modal.classList.remove("open");
+        lightbox.classList.remove("open");
+      };
+      modal.classList.add("open");
+    };
+  });
 }
 
 function renderWishlist(){
@@ -689,7 +708,7 @@ renderWishlist();
     display: flex; position: fixed; bottom: 0; left: 0; width: 100%; height: 66px; background: #ffffff; border-top: 1px solid #e5e7eb; box-shadow: 0 -3px 12px rgba(0,0,0,.08); justify-content: space-around; align-items: center; z-index: 999;
   }
   .mobile-bottom-nav button, .mobile-bottom-nav a {
-    border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #174ea6; font-size: 20px; text-decoration: none;
+    border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #174ea6; font-size: 20px; text-type: none; text-decoration: none;
   }
   .mobile-bottom-nav span { font-size: 10px; font-weight: 700; }
   body { padding-bottom: 75px; }
@@ -699,7 +718,7 @@ body.categories-view main > *:not(#categories) { display: none !important; }
 body.categories-view #categories { display: block !important; min-height: 70vh; margin: 24px auto !important; max-width: 900px; }
 </style>
 
-<!-- BOTTOM NAVIGATION BAR WITHOUT RETAIL -->
+<!-- BOTTOM NAVIGATION BAR -->
 <nav class="mobile-bottom-nav">
   <button onclick="go('shop')">🏠<span>Home</span></button>
   <button onclick="go('categories')">☰<span>Categories</span></button>
@@ -712,12 +731,12 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
 const locationDisplay = document.getElementById("buyerLocation");
 const gpsButton = document.getElementById("useMyLocation");
 const changeButton = document.getElementById("changeLocation");
-let buyerCoordinates = locationDisplay ? null : null;
+let buyerCoordinates = null;
 if (locationDisplay) {
   locationDisplay.style.cursor = "pointer";
   locationDisplay.addEventListener("click", function () {
     if (!buyerCoordinates) { alert("Please press Use GPS first."); return; }
-    window.open("https://www.google.com/maps/search/?api=1&query=" + buyerCoordinates.latitude + "," + buyerCoordinates.longitude, "_blank");
+    window.open("https://www.google.com/maps/search/?api=1&query=" + buyerCoordinates.latitude + "," +buyerCoordinates.longitude, "_blank");
   });
 }
 
