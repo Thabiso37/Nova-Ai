@@ -459,22 +459,70 @@ header {
 </head>
 <body>
  
-<div id="productModal" class="product-modal" role="dialog" aria-modal="true" aria-labelledby="modalProductName">
-  <div class="product-modal-card">
-    <button type="button" class="product-modal-close" id="closeProductModal" aria-label="Close">×</button>
-    <img id="modalProductImage" class="product-modal-image" alt="Product image">
+<div id="productModal" class="product-modal" role="dialog"
+     aria-modal="true" aria-labelledby="modalProductName">
+
+  <div class="product-modal-card nova-product-page">
+
+    <button type="button" class="product-modal-close"
+            id="closeProductModal" aria-label="Close">×</button>
+
+    <div class="nova-product-photo">
+      <div class="nova-gallery">
+        <button type="button" id="galleryPrev" aria-label="Previous photo">‹</button>
+        <img id="modalProductImage" class="product-modal-image"
+             alt="Product image">
+        <button type="button" id="galleryNext" aria-label="Next photo">›</button>
+      </div>
+      <div id="galleryDots" class="nova-gallery-dots"></div>
+    </div>
+
     <div class="product-modal-content">
+      <div class="nova-product-label">NOVAAI MARKETPLACE</div>
+
       <h2 id="modalProductName">Product name</h2>
+
+      <div class="nova-rating">☆ No reviews yet</div>
+
       <div id="modalProductPrice" class="product-modal-price"></div>
       <div id="modalProductMeta" class="product-modal-meta"></div>
+
       <p id="modalProductDescription"></p>
-      <div class="product-modal-actions">
-        <button type="button" class="btn primary" id="modalAddToCart">Add to cart</button>
-        <button type="button" class="btn outline" id="modalContinueShopping">Continue shopping</button>
+
+      <div class="nova-location">
+        <strong>📍 Delivery</strong>
+        <p id="modalDeliveryText">Confirm delivery with the seller.</p>
+        <button type="button" class="btn outline" id="modalChangeLocation">
+          Change location
+        </button>
+      </div>
+
+      <div class="field">
+        <label for="modalProductOption">Size / colour (optional)</label>
+        <input id="modalProductOption"
+               placeholder="Ask seller about available options">
+      </div>
+
+      <div class="nova-delivery">
+        <strong>🚚 Delivery information</strong>
+        <p>Confirm delivery cost and estimated delivery time with the seller.</p>
+      </div>
+
+      <div class="nova-payment-note">
+        🔒 Orders are submitted for seller confirmation. No online payment is taken yet.
+      </div>
+
+      <div class="nova-product-actions">
+        <button type="button" class="btn primary" id="modalAddToCart">
+          Add to Cart
+        </button>
+        <button type="button" class="btn outline" id="modalContinueShopping">
+          Continue shopping
+        </button>
       </div>
     </div>
   </div>
-</div> 
+</div>
 <div class="top">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
 <header class="new-header">
   <div class="head">
@@ -836,32 +884,97 @@ b.style.color=wishlist.includes(id)?"#e11d48":"#17345b";
 renderWishlist();
   };
 });
-document.querySelectorAll("[data-info]").forEach(b=>{
-  b.onclick=()=>{
-    const p=products.find(x=>x.id===b.dataset.info);
-    if(!p)return;
+document.querySelectorAll("[data-info]").forEach(b => {
+  b.onclick = () => {
+    const p = products.find(x => x.id === b.dataset.info);
+    if (!p) return;
 
-    document.getElementById("modalProductName").textContent=p.name;
-    document.getElementById("modalProductPrice").textContent=cash(p.price);
-    document.getElementById("modalProductMeta").textContent=
-      p.category+" · Seller: "+p.seller;
-    document.getElementById("modalProductDescription").textContent=p.description;
+    const modal = document.getElementById("productModal");
+    const img = document.getElementById("modalProductImage");
 
-    const img=document.getElementById("modalProductImage");
-    const imageUrl=safeImg(p.image);
-    img.style.display=imageUrl?"block":"none";
-    if(imageUrl)img.src=imageUrl;
-    else img.removeAttribute("src");
+    // Product details
+    document.getElementById("modalProductName").textContent = p.name;
+    document.getElementById("modalProductPrice").textContent = cash(p.price);
+    document.getElementById("modalProductMeta").textContent =
+      p.category + " · Seller: " + p.seller;
+    document.getElementById("modalProductDescription").textContent =
+      p.description || "Contact the seller for more product details.";
 
-    document.getElementById("modalAddToCart").onclick=()=>{
-      add(p.id);
-      document.getElementById("productModal").classList.remove("open");
+    // Product image
+    const imageUrl = safeImg(p.image || p.image_url);
+    img.style.display = imageUrl ? "block" : "none";
+
+    if (imageUrl) {
+      img.src = imageUrl;
+    } else {
+      img.removeAttribute("src");
+    }
+
+    // Gallery: currently one image per product
+    let galleryImages = imageUrl ? [imageUrl] : [];
+    let galleryIndex = 0;
+
+    const dots = document.getElementById("galleryDots");
+    const prev = document.getElementById("galleryPrev");
+    const next = document.getElementById("galleryNext");
+
+    function showGalleryImage(index) {
+      if (!galleryImages.length) {
+        img.style.display = "none";
+        dots.innerHTML = "";
+        prev.style.display = "none";
+        next.style.display = "none";
+        return;
+      }
+
+      galleryIndex = (index + galleryImages.length) % galleryImages.length;
+      img.src = galleryImages[galleryIndex];
+      img.style.display = "block";
+
+      // Hide arrows when there is only one photo
+      const multiple = galleryImages.length > 1;
+      prev.style.display = multiple ? "block" : "none";
+      next.style.display = multiple ? "block" : "none";
+
+      dots.innerHTML = galleryImages
+        .map((_, i) =>
+          `<span class="nova-gallery-dot ${i === galleryIndex ? "active" : ""}"></span>`
+        )
+        .join("");
+    }
+
+    prev.onclick = () => showGalleryImage(galleryIndex - 1);
+    next.onclick = () => showGalleryImage(galleryIndex + 1);
+
+    showGalleryImage(0);
+
+    // Delivery location
+    const deliveryText = document.getElementById("modalDeliveryText");
+const locationDisplay = document.getElementById("buyerLocation");
+    if (deliveryText && locationDisplay) {
+      deliveryText.textContent = locationDisplay.textContent.replace("📍 Deliver to: ", "");
+    }
+
+    document.getElementById("modalChangeLocation").onclick = () => {
+      const town = prompt("Enter your delivery town or suburb:");
+      if (town && town.trim()) {
+        const newLocation = "📍 Deliver to: " + town.trim();
+
+        if (locationDisplay) locationDisplay.textContent = newLocation;
+        if (deliveryText) deliveryText.textContent = town.trim();
+      }
     };
 
-    document.getElementById("productModal").classList.add("open");
+    // Add to cart
+    document.getElementById("modalAddToCart").onclick = () => {
+      add(p.id);
+      modal.classList.remove("open");
+    };
+
+    // Open modal
+    modal.classList.add("open");
   };
 });
-}
   
 
 function renderWishlist(){
@@ -887,22 +1000,6 @@ function renderWishlist(){
       <a href="#shop">Continue shopping</a>
     `}
   `;
-
-  section.querySelectorAll("[data-wish-add]").forEach(b => {
-    b.onclick = () => add(b.dataset.wishAdd);
-  });
-
-  section.querySelectorAll("[data-wish-remove]").forEach(b => {
-    b.onclick = () => {
-      const id = b.dataset.wishRemove;
-      const savedNow = JSON.parse(localStorage.getItem("novaWishlist") || "[]");
-      localStorage.setItem("novaWishlist", JSON.stringify(
-        savedNow.filter(x => String(x) !== String(id))
-      ));
-      render();
-      renderWishlist();
-    };
-  });
 }
   function resetFilters(){document.getElementById("search").value="";document.getElementById("filter").value="All";document.getElementById("sort").value="featured";active="All";initCategories();render()}
 function add(id){let p=products.find(x=>x.id===id);let i=cart.find(x=>x.id===id);if(i)i.qty++;else cart.push({id,qty:1});saveCart();renderCart();toast(p.name+" added to cart.")}
