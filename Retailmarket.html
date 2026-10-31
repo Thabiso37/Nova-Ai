@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Retail Partner Portal | NOVAAI</title>
+<style>
+:root{--bg:#f5f7fb;--ink:#171c2d;--p:#174ea6;--line:#e1e6ee}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Arial,sans-serif}
+.head{max-width:800px;margin:20px auto;padding:0 20px;display:flex;justify-content:space-between;align-items:center}
+.panel{max-width:800px;margin:auto;background:white;border:1px solid var(--line);border-radius:15px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.field{margin:14px 0}
+.field label{display:block;font-size:12px;font-weight:800;margin-bottom:5px}
+.field input,.field textarea{width:100%;padding:11px;border:1px solid #dfe2ed;border-radius:9px}
+.btn{border:0;border-radius:9px;padding:12px 18px;font-weight:800;background:var(--p);color:white;cursor:pointer;width:100%}
+.msg{font-size:13px;margin-top:10px;font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <a href="index.html" style="font-weight:900;font-size:22px;color:var(--p);text-decoration:none">NOVA<span>AI</span> RETAIL</a>
+  <a href="index.html" style="font-size:13px;font-weight:700;color:var(--p);text-decoration:none">← Back to Marketplace</a>
+</div>
+
+<main>
+<div class="panel">
+  <h2>🛍️ Official Retail Partner Sign In & Publish</h2>
+  <p style="font-size:13px;color:#666;">Simple corporate sign-in for brands like Nike, Puma, and Pick n Pay.</p>
+
+  <div id="retailAuthBox">
+    <div class="field"><label>Corporate Email *</label><input id="rEmail" type="email" placeholder="partner@brand.co.za" required></div>
+    <div class="field"><label>Brand / Store Name *</label><input id="rStore" placeholder="Nike Official Store" required></div>
+    <button class="btn" onclick="authRetail()">Sign In & Unlock Publishing</button>
+  </div>
+
+  <div id="retailPublishBox" style="display:none;">
+    <p style="color:#16885e;font-weight:bold;">✔ Signed in as: <span id="activeRetailEmail"></span></p>
+    <button onclick="logoutRetail()" style="background:#b52828;color:white;border:0;padding:6px 12px;border-radius:6px;cursor:pointer;margin-bottom:15px;">Sign out</button>
+    
+    <h3>Publish Retail Product</h3>
+    <div class="field"><label>Product Name *</label><input id="pName" placeholder="Nike Air Trainer" required></div>
+    <div class="field"><label>Price (ZAR) *</label><input id="pPrice" type="number" placeholder="1899" required></div>
+    <div class="field"><label>Discount Badge (e.g. 20%) *</label><input id="pDisc" placeholder="20%" required></div>
+    <div class="field"><label>Image URL *</label><input id="pImg" placeholder="https://..." required></div>
+    <button class="btn" onclick="publishRetail()">Publish to Retail Market</button>
+  </div>
+  <div id="rMsg" class="msg"></div>
+</div>
+</main>
+
+<script>
+function authRetail(){
+  const email = document.getElementById("rEmail").value.trim();
+  const store = document.getElementById("rStore").value.trim();
+  if(!email || !store) { alert("Please fill in all fields."); return; }
+  localStorage.setItem("novaSimpleRetailUser", email);
+  localStorage.setItem("novaSimpleRetailStore", store);
+  checkRetailState();
+}
+function logoutRetail(){
+  localStorage.removeItem("novaSimpleRetailUser");
+  checkRetailState();
+}
+function checkRetailState(){
+  const user = localStorage.getItem("novaSimpleRetailUser");
+  document.getElementById("retailAuthBox").style.display = user ? "none" : "block";
+  document.getElementById("retailPublishBox").style.display = user ? "block" : "none";
+  if(user) document.getElementById("activeRetailEmail").textContent = user;
+}
+function publishRetail(){
+  const name = document.getElementById("pName").value.trim();
+  const price = Number(document.getElementById("pPrice").value);
+  const discount = document.getElementById("pDisc").value.trim();
+  const img = document.getElementById("pImg").value.trim();
+  const store = localStorage.getItem("novaSimpleRetailStore") || "Retail Brand";
+
+  if(!name || !price || !img) { document.getElementById("rMsg").textContent = "Fill in all required fields."; document.getElementById("rMsg").style.color="#b52828"; return; }
+
+  let list = JSON.parse(localStorage.getItem("novaRetailCustomListings") || "[]");
+  list.unshift({id: "r-" + Date.now(), name, price, discount: discount || "10%", seller: store, img});
+  localStorage.setItem("novaRetailCustomListings", JSON.stringify(list));
+
+  document.getElementById("pName").value = "";
+  document.getElementById("pPrice").value = "";
+  document.getElementById("pDisc").value = "";
+  document.getElementById("pImg").value = "";
+  document.getElementById("rMsg").textContent = "✔ Successfully published to Retail Market!";
+  document.getElementById("rMsg").style.color = "#16885e";
+}
+checkRetailState();
+</script>
+</body>
+</html>
