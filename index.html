@@ -886,7 +886,7 @@ const demo=[
 ["demo-11","Smartphone Stand","Electronics",99,"Nova Demo Store","A desk stand for compatible phones.","https://images.unsplash.com/photo-1586953208448-b95a79798f07?auto=format&fit=crop&w=700&q=80"],
 ["demo-12","Everyday Shoulder Bag","Fashion",329,"Nova Demo Store","A versatile accessory for daily use.","https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=700&q=80"]
 ];
-let products=demo.map(a=>({id:a[0],name:a[1],category:a[2],price:a[3],seller:a[4],description:a[5],image:a[6],tag:"Demo"}));
+let products=demo.map(a=>({id:a[0],name:a[1],category:a[2],price:a[3],seller:a[4],description:a[5],images:[a[6]],tag:"Demo"}));
 let cart=readCart(),active="All",user=null;
 function readCart(){try{return JSON.parse(localStorage.getItem("novaMarketplaceCartV1")||"[]")}catch(e){return []}}
 function saveCart(){try{localStorage.setItem("novaMarketplaceCartV1",JSON.stringify(cart))}catch(e){}}
@@ -946,9 +946,13 @@ if(sort==="low")list.sort((a,b)=>a.price-b.price);
 if(sort==="high")list.sort((a,b)=>b.price-a.price);
 if(sort==="az")list.sort((a,b)=>a.name.localeCompare(b.name));
 document.getElementById("productCount").textContent=products.length;
-document.getElementById("products").innerHTML=list.length?list.map(p=>`<article class="product">
+document.getElementById("products").innerHTML=list.length?list.map(p=>{
+  const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
+  const firstImg = safeImg(imgList[0]);
+  return `<article class="product">
 <div class="prodimg" style="position:relative"><button type="button" class="wishlist-btn" data-wishlist="${esc(p.id)}" aria-label="Add to wishlist" style="position:absolute;top:10px;right:10px;z-index:2;width:38px;height:38px;border:1px solid #e1e6ee;border-radius:50%;background:#fff;font-size:22px;cursor:pointer">♡</button>
-${safeImg(p.image)?`<img loading="lazy" src="${esc(safeImg(p.image))}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}</div><div class="prodbody"><small style="color:#6654f5;font-weight:800">${esc(p.category)}</small><h3>${esc(p.name)}</h3><p>${esc(p.description)}</p><div class="price">${cash(p.price)}</div><p>Seller: ${esc(p.seller)}</p><div class="actions"><button class="btn primary" data-add="${esc(p.id)}">Add to cart</button><button class="btn outline" data-info="${esc(p.id)}">Details</button></div></div></article>`).join(""):'<div class="panel">No products found. Try another search or category.</div>';
+${firstImg?`<img loading="lazy" src="${esc(firstImg)}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}</div><div class="prodbody"><small style="color:#6654f5;font-weight:800">${esc(p.category)}</small><h3>${esc(p.name)}</h3><p>${esc(p.description)}</p><div class="price">${cash(p.price)}</div><p>Seller: ${esc(p.seller)}</p><div class="actions"><button class="btn primary" data-add="${esc(p.id)}">Add to cart</button><button class="btn outline" data-info="${esc(p.id)}">Details</button></div></div></article>`;
+}).join(""):'<div class="panel">No products found. Try another search or category.</div>';
 document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add(b.dataset.add));
 let savedWishlist=JSON.parse(localStorage.getItem("novaWishlist")||"[]");
 document.querySelectorAll("[data-wishlist]").forEach(b=>{
@@ -989,12 +993,8 @@ document.querySelectorAll("[data-info]").forEach(b => {
     document.getElementById("modalEbucks").textContent = "eB" + Math.round(productPrice * 18);
     document.getElementById("modalDiscovery").textContent = Math.round(productPrice * 10);
 
-    const mainImg = safeImg(p.image || p.image_url);
-    const galleryImages = mainImg ? [
-      mainImg,
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80",
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80"
-    ] : [];
+    const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
+    const galleryImages = imgList.map(url => safeImg(url)).filter(Boolean);
 
     galleryScroll.innerHTML = galleryImages.length 
       ? galleryImages.map(img => `<div class="nova-gallery-slide"><img src="${esc(img)}" alt="Product photo"></div>`).join("")
@@ -1166,9 +1166,9 @@ function toast(s){let t=document.getElementById("toast");t.textContent=s;t.class
 
 async function loadShared(){
 try{
-let{data,error}=await sb.from("Products").select("id,name,description,price,category,image_url,seller_name").order("created_at",{ascending:false});
+let{data,error}=await sb.from("Products").select("id,name,description,price,category,image_url,images,seller_name").order("created_at",{ascending:false});
 if(error)throw error;
-products=[...demo.map(a=>({id:a[0],name:a[1],category:a[2],price:a[3],seller:a[4],description:a[5],image:a[6],tag:"Demo"})),...(data||[]).map(r=>({id:"db-"+r.id,dbId:r.id,name:r.name,category:r.category,price:Number(r.price),seller:r.seller_name||"Independent seller",description:r.description||"",image:r.image_url||""}))];
+products=[...demo.map(a=>({id:a[0],name:a[1],category:a[2],price:a[3],seller:a[4],description:a[5],images:[a[6]],tag:"Demo"})),...(data||[]).map(r=>({id:"db-"+r.id,dbId:r.id,name:r.name,category:r.category,price:Number(r.price),seller:r.seller_name||"Independent seller",description:r.description||"",images: Array.isArray(r.images) && r.images.length ? r.images : (r.image_url ? [r.image_url] : [])}))];
 document.getElementById("dbStatus").textContent="SUPABASE CONNECTED";
 document.getElementById("catalogueMessage").textContent="Demo products plus listings shared through Supabase.";
 render();renderCart();
@@ -1277,6 +1277,7 @@ document.getElementById("sellerForm").onsubmit = async e => {
     const { error } = await sb.from("Products").insert({
       name, description, price, category,
       image_url: uploadedImage || null,
+      images: uploadedImage ? [uploadedImage] : [],
       seller_name: seller,
       seller_id: u.id
     });
