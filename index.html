@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#101526">
-<title>NOVA-AI | South African Marketplace</title>
+<title>NOVAAI | South African Marketplace</title>
 <style>
 #cats.cats {
   display: grid;
@@ -414,6 +414,7 @@ header {
   background: #ffffff;
   position: relative;
   border-bottom: 1px solid #e5e8ee;
+  cursor: pointer;
 }
 .nova-gallery-scroll {
   display: flex;
@@ -459,6 +460,80 @@ header {
 .nova-gallery-dot.active {
   background: #174ea6;
 }
+
+/* Fullscreen Lightbox Overlay (Matches Video Reference) */
+.fullscreen-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: #000000;
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.fullscreen-lightbox.open {
+  display: flex;
+}
+.lightbox-top-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px;
+}
+.lightbox-close-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: 0;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox-scroll {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  flex: 1;
+  align-items: center;
+}
+.lightbox-scroll::-webkit-scrollbar {
+  display: none;
+}
+.lightbox-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  scroll-snap-align: start;
+}
+.lightbox-slide img {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+}
+.lightbox-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px 0;
+}
+.lightbox-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  transition: background 0.2s;
+}
+.lightbox-dot.active {
+  background: #3b82f6;
+}
+
 .nova-product-content {
   padding: 18px;
 }
@@ -588,7 +663,7 @@ header {
   <div class="product-modal-card nova-product-page">
     <button type="button" class="product-modal-close" id="closeProductModal" aria-label="Close">×</button>
 
-    <div class="nova-product-photo-container">
+    <div class="nova-product-photo-container" id="openLightboxBtn" title="Tap to view fullscreen">
       <div id="modalGalleryScroll" class="nova-gallery-scroll"></div>
       <div id="galleryDots" class="nova-gallery-dots"></div>
     </div>
@@ -642,6 +717,15 @@ header {
       </div>
     </div>
   </div>
+</div>
+
+<!-- Fullscreen Image Lightbox Overlay -->
+<div id="fullscreenLightbox" class="fullscreen-lightbox" role="dialog" aria-modal="true">
+  <div class="lightbox-top-bar">
+    <button type="button" class="lightbox-close-btn" id="closeLightboxBtn" aria-label="Close">×</button>
+  </div>
+  <div id="lightboxScroll" class="lightbox-scroll"></div>
+  <div id="lightboxDots" class="lightbox-dots"></div>
 </div>
 
 <div class="top">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
@@ -996,6 +1080,10 @@ document.querySelectorAll("[data-info]").forEach(b => {
     const galleryScroll = document.getElementById("modalGalleryScroll");
     const dotsContainer = document.getElementById("galleryDots");
 
+    const lightbox = document.getElementById("fullscreenLightbox");
+    const lightboxScroll = document.getElementById("lightboxScroll");
+    const lightboxDots = document.getElementById("lightboxDots");
+
     document.getElementById("modalProductName").textContent = p.name;
     document.getElementById("modalProductPrice").textContent = cash(p.price);
     document.getElementById("modalProductBrand").textContent = p.seller ? p.seller.toLowerCase() : "novaaibadge";
@@ -1029,6 +1117,7 @@ document.querySelectorAll("[data-info]").forEach(b => {
     const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
     const galleryImages = imgList.map(url => safeImg(url)).filter(Boolean);
 
+    // Populate modal gallery
     galleryScroll.innerHTML = galleryImages.length 
       ? galleryImages.map(img => `<div class="nova-gallery-slide"><img src="${esc(img)}" alt="Product photo"></div>`).join("")
       : `<div class="nova-gallery-slide"><div class="muted">No image available</div></div>`;
@@ -1040,6 +1129,32 @@ document.querySelectorAll("[data-info]").forEach(b => {
       dotsContainer.querySelectorAll(".nova-gallery-dot").forEach((dot, i) => {
         dot.classList.toggle("active", i === index);
       });
+    };
+
+    // Populate Fullscreen Lightbox
+    lightboxScroll.innerHTML = galleryImages.length
+      ? galleryImages.map(img => `<div class="lightbox-slide"><img src="${esc(img)}" alt="Fullscreen product photo"></div>`).join("")
+      : `<div class="lightbox-slide"><div class="muted" style="color:white">No image available</div></div>`;
+
+    lightboxDots.innerHTML = galleryImages.map((_, i) => `<span class="lightbox-dot ${i === 0 ? 'active' : ''}"></span>`).join("");
+
+    lightboxScroll.onscroll = () => {
+      const index = Math.round(lightboxScroll.scrollLeft / lightboxScroll.clientWidth);
+      lightboxDots.querySelectorAll(".lightbox-dot").forEach((dot, i) => {
+        dot.classList.toggle("active", i === index);
+      });
+    };
+
+    document.getElementById("openLightboxBtn").onclick = () => {
+      lightbox.classList.add("open");
+    };
+
+    document.getElementById("closeLightboxBtn").onclick = () => {
+      lightbox.classList.remove("open");
+    };
+
+    lightbox.onclick = (e) => {
+      if (e.target === lightbox) lightbox.classList.remove("open");
     };
 
     const modalTownEl = document.getElementById("modalDeliveryTown");
@@ -1062,6 +1177,7 @@ document.querySelectorAll("[data-info]").forEach(b => {
     document.getElementById("modalAddToCart").onclick = () => {
       add(p.id);
       modal.classList.remove("open");
+      lightbox.classList.remove("open");
     };
 
     modal.classList.add("open");
