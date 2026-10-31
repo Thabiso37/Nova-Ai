@@ -167,7 +167,7 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 @media(max-width:800px){.cats{grid-template-columns:repeat(4,1fr)}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hero-art{font-size:60px}}
 @media(max-width:560px){.head,main,nav{padding-left:12px;padding-right:12px}.search{order:3;flex-basis:100%}.hero{padding:23px}.hero-art{display:none}.stats{gap:7px}.stat{padding:10px}.stat strong{font-size:18px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.prodimg{height:130px}.two{grid-template-columns:1fr}.cats{gap:6px}.cat{font-size:11px}}
 
-/* Clean Product Modal Styles with High z-index & Fixed Overflow */
+/* Clean Product Modal Styles */
 .product-modal {
   position: fixed;
   inset: 0;
@@ -406,7 +406,6 @@ header {
   box-shadow: 0 2px 8px rgba(20, 40, 70, .05);
 }
 
-/* Scrollable Gallery & Video-matching Modal CSS */
 .nova-product-page {
   max-width: 520px;
   border-radius: 14px;
@@ -511,25 +510,19 @@ header {
 .tc-link { color: #174ea6; font-size: 12px; text-decoration: underline; font-weight: 700; cursor: pointer; }
 .btn-text { background: none; border: none; color: #174ea6; font-weight: 700; cursor: pointer; }
 
-.loyalty-badges {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+.trust-badge-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #166534;
   margin-bottom: 14px;
-}
-.loyalty-item {
-  border: 1px solid #e1e6ee;
-  border-radius: 6px;
-  padding: 8px 10px;
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
   font-weight: 700;
 }
-.badge-brand { font-size: 10px; padding: 2px 5px; border-radius: 4px; color: white; }
-.badge-brand.eboks { background: #e65c00; }
-.badge-brand.discovery { background: #003366; }
 
 .stock-warranty-box {
   font-size: 12px;
@@ -538,7 +531,6 @@ header {
   line-height: 1.6;
 }
 .stock-warranty-box .in-stock { color: #08774f; font-weight: 700; }
-.muted-loc { color: #777; font-weight: 400; }
 
 .modal-bottom-bar {
   display: flex;
@@ -567,7 +559,6 @@ header {
   color: white;
 }
 
-/* Inline collapsible info boxes */
 .info-drawer {
   background: #f0f4f9;
   border: 1px solid #d1dced;
@@ -592,7 +583,7 @@ header {
 </head>
 <body>
  
-<!-- Clean Video-Matching Modal Layout -->
+<!-- Clean Product Modal Layout -->
 <div id="productModal" class="product-modal" role="dialog" aria-modal="true" aria-labelledby="modalProductName">
   <div class="product-modal-card nova-product-page">
     <button type="button" class="product-modal-close" id="closeProductModal" aria-label="Close">×</button>
@@ -629,21 +620,14 @@ header {
         </div>
       </div>
 
-      <div class="loyalty-badges">
-        <div class="loyalty-item">
-          <span class="badge-brand eboks">eBucks</span>
-          <span id="modalEbucks">eB0</span>
-        </div>
-        <div class="loyalty-item">
-          <span class="badge-brand discovery">Discovery MILES</span>
-          <span id="modalDiscovery">0</span>
-        </div>
+      <div class="trust-badge-box">
+        <span>🛡️ Verified Independent Seller · 7-Day Buyer Protection</span>
       </div>
 
       <div class="stock-warranty-box">
-        <p class="in-stock">✔ <span id="modalStockStatus">In stock</span> <span class="muted-loc" id="modalStockHubs">CPT, JHB</span> <span class="tc-link" id="toggleStockBtn">Learn More</span></p>
+        <p class="in-stock">✔ <span id="modalStockStatus">In stock & ready to ship</span> <span class="tc-link" id="toggleStockBtn">Learn More</span></p>
         <div id="stockDrawer" class="info-drawer">
-          <strong>Stock & Fulfillment:</strong> Dispatched directly from verified independent merchant stockists and regional fulfillment nodes in Johannesburg and Cape Town. Backed by NOVAAI buyer protection.
+          <strong>Stock & Fulfillment:</strong> Dispatched directly from verified independent merchant stockists. Backed by NOVAAI marketplace guarantees and direct seller communication.
         </div>
       </div>
 
@@ -1016,12 +1000,6 @@ document.querySelectorAll("[data-info]").forEach(b => {
     document.getElementById("modalProductPrice").textContent = cash(p.price);
     document.getElementById("modalProductBrand").textContent = p.seller ? p.seller.toLowerCase() : "novaaibadge";
 
-    const productPrice = Number(p.price) || 0;
-    
-    // Dynamic loyalty calculation
-    document.getElementById("modalEbucks").textContent = "eB" + Math.round(productPrice * 18);
-    document.getElementById("modalDiscovery").textContent = Math.round(productPrice * 10);
-
     // Dynamic ratings
     const hashNum = String(p.id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const reviewCount = (hashNum % 35) + 3;
@@ -1070,22 +1048,6 @@ document.querySelectorAll("[data-info]").forEach(b => {
     if (globalHeaderLocation && modalTownEl) {
       let currentText = globalHeaderLocation.textContent.replace("📍 Deliver to: ", "").replace("📍 Your GPS: ", "").trim();
       modalTownEl.textContent = currentText || "Sonderwater";
-    }
-
-    // Dynamic stock hubs
-    const stockStatusEl = document.getElementById("modalStockStatus");
-    const stockHubsEl = document.getElementById("modalStockHubs");
-    if (stockStatusEl && stockHubsEl) {
-      if (hashNum % 3 === 0) {
-        stockStatusEl.textContent = "Low stock (3 left)";
-        stockHubsEl.textContent = "JHB Hub";
-      } else if (hashNum % 3 === 1) {
-        stockStatusEl.textContent = "In stock";
-        stockHubsEl.textContent = "CPT, JHB, DBN";
-      } else {
-        stockStatusEl.textContent = "In stock";
-        stockHubsEl.textContent = "CPT Hub";
-      }
     }
 
     document.getElementById("modalChangeLocation").onclick = () => {
