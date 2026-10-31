@@ -191,26 +191,6 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
   border-radius: 18px;
   box-shadow: 0 20px 60px rgba(0,0,0,.25);
 }
-.product-modal-image {
-  width: 100%;
-  height: 220px;
-  object-fit: contain;
-  background: #f5f6fb;
-}
-.product-modal-content {
-  padding: 20px;
-}
-.product-modal-price {
-  color: #5145e5;
-  font-size: 25px;
-  font-weight: 800;
-  margin: 10px 0;
-}
-.product-modal-meta {
-  color: #666b7a;
-  font-size: 13px;
-  margin: 8px 0;
-}
 .product-modal-close {
   position: absolute;
   top: 10px;
@@ -223,14 +203,7 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
   font-size: 24px;
   cursor: pointer;
   box-shadow: 0 2px 8px #0002;
-}
-.product-modal-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 18px;
-}
-.product-modal-actions button {
-  flex: 1;
+  z-index: 10;
 }
   
 :root {
@@ -289,14 +262,6 @@ header {
   background: none;
   color: #174ea6;
   font-weight: 700;
-}
-
-.logo {
-  letter-spacing: -1px;
-}
-
-.logo span {
-  color: #f5b900;
 }
 
 .search input {
@@ -383,37 +348,27 @@ header {
   background: #174ea6;
 }
 
-.product-modal-price {
-  color: #174ea6;
-}
-
 @media (max-width: 560px) {
   .prodimg {
     height: 145px;
     padding: 7px;
   }
-
   .prodbody {
     padding: 10px;
   }
-
   .prodbody h3 {
     font-size: 13px;
   }
-
   .price {
     font-size: 19px;
   }
-
   .actions {
     gap: 5px;
   }
-
   .actions button {
     font-size: 11px;
     padding: 9px 3px;
   }
-
   .hero {
     border-radius: 15px;
   }
@@ -448,56 +403,165 @@ header {
   box-shadow: 0 2px 8px rgba(20, 40, 70, .05);
 }
 
-/* Real-looking modal styling overrides */
+/* Scrollable Gallery & Video-matching Modal CSS */
+.nova-product-page {
+  max-width: 520px;
+  border-radius: 14px;
+}
+.nova-product-photo-container {
+  background: #ffffff;
+  position: relative;
+  border-bottom: 1px solid #e5e8ee;
+}
+.nova-gallery-scroll {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  gap: 0;
+  width: 100%;
+}
+.nova-gallery-scroll::-webkit-scrollbar {
+  display: none;
+}
+.nova-gallery-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  scroll-snap-align: start;
+  background: #ffffff;
+  padding: 10px;
+}
+.nova-gallery-slide img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.nova-gallery-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 0;
+  background: #ffffff;
+}
+.nova-gallery-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  transition: background 0.2s;
+}
+.nova-gallery-dot.active {
+  background: #174ea6;
+}
+.nova-product-content {
+  padding: 18px;
+}
+.nova-product-label {
+  color: #174ea6;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.nova-product-page h2 {
+  font-size: 18px;
+  line-height: 1.4;
+  margin: 6px 0;
+}
 .nova-rating-row {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 .stars {
-  color: #f5b900;
+  color: #cbd5e1;
   letter-spacing: 2px;
 }
-.rating-count {
-  color: #174ea6;
-  font-weight: 700;
-}
-.variant-pills {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 6px;
-}
-.variant-pill {
-  background: #f4f6f9;
-  border: 1px solid #d1dcf0;
-  border-radius: 6px;
-  padding: 8px 14px;
+.takealot-delivery-box {
+  background: #f8faff;
+  border: 1px solid #e1e6ee;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 14px 0;
   font-size: 13px;
+}
+.takealot-delivery-box .delivery-row {
+  display: flex;
+  justify-content: space-between;
   font-weight: 700;
   color: #10284b;
-  cursor: pointer;
+  margin-bottom: 6px;
 }
-.variant-pill.active {
-  background: #174ea6;
-  color: white;
-  border-color: #174ea6;
+.takealot-delivery-box .delivery-location-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #555;
+  border-top: 1px solid #edf0f5;
+  padding-top: 6px;
 }
-.nova-delivery-notice {
-  background: #f8faff;
-  border-left: 4px solid #174ea6;
-  padding: 10px 12px;
-  font-size: 12px;
-  margin: 14px 0;
-  border-radius: 0 6px 6px 0;
-  color: #444;
-}
-.nova-payment-note {
-  font-size: 11px;
-  color: #666;
+.tc-link { color: #174ea6; font-size: 12px; text-decoration: underline; font-weight: 700; }
+.btn-text { background: none; border: none; color: #174ea6; font-weight: 700; cursor: pointer; }
+
+.loyalty-badges {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
   margin-bottom: 14px;
+}
+.loyalty-item {
+  border: 1px solid #e1e6ee;
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.badge-brand { font-size: 10px; padding: 2px 5px; border-radius: 4px; color: white; }
+.badge-brand.eboks { background: #e65c00; }
+.badge-brand.discovery { background: #003366; }
+
+.stock-warranty-box {
+  font-size: 12px;
+  color: #444;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+.stock-warranty-box .in-stock { color: #08774f; font-weight: 700; }
+.muted-loc { color: #777; font-weight: 400; }
+
+.modal-bottom-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #e5e8ee;
+  margin-top: 20px;
+  padding-top: 14px;
+}
+.modal-price-display {
+  display: flex;
+  flex-direction: column;
+}
+.modal-bottom-bar .product-modal-price {
+  font-size: 22px;
+  font-weight: 900;
+  color: #17345b;
+  margin: 0;
+}
+.add-to-cart-btn {
+  background: #174ea6 !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-size: 15px;
+  font-weight: 800;
+  color: white;
 }
 </style>
 <style>
@@ -510,41 +574,33 @@ header {
 </head>
 <body>
  
+<!-- Clean Video-Matching Modal Layout -->
 <div id="productModal" class="product-modal" role="dialog" aria-modal="true" aria-labelledby="modalProductName">
   <div class="product-modal-card nova-product-page">
     <button type="button" class="product-modal-close" id="closeProductModal" aria-label="Close">×</button>
 
-    <div class="nova-product-photo">
-      <div class="nova-gallery">
-        <button type="button" id="galleryPrev" aria-label="Previous photo">‹</button>
-        <img id="modalProductImage" class="product-modal-image" alt="Product image">
-        <button type="button" id="galleryNext" aria-label="Next photo">›</button>
-      </div>
+    <div class="nova-product-photo-container">
+      <div id="modalGalleryScroll" class="nova-gallery-scroll"></div>
       <div id="galleryDots" class="nova-gallery-dots"></div>
     </div>
 
-    <div class="product-modal-content">
-      <div class="nova-product-label" id="modalProductBrand">NOVAAI MARKETPLACE</div>
+    <div class="nova-product-content">
+      <div class="nova-product-label" id="modalProductBrand">novaaibadge</div>
 
       <h2 id="modalProductName">Product name</h2>
 
       <div class="nova-rating-row">
-        <span class="stars">★★★★★</span> 
-        <span id="ratingCountText" class="rating-count">1 Verified Rating</span>
+        <span class="stars">☆☆☆☆☆</span> 
+        <span class="rating-count">Be the first to <a href="#" class="tc-link">Write Review</a></span>
       </div>
-
-      <div id="modalProductPrice" class="product-modal-price"></div>
-      <div id="modalProductMeta" class="product-modal-meta"></div>
-
-      <p id="modalProductDescription"></p>
 
       <div class="takealot-delivery-box">
         <div class="delivery-row">
-          <span id="modalDeliveryDateText">📦 Delivery 2 Nov - 4 Nov</span>
+          <span id="modalDeliveryDateText">📦 Delivery loading...</span>
           <a href="#" class="tc-link">T&Cs Apply</a>
         </div>
         <div class="delivery-location-row">
-          <span>📍 Deliver to: <strong id="modalDeliveryTown">Your current location</strong></span>
+          <span>📍 Deliver to: <strong id="modalDeliveryTown">Sonderwater</strong></span>
           <button type="button" class="btn-text" id="modalChangeLocation">Change</button>
         </div>
       </div>
@@ -552,39 +608,25 @@ header {
       <div class="loyalty-badges">
         <div class="loyalty-item">
           <span class="badge-brand eboks">eBucks</span>
-          <span id="modalEbucks">eB1,745</span>
+          <span id="modalEbucks">eB0</span>
         </div>
         <div class="loyalty-item">
           <span class="badge-brand discovery">Discovery MILES</span>
-          <span id="modalDiscovery">1,745</span>
+          <span id="modalDiscovery">0</span>
         </div>
       </div>
 
       <div class="stock-warranty-box">
-        <p class="in-stock">✔ In stock <span class="muted-loc">CPT, JHB</span> <a href="#" class="learn-more">Learn More</a></p>
-        <p class="warranty-text">🔄 Hassle-Free Exchanges & Returns for 30 Days.</p>
-        <p class="warranty-text">🛡️ 6-Month Limited Warranty.</p>
+        <p class="in-stock">✔ In stock <span class="muted-loc">CPT, JHB</span> <a href="#" class="tc-link">Learn More</a></p>
       </div>
 
-      <div class="field">
-        <label>Select Option / Variant</label>
-        <div id="variantOptionsContainer" class="variant-pills">
-          <button type="button" class="variant-pill active" data-option="Standard">Standard</button>
+      <div class="modal-bottom-bar">
+        <div class="modal-price-display">
+          <span class="muted" style="font-size:11px">Price:</span>
+          <span id="modalProductPrice" class="product-modal-price">R 0</span>
         </div>
-      </div>
-
-      <div class="nova-delivery-notice">
-        <strong>🚚 Delivery information</strong>
-        <p>Confirm delivery cost and estimated delivery time with the seller upon checkout.</p>
-      </div>
-
-      <div class="nova-payment-note">
-        🔒 Orders are submitted for seller confirmation. No online payment is taken yet.
-      </div>
-
-      <div class="product-modal-actions">
         <button type="button" class="btn primary add-to-cart-btn" id="modalAddToCart">
-          Add to Cart
+          🛒 Add to Cart
         </button>
       </div>
     </div>
@@ -936,25 +978,42 @@ document.querySelectorAll("[data-info]").forEach(b => {
     if (!p) return;
 
     const modal = document.getElementById("productModal");
-    const img = document.getElementById("modalProductImage");
+    const galleryScroll = document.getElementById("modalGalleryScroll");
+    const dotsContainer = document.getElementById("galleryDots");
 
-    // Populate Real Product Data
     document.getElementById("modalProductName").textContent = p.name;
     document.getElementById("modalProductPrice").textContent = cash(p.price);
-    document.getElementById("modalProductMeta").textContent = p.category + " · Seller: " + (p.seller || "Independent seller");
-    document.getElementById("modalProductDescription").textContent = p.description || "No description provided by seller.";
-    
-    // Real Reward Points Calculation
-    const productPrice = Number(p.price) || 0;
-    document.getElementById("modalEbucks").textContent = "eB" + Math.round(productPrice * 5);
-    document.getElementById("modalDiscovery").textContent = Math.round(productPrice * 5);
+    document.getElementById("modalProductBrand").textContent = p.seller ? p.seller.toLowerCase() : "novaaibadge";
 
-    // --- REAL DYNAMIC DELIVERY DATES ---
+    const productPrice = Number(p.price) || 0;
+    document.getElementById("modalEbucks").textContent = "eB" + Math.round(productPrice * 18);
+    document.getElementById("modalDiscovery").textContent = Math.round(productPrice * 10);
+
+    const mainImg = safeImg(p.image || p.image_url);
+    const galleryImages = mainImg ? [
+      mainImg,
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80",
+      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80"
+    ] : [];
+
+    galleryScroll.innerHTML = galleryImages.length 
+      ? galleryImages.map(img => `<div class="nova-gallery-slide"><img src="${esc(img)}" alt="Product photo"></div>`).join("")
+      : `<div class="nova-gallery-slide"><div class="muted">No image available</div></div>`;
+
+    dotsContainer.innerHTML = galleryImages.map((_, i) => `<span class="nova-gallery-dot ${i === 0 ? 'active' : ''}"></span>`).join("");
+
+    galleryScroll.onscroll = () => {
+      const index = Math.round(galleryScroll.scrollLeft / galleryScroll.clientWidth);
+      dotsContainer.querySelectorAll(".nova-gallery-dot").forEach((dot, i) => {
+        dot.classList.toggle("active", i === index);
+      });
+    };
+
     const today = new Date();
     const deliveryStart = new Date();
-    deliveryStart.setDate(today.getDate() + 2); 
+    deliveryStart.setDate(today.getDate() + 1);
     const deliveryEnd = new Date();
-    deliveryEnd.setDate(today.getDate() + 4);   
+    deliveryEnd.setDate(today.getDate() + 3);
 
     const options = { month: 'short', day: 'numeric' };
     const dateString = deliveryStart.toLocaleDateString('en-ZA', options) + " - " + deliveryEnd.toLocaleDateString('en-ZA', options);
@@ -964,54 +1023,12 @@ document.querySelectorAll("[data-info]").forEach(b => {
       deliveryDateEl.textContent = "📦 Delivery " + dateString;
     }
 
-    // Handle Image Gallery
-    const imageUrl = safeImg(p.image || p.image_url);
-    img.style.display = imageUrl ? "block" : "none";
-    if (imageUrl) {
-      img.src = imageUrl;
-    } else {
-      img.removeAttribute("src");
-    }
-
-    let galleryImages = imageUrl ? [imageUrl] : [];
-    let galleryIndex = 0;
-
-    const dots = document.getElementById("galleryDots");
-    const prev = document.getElementById("galleryPrev");
-    const next = document.getElementById("galleryNext");
-
-    function showGalleryImage(index) {
-      if (!galleryImages.length) {
-        img.style.display = "none";
-        dots.innerHTML = "";
-        prev.style.display = "none";
-        next.style.display = "none";
-        return;
-      }
-      galleryIndex = (index + galleryImages.length) % galleryImages.length;
-      img.src = galleryImages[galleryIndex];
-      img.style.display = "block";
-
-      const multiple = galleryImages.length > 1;
-      prev.style.display = multiple ? "block" : "none";
-      next.style.display = multiple ? "block" : "none";
-
-      dots.innerHTML = galleryImages
-        .map((_, i) => `<span class="nova-gallery-dot ${i === galleryIndex ? "active" : ""}"></span>`)
-        .join("");
-    }
-
-    prev.onclick = () => showGalleryImage(galleryIndex - 1);
-    next.onclick = () => showGalleryImage(galleryIndex + 1);
-    showGalleryImage(0);
-
-    // --- REAL LOCATION SYNCHRONIZATION ---
     const modalTownEl = document.getElementById("modalDeliveryTown");
     const globalHeaderLocation = document.getElementById("buyerLocation");
 
     if (globalHeaderLocation && modalTownEl) {
       let currentText = globalHeaderLocation.textContent.replace("📍 Deliver to: ", "").replace("📍 Your GPS: ", "").trim();
-      modalTownEl.textContent = currentText || "Your current location";
+      modalTownEl.textContent = currentText || "Sonderwater";
     }
 
     document.getElementById("modalChangeLocation").onclick = () => {
@@ -1023,25 +1040,8 @@ document.querySelectorAll("[data-info]").forEach(b => {
       }
     };
 
-    // --- INTERACTIVE VARIANT SELECTION PILLS ---
-    let selectedVariant = "Standard";
-    const variantsContainer = document.getElementById("variantOptionsContainer");
-    variantsContainer.innerHTML = `
-      <button type="button" class="variant-pill active" data-option="Standard">Standard</button>
-      <button type="button" class="variant-pill" data-option="Bundle">Bundle Pack</button>
-    `;
-
-    variantsContainer.querySelectorAll(".variant-pill").forEach(pill => {
-      pill.onclick = (e) => {
-        variantsContainer.querySelectorAll(".variant-pill").forEach(p => p.classList.remove("active"));
-        e.target.classList.add("active");
-        selectedVariant = e.target.dataset.option;
-      };
-    });
-
-    // Add to Cart with Selected Variant
     document.getElementById("modalAddToCart").onclick = () => {
-      addWithOptions(p.id, selectedVariant);
+      add(p.id);
       modal.classList.remove("open");
     };
 
@@ -1076,45 +1076,17 @@ function renderWishlist(){
 }
 function resetFilters(){document.getElementById("search").value="";document.getElementById("filter").value="All";document.getElementById("sort").value="featured";active="All";initCategories();render()}
 function add(id){let p=products.find(x=>x.id===id);let i=cart.find(x=>x.id===id);if(i)i.qty++;else cart.push({id,qty:1});saveCart();renderCart();toast(p.name+" added to cart.")}
-
-function addWithOptions(id, optionText) {
-  let p = products.find(x => x.id === id);
-  if (!p) return;
-  let existingItem = cart.find(x => x.id === id && x.option === optionText);
-  if (existingItem) {
-    existingItem.qty++;
-  } else {
-    cart.push({ id: id, qty: 1, option: optionText || "Standard" });
-  }
-  saveCart();
-  renderCart();
-  toast(p.name + " added to cart.");
-}
-
 function renderCart(){
 cart=cart.filter(i=>products.some(p=>p.id===i.id));
 document.getElementById("count").textContent=cart.reduce((s,i)=>s+i.qty,0);
-document.getElementById("cartItems").innerHTML=cart.length?cart.map(i=>{let p=products.find(x=>x.id===i.id);return`<div class="cartitem"><div><b>${esc(p.name)}</b>${i.option && i.option !== "Standard" ? `<br><small class="muted">Option: ${esc(i.option)}</small>` : ""}<p class="muted">${cash(p.price)} each · Qty ${i.qty}</p></div><div><button class="btn outline" data-dec="${esc(i.id)}" data-opt="${esc(i.option)}">−</button> <button class="btn outline" data-inc="${esc(i.id)}" data-opt="${esc(i.option)}">+</button> <button class="btn outline" data-rem="${esc(i.id)}" data-opt="${esc(i.option)}">Remove</button></div></div>`}).join(""):'<p class="muted">Your cart is empty. Browse products and add something you like.</p>';
+document.getElementById("cartItems").innerHTML=cart.length?cart.map(i=>{let p=products.find(x=>x.id===i.id);return`<div class="cartitem"><div><b>${esc(p.name)}</b><p class="muted">${cash(p.price)} each · Qty ${i.qty}</p></div><div><button class="btn outline" data-dec="${esc(i.id)}">−</button> <button class="btn outline" data-inc="${esc(i.id)}">+</button> <button class="btn outline" data-rem="${esc(i.id)}">Remove</button></div></div>`}).join(""):'<p class="muted">Your cart is empty. Browse products and add something you like.</p>';
 document.getElementById("total").textContent=cash(cart.reduce((s,i)=>s+(products.find(p=>p.id===i.id)?.price||0)*i.qty,0));
-document.querySelectorAll("[data-dec]").forEach(b=>b.onclick=()=>qtyWithOptions(b.dataset.dec, b.dataset.opt, -1));
-document.querySelectorAll("[data-inc]").forEach(b=>b.onclick=()=>qtyWithOptions(b.dataset.inc, b.dataset.opt, 1));
-document.querySelectorAll("[data-rem]").forEach(b=>b.onclick=()=>{
-  cart=cart.filter(i=>!(i.id===b.dataset.rem && i.option===b.dataset.opt));
-  saveCart();
-  renderCart();
-});
+document.querySelectorAll("[data-dec]").forEach(b=>b.onclick=()=>qty(b.dataset.dec,-1));
+document.querySelectorAll("[data-inc]").forEach(b=>b.onclick=()=>qty(b.dataset.inc,1));
+document.querySelectorAll("[data-rem]").forEach(b=>b.onclick=()=>{cart=cart.filter(i=>i.id!==b.dataset.rem);saveCart();renderCart()});
 saveCart();
 }
-
-function qtyWithOptions(id, option, n){
-  let i=cart.find(x=>x.id===id && x.option===option);
-  if(!i)return;
-  i.qty+=n;
-  if(i.qty<1)cart=cart.filter(x=>!(x.id===id && x.option===option));
-  saveCart();
-  renderCart();
-}
-
+function qty(id,n){let i=cart.find(x=>x.id===id);if(!i)return;i.qty+=n;if(i.qty<1)cart=cart.filter(x=>x.id!==id);saveCart();renderCart()}
 function clearCart(){cart=[];saveCart();renderCart();document.getElementById("checkoutMsg").textContent=""}
 function checkout(){
   const form = document.getElementById("checkoutForm");
@@ -1560,7 +1532,6 @@ function closeProductModal(){
   document.getElementById("productModal").classList.remove("open");
 }
 document.getElementById("closeProductModal").onclick=closeProductModal;
-document.getElementById("modalContinueShopping").onclick=closeProductModal;
 document.getElementById("productModal").onclick=function(e){if(e.target===this)closeProductModal();};
 document.addEventListener("keydown",function(e){if(e.key==="Escape")closeProductModal();});
 renderWishlist();
@@ -1667,112 +1638,6 @@ changeButton.addEventListener("click", function () {
   }
 });
 </script>
-
-<style>
-.nova-product-page {
-  max-width: 520px;
-  border-radius: 14px;
-}
-.nova-product-photo {
-  background: #fff;
-  padding: 12px;
-  border-bottom: 1px solid #e5e8ee;
-}
-.nova-product-page .product-modal-image {
-  height: 280px;
-  object-fit: contain;
-}
-.nova-product-page .product-modal-content {
-  padding: 18px;
-}
-.nova-product-label {
-  color: #174ea6;
-  font-size: 12px;
-  font-weight: 800;
-  margin-bottom: 12px;
-}
-.nova-product-page h2 {
-  font-size: 21px;
-  line-height: 1.4;
-  margin: 8px 0;
-}
-.nova-product-page .product-modal-meta {
-  color: #174ea6;
-  font-weight: 700;
-}
-.takealot-delivery-box {
-  background: #f8faff;
-  border: 1px solid #e1e6ee;
-  border-radius: 8px;
-  padding: 12px;
-  margin: 14px 0;
-  font-size: 13px;
-}
-.takealot-delivery-box .delivery-row {
-  display: flex;
-  justify-content: space-between;
-  font-weight: 700;
-  color: #10284b;
-  margin-bottom: 6px;
-}
-.takealot-delivery-box .delivery-location-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #555;
-  border-top: 1px solid #edf0f5;
-  padding-top: 6px;
-}
-.tc-link { color: #174ea6; font-size: 11px; text-decoration: underline; }
-.btn-text { background: none; border: none; color: #174ea6; font-weight: 700; cursor: pointer; }
-
-.loyalty-badges {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-.loyalty-item {
-  border: 1px solid #e1e6ee;
-  border-radius: 6px;
-  padding: 8px 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 700;
-}
-.badge-brand { font-size: 10px; padding: 2px 5px; border-radius: 4px; color: white; }
-.badge-brand.eboks { background: #e65c00; }
-.badge-brand.discovery { background: #003366; }
-
-.stock-warranty-box {
-  font-size: 12px;
-  color: #444;
-  margin-bottom: 16px;
-  line-height: 1.6;
-}
-.stock-warranty-box .in-stock { color: #08774f; font-weight: 700; }
-.muted-loc { color: #777; font-weight: 400; }
-
-.add-to-cart-btn {
-  background: #174ea6 !important;
-  width: 100%;
-  border-radius: 8px !important;
-  padding: 14px !important;
-  font-size: 15px;
-  font-weight: 800;
-}
-
-@media(max-width:560px) {
-  .nova-product-page {
-    max-height: 94vh;
-  }
-  .nova-product-page .product-modal-image {
-    height: 240px;
-  }
-}
-</style>
 
 </body>
 </html>
