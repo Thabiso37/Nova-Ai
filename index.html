@@ -931,7 +931,6 @@ document.querySelectorAll("[data-info]").forEach(b => {
       img.src = galleryImages[galleryIndex];
       img.style.display = "block";
 
-      // Hide arrows when there is only one photo
       const multiple = galleryImages.length > 1;
       prev.style.display = multiple ? "block" : "none";
       next.style.display = multiple ? "block" : "none";
@@ -946,9 +945,8 @@ document.querySelectorAll("[data-info]").forEach(b => {
     prev.onclick = () => showGalleryImage(galleryIndex - 1);
     next.onclick = () => showGalleryImage(galleryIndex + 1);
 
-    showGalleryImage(0);
-
-    // Delivery location
+    showGalleryImage(0)
+    
     const deliveryText = document.getElementById("modalDeliveryText");
     const locationDisplay = document.getElementById("buyerLocation");
     if (deliveryText && locationDisplay) {
@@ -965,18 +963,16 @@ document.querySelectorAll("[data-info]").forEach(b => {
       }
     };
 
-    // Add to cart
     document.getElementById("modalAddToCart").onclick = () => {
       add(p.id);
       modal.classList.remove("open");
     };
 
-    // Open modal
     modal.classList.add("open");
   };
 });
-  
 
+  }
 function renderWishlist(){
   const section = document.getElementById("wishlist");
   if(!section) return;
