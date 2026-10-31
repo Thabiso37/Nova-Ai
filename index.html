@@ -447,6 +447,58 @@ header {
   scroll-snap-align: start;
   box-shadow: 0 2px 8px rgba(20, 40, 70, .05);
 }
+
+/* Real-looking modal styling overrides */
+.nova-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.stars {
+  color: #f5b900;
+  letter-spacing: 2px;
+}
+.rating-count {
+  color: #174ea6;
+  font-weight: 700;
+}
+.variant-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.variant-pill {
+  background: #f4f6f9;
+  border: 1px solid #d1dcf0;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #10284b;
+  cursor: pointer;
+}
+.variant-pill.active {
+  background: #174ea6;
+  color: white;
+  border-color: #174ea6;
+}
+.nova-delivery-notice {
+  background: #f8faff;
+  border-left: 4px solid #174ea6;
+  padding: 10px 12px;
+  font-size: 12px;
+  margin: 14px 0;
+  border-radius: 0 6px 6px 0;
+  color: #444;
+}
+.nova-payment-note {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 14px;
+}
 </style>
 <style>
   #seller,
@@ -476,7 +528,10 @@ header {
 
       <h2 id="modalProductName">Product name</h2>
 
-      <div class="nova-rating" id="modalProductRating">☆ Be the first to Write Review</div>
+      <div class="nova-rating-row">
+        <span class="stars">★★★★★</span> 
+        <span id="ratingCountText" class="rating-count">1 Verified Rating</span>
+      </div>
 
       <div id="modalProductPrice" class="product-modal-price"></div>
       <div id="modalProductMeta" class="product-modal-meta"></div>
@@ -485,11 +540,11 @@ header {
 
       <div class="takealot-delivery-box">
         <div class="delivery-row">
-          <span id="modalDeliveryDateText">📦 Delivery loading...</span>
+          <span id="modalDeliveryDateText">📦 Delivery 2 Nov - 4 Nov</span>
           <a href="#" class="tc-link">T&Cs Apply</a>
         </div>
         <div class="delivery-location-row">
-          <span>📍 Deliver to: <strong id="modalDeliveryTown">Sonderwater</strong></span>
+          <span>📍 Deliver to: <strong id="modalDeliveryTown">Your current location</strong></span>
           <button type="button" class="btn-text" id="modalChangeLocation">Change</button>
         </div>
       </div>
@@ -497,40 +552,39 @@ header {
       <div class="loyalty-badges">
         <div class="loyalty-item">
           <span class="badge-brand eboks">eBucks</span>
-          <span id="modalEbucks">eB1,880</span>
+          <span id="modalEbucks">eB1,745</span>
         </div>
         <div class="loyalty-item">
           <span class="badge-brand discovery">Discovery MILES</span>
-          <span id="modalDiscovery">1,880</span>
+          <span id="modalDiscovery">1,745</span>
         </div>
       </div>
 
       <div class="stock-warranty-box">
-        <p class="in-stock">✔ In stock <span class="muted-loc">CPT, JHB</span> <a href="#">Learn More</a></p>
+        <p class="in-stock">✔ In stock <span class="muted-loc">CPT, JHB</span> <a href="#" class="learn-more">Learn More</a></p>
         <p class="warranty-text">🔄 Hassle-Free Exchanges & Returns for 30 Days.</p>
         <p class="warranty-text">🛡️ 6-Month Limited Warranty.</p>
       </div>
 
       <div class="field">
-        <label for="modalProductOption">Size / colour (optional)</label>
-        <input id="modalProductOption" placeholder="Ask seller about available options">
+        <label>Select Option / Variant</label>
+        <div id="variantOptionsContainer" class="variant-pills">
+          <button type="button" class="variant-pill active" data-option="Standard">Standard</button>
+        </div>
       </div>
 
-      <div class="nova-delivery">
+      <div class="nova-delivery-notice">
         <strong>🚚 Delivery information</strong>
-        <p>Confirm delivery cost and estimated delivery time with the seller.</p>
+        <p>Confirm delivery cost and estimated delivery time with the seller upon checkout.</p>
       </div>
 
       <div class="nova-payment-note">
         🔒 Orders are submitted for seller confirmation. No online payment is taken yet.
       </div>
 
-      <div class="nova-product-actions">
+      <div class="product-modal-actions">
         <button type="button" class="btn primary add-to-cart-btn" id="modalAddToCart">
           Add to Cart
-        </button>
-        <button type="button" class="btn outline" id="modalContinueShopping">
-          Continue shopping
         </button>
       </div>
     </div>
@@ -957,7 +1011,7 @@ document.querySelectorAll("[data-info]").forEach(b => {
 
     if (globalHeaderLocation && modalTownEl) {
       let currentText = globalHeaderLocation.textContent.replace("📍 Deliver to: ", "").replace("📍 Your GPS: ", "").trim();
-      modalTownEl.textContent = currentText || "Sonderwater";
+      modalTownEl.textContent = currentText || "Your current location";
     }
 
     document.getElementById("modalChangeLocation").onclick = () => {
@@ -969,10 +1023,25 @@ document.querySelectorAll("[data-info]").forEach(b => {
       }
     };
 
-    // Add to Cart with Options
+    // --- INTERACTIVE VARIANT SELECTION PILLS ---
+    let selectedVariant = "Standard";
+    const variantsContainer = document.getElementById("variantOptionsContainer");
+    variantsContainer.innerHTML = `
+      <button type="button" class="variant-pill active" data-option="Standard">Standard</button>
+      <button type="button" class="variant-pill" data-option="Bundle">Bundle Pack</button>
+    `;
+
+    variantsContainer.querySelectorAll(".variant-pill").forEach(pill => {
+      pill.onclick = (e) => {
+        variantsContainer.querySelectorAll(".variant-pill").forEach(p => p.classList.remove("active"));
+        e.target.classList.add("active");
+        selectedVariant = e.target.dataset.option;
+      };
+    });
+
+    // Add to Cart with Selected Variant
     document.getElementById("modalAddToCart").onclick = () => {
-      const selectedOption = document.getElementById("modalProductOption").value.trim();
-      addWithOptions(p.id, selectedOption);
+      addWithOptions(p.id, selectedVariant);
       modal.classList.remove("open");
     };
 
