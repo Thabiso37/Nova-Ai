@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#101526">
-<title>NOVAAI | Secure Motors & Property Portal</title>
+<title>NOVAAI | Secure Motors & Property Marketplace</title>
 <style>
 :root{--bg:#f5f7fb;--ink:#171c2d;--muted:#70778b;--p:#174ea6;--dark:#10284b;--line:#e1e6ee}
 *{box-sizing:border-box}
@@ -42,17 +42,39 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 </head>
 <body>
 
-<div class="top">🛡️ NOVA AI TRUST SHIELD · MOTORS & PROPERTY ASSET PORTAL</div>
+<div class="top">🛡️ NOVA AI TRUST SHIELD · MOTORS & PROPERTY MARKETPLACE & PORTAL</div>
 <header>
   <div class="head">
     <a class="logo" href="index.html">NOVA<span>AI</span> ASSETS</a>
-    <a class="btn outline" href="index.html">← Back to Marketplace</a>
+    <div style="display:flex;gap:10px;">
+      <a class="btn outline" href="index.html">← Retail Marketplace</a>
+    </div>
   </div>
 </header>
 
 <main>
+<!-- PUBLIC MARKETPLACE BROWSING SECTION -->
 <section class="section">
-<h2>Nova AI Motors & Property Portal</h2>
+  <h2>🚗🏠 Browse Verified Cars & Property</h2>
+  <p class="muted">Explore verified vehicles, houses for sale, and properties to rent from biometric-bound agents and dealers.</p>
+  
+  <div style="display:flex;gap:10px;margin:15px 0;flex-wrap:wrap;">
+    <button class="btn primary" onclick="filterMarket('all')">All Assets</button>
+    <button class="btn outline" onclick="filterMarket('Motors & Vehicles')">Cars</button>
+    <button class="btn outline" onclick="filterMarket('Property For Sale')">Properties For Sale</button>
+    <button class="btn outline" onclick="filterMarket('Property To Rent')">Properties To Rent</button>
+  </div>
+
+  <div id="publicAssetList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-top:20px;">
+    <p class="muted">Loading verified listings...</p>
+  </div>
+</section>
+
+<hr style="margin:40px 0;border:0;border-top:1px solid var(--line)">
+
+<!-- AGENT & DEALER SUBMISSION PORTAL -->
+<section class="section">
+<h2>Dealer & Agent Secure Portal</h2>
 <p class="muted">Strict biometric face capture, phone fingerprinting, and manual admin verification required for all vehicle dealers and real estate agents.</p>
 
 <div class="two">
@@ -203,12 +225,12 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
       2. <strong>Zero Scams:</strong> No fake rentals or ghost cars allowed.<br>
       3. <strong>Admin Control:</strong> Instant manual vetting on your R0 budget.
     </div>
-    <h3>Hub Features</h3>
+    <h3>Market Features</h3>
     <p class="muted">
+      ✓ Combined public marketplace & seller portal<br>
       ✓ Dynamic forms for Cars & Properties<br>
       ✓ Multi-photo gallery uploads (up to 6 photos)<br>
-      ✓ Nova AI Biometric Shield<br>
-      ✓ Manual Admin Approval Workflow
+      ✓ Nova AI Biometric Shield & Admin Workflow
     </p>
   </div>
 </div>
@@ -246,6 +268,50 @@ function getDeviceFingerprint() {
     hash |= 0;
   }
   return "dev_" + Math.abs(hash).toString(36);
+}
+
+// Load Public Marketplace Assets
+async function loadPublicAssets(categoryFilter = 'all') {
+  const container = document.getElementById('publicAssetList');
+  container.innerHTML = "<p class='muted'>Loading verified listings...</p>";
+
+  let query = sb.from("Products").select("*").in("category", ["Motors & Vehicles", "Property For Sale", "Property To Rent"]).order("created_at", { ascending: false });
+  
+  if (categoryFilter !== 'all') {
+    query = query.eq("category", categoryFilter);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    container.innerHTML = "<p class='error'>Failed to load listings: " + esc(error.message) + "</p>";
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    container.innerHTML = "<p class='muted'>No verified listings found in this category yet.</p>";
+    return;
+  }
+
+  container.innerHTML = data.map(item => `
+    <div class="panel" style="display:flex;flex-direction:column;justify-content:space-between;box-shadow:none;border:1px solid var(--line);">
+      <div>
+        ${item.image_url ? `<img src="${esc(item.image_url)}" alt="Asset" style="width:100%;height:160px;object-fit:cover;border-radius:8px;margin-bottom:10px;">` : ''}
+        <span style="font-size:11px;background:#f0fdf4;color:#166534;padding:3px 8px;border-radius:6px;font-weight:bold;">${esc(item.category)}</span>
+        <h4 style="margin:8px 0 4px;">${esc(item.name)}</h4>
+        <p style="font-size:16px;font-weight:bold;color:#174ea6;margin:0 0 8px;">${cash(item.price)}</p>
+        <p style="font-size:12px;color:#70778b;white-space:pre-line;max-height:80px;overflow:hidden;">${esc(item.description)}</p>
+      </div>
+      <div style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:11px;color:#70778b;">Dealer/Agent: <strong>${esc(item.seller_name || 'Verified')}</strong></span>
+        <button class="btn primary" style="padding:6px 12px;font-size:11px;" onclick="alert('Contact dealer/agent securely via verified profile.')">View Details</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function filterMarket(cat) {
+  loadPublicAssets(cat);
 }
 
 // Toggle form fields based on asset category selection
@@ -463,6 +529,7 @@ document.getElementById("sellerForm").onsubmit = async e => {
     capturedFaceBlob = null;
     message("sellerMsg", "Asset listed successfully with " + uploadedImages.length + " photo(s)!");
     loadMyProducts();
+    loadPublicAssets();
   } catch (err) {
     message("sellerMsg", "Publishing failed: " + err.message, true);
   } finally {
@@ -494,10 +561,14 @@ async function deleteMyProduct(id) {
   if (error) { alert("Delete failed: " + error.message); return; }
   alert("Listing deleted.");
   loadMyProducts();
+  loadPublicAssets();
 }
 
 sb.auth.getSession().then(({ data }) => { updateUser(data?.session?.user || null); });
 sb.auth.onAuthStateChange((_e, session) => { updateUser(session?.user || null); });
+
+// Initial load of public marketplace items
+loadPublicAssets();
 </script>
 
 </body>
