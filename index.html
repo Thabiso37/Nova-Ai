@@ -335,8 +335,8 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
     </form>
     <button class="btn outline" onclick="go('cart')">🛒 <span id="count">0</span></button>
     <button class="btn outline" onclick="window.location.href='seller.html'" aria-label="Account">👤</button>
-    <!-- RETAIL MARKET BADGE PLACED IN TOP HEADER AREA -->
-    <a href="seller.html" style="font-size: 13px; font-weight: 700; color: #174ea6; background: #f0f4f9; padding: 8px 12px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 5px; border: 1px solid #d1dced;">🛍️ Retail Market</a>
+    <!-- RETAIL MARKET BADGE LINKING TO THE MAIN RETAIL MARKET SECTION -->
+    <button type="button" onclick="go('shop')" style="font-size: 13px; font-weight: 700; color: #174ea6; background: #f0f4f9; padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; gap: 5px; border: 1px solid #d1dced; cursor: pointer;">🛍️ Retail Market</button>
   </div>
   <div class="delivery-bar">
     <span id="buyerLocation">📍 Deliver to: Your current location</span>
@@ -712,33 +712,38 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
 const locationDisplay = document.getElementById("buyerLocation");
 const gpsButton = document.getElementById("useMyLocation");
 const changeButton = document.getElementById("changeLocation");
-let buyerCoordinates = null;
-locationDisplay.style.cursor = "pointer";
+let buyerCoordinates = locationDisplay ? null : null;
+if (locationDisplay) {
+  locationDisplay.style.cursor = "pointer";
+  locationDisplay.addEventListener("click", function () {
+    if (!buyerCoordinates) { alert("Please press Use GPS first."); return; }
+    window.open("https://www.google.com/maps/search/?api=1&query=" + buyerCoordinates.latitude + "," + buyerCoordinates.longitude, "_blank");
+  });
+}
 
-locationDisplay.addEventListener("click", function () {
-  if (!buyerCoordinates) { alert("Please press Use GPS first."); return; }
-  window.open("https://www.google.com/maps/search/?api=1&query=" + buyerCoordinates.latitude + "," + buyerCoordinates.longitude, "_blank");
-});
+if (gpsButton) {
+  gpsButton.addEventListener("click", function () {
+    if (!navigator.geolocation) { locationDisplay.textContent = "📍 GPS not supported"; return; }
+    locationDisplay.textContent = "📍 Finding location...";
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        buyerCoordinates = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+        locationDisplay.textContent = "📍 GPS: " + pos.coords.latitude.toFixed(4) + ", " + pos.coords.longitude.toFixed(4);
+      },
+      err => { locationDisplay.textContent = "📍 GPS error"; }
+    );
+  });
+}
 
-gpsButton.addEventListener("click", function () {
-  if (!navigator.geolocation) { locationDisplay.textContent = "📍 GPS not supported"; return; }
-  locationDisplay.textContent = "📍 Finding location...";
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      buyerCoordinates = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-      locationDisplay.textContent = "📍 GPS: " + pos.coords.latitude.toFixed(4) + ", " + pos.coords.longitude.toFixed(4);
-    },
-    err => { locationDisplay.textContent = "📍 GPS error"; }
-  );
-});
-
-changeButton.addEventListener("click", function () {
-  const town = prompt("Enter your town or suburb:");
-  if (town && town.trim()) {
-    buyerCoordinates = null;
-    locationDisplay.textContent = "📍 Deliver to: " + town.trim();
-  }
-});
+if (changeButton) {
+  changeButton.addEventListener("click", function () {
+    const town = prompt("Enter your town or suburb:");
+    if (town && town.trim()) {
+      buyerCoordinates = null;
+      locationDisplay.textContent = "📍 Deliver to: " + town.trim();
+    }
+  });
+}
 </script>
 
 </body>
