@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -7,6 +6,67 @@
 <meta name="theme-color" content="#101526">
 <title>NOVAAI | South African Marketplace</title>
 <style>
+#cats.cats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+#cats .cat {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 58px;
+  padding: 10px;
+  background: #fff;
+  color: #202638;
+  border: 1px solid #e8eaf0;
+  border-radius: 12px;
+  text-align: left;
+  box-shadow: 0 2px 6px rgba(0,0,0,.04);
+}
+
+#cats .cat .emoji {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f5fa;
+  border-radius: 9px;
+  font-size: 20px;
+}
+
+#cats .cat.active {
+  border-color: #6478e8;
+  background: #f5f6ff;
+}
+
+#cats .cat span:last-child {
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+  
+#wishlist {
+  display: none;
+}
+
+body.wishlist-view main > *:not(#wishlist) {
+  display: none !important;
+}
+
+body.wishlist-view #wishlist {
+  display: block !important;
+  min-height: 70vh;
+  margin: 24px auto !important;
+  max-width: 900px;
+}
+
 :root{--bg:#f5f7fb;--ink:#171c2d;--muted:#70778b;--p:#6654f5;--dark:#101526;--line:#e8eaf2}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Arial,sans-serif}
@@ -131,26 +191,6 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
   border-radius: 18px;
   box-shadow: 0 20px 60px rgba(0,0,0,.25);
 }
-.product-modal-image {
-  width: 100%;
-  height: 220px;
-  object-fit: contain;
-  background: #f5f6fb;
-}
-.product-modal-content {
-  padding: 20px;
-}
-.product-modal-price {
-  color: #5145e5;
-  font-size: 25px;
-  font-weight: 800;
-  margin: 10px 0;
-}
-.product-modal-meta {
-  color: #666b7a;
-  font-size: 13px;
-  margin: 8px 0;
-}
 .product-modal-close {
   position: absolute;
   top: 10px;
@@ -163,14 +203,7 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
   font-size: 24px;
   cursor: pointer;
   box-shadow: 0 2px 8px #0002;
-}
-.product-modal-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 18px;
-}
-.product-modal-actions button {
-  flex: 1;
+  z-index: 10;
 }
   
 :root {
@@ -229,14 +262,6 @@ header {
   background: none;
   color: #174ea6;
   font-weight: 700;
-}
-
-.logo {
-  letter-spacing: -1px;
-}
-
-.logo span {
-  color: #f5b900;
 }
 
 .search input {
@@ -323,37 +348,27 @@ header {
   background: #174ea6;
 }
 
-.product-modal-price {
-  color: #174ea6;
-}
-
 @media (max-width: 560px) {
   .prodimg {
     height: 145px;
     padding: 7px;
   }
-
   .prodbody {
     padding: 10px;
   }
-
   .prodbody h3 {
     font-size: 13px;
   }
-
   .price {
     font-size: 19px;
   }
-
   .actions {
     gap: 5px;
   }
-
   .actions button {
     font-size: 11px;
     padding: 9px 3px;
   }
-
   .hero {
     border-radius: 15px;
   }
@@ -387,48 +402,237 @@ header {
   scroll-snap-align: start;
   box-shadow: 0 2px 8px rgba(20, 40, 70, .05);
 }
-</style>
 
+/* Scrollable Gallery & Video-matching Modal CSS */
+.nova-product-page {
+  max-width: 520px;
+  border-radius: 14px;
+}
+.nova-product-photo-container {
+  background: #ffffff;
+  position: relative;
+  border-bottom: 1px solid #e5e8ee;
+}
+.nova-gallery-scroll {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  gap: 0;
+  width: 100%;
+}
+.nova-gallery-scroll::-webkit-scrollbar {
+  display: none;
+}
+.nova-gallery-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  scroll-snap-align: start;
+  background: #ffffff;
+  padding: 10px;
+}
+.nova-gallery-slide img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.nova-gallery-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 0;
+  background: #ffffff;
+}
+.nova-gallery-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  transition: background 0.2s;
+}
+.nova-gallery-dot.active {
+  background: #174ea6;
+}
+.nova-product-content {
+  padding: 18px;
+}
+.nova-product-label {
+  color: #174ea6;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.nova-product-page h2 {
+  font-size: 18px;
+  line-height: 1.4;
+  margin: 6px 0;
+}
+.nova-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+.stars {
+  color: #cbd5e1;
+  letter-spacing: 2px;
+}
+.takealot-delivery-box {
+  background: #f8faff;
+  border: 1px solid #e1e6ee;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 14px 0;
+  font-size: 13px;
+}
+.takealot-delivery-box .delivery-row {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  color: #10284b;
+  margin-bottom: 6px;
+}
+.takealot-delivery-box .delivery-location-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #555;
+  border-top: 1px solid #edf0f5;
+  padding-top: 6px;
+}
+.tc-link { color: #174ea6; font-size: 12px; text-decoration: underline; font-weight: 700; }
+.btn-text { background: none; border: none; color: #174ea6; font-weight: 700; cursor: pointer; }
+
+.loyalty-badges {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.loyalty-item {
+  border: 1px solid #e1e6ee;
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.badge-brand { font-size: 10px; padding: 2px 5px; border-radius: 4px; color: white; }
+.badge-brand.eboks { background: #e65c00; }
+.badge-brand.discovery { background: #003366; }
+
+.stock-warranty-box {
+  font-size: 12px;
+  color: #444;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+.stock-warranty-box .in-stock { color: #08774f; font-weight: 700; }
+.muted-loc { color: #777; font-weight: 400; }
+
+.modal-bottom-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #e5e8ee;
+  margin-top: 20px;
+  padding-top: 14px;
+}
+.modal-price-display {
+  display: flex;
+  flex-direction: column;
+}
+.modal-bottom-bar .product-modal-price {
+  font-size: 22px;
+  font-weight: 900;
+  color: #17345b;
+  margin: 0;
+}
+.add-to-cart-btn {
+  background: #174ea6 !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-size: 15px;
+  font-weight: 800;
+  color: white;
+}
+</style>
 <style>
-  .top,
-  .new-header,
-  .hero,
-  .stats,
-  #categories,
-  #shop,
-  #assistant,
+  #seller,
   #cart,
-  #customerOrders,
-  #wishlist,
-  .mobile-bottom-nav {
+  #customerOrders {
     display: none !important;
   }
-
-  #seller {
-    display: block !important;
-    padding-top: 25px;
-  }
-</style>  
-  
+</style>
 </head>
 <body>
  
+<!-- Clean Video-Matching Modal Layout -->
 <div id="productModal" class="product-modal" role="dialog" aria-modal="true" aria-labelledby="modalProductName">
-  <div class="product-modal-card">
+  <div class="product-modal-card nova-product-page">
     <button type="button" class="product-modal-close" id="closeProductModal" aria-label="Close">×</button>
-    <img id="modalProductImage" class="product-modal-image" alt="Product image">
-    <div class="product-modal-content">
+
+    <div class="nova-product-photo-container">
+      <div id="modalGalleryScroll" class="nova-gallery-scroll"></div>
+      <div id="galleryDots" class="nova-gallery-dots"></div>
+    </div>
+
+    <div class="nova-product-content">
+      <div class="nova-product-label" id="modalProductBrand">novaaibadge</div>
+
       <h2 id="modalProductName">Product name</h2>
-      <div id="modalProductPrice" class="product-modal-price"></div>
-      <div id="modalProductMeta" class="product-modal-meta"></div>
-      <p id="modalProductDescription"></p>
-      <div class="product-modal-actions">
-        <button type="button" class="btn primary" id="modalAddToCart">Add to cart</button>
-        <button type="button" class="btn outline" id="modalContinueShopping">Continue shopping</button>
+
+      <div class="nova-rating-row">
+        <span class="stars">☆☆☆☆☆</span> 
+        <span class="rating-count">Be the first to <a href="#" class="tc-link">Write Review</a></span>
+      </div>
+
+      <div class="takealot-delivery-box">
+        <div class="delivery-row">
+          <span id="modalDeliveryDateText">📦 Delivery loading...</span>
+          <a href="#" class="tc-link">T&Cs Apply</a>
+        </div>
+        <div class="delivery-location-row">
+          <span>📍 Deliver to: <strong id="modalDeliveryTown">Sonderwater</strong></span>
+          <button type="button" class="btn-text" id="modalChangeLocation">Change</button>
+        </div>
+      </div>
+
+      <div class="loyalty-badges">
+        <div class="loyalty-item">
+          <span class="badge-brand eboks">eBucks</span>
+          <span id="modalEbucks">eB0</span>
+        </div>
+        <div class="loyalty-item">
+          <span class="badge-brand discovery">Discovery MILES</span>
+          <span id="modalDiscovery">0</span>
+        </div>
+      </div>
+
+      <div class="stock-warranty-box">
+        <p class="in-stock">✔ In stock <span class="muted-loc">CPT, JHB</span> <a href="#" class="tc-link">Learn More</a></p>
+      </div>
+
+      <div class="modal-bottom-bar">
+        <div class="modal-price-display">
+          <span class="muted" style="font-size:11px">Price:</span>
+          <span id="modalProductPrice" class="product-modal-price">R 0</span>
+        </div>
+        <button type="button" class="btn primary add-to-cart-btn" id="modalAddToCart">
+          🛒 Add to Cart
+        </button>
       </div>
     </div>
   </div>
-</div> 
+</div>
+
 <div class="top">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
 <header class="new-header">
   <div class="head">
@@ -452,9 +656,8 @@ header {
     <span>📍 Deliver to: <strong>Sonderwater</strong></span>
     <button type="button" onclick="alert('Location selection coming soon.')">Change</button>
   </div>
-
-  
 </header>
+
 <main>
 <section class="hero">
 <div>
@@ -465,15 +668,18 @@ header {
 <button class="btn outline" onclick="go('seller')">Start selling</button>
 </div><div class="hero-art">🛍️</div>
 </section>
+
 <section class="stats">
 <div class="stat"><strong id="productCount">0</strong><span>Products listed</span></div>
 <div class="stat"><strong>8</strong><span>Shopping categories</span></div>
 <div class="stat"><strong>R0</strong><span>Listing fee in this demo</span></div>
 </section>
+
 <section id="categories" class="section">
 <div class="section-head"><h2>Shop by category</h2><span class="muted">Find what you need, all in one place.</span></div>
 <div id="cats" class="cats"></div>
 </section>
+
 <section id="shop" class="section">
 <div class="section-head">
 <h2>Explore products</h2>
@@ -490,6 +696,7 @@ header {
 </div>
 <div id="products" class="grid"></div>
 </section>
+
 <section id="seller" class="section">
 <h2>Nova Seller Portal</h2>
 <p class="muted">Create an account or sign in to publish shared listings.</p>
@@ -511,19 +718,19 @@ header {
 <button class="btn outline" id="signout">Sign out</button>
 <div id="userMsg" class="msg"></div>
 </div>
-<hr><h3>📦 List a product</h3>
+<hr><h3>📦 List a product with up to 6 photos</h3>
 <form id="sellerForm">
 <div class="field"><label for="sellerName">Seller or business name *</label><input id="sellerName" maxlength="70" required placeholder="Mzansi Sneaker Store"></div>
 <div class="field"><label for="productName">Product name *</label><input id="productName" maxlength="100" required></div>
 <div class="field"><label for="category">Category *</label><select id="category" required></select></div>
 <div class="field"><label for="price">Price in rand (R) *</label><input id="price" type="number" min="1" max="10000000" step=".01" required></div>
 <div class="field">
-  <label for="photoFile">Upload product photo from your phone (optional)</label>
-  <input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp">
-  <p class="muted">Choose a JPG, PNG or WebP photo from your gallery.</p>
+  <label for="photoFiles">Upload up to 6 product photos</label>
+  <input id="photoFiles" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+  <p class="muted">Select up to 6 JPG, PNG or WebP photos from your gallery.</p>
 </div>
 <div class="field">
-  <label for="image">Or use a product image URL (optional)</label>
+  <label for="image">Or use a primary product image URL (optional)</label>
   <input id="image" type="url" maxlength="500" placeholder="https://example.com/photo.jpg">
 </div>
 <div class="field"><label for="description">Product description *</label><textarea id="description" maxlength="500" required></textarea></div>
@@ -538,26 +745,21 @@ header {
  
 <hr>
 <h3>📬 My Orders</h3>
-<p class="muted">
-  Orders containing products published by your seller account.
-</p>
-<button class="btn light" type="button" id="loadSellerOrders">
-  Refresh my orders
-</button>
-<div id="sellerOrdersMsg" class="msg" aria-live="polite">
-  Sign in to view orders for your products.
-</div>
+<p class="muted">Orders containing products published by your seller account.</p>
+<button class="btn light" type="button" id="loadSellerOrders">Refresh my orders</button>
+<div id="sellerOrdersMsg" class="msg" aria-live="polite">Sign in to view orders for your products.</div>
 <div id="sellerOrdersList"></div> 
 </div>
 <div class="panel">
 <h3>🚀 Seller checklist</h3>
-<div class="notice">1. Use a clear product name.<br>2. Set an accurate price in rand.<br>3. Use photos you own or are authorised to use.<br>4. Explain size, condition and delivery arrangements honestly.</div>
+<div class="notice">1. Use a clear product name.<br>2. Set an accurate price in rand.<br>3. Upload up to 6 high-quality photos.<br>4. Explain size, condition and delivery arrangements honestly.</div>
 <h3>What works in this prototype</h3>
-<p class="muted">✓ Browse demo products<br>✓ Seller email sign-up and sign-in<br>✓ Publish shared products through Supabase<br>✓ Read shared listings on other devices<br>✓ Local demo cart</p>
+<p class="muted">✓ Browse demo products<br>✓ Seller email sign-up and sign-in<br>✓ Publish shared products with up to 6 photos through Supabase<br>✓ Read shared listings on other devices<br>✓ Local demo cart</p>
 <p class="muted">Online payments, delivery tracking, refunds and seller verification are still being developed. Orders can be submitted for seller confirmation. No online payment is taken at this stage.</p>
 </div>
 </div>
 </section>
+
 <section id="assistant" class="section assistant">
 <h2>Meet your shopping assistant ✨</h2>
 <p>This prototype uses simple built-in rules, not a connected live AI model.</p>
@@ -565,6 +767,7 @@ header {
 <button class="btn light" onclick="askNova()">Ask Nova AI</button>
 <div id="answer" class="out">Hello! Ask me to find products within a budget or get basic seller tips.</div>
 </section>
+
 <section id="cart" class="section">
 <h2>🛒 Your shopping cart</h2>
 <p class="muted">Review your demo cart before continuing.</p>
@@ -588,19 +791,16 @@ header {
 
   <div class="field">
     <label for="customerPhone">Phone number *</label>
-    <input id="customerPhone" type="tel" maxlength="30"
-      autocomplete="tel" required>
+    <input id="customerPhone" type="tel" maxlength="30" autocomplete="tel" required>
   </div>
 
   <div class="field">
     <label for="deliveryAddress">Delivery address *</label>
-    <textarea id="deliveryAddress" maxlength="500"
-      autocomplete="street-address" required></textarea>
+    <textarea id="deliveryAddress" maxlength="500" autocomplete="street-address" required></textarea>
   </div>
 
   <p class="notice">
-    Orders are submitted for seller confirmation.
-    No online payment is taken at this stage.
+    Orders are submitted for seller confirmation. No online payment is taken at this stage.
   </p>
 
   <button class="btn primary" id="placeOrderBtn" type="submit">
@@ -609,29 +809,14 @@ header {
 </form>
 </div>
 </section>
+
 <section id="customerOrders" class="section">
   <h2>📦 My Orders</h2>
-  <p class="muted">
-    Track orders placed using your signed-in NOVAAI account.
-  </p>
+  <p class="muted">Track orders placed using your signed-in NOVAAI account.</p>
 
   <div class="panel">
-    <button
-      class="btn primary"
-      type="button"
-      id="loadCustomerOrders"
-    >
-      View my orders
-    </button>
-
-    <div
-      id="customerOrdersMsg"
-      class="msg"
-      aria-live="polite"
-    >
-      Sign in to view your orders.
-    </div>
-
+    <button class="btn primary" type="button" id="loadCustomerOrders">View my orders</button>
+    <div id="customerOrdersMsg" class="msg" aria-live="polite">Sign in to view your orders.</div>
     <div id="customerOrdersList"></div>
   </div>
 </section>
@@ -641,12 +826,14 @@ header {
   <p>Your saved products will appear here.</p>
 </section>
 </main>
+
 <footer>
 <div class="foot">
 <div><div class="logo">NOVA<span>AI</span> MARKETPLACE</div><p>A marketplace prototype for South African shoppers and independent sellers. Confirm seller details before paying.</p></div>
 <div><strong>Shop smart. Sell more.</strong><p>© <span id="year"></span> NOVAAI. Built for South Africa.</p></div>
 </div>
 </footer>
+
 <div id="toast" class="toast hidden"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -688,7 +875,7 @@ const demo=[
 ["demo-11","Smartphone Stand","Electronics",99,"Nova Demo Store","A desk stand for compatible phones.","https://images.unsplash.com/photo-1586953208448-b95a79798f07?auto=format&fit=crop&w=700&q=80"],
 ["demo-12","Everyday Shoulder Bag","Fashion",329,"Nova Demo Store","A versatile accessory for daily use.","https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=700&q=80"]
 ];
-let products=demo.map(a=>({id:a[0],name:a[1],category:a[2],price:a[3],seller:a[4],description:a[5],image:a[6],tag:"Demo"}));
+let products=demo.map(a=>({id:a[0],name:a[1],category:a[2],price:a[3],seller:a[4],description:a[5],images:[a[6]],tag:"Demo"}));
 let cart=readCart(),active="All",user=null;
 function readCart(){try{return JSON.parse(localStorage.getItem("novaMarketplaceCartV1")||"[]")}catch(e){return []}}
 function saveCart(){try{localStorage.setItem("novaMarketplaceCartV1",JSON.stringify(cart))}catch(e){}}
@@ -697,13 +884,18 @@ function cash(n){return new Intl.NumberFormat("en-ZA",{style:"currency",currency
 function safeImg(s){try{let u=new URL(s);return ["http:","https:"].includes(u.protocol)?u.href:""}catch(e){return ""}}
 function go(id){
   const section = document.getElementById(id);
-
   if (!section) return;
+  document.body.classList.remove("wishlist-view");
 
+  if (id === "wishlist") {
+    document.body.classList.add("wishlist-view");
+    renderWishlist();
+    section.scrollIntoView({behavior:"smooth"});
+    return;
+  }
   if (id === "seller") {
     section.style.display = "block";
   }
-
   section.scrollIntoView({behavior:"smooth"});
 }
 function message(id,s,bad=false){let e=document.getElementById(id);e.textContent=s;e.className="msg "+(bad?"error":"success")}
@@ -714,7 +906,7 @@ document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{
   document.getElementById("filter").value=active;
   document.getElementById("search").value="";
   initCategories();
-    render();
+  render();
   go("shop");
 });
 document.getElementById("filter").innerHTML='<option>All</option>'+C.map(([n])=>`<option>${esc(n)}</option>`).join("");
@@ -728,9 +920,12 @@ if(sort==="low")list.sort((a,b)=>a.price-b.price);
 if(sort==="high")list.sort((a,b)=>b.price-a.price);
 if(sort==="az")list.sort((a,b)=>a.name.localeCompare(b.name));
 document.getElementById("productCount").textContent=products.length;
-document.getElementById("products").innerHTML=list.length?list.map(p=>`<article class="product">
+document.getElementById("products").innerHTML=list.length?list.map(p=>{
+  const mainImage = (p.images && p.images.length > 0) ? p.images[0] : "";
+  return `<article class="product">
 <div class="prodimg" style="position:relative"><button type="button" class="wishlist-btn" data-wishlist="${esc(p.id)}" aria-label="Add to wishlist" style="position:absolute;top:10px;right:10px;z-index:2;width:38px;height:38px;border:1px solid #e1e6ee;border-radius:50%;background:#fff;font-size:22px;cursor:pointer">♡</button>
-${safeImg(p.image)?`<img loading="lazy" src="${esc(safeImg(p.image))}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}</div><div class="prodbody"><small style="color:#6654f5;font-weight:800">${esc(p.category)}</small><h3>${esc(p.name)}</h3><p>${esc(p.description)}</p><div class="price">${cash(p.price)}</div><p>Seller: ${esc(p.seller)}</p><div class="actions"><button class="btn primary" data-add="${esc(p.id)}">Add to cart</button><button class="btn outline" data-info="${esc(p.id)}">Details</button></div></div></article>`).join(""):'<div class="panel">No products found. Try another search or category.</div>';
+${safeImg(mainImage)?`<img loading="lazy" src="${esc(safeImg(mainImage))}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}</div><div class="prodbody"><small style="color:#6654f5;font-weight:800">${esc(p.category)}</small><h3>${esc(p.name)}</h3><p>${esc(p.description)}</p><div class="price">${cash(p.price)}</div><p>Seller: ${esc(p.seller)}</p><div class="actions"><button class="btn primary" data-add="${esc(p.id)}">Add to cart</button><button class="btn outline" data-info="${esc(p.id)}">Details</button></div></div></article>`;
+}).join(""):'<div class="panel">No products found. Try another search or category.</div>';
 document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add(b.dataset.add));
 let savedWishlist=JSON.parse(localStorage.getItem("novaWishlist")||"[]");
 document.querySelectorAll("[data-wishlist]").forEach(b=>{
@@ -747,40 +942,68 @@ document.querySelectorAll("[data-wishlist]").forEach(b=>{
     }else{
       wishlist.push(id);
     }
-
- localStorage.setItem("novaWishlist",JSON.stringify(wishlist));
-b.textContent=wishlist.includes(id)?"♥":"♡";
-b.style.color=wishlist.includes(id)?"#e11d48":"#17345b";
-renderWishlist();
+    localStorage.setItem("novaWishlist",JSON.stringify(wishlist));
+    b.textContent=wishlist.includes(id)?"♥":"♡";
+    b.style.color=wishlist.includes(id)?"#e11d48":"#17345b";
+    renderWishlist();
   };
 });
+
 document.querySelectorAll("[data-info]").forEach(b=>{
   b.onclick=()=>{
     const p=products.find(x=>x.id===b.dataset.info);
     if(!p)return;
 
+    const modal = document.getElementById("productModal");
+    const galleryScroll = document.getElementById("modalGalleryScroll");
+    const dotsContainer = document.getElementById("galleryDots");
+
     document.getElementById("modalProductName").textContent=p.name;
     document.getElementById("modalProductPrice").textContent=cash(p.price);
-    document.getElementById("modalProductMeta").textContent=
-      p.category+" · Seller: "+p.seller;
-    document.getElementById("modalProductDescription").textContent=p.description;
+    document.getElementById("modalProductBrand").textContent=p.seller ? p.seller.toLowerCase() : "novaaibadge";
 
-    const img=document.getElementById("modalProductImage");
-    const imageUrl=safeImg(p.image);
-    img.style.display=imageUrl?"block":"none";
-    if(imageUrl)img.src=imageUrl;
-    else img.removeAttribute("src");
+    const productPrice = Number(p.price) || 0;
+    document.getElementById("modalEbucks").textContent = "eB" + Math.round(productPrice * 18);
+    document.getElementById("modalDiscovery").textContent = Math.round(productPrice * 10);
+
+    const galleryImages = (p.images && p.images.length > 0) ? p.images.map(img => safeImg(img)).filter(Boolean) : [];
+
+    galleryScroll.innerHTML = galleryImages.length 
+      ? galleryImages.map(img => `<div class="nova-gallery-slide"><img src="${esc(img)}" alt="Product photo"></div>`).join("")
+      : `<div class="nova-gallery-slide"><div class="muted">No image available</div></div>`;
+
+    dotsContainer.innerHTML = galleryImages.map((_, i) => `<span class="nova-gallery-dot ${i === 0 ? 'active' : ''}"></span>`).join("");
+
+    galleryScroll.onscroll = () => {
+      const index = Math.round(galleryScroll.scrollLeft / galleryScroll.clientWidth);
+      dotsContainer.querySelectorAll(".nova-gallery-dot").forEach((dot, i) => {
+        dot.classList.toggle("active", i === index);
+      });
+    };
+
+    const today = new Date();
+    const deliveryStart = new Date();
+    deliveryStart.setDate(today.getDate() + 1);
+    const deliveryEnd = new Date();
+    deliveryEnd.setDate(today.getDate() + 3);
+
+    const options = { month: 'short', day: 'numeric' };
+    const dateString = deliveryStart.toLocaleDateString('en-ZA', options) + " - " + deliveryEnd.toLocaleDateString('en-ZA', options);
+    
+    const deliveryDateEl = document.getElementById("modalDeliveryDateText");
+    if (deliveryDateEl) {
+      deliveryDateEl.textContent = "📦 Delivery " + dateString;
+    }
 
     document.getElementById("modalAddToCart").onclick=()=>{
       add(p.id);
-      document.getElementById("productModal").classList.remove("open");
+      modal.classList.remove("open");
     };
 
-    document.getElementById("productModal").classList.add("open");
+    modal.classList.add("open");
   };
 });
 }
-  
 
 function renderWishlist(){
   const section = document.getElementById("wishlist");
@@ -822,7 +1045,8 @@ function renderWishlist(){
     };
   });
 }
-  function resetFilters(){document.getElementById("search").value="";document.getElementById("filter").value="All";document.getElementById("sort").value="featured";active="All";initCategories();render()}
+
+function resetFilters(){document.getElementById("search").value="";document.getElementById("filter").value="All";document.getElementById("sort").value="featured";active="All";initCategories();render()}
 function add(id){let p=products.find(x=>x.id===id);let i=cart.find(x=>x.id===id);if(i)i.qty++;else cart.push({id,qty:1});saveCart();renderCart();toast(p.name+" added to cart.")}
 function renderCart(){
 cart=cart.filter(i=>products.some(p=>p.id===i.id));
@@ -870,6 +1094,7 @@ function checkout(){
   message("checkoutMsg", "Enter your name, phone number and delivery address below.");
   form.scrollIntoView({ behavior: "smooth", block: "start" });
 }
+
 document.getElementById("checkoutForm").addEventListener("submit", async e => {
   e.preventDefault();
 
@@ -934,12 +1159,31 @@ document.getElementById("checkoutForm").addEventListener("submit", async e => {
     btn.textContent = "Place order";
   }
 });
-  function toast(s){let t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2400)}
+
+function toast(s){let t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2400)}
+
 async function loadShared(){
 try{
-let{data,error}=await sb.from("Products").select("id,name,description,price,category,image_url,seller_name").order("created_at",{ascending:false});
+let{data,error}=await sb.from("Products").select("id,name,description,price,category,image_url,images,seller_name").order("created_at",{ascending:false});
 if(error)throw error;
-products=[...demo.map(a=>({id:a[0],name:a[1],category:a[2],price:a[3],seller:a[4],description:a[5],image:a[6],tag:"Demo"})),...(data||[]).map(r=>({id:"db-"+r.id,dbId:r.id,name:r.name,category:r.category,price:Number(r.price),seller:r.seller_name||"Independent seller",description:r.description||"",image:r.image_url||""}))];
+products=[...demo.map(a=>({id:a[0],name:a[1],category:a[2],price:a[3],seller:a[4],description:a[5],images:[a[6]],tag:"Demo"})),...(data||[]).map(r=>{
+  let imgs = [];
+  if (Array.isArray(r.images) && r.images.length > 0) {
+    imgs = r.images;
+  } else if (r.image_url) {
+    imgs = [r.image_url];
+  }
+  return {
+    id:"db-"+r.id,
+    dbId:r.id,
+    name:r.name,
+    category:r.category,
+    price:Number(r.price),
+    seller:r.seller_name||"Independent seller",
+    description:r.description||"",
+    images:imgs
+  };
+})];
 document.getElementById("dbStatus").textContent="SUPABASE CONNECTED";
 document.getElementById("catalogueMessage").textContent="Demo products plus listings shared through Supabase.";
 render();renderCart();
@@ -958,7 +1202,6 @@ function updateUser(u){
   document.getElementById("userEmail").textContent=u?.email||"";
   document.getElementById("publish").disabled=!u;
   document.getElementById("publish").textContent=u?"Publish shared listing":"Sign in to publish";
-
   
   if (u) {
     loadMyProducts();
@@ -973,12 +1216,14 @@ function updateUser(u){
     }
   }
 }
+
 document.getElementById("authForm").onsubmit=async e=>{
 e.preventDefault();message("authMsg","Signing in…");
 let{data,error}=await sb.auth.signInWithPassword({email:document.getElementById("email").value.trim(),password:document.getElementById("password").value});
 if(error){message("authMsg",error.message,true);return}
 updateUser(data.user);message("userMsg","Signed in successfully.");
 };
+
 document.getElementById("signup").onclick=async()=>{
 let email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;
 if(!email||password.length<6){message("authMsg","Enter a valid email and password of at least 6 characters.",true);return}
@@ -988,6 +1233,7 @@ if(error){message("authMsg",error.message,true);return}
 if(data.session){updateUser(data.user);message("userMsg","Account created and signed in.")}
 else message("authMsg","Account request submitted. Check your email and confirm your address, then return here to sign in.");
 };
+
 document.getElementById("signout").onclick=async()=>{
 let{error}=await sb.auth.signOut();
 if(error)message("userMsg",error.message,true);
@@ -1016,13 +1262,8 @@ document.getElementById("sellerForm").onsubmit = async e => {
   const category = document.getElementById("category").value;
   const price = Number(document.getElementById("price").value);
   const description = document.getElementById("description").value.trim();
-  const image = safeImg(document.getElementById("image").value.trim());
-  const file = document.getElementById("photoFile").files[0];
-
-  if (file && image) {
-    message("sellerMsg", "Choose a photo OR an image URL, not both.", true);
-    return;
-  }
+  const imageInput = safeImg(document.getElementById("image").value.trim());
+  const files = document.getElementById("photoFiles").files;
 
   if (!seller || !name || !description || !Number.isFinite(price) || price < 1) {
     message("sellerMsg", "Check all required fields and enter a valid price.", true);
@@ -1033,40 +1274,29 @@ document.getElementById("sellerForm").onsubmit = async e => {
   b.disabled = true;
   b.textContent = "Publishing…";
 
-  let uploadedImage = image;
-
   try {
-    if (file) {
-      const types = {
-        "image/jpeg": "jpg",
-        "image/png": "png",
-        "image/webp": "webp"
-      };
+    let uploadedImages = [];
+    if (imageInput) uploadedImages.push(imageInput);
 
-      if (!types[file.type]) {
-        throw new Error("Choose a JPG, PNG, or WebP photo.");
+    if (files && files.length > 0) {
+      const limit = Math.min(files.length, 6);
+      for (let i = 0; i < limit; i++) {
+        const file = files[i];
+        const types = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"};
+        if (!types[file.type]) continue;
+        if (file.size > 5 * 1024 * 1024) continue;
+
+        const path = u.id + "/" + Date.now() + "_" + i + "." + types[file.type];
+        const { error: uploadError } = await sb.storage.from("Nova AI").upload(path, file, { contentType: file.type, upsert: false });
+        if (!uploadError) {
+          const { data: publicData } = sb.storage.from("Nova AI").getPublicUrl(path);
+          if (publicData?.publicUrl) uploadedImages.push(publicData.publicUrl);
+        }
       }
+    }
 
-      if (file.size > 5 * 1024 * 1024) {
-        throw new Error("Photo must be smaller than 5 MB.");
-      }
-
-      const path = u.id + "/" + Date.now() + "." + types[file.type];
-
-      const { error: uploadError } = await sb.storage
-        .from("Nova AI")
-        .upload(path, file, {
-          contentType: file.type,
-          upsert: false
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: publicData } = sb.storage
-        .from("Nova AI")
-        .getPublicUrl(path);
-
-      uploadedImage = publicData.publicUrl;
+    if (uploadedImages.length === 0) {
+      throw new Error("Please upload at least one valid photo or provide an image URL.");
     }
 
     const { error } = await sb.from("Products").insert({
@@ -1074,7 +1304,8 @@ document.getElementById("sellerForm").onsubmit = async e => {
       description,
       price,
       category,
-      image_url: uploadedImage || null,
+      image_url: uploadedImages[0],
+      images: uploadedImages,
       seller_name: seller,
       seller_id: u.id
     });
@@ -1082,10 +1313,10 @@ document.getElementById("sellerForm").onsubmit = async e => {
     if (error) throw error;
 
     e.target.reset();
-    message("sellerMsg", "Product published successfully!");
-await loadShared();
-await loadMyProducts();
-go("shop");
+    message("sellerMsg", "Product published successfully with " + uploadedImages.length + " photo(s)!");
+    await loadShared();
+    await loadMyProducts();
+    go("shop");
 
   } catch (err) {
     message("sellerMsg", "Publishing failed: " + err.message, true);
@@ -1094,11 +1325,11 @@ go("shop");
     b.textContent = "Publish shared listing";
   }
 };
+
 let sessionReady = false;
 
 const sessionPromise = sb.auth.getSession().then(({ data, error }) => {
   if (error) throw error;
-
   updateUser(data?.session?.user || null);
   sessionReady = true;
 }).catch(err => {
@@ -1129,10 +1360,8 @@ document.getElementById("sort").onchange=render;
 
 function askNova(){
   let q=document.getElementById("question").value.toLowerCase();
-
   let budgetMatch=q.match(/(?:under|below|less than|budget|r)\s*r?\s*(\d+)/);
   let budget=budgetMatch?Number(budgetMatch[1]):null;
-
   let list=products
     .filter(p=>
       (!C.some(([n])=>q.includes(n.toLowerCase()))||
@@ -1152,13 +1381,13 @@ function askNova(){
       :"I couldn't find a matching item. Try a product category and budget in rand.";
 }
 
-document.getElementById("year").textContent=
-  new Date().getFullYear();
+document.getElementById("year").textContent=new Date().getFullYear();
 
 initCategories();
 render();
 renderCart();
 loadShared();
+
 async function loadMyProducts() {
   const box = document.getElementById("myProductsList");
   const msg = document.getElementById("myProductsMsg");
@@ -1206,7 +1435,6 @@ async function loadMyProducts() {
   });
 }
 
-
 async function loadSellerOrders() {
   const msg = document.getElementById("sellerOrdersMsg");
   const box = document.getElementById("sellerOrdersList");
@@ -1244,332 +1472,18 @@ async function loadSellerOrders() {
         <p><b>Unit price:</b> ${cash(o.unit_price)}</p>
         <p><b>Item total:</b> ${cash(o.line_total)}</p>
         <p><b>Order status:</b></p>
-<select id="status-${esc(o.order_id)}">
-  ${["pending","accepted","rejected","processing","shipped","delivered","cancelled"].map(s =>
-    `<option value="${s}" ${o.order_status === s ? "selected" : ""}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
-  ).join("")}
-</select>
-<button class="btn" type="button"
-  onclick="saveSellerOrderStatus('${esc(o.order_id)}')">
-  Save status
-</button>
+        <select id="status-${esc(o.order_id)}">
+          ${["pending","accepted","rejected","processing","shipped","delivered","cancelled"].map(s =>
+            `<option value="${s}" ${o.order_status === s ? "selected" : ""}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
+          ).join("")}
+        </select>
+        <button class="btn" type="button" onclick="saveSellerOrderStatus('${esc(o.order_id)}')">
+          Save status
+        </button>
         <p><b>Payment status:</b> ${esc(o.payment_status)}</p>
         <p class="muted">${esc(o.order_created_at)}</p>
       </div>
     `).join("");
   } catch (err) {
     msg.textContent = "Could not load seller orders: " + err.message;
-    box.innerHTML = "";
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-document.getElementById("loadSellerOrders")
-  .addEventListener("click", loadSellerOrders);
-  
-
-async function saveSellerOrderStatus(orderId) {
-  const select = document.getElementById("status-" + orderId);
-  const msg = document.getElementById("sellerOrdersMsg");
-
-  if (!user || !select) {
-    msg.textContent = "Please sign in and select an order status.";
-    return;
-  }
-
-  const newStatus = select.value;
-  select.disabled = true;
-  msg.textContent = "Saving status: " + newStatus + "...";
-  
-alert("Save button clicked. Selected status: " + newStatus);
-  try {
-    const { data, error } = await sb.rpc(
-      "update_my_seller_order_status",
-      {
-        p_order_id: orderId,
-        p_status: newStatus
-      }
-    );
-
-    if (error) {
-      console.error("Status update error:", error);
-      throw error;
-    }
-
-    msg.textContent = "Saved. Checking the database status...";
-
-    const { data: orders, error: readError } =
-      await sb.rpc("get_my_seller_orders");
-
-    if (readError) throw readError;
-
-    const updatedOrder = orders?.find(
-      o => o.order_id === orderId
-    );
-
-    if (updatedOrder) {
-      msg.textContent =
-        "Database status: " + updatedOrder.order_status;
-    } else {
-      msg.textContent =
-        "Status saved, but the order could not be reloaded.";
-    }
-
-        await loadSellerOrders();
-
-const updatedSelect = document.getElementById("status-" + orderId);
-
-if (updatedSelect) {
-  updatedSelect.value = newStatus;
-  updatedSelect.disabled = false;
-}
-
-msg.textContent =
-  "SUCCESS: Order status saved as " +
-  newStatus.charAt(0).toUpperCase() +
-  newStatus.slice(1) +
-  ".";
-msg.className = "msg success";
-  } catch (err) {
-    console.error("Could not save order status:", err);
-    msg.textContent =
-      "Save failed: " + (err.message || String(err));
-    select.disabled = false;
-  }
-}
-
-async function editMyProduct(id) {
-  const { data: rows, error } = await sb
-    .from("Products")
-    .select("id,name,description,price")
-    .eq("id", id)
-    .eq("seller_id", user.id);
-
-  if (error || !rows || !rows.length) {
-    alert("Product not found or you do not have permission to edit it.");
-    return;
-  }
-
-  const p = rows[0];
-  const name = prompt("Product name:", p.name);
-  if (name === null) return;
-
-  const priceText = prompt("Price in rand:", p.price);
-  if (priceText === null) return;
-
-  const price = Number(priceText);
-  if (!name.trim() || !Number.isFinite(price) || price < 1) {
-    alert("Enter a product name and a valid price.");
-    return;
-  }
-
-  const description = prompt("Product description:", p.description || "");
-  if (description === null) return;
-
-  const { error: updateError } = await sb
-    .from("Products")
-    .update({
-      name: name.trim(),
-      price,
-      description: description.trim()
-    })
-    .eq("id", id)
-    .eq("seller_id", user.id);
-
-  if (updateError) {
-    alert("Update failed: " + updateError.message);
-    return;
-  }
-
-  alert("Product updated.");
-  await loadShared();
-  await loadMyProducts();
-}
-
-async function deleteMyProduct(id) {
-  if (!user || !confirm("Delete this product permanently?")) return;
-
-  const { error } = await sb
-    .from("Products")
-    .delete()
-    .eq("id", id)
-    .eq("seller_id", user.id);
-
-  if (error) {
-    alert("Delete failed: " + error.message);
-    return;
-  }
-
-  alert("Product deleted.");
-  await loadShared();
-  await loadMyProducts();
-}
-  
-async function loadCustomerOrders() {
-  const msg = document.getElementById("customerOrdersMsg");
-  const box = document.getElementById("customerOrdersList");
-  const btn = document.getElementById("loadCustomerOrders");
-
-  
-if (!sessionReady) {
-  msg.textContent = "Checking your sign-in session...";
-  try {
-    await sessionPromise;
-  } catch (err) {
-    msg.textContent =
-      "Could not check your sign-in session. Please refresh and try again.";
-    return;
-  }
-}
-
-
-if (!user) {
-  msg.textContent = "Please sign in to view your orders.";
-  box.innerHTML = "";
-  return;
-}
-
-  btn.disabled = true;
-  msg.textContent = "Loading your orders...";
-  box.innerHTML = "";
-
-  try {
-    const { data: orders, error } = await sb
-      .from("orders")
-      .select("id,order_status,payment_status,total_amount,created_at")
-      .eq("customer_id", user.id)
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-
-    if (!orders || orders.length === 0) {
-      msg.textContent = "You have no orders yet.";
-      return;
-    }
-
-    const ids = orders.map(o => o.id);
-
-    const { data: items, error: itemsError } = await sb
-      .from("order_items")
-      .select("order_id,product_name,quantity,unit_price")
-      .in("order_id", ids);
-
-    if (itemsError) throw itemsError;
-
-    box.innerHTML = orders.map(o => {
-      const orderItems = (items || []).filter(
-        item => item.order_id === o.id
-      );
-
-      return `
-        <div class="panel" style="margin:10px 0">
-          <h3>Order ${esc(o.id)}</h3>
-          <p><b>Date:</b> ${esc(new Date(o.created_at).toLocaleString())}</p>
-          <p><b>Order status:</b> ${esc(o.order_status)}</p>
-          <p><b>Payment status:</b> ${esc(o.payment_status)}</p>
-          <p><b>Order total:</b> ${cash(o.total_amount)}</p>
-          <h4>Items</h4>
-          ${orderItems.map(item => `
-            <p>
-              ${esc(item.product_name)}
-              × ${esc(item.quantity)}
-              — ${cash(item.unit_price)}
-            </p>
-          `).join("")}
-        </div>
-      `;
-    }).join("");
-
-    msg.textContent = "Your orders have loaded successfully.";
-  } catch (err) {
-    console.error("Customer orders error:", err);
-    msg.textContent = "Could not load orders: " + err.message;
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-document.getElementById("loadCustomerOrders")
-  .addEventListener("click", loadCustomerOrders);
-
-function closeProductModal(){
-  document.getElementById("productModal").classList.remove("open");
-}
-
-document.getElementById("closeProductModal").onclick=closeProductModal;
-document.getElementById("modalContinueShopping").onclick=closeProductModal;
-
-document.getElementById("productModal").onclick=function(e){
-  if(e.target===this)closeProductModal();
-};
-
-document.addEventListener("keydown",function(e){
-  if(e.key==="Escape")closeProductModal();
-});
-
-  renderWishlist();
-</script>
-
-<style>
-.mobile-bottom-nav {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .mobile-bottom-nav {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 66px;
-    background: #ffffff;
-    border-top: 1px solid #e5e7eb;
-    box-shadow: 0 -3px 12px rgba(0,0,0,.08);
-    justify-content: space-around;
-    align-items: center;
-    z-index: 999;
-  }
-
-  .mobile-bottom-nav button {
-    border: 0;
-    background: transparent;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    color: #174ea6;
-    font-size: 20px;
-  }
-
-  .mobile-bottom-nav button span {
-    font-size: 10px;
-    font-weight: 700;
-  }
-
-  body {
-    padding-bottom: 75px;
-  }
-}
-</style>
-<nav class="mobile-bottom-nav">
-  <button onclick="window.scrollTo({top:0,behavior:'smooth'})">
-    🏠<span>Home</span>
-  </button>
-  <button onclick="go('categories')">
-    ☰<span>Categories</span>
-  </button>
-  <button class="nav-ai" onclick="go('assistant')">
-    🤖<span>Nova AI</span>
-  </button>
-  <button onclick="go('wishlist')">
-    ❤️<span>Wishlist</span>
-  </button>
-  <button onclick="go('seller')">
-    🏷️<span>Sell</span>
-  </button>
-</nav>
-
-</body>
-</html>
+    box.
