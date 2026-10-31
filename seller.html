@@ -1,667 +1,268 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#101526">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>NOVAAI | Secure Seller & Retail Portal</title>
 <style>
-:root{--bg:#f5f7fb;--ink:#171c2d;--muted:#70778b;--p:#174ea6;--dark:#10284b;--line:#e1e6ee}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Arial,sans-serif}
-button,input,select,textarea{font:inherit}
-button{cursor:pointer}
-a{color:inherit;text-decoration:none}
-.top{background:var(--dark);color:white;text-align:center;padding:10px;font-size:12px;font-weight:700}
-header{background:white;position:sticky;top:0;z-index:5;border-bottom:1px solid var(--line);box-shadow:0 3px 12px rgba(20,40,70,.06)}
-.head,main,.foot{max-width:1200px;margin:auto;padding:15px 20px}
+:root{--bg:#f5f7fb;--ink:#171c2d;--p:#174ea6;--dark:#10284b;--line:#e1e6ee}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,sans-serif}
+button,input,select,textarea{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}
+.top{background:var(--dark);color:#fff;text-align:center;padding:8px;font-size:11px;font-weight:700}
+header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid var(--line)}
+.head,main,footer{max-width:1100px;margin:auto;padding:15px 20px}
 .head{display:flex;justify-content:space-between;align-items:center}
-.logo{font-size:25px;font-weight:900;letter-spacing:-1px}
-.logo span{color:#f5b900}
-.btn{border:0;border-radius:9px;padding:11px 14px;font-weight:750}
-.primary{background:var(--p);color:white}
-.light{background:#fff2bd;color:#17345b}
-.outline{background:white;border:1px solid var(--line)}
-.section{margin-top:28px}
-.portal-tabs{display:flex;gap:10px;margin-bottom:20px}
-.portal-tab{flex:1;padding:12px;text-align:center;font-weight:800;border-radius:10px;border:1px solid var(--line);background:white;cursor:pointer}
-.portal-tab.active{background:var(--p);color:white;border-color:var(--p)}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.panel{background:white;border:1px solid var(--line);border-radius:15px;padding:20px;box-shadow:0 2px 7px rgba(20,40,70,.035)}
-.field{margin:12px 0}
-.field label{display:block;font-size:12px;font-weight:800;margin-bottom:5px}
-.field input,.field select,.field textarea{width:100%;padding:11px;border:1px solid #dfe2ed;border-radius:9px;background:#f8faff}
-textarea{min-height:85px}
-.notice{padding:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;font-size:12px;line-height:1.6;color:#991b1b}
-.msg{font-size:13px;margin-top:10px}
-.error{color:#b52828}
-.success{color:#16885e}
-.hidden{display:none!important}
-.muted{color:var(--muted);font-size:12px}
-footer{background:var(--dark);color:white;margin-top:40px;padding:28px 20px}
-footer .foot{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
-footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
-@media(max-width:768px){.two{grid-template-columns:1fr}}
+.logo{font-size:22px;font-weight:900}.logo span{color:#f5b900}
+.btn{border:0;border-radius:8px;padding:10px 14px;font-weight:700;background:var(--p);color:#fff}
+.btn.outline{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.tabs{display:flex;gap:10px;margin-bottom:20px}
+.tab{flex:1;padding:12px;text-align:center;font-weight:800;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer}
+.tab.active{background:var(--p);color:#fff;border-color:var(--p)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:0 2px 6px rgba(0,0,0,.03)}
+.field{margin:10px 0}.field label{display:block;font-size:11px;font-weight:800;margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;padding:10px;border:1px solid #dfe2ed;border-radius:8px;background:#f8faff}
+.notice{padding:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:11px;color:#991b1b;line-height:1.5}
+.msg{font-size:12px;margin-top:8px}.error{color:#b52828}.success{color:#16885e}.hidden{display:none!important}
+@media(max-width:768px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-
-<div class="top">🛡️ NOVA AI TRUST SHIELD · SECURE ADMIN-VERIFIED MARKETPLACE</div>
-<header>
-  <div class="head">
-    <a class="logo" href="index.html">NOVA<span>AI</span></a>
-    <a class="btn outline" href="index.html">← Back to Marketplace</a>
-  </div>
-</header>
+<div class="top">🛡️ NOVA AI TRUST SHIELD · SECURE MARKETPLACE PORTAL</div>
+<header><div class="head"><a class="logo" href="index.html">NOVA<span>AI</span></a><a class="btn outline" href="index.html">← Marketplace</a></div></header>
 
 <main>
-<section class="section">
-<h2>Nova AI Protected Portal</h2>
-<p class="muted">Strict biometric face capture, phone fingerprinting, and manual admin verification required for all merchants and retail partners.</p>
-
-<!-- PORTAL SELECTOR TABS -->
-<div class="portal-tabs">
-  <div class="portal-tab active" id="tabStandardSeller" onclick="switchPortal('standard')">Standard Independent Seller</div>
-  <div class="portal-tab" id="tabRetailMarket" onclick="switchPortal('retail')">🛍️ Retail Market Partner (Nike, Puma, etc.)</div>
+<h2>Protected Seller Portals</h2>
+<div class="tabs">
+  <div class="tab active" id="tabStd" onclick="switchPortal('std')">Standard Independent Seller</div>
+  <div class="tab" id="tabRetail" onclick="switchPortal('retail')">🛍️ Retail Market Partner</div>
 </div>
 
-<!-- ================= STANDARD SELLER PORTAL ================= -->
-<div id="standardSellerPortal">
-<div class="two">
+<!-- STANDARD SELLER PORTAL -->
+<div id="portalStd" class="grid">
   <div class="panel">
-    <h3>🔐 Secure Merchant Verification</h3>
-    <div class="notice">
-      <strong>Zero-Tolerance Security:</strong> Every seller must complete a live webcam face verification and phone hardware bind. Accounts remain pending until reviewed and approved by Nova AI administration.
-    </div>
-    
+    <h3>🔐 Merchant Sign-In & Verification</h3>
+    <div class="notice">Face scan and mobile verification required before admin approval.</div>
     <div id="signedOut">
       <form id="authForm">
-        <div class="field">
-          <label for="email">Email address *</label>
-          <input id="email" type="email" autocomplete="email" required placeholder="you@example.com">
-        </div>
-        <div class="field">
-          <label for="password">Password (at least 6 characters) *</label>
-          <input id="password" type="password" minlength="6" autocomplete="current-password" required>
-        </div>
-        <div class="field">
-          <label for="sellerRealName">Full Legal Name *</label>
-          <input id="sellerRealName" required placeholder="Sipho Dlamini">
-        </div>
-        <div class="field">
-          <label for="sellerPhone">Active Mobile Number *</label>
-          <input id="sellerPhone" type="tel" required placeholder="0820000000">
-        </div>
-
-        <!-- Face Verification Section -->
-        <div class="field" style="background:#f8faff;padding:12px;border:1px dashed #174ea6;border-radius:10px;text-align:center;">
-          <label style="margin-bottom:8px;">📸 Mandatory Biometric Face Scan *</label>
-          <video id="webcam" autoplay playsinline width="100%" style="max-height:180px;border-radius:8px;background:#000;display:none;object-fit:cover;margin-bottom:8px;"></video>
+        <div class="field"><label>Email *</label><input id="email" type="email" required></div>
+        <div class="field"><label>Password (min 6 chars) *</label><input id="password" type="password" minlength="6" required></div>
+        <div class="field"><label>Full Legal Name *</label><input id="sellerRealName" required></div>
+        <div class="field"><label>Mobile Number *</label><input id="sellerPhone" type="tel" required></div>
+        <div class="field" style="text-align:center;border:1px dashed var(--p);padding:10px;border-radius:8px;">
+          <label>📸 Biometric Face Scan *</label>
+          <video id="webcam" autoplay playsinline width="100%" style="max-height:140px;display:none;background:#000;border-radius:6px;"></video>
           <canvas id="snapshotCanvas" style="display:none;"></canvas>
-          <img id="facePreview" style="max-height:140px;border-radius:8px;display:none;margin:0 auto 8px;" alt="Face scan preview">
-          <div style="display:flex;gap:8px;justify-content:center;">
-            <button type="button" class="btn outline" id="startCameraBtn" style="font-size:12px;padding:8px 12px;">Turn on Camera</button>
-            <button type="button" class="btn primary" id="captureFaceBtn" style="font-size:12px;padding:8px 12px;display:none;">Capture Face Scan</button>
+          <img id="facePreview" style="max-height:120px;display:none;margin:auto;border-radius:6px;" alt="">
+          <div style="margin-top:6px;">
+            <button type="button" class="btn outline" id="startCam" style="font-size:11px;padding:6px 10px;">Turn on Camera</button>
+            <button type="button" class="btn" id="captureCam" style="font-size:11px;padding:6px 10px;display:none;">Capture Scan</button>
           </div>
-          <div id="faceStatus" class="muted" style="margin-top:6px;font-weight:bold;color:#b52828;">Face scan snapshot required for account submission.</div>
+          <div id="faceStatus" class="error" style="font-size:11px;margin-top:4px;">Face scan snapshot required.</div>
         </div>
-
-        <div class="field" style="display:flex;align-items:center;gap:8px;font-size:12px;margin-top:10px;">
-          <input type="checkbox" id="novaTrustAgree" required style="width:auto;">
-          <label for="novaTrustAgree" style="margin:0;font-weight:normal;cursor:pointer;">I accept biometric liability, criminal tracking terms, and manual admin verification rules.</label>
-        </div>
-        <button class="btn primary" type="submit" style="margin-top:12px;">Sign in securely</button>
-        <button class="btn outline" type="button" id="signup" style="margin-top:8px;">Submit for admin verification</button>
-        <div id="authMsg" class="msg" aria-live="polite"></div>
+        <button class="btn" type="submit" style="width:100%;margin-top:10px;">Sign In Securely</button>
+        <button class="btn outline" type="button" id="signup" style="width:100%;margin-top:6px;">Submit for Admin Verification</button>
+        <div id="authMsg" class="msg"></div>
       </form>
     </div>
-
     <div id="signedIn" class="hidden">
       <p>Signed in as <strong id="userEmail"></strong></p>
-      <div id="approvalStatusBox" class="notice" style="background:#fffbeb;border-color:#fde68a;color:#92400e;margin:12px 0;">
-        ⏳ <strong>Status: Pending Admin Approval</strong><br>
-        Your face scan and phone fingerprint have been securely logged. An administrator will verify your profile within 5 minutes. Product publishing will unlock upon approval.
-      </div>
-      <button class="btn outline" id="signout">Sign out</button>
+      <div id="approvalBox" class="notice" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">⏳ Status: Pending Admin Approval</div>
+      <button class="btn outline" id="signout" style="margin-top:10px;">Sign Out</button>
       <div id="userMsg" class="msg"></div>
     </div>
+  </div>
 
-    <hr style="margin:20px 0;border:0;border-top:1px solid var(--line)">
-
-    <h3>📦 Publish Product (Up to 6 Photos)</h3>
+  <div class="panel">
+    <h3>📦 Publish Product</h3>
     <form id="sellerForm">
-      <div class="field">
-        <label for="sellerName">Store or Business Name *</label>
-        <input id="sellerName" maxlength="70" required placeholder="Mzansi Store">
-      </div>
-      <div class="field">
-        <label for="productName">Product name *</label>
-        <input id="productName" maxlength="100" required>
-      </div>
-      <div class="field">
-        <label for="category">Category *</label>
-        <select id="category" required></select>
-      </div>
-      <div class="field">
-        <label for="price">Price in rand (R) *</label>
-        <input id="price" type="number" min="1" max="10000000" step=".01" required>
-      </div>
-      <div class="field">
-        <label for="photoFiles">Upload up to 6 product photos *</label>
-        <input id="photoFiles" type="file" accept="image/jpeg,image/png,image/webp" multiple required>
-        <p class="muted">Select up to 6 high-quality photos from your gallery.</p>
-      </div>
-      <div class="field">
-        <label for="image">Or use a primary image URL (optional)</label>
-        <input id="image" type="url" maxlength="500" placeholder="https://example.com/photo.jpg">
-      </div>
-      <div class="field">
-        <label for="description">Product description *</label>
-        <textarea id="description" maxlength="500" required placeholder="Describe item condition, size, and pickup/delivery details..."></textarea>
-      </div>
-      <button class="btn primary" id="publish" disabled>Pending admin approval</button>
-      <div id="sellerMsg" class="msg" aria-live="polite"></div>
+      <div class="field"><label>Store Name *</label><input id="sellerName" required></div>
+      <div class="field"><label>Product Name *</label><input id="productName" required></div>
+      <div class="field"><label>Category *</label><select id="category" required></select></div>
+      <div class="field"><label>Price (R) *</label><input id="price" type="number" min="1" required></div>
+      <div class="field"><label>Photos (Up to 6) *</label><input id="photoFiles" type="file" accept="image/*" multiple required></div>
+      <div class="field"><label>Description *</label><textarea id="description" required></textarea></div>
+      <button class="btn" id="publish" type="submit" disabled style="width:100%;">Pending Approval</button>
+      <div id="sellerMsg" class="msg"></div>
     </form>
-
-    <hr style="margin:20px 0;border:0;border-top:1px solid var(--line)">
-
-    <h3>📋 My Products</h3>
-    <p class="muted">Manage products published by your account.</p>
-    <div id="myProductsMsg" class="msg">Sign in to view your products.</div>
+    <h3 style="margin-top:20px;">📋 My Products</h3>
+    <div id="myProductsMsg" class="msg">Sign in to view items.</div>
     <div id="myProductsList"></div>
-
-    <hr style="margin:20px 0;border:0;border-top:1px solid var(--line)">
-
-    <h3>📬 Customer Orders</h3>
-    <p class="muted">Orders containing products published by your seller account.</p>
-    <button class="btn light" type="button" id="loadSellerOrders">Refresh my orders</button>
-    <div id="sellerOrdersMsg" class="msg" aria-live="polite">Sign in to view orders for your products.</div>
-    <div id="sellerOrdersList"></div>
-  </div>
-
-  <div class="panel">
-    <h3>🛡️ How Admin Verification Works (R0 Budget)</h3>
-    <div class="notice" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">
-      <strong>Maximum Marketplace Integrity:</strong><br>
-      1. <strong>Biometric Binding:</strong> Sellers submit their facial snapshot and phone hardware signature.<br>
-      2. <strong>Pending State:</strong> New accounts cannot publish products until checked.<br>
-      3. <strong>Instant Approval:</strong> You review the signup in Supabase and unlock their selling status with 1 click.
-    </div>
-    <h3>Marketplace Features</h3>
-    <p class="muted">
-      ✓ Secure Supabase Auth & DB<br>
-      ✓ Multi-photo gallery uploads (up to 6 photos)<br>
-      ✓ Nova AI Face & Phone Biometric Shield<br>
-      ✓ Manual Admin Approval Workflow
-    </p>
   </div>
 </div>
-</div>
 
-<!-- ================= RETAIL MARKET SELLER PORTAL ================= -->
-<div id="retailMarketPortal" class="hidden">
-<div class="two">
+<!-- RETAIL PARTNER PORTAL -->
+<div id="portalRetail" class="grid hidden">
   <div class="panel">
-    <h3>🛍️ Official Retail Partner Verification</h3>
-    <div class="notice">
-      <strong>Corporate Security:</strong> Dedicated portal for major retail brands (Nike, Puma, Pick n Pay, etc.) to list verified corporate stock directly in the Retail Market.
-    </div>
-
+    <h3>🛍️ Retail Partner Verification</h3>
     <div id="retailSignedOut">
       <form id="retailAuthForm">
-        <div class="field">
-          <label for="retailEmail">Corporate Partner Email *</label>
-          <input id="retailEmail" type="email" required placeholder="partner@nike.co.za">
-        </div>
-        <div class="field">
-          <label for="retailPassword">Password *</label>
-          <input id="retailPassword" type="password" minlength="6" required>
-        </div>
-        <div class="field">
-          <label for="retailStoreName">Corporate Brand / Store Name *</label>
-          <input id="retailStoreName" required placeholder="Nike Official Store">
-        </div>
-        <button class="btn primary" type="submit" style="margin-top:10px;">Authenticate Retail Partner</button>
-        <div id="retailAuthMsg" class="msg" aria-live="polite"></div>
+        <div class="field"><label>Corporate Email *</label><input id="retailEmail" type="email" required></div>
+        <div class="field"><label>Password *</label><input id="retailPassword" type="password" minlength="6" required></div>
+        <div class="field"><label>Brand / Store Name *</label><input id="retailStoreName" required></div>
+        <button class="btn" type="submit" style="width:100%;margin-top:10px;">Authenticate Retail Partner</button>
+        <div id="retailAuthMsg" class="msg"></div>
       </form>
     </div>
-
     <div id="retailSignedIn" class="hidden">
-      <p>Signed in as corporate partner: <strong id="retailUserEmail"></strong></p>
-      <div class="notice" style="background:#f0fdf4;border-color:#bbf7d0;color:#166534;margin:12px 0;">
-        ✔ <strong>Status: Verified Retail Partner</strong><br>
-        Your corporate account is active and cleared to publish official retail catalog items.
-      </div>
-      <button class="btn outline" id="retailSignout">Sign out</button>
+      <p>Partner: <strong id="retailUserEmail"></strong></p>
+      <div class="notice" style="background:#f0fdf4;border-color:#bbf7d0;color:#166534;">✔ Verified Retail Partner</div>
+      <button class="btn outline" id="retailSignout" style="margin-top:10px;">Sign Out</button>
     </div>
-
-    <hr style="margin:20px 0;border:0;border-top:1px solid var(--line)">
-
-    <h3>📦 Publish Official Retail Product</h3>
-    <form id="retailPublishForm">
-      <div class="field">
-        <label for="rProdName">Product Name *</label>
-        <input id="rProdName" required placeholder="Nike Air Max Trainer">
-      </div>
-      <div class="field">
-        <label for="rProdPrice">Price (ZAR) *</label>
-        <input id="rProdPrice" type="number" min="1" required placeholder="1899">
-      </div>
-      <div class="field">
-        <label for="rProdDiscount">Discount Badge (e.g. 20%) *</label>
-        <input id="rProdDiscount" required placeholder="20%">
-      </div>
-      <div class="field">
-        <label for="rProdImg">Product Image URL *</label>
-        <input id="rProdImg" type="url" required placeholder="https://images.unsplash.com/...">
-      </div>
-      <button class="btn primary" type="submit">Publish to Retail Market</button>
-      <div id="retailPublishMsg" class="msg" aria-live="polite"></div>
-    </form>
   </div>
 
   <div class="panel">
-    <h3>🛡️ Retail Partner Guidelines</h3>
-    <p class="muted">
-      ✓ Only verified corporate brands may list in the Retail Market.<br>
-      ✓ High-resolution images and correct pricing are required.<br>
-      ✓ All listings sync instantly with <b>retail.html</b> and the main shopping portal.
-    </p>
+    <h3>📦 Publish Retail Stock</h3>
+    <form id="retailPublishForm">
+      <div class="field"><label>Product Name *</label><input id="rProdName" required></div>
+      <div class="field"><label>Price (ZAR) *</label><input id="rProdPrice" type="number" min="1" required></div>
+      <div class="field"><label>Discount Badge *</label><input id="rProdDiscount" required placeholder="20%"></div>
+      <div class="field"><label>Image URL *</label><input id="rProdImg" type="url" required></div>
+      <button class="btn" type="submit" style="width:100%;">Publish to Retail Market</button>
+      <div id="retailPublishMsg" class="msg"></div>
+    </form>
   </div>
 </div>
-</div>
-
-</section>
 </main>
-
-<footer>
-<div class="foot">
-  <div><div class="logo">NOVA<span>AI</span></div><p>Protected independent marketplace portal for South African entrepreneurs.</p></div>
-  <div><strong>Shop smart. Sell safe.</strong><p>© <span id="year"></span> NOVAAI.</p></div>
-</div>
-</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-"use strict";
 const sb = window.supabase.createClient("https://nxplffvklkopwfjaqexo.supabase.co","sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ");
-const C = [
-  ["Auto","🚗"],["Luggage & Travel","🧳"],["Baby & Toddler","👶"],["Movies & Series","🎬"],
-  ["Beauty","💄"],["Music","🎵"],["Books","📚"],["Office & Stationery","🖊️"],
-  ["Cellphones","📱"],["Personal Care","🧴"],["Derma Skincare","🧖"],["Pets","🐾"],
-  ["Clothing Shoes & Accessories","👕"],["Photography","📷"],["Computers & Laptops","💻"],
-  ["Small Appliances","🔌"],["Garden Pool & Patio","🌿"],["Toys & Games","🧸"],["Groceries","🛒"],["TV Audio & Video","📺"]
-];
+const cats = ["Auto","Clothing Shoes & Accessories","Cellphones","Computers & Laptops","Groceries","Office & Stationery","Toys & Games"];
+document.getElementById("category").innerHTML = cats.map(c=>`<option>${c}</option>`).join("");
 
-function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function cash(n){return new Intl.NumberFormat("en-ZA",{style:"currency",currency:"ZAR"}).format(Number(n)||0)}
-function safeImg(s){try{let u=new URL(s);return ["http:","https:"].includes(u.protocol)?u.href:""}catch(e){return ""}}
-function message(id,s,bad=false){let e=document.getElementById(id);e.textContent=s;e.className="msg "+(bad?"error":"success")}
-
-// Portal Switcher Function
-function switchPortal(type) {
-  const isStd = type === 'standard';
-  document.getElementById("tabStandardSeller").classList.toggle("active", isStd);
-  document.getElementById("tabRetailMarket").classList.toggle("active", !isStd);
-  document.getElementById("standardSellerPortal").classList.toggle("hidden", !isStd);
-  document.getElementById("retailMarketPortal").classList.toggle("hidden", isStd);
+function switchPortal(t) {
+  document.getElementById("tabStd").classList.toggle("active", t==='std');
+  document.getElementById("tabRetail").classList.toggle("active", t==='retail');
+  document.getElementById("portalStd").classList.toggle("hidden", t!=='std');
+  document.getElementById("portalRetail").classList.toggle("hidden", t!=='retail');
 }
 
-// Generate phone hardware fingerprint hash
-function getDeviceFingerprint() {
-  const nav = window.navigator;
-  const screen = window.screen;
-  const rawData = [
-    nav.userAgent, nav.language, screen.colorDepth,
-    screen.width + "x" + screen.height, new Date().getTimezoneOffset(),
-    nav.hardwareConcurrency || "unknown", nav.maxTouchPoints || 0, nav.platform || "unknown"
-  ].join("||");
+let faceBlob = null, user = null;
+const video = document.getElementById("webcam"), canvas = document.getElementById("snapshotCanvas"), preview = document.getElementById("facePreview");
 
-  let hash = 0;
-  for (let i = 0; i < rawData.length; i++) {
-    const char = rawData.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash |= 0;
-  }
-  return "dev_" + Math.abs(hash).toString(36);
-}
-
-// Camera / Face Verification Logic
-let capturedFaceBlob = null;
-const video = document.getElementById("webcam");
-const snapshotCanvas = document.getElementById("snapshotCanvas");
-const facePreview = document.getElementById("facePreview");
-const startCameraBtn = document.getElementById("startCameraBtn");
-const captureFaceBtn = document.getElementById("captureFaceBtn");
-const faceStatus = document.getElementById("faceStatus");
-
-startCameraBtn.onclick = async () => {
+document.getElementById("startCam").onclick = async () => {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-    video.srcObject = stream;
-    video.style.display = "block";
-    startCameraBtn.style.display = "none";
-    captureFaceBtn.style.display = "inline-block";
-    faceStatus.textContent = "Position your face in front of the camera and tap Capture.";
-    faceStatus.style.color = "#174ea6";
-  } catch (err) {
-    faceStatus.textContent = "Camera access denied or unavailable: " + err.message;
-    faceStatus.style.color = "#b52828";
-  }
+    video.srcObject = await navigator.mediaDevices.getUserMedia({video:true});
+    video.style.display="block"; document.getElementById("startCam").style.display="none";
+    document.getElementById("captureCam").style.display="inline-block";
+    document.getElementById("faceStatus").textContent = "Position face and capture.";
+  } catch(e) { document.getElementById("faceStatus").textContent = "Camera denied."; }
 };
 
-captureFaceBtn.onclick = () => {
-  snapshotCanvas.width = video.videoWidth || 320;
-  snapshotCanvas.height = video.videoHeight || 240;
-  const ctx = snapshotCanvas.getContext("2d");
-  ctx.drawImage(video, 0, 0, snapshotCanvas.width, snapshotCanvas.height);
-  
-  snapshotCanvas.toBlob(blob => {
-    capturedFaceBlob = blob;
-    const url = URL.createObjectURL(blob);
-    facePreview.src = url;
-    facePreview.style.display = "block";
-    video.style.display = "none";
-    captureFaceBtn.style.display = "none";
-    
-    const stream = video.srcObject;
-    if (stream) stream.getTracks().forEach(track => track.stop());
-    
-    faceStatus.textContent = "✔ Biometric face scan captured successfully!";
-    faceStatus.style.color = "#16885e";
+document.getElementById("captureCam").onclick = () => {
+  canvas.width = video.videoWidth || 320; canvas.height = video.videoHeight || 240;
+  canvas.getContext("2d").drawImage(video, 0, 0);
+  canvas.toBlob(b => {
+    faceBlob = b; preview.src = URL.createObjectURL(b); preview.style.display="block";
+    video.style.display="none"; document.getElementById("captureCam").style.display="none";
+    video.srcObject?.getTracks().forEach(t => t.stop());
+    document.getElementById("faceStatus").textContent = "✔ Captured!";
+    document.getElementById("faceStatus").className = "success";
   }, "image/jpeg", 0.85);
 };
 
-document.getElementById("category").innerHTML = C.map(([n])=>`<option>${esc(n)}</option>`).join("");
-document.getElementById("year").textContent = new Date().getFullYear();
-
-let user = null;
+function msg(id, txt, err=false) {
+  const el = document.getElementById(id); el.textContent = txt; el.className = "msg " + (err?"error":"success");
+}
 
 async function updateUser(u) {
   user = u;
   document.getElementById("signedOut").classList.toggle("hidden", !!u);
   document.getElementById("signedIn").classList.toggle("hidden", !u);
   document.getElementById("userEmail").textContent = u?.email || "";
-  
-  if (u) {
-    const isApproved = u.user_metadata?.approved === true;
-    const pubBtn = document.getElementById("publish");
-    const statusBox = document.getElementById("approvalStatusBox");
-
-    if (isApproved) {
-      pubBtn.disabled = false;
-      pubBtn.textContent = "Publish verified listing";
-      statusBox.style.background = "#f0fdf4";
-      statusBox.style.borderColor = "#bbf7d0";
-      statusBox.style.color = "#166534";
-      statusBox.innerHTML = "✔ <strong>Status: Approved by Admin</strong><br>Your merchant account is verified and fully active.";
-      loadMyProducts();
-      loadSellerOrders();
-    } else {
-      pubBtn.disabled = true;
-      pubBtn.textContent = "Pending admin approval";
-      statusBox.style.background = "#fffbeb";
-      statusBox.style.borderColor = "#fde68a";
-      statusBox.style.color = "#92400e";
-      statusBox.innerHTML = "⏳ <strong>Status: Pending Admin Approval</strong><br>Your face scan and phone fingerprint are logged. An admin will review and approve your store within 5 minutes.";
-    }
-  } else {
-    document.getElementById("myProductsList").innerHTML = "";
-    document.getElementById("myProductsMsg").textContent = "Please sign in to view your products.";
-  }
+  if(u) {
+    const approved = u.user_metadata?.approved === true;
+    document.getElementById("publish").disabled = !approved;
+    document.getElementById("publish").textContent = approved ? "Publish Listing" : "Pending Approval";
+    if(approved) loadMyProducts();
+  } else { document.getElementById("myProductsList").innerHTML = ""; }
 }
 
 document.getElementById("authForm").onsubmit = async e => {
   e.preventDefault();
-  const agree = document.getElementById("novaTrustAgree");
-  if (agree && !agree.checked) {
-    message("authMsg", "You must agree to biometric and admin verification terms.", true);
-    return;
-  }
-  message("authMsg", "Signing in securely…");
-  let { data, error } = await sb.auth.signInWithPassword({
-    email: document.getElementById("email").value.trim(),
-    password: document.getElementById("password").value
-  });
-  if (error) { message("authMsg", error.message, true); return; }
+  let {data, error} = await sb.auth.signInWithPassword({email:document.getElementById("email").value, password:document.getElementById("password").value});
+  if(error) return msg("authMsg", error.message, true);
   updateUser(data.user);
-  message("userMsg", "Signed in successfully.");
 };
 
 document.getElementById("signup").onclick = async () => {
-  let email = document.getElementById("email").value.trim();
-  let password = document.getElementById("password").value;
-  let realName = document.getElementById("sellerRealName").value.trim();
-  let phone = document.getElementById("sellerPhone").value.trim();
-  const agree = document.getElementById("novaTrustAgree");
-
-  if (agree && !agree.checked) {
-    message("authMsg", "You must agree to biometric terms.", true);
-    return;
-  }
-  if (!email || password.length < 6 || !realName || !phone) {
-    message("authMsg", "Please fill in all required text fields.", true);
-    return;
-  }
-  if (!capturedFaceBlob) {
-    message("authMsg", "Biometric face verification snapshot is mandatory.", true);
-    return;
-  }
-
-  const deviceHash = getDeviceFingerprint();
-  message("authMsg", "Submitting verification details…");
+  let email = document.getElementById("email").value, password = document.getElementById("password").value;
+  let full_name = document.getElementById("sellerRealName").value, phone = document.getElementById("sellerPhone").value;
+  if(!email || password.length<6 || !full_name || !phone || !faceBlob) return msg("authMsg", "Fill all fields & capture face scan.", true);
   
-  try {
-    let { data, error } = await sb.auth.signUp({ 
-      email, password, 
-      options: { data: { full_name: realName, phone: phone, device_fingerprint: deviceHash, approved: false } } 
-    });
-    if (error) throw error;
-
-    const u = data.user || data.session?.user;
-    if (u && capturedFaceBlob) {
-      const facePath = u.id + "/face_verification_" + Date.now() + ".jpg";
-      await sb.storage.from("Nova AI").upload(facePath, capturedFaceBlob, { contentType: "image/jpeg", upsert: true });
-    }
-
-    if (data.session) { 
-      updateUser(u); 
-      message("userMsg", "Account submitted successfully. Waiting for admin approval."); 
-    } else { 
-      message("authMsg", "Account submitted for admin review. Sign in once approved."); 
-    }
-  } catch (err) {
-    message("authMsg", "Sign up failed: " + err.message, true);
-  }
+  let {data, error} = await sb.auth.signUp({email, password, options:{data:{full_name, phone, approved:false}}});
+  if(error) return msg("authMsg", error.message, true);
+  const u = data.user || data.session?.user;
+  if(u && faceBlob) await sb.storage.from("Nova AI").upload(`${u.id}/face.jpg`, faceBlob, {contentType:"image/jpeg", upsert:true});
+  msg("authMsg", "Submitted for review!");
 };
 
-document.getElementById("signout").onclick = async () => {
-  let { error } = await sb.auth.signOut();
-  if (error) message("userMsg", error.message, true);
-  else { updateUser(null); message("authMsg", "You have signed out."); }
-};
+document.getElementById("signout").onclick = () => sb.auth.signOut().then(()=>updateUser(null));
 
 document.getElementById("sellerForm").onsubmit = async e => {
   e.preventDefault();
-  if (!user) { message("sellerMsg", "Please sign in before publishing.", true); return; }
+  if(!user || !user.user_metadata?.approved) return msg("sellerMsg", "Account not approved yet.", true);
+  let files = document.getElementById("photoFiles").files, imgs = [];
+  for(let i=0; i<Math.min(files.length, 6); i++) {
+    let path = `${user.id}/${Date.now()}_${i}.jpg`;
+    let {error} = await sb.storage.from("Nova AI").upload(path, files[i]);
+    if(!error) imgs.push(sb.storage.from("Nova AI").getPublicUrl(path).data.publicUrl);
+  }
+  if(!imgs.length) return msg("sellerMsg", "Upload at least one image.", true);
   
-  const isApproved = user.user_metadata?.approved === true;
-  if (!isApproved) {
-    message("sellerMsg", "Your account is pending admin approval. Publishing is locked.", true);
-    return;
-  }
-
-  const seller = document.getElementById("sellerName").value.trim();
-  const name = document.getElementById("productName").value.trim();
-  const category = document.getElementById("category").value;
-  const price = Number(document.getElementById("price").value);
-  const description = document.getElementById("description").value.trim();
-  const imageInput = safeImg(document.getElementById("image").value.trim());
-  const files = document.getElementById("photoFiles").files;
-
-  if (!seller || !name || !description || !Number.isFinite(price) || price < 1) {
-    message("sellerMsg", "Check all required fields and enter a valid price.", true);
-    return;
-  }
-  if (!files || files.length === 0) {
-    message("sellerMsg", "At least one product photo is required.", true);
-    return;
-  }
-
-  const b = document.getElementById("publish");
-  b.disabled = true;
-  b.textContent = "Publishing…";
-
-  try {
-    let uploadedImages = [];
-    if (imageInput) uploadedImages.push(imageInput);
-
-    const limit = Math.min(files.length, 6);
-    for (let i = 0; i < limit; i++) {
-      const file = files[i];
-      const types = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"};
-      if (!types[file.type]) continue;
-      if (file.size > 5 * 1024 * 1024) continue;
-
-      const path = user.id + "/" + Date.now() + "_" + i + "." + types[file.type];
-      const { error: uploadError } = await sb.storage.from("Nova AI").upload(path, file, { contentType: file.type, upsert: false });
-      if (!uploadError) {
-        const { data: publicData } = sb.storage.from("Nova AI").getPublicUrl(path);
-        if (publicData?.publicUrl) uploadedImages.push(publicData.publicUrl);
-      }
-    }
-
-    if (uploadedImages.length === 0) {
-      throw new Error("Please upload at least one valid photo (JPEG/PNG/WebP under 5MB).");
-    }
-
-    const { error } = await sb.from("Products").insert({
-      name, description, price, category,
-      image_url: uploadedImages[0],
-      images: uploadedImages,
-      seller_name: seller,
-      seller_id: user.id
-    });
-    if (error) throw error;
-
-    e.target.reset();
-    document.getElementById("facePreview").style.display = "none";
-    capturedFaceBlob = null;
-    message("sellerMsg", "Product published successfully with " + uploadedImages.length + " photo(s)!");
-    loadMyProducts();
-  } catch (err) {
-    message("sellerMsg", "Publishing failed: " + err.message, true);
-  } finally {
-    b.disabled = false;
-    b.textContent = "Publish verified listing";
-  }
-};
-
-// Retail Partner Script Logic
-let retailUser = localStorage.getItem("novaRetailAuthUser") || null;
-function updateRetailAuth(email) {
-  retailUser = email;
-  document.getElementById("retailSignedOut").classList.toggle("hidden", !!email);
-  document.getElementById("retailSignedIn").classList.toggle("hidden", !email);
-  document.getElementById("retailUserEmail").textContent = email || "";
-  if(email) localStorage.setItem("novaRetailAuthUser", email);
-  else localStorage.removeItem("novaRetailAuthUser");
-}
-
-document.getElementById("retailAuthForm").onsubmit = e => {
-  e.preventDefault();
-  const email = document.getElementById("retailEmail").value.trim();
-  const store = document.getElementById("retailStoreName").value.trim();
-  if(!email || !store) { message("retailAuthMsg", "Fill in all fields.", true); return; }
-  updateRetailAuth(email);
-  message("retailAuthMsg", "Retail partner authenticated successfully.");
-};
-
-document.getElementById("retailSignout").onclick = () => {
-  updateRetailAuth(null);
-  message("retailAuthMsg", "Signed out.");
-};
-
-document.getElementById("retailPublishForm").onsubmit = e => {
-  e.preventDefault();
-  if(!retailUser) { message("retailPublishMsg", "Please authenticate as a retail partner first.", true); return; }
-  
-  const name = document.getElementById("rProdName").value.trim();
-  const price = Number(document.getElementById("rProdPrice").value);
-  const discount = document.getElementById("rProdDiscount").value.trim();
-  const img = safeImg(document.getElementById("rProdImg").value.trim());
-
-  if(!name || !Number.isFinite(price) || !img) {
-    message("retailPublishMsg", "Please check all required fields.", true);
-    return;
-  }
-
-  // Save to local cache so retail.html picks it up immediately
-  let cachedRetail = JSON.parse(localStorage.getItem("novaRetailCustomListings") || "[]");
-  cachedRetail.unshift({ id: "custom-" + Date.now(), name, price, discount: discount || "10%", seller: document.getElementById("retailStoreName").value || "Corporate Brand", img });
-  localStorage.setItem("novaRetailCustomListings", JSON.stringify(cachedRetail));
-
-  e.target.reset();
-  message("retailPublishMsg", "Product successfully published to the Official Retail Market!");
+  let {error} = await sb.from("Products").insert({
+    name: document.getElementById("productName").value,
+    description: document.getElementById("description").value,
+    price: Number(document.getElementById("price").value),
+    category: document.getElementById("category").value,
+    image_url: imgs[0], images: imgs,
+    seller_name: document.getElementById("sellerName").value, seller_id: user.id
+  });
+  if(error) return msg("sellerMsg", error.message, true);
+  e.target.reset(); preview.style.display="none"; faceBlob=null;
+  msg("sellerMsg", "Published successfully!"); loadMyProducts();
 };
 
 async function loadMyProducts() {
-  const box = document.getElementById("myProductsList");
-  const msg = document.getElementById("myProductsMsg");
-  if (!user) { msg.textContent = "Please sign in to manage your products."; box.innerHTML = ""; return; }
-  msg.textContent = "Loading your products…";
-  const { data, error } = await sb.from("Products").select("id,name,description,price,category").eq("seller_id", user.id).order("created_at", { ascending: false });
-  if (error) { msg.textContent = "Could not load products: " + error.message; box.innerHTML = ""; return; }
-  msg.textContent = data.length ? "Your published products: " + data.length : "You haven't published any products yet.";
-  box.innerHTML = data.map(p => `
-    <div class="panel" style="margin:10px 0;box-shadow:none;border:1px solid var(--line)">
-      <h4>${esc(p.name)}</h4>
-      <p>${esc(p.category)} · ${cash(p.price)}</p>
-      <button class="btn outline" style="padding:6px 10px;font-size:12px" onclick="deleteMyProduct('${esc(p.id)}')">Delete</button>
-    </div>
-  `).join("");
+  let {data} = await sb.from("Products").select("id,name,price").eq("seller_id", user.id);
+  document.getElementById("myProductsList").innerHTML = (data||[]).map(p=>`<div style="font-size:11px;padding:6px;border-bottom:1px solid var(--line)"><b>${p.name}</b> - R${p.price}</div>`).join("");
 }
 
-async function deleteMyProduct(id) {
-  if (!user || !confirm("Delete this product permanently?")) return;
-  const { error } = await sb.from("Products").delete().eq("id", id).eq("seller_id", user.id);
-  if (error) { alert("Delete failed: " + error.message); return; }
-  alert("Product deleted.");
-  loadMyProducts();
+// Retail Portal Logic
+let retailUser = localStorage.getItem("novaRetailUser");
+function updateRetailAuth(e) {
+  retailUser = e;
+  document.getElementById("retailSignedOut").classList.toggle("hidden", !!e);
+  document.getElementById("retailSignedIn").classList.toggle("hidden", !e);
+  document.getElementById("retailUserEmail").textContent = e || "";
+  e ? localStorage.setItem("novaRetailUser", e) : localStorage.removeItem("novaRetailUser");
 }
+document.getElementById("retailAuthForm").onsubmit = e => {
+  e.preventDefault();
+  let email = document.getElementById("retailEmail").value;
+  updateRetailAuth(email);
+  msg("retailAuthMsg", "Retail Partner Authenticated.");
+};
+document.getElementById("retailSignout").onclick = () => updateRetailAuth(null);
 
-async function loadSellerOrders() {
-  const msg = document.getElementById("sellerOrdersMsg");
-  const box = document.getElementById("sellerOrdersList");
-  if (!user) { msg.textContent = "Please sign in to view seller orders."; box.innerHTML = ""; return; }
-  msg.textContent = "Loading your orders...";
-  box.innerHTML = "";
-  try {
-    const { data, error } = await sb.rpc("get_my_seller_orders");
-    if (error) throw error;
-    if (!data || data.length === 0) { msg.textContent = "No orders found for your products yet."; return; }
-    msg.textContent = "Orders found: " + data.length;
-    box.innerHTML = data.map(o => `
-      <div class="panel" style="margin:10px 0;box-shadow:none;border:1px solid var(--line)">
-        <h4>${esc(o.product_name)}</h4>
-        <p><b>Order ref:</b> ${esc(o.order_id)}</p>
-        <p><b>Customer:</b> ${esc(o.customer_name)} (${esc(o.customer_phone)})</p>
-        <p><b>Address:</b> ${esc(o.delivery_address)}</p>
-        <p><b>Qty:</b> ${esc(o.quantity)} · <b>Total:</b> ${cash(o.line_total)}</p>
-        <p><b>Status:</b> ${esc(o.order_status)}</p>
-      </div>
-    `).join("");
-  } catch (err) {
-    msg.textContent = "Could not load seller orders: " + err.message;
-  }
-}
+document.getElementById("retailPublishForm").onsubmit = e => {
+  e.preventDefault();
+  if(!retailUser) return msg("retailPublishMsg", "Authenticate first.", true);
+  let list = JSON.parse(localStorage.getItem("novaRetailCustomListings") || "[]");
+  list.unshift({
+    name: document.getElementById("rProdName").value,
+    price: Number(document.getElementById("rProdPrice").value),
+    discount: document.getElementById("rProdDiscount").value,
+    img: document.getElementById("rProdImg").value,
+    seller: document.getElementById("retailStoreName").value || "Corporate Brand"
+  });
+  localStorage.setItem("novaRetailCustomListings", JSON.stringify(list));
+  e.target.reset(); msg("retailPublishMsg", "Published to Retail Market!");
+};
 
-document.getElementById("loadSellerOrders").addEventListener("click", loadSellerOrders);
 if(retailUser) updateRetailAuth(retailUser);
-
-sb.auth.getSession().then(({ data }) => { updateUser(data?.session?.user || null); });
-sb.auth.onAuthStateChange((_e, session) => { updateUser(session?.user || null); });
+sb.auth.getSession().then(({data}) => updateUser(data?.session?.user || null));
+sb.auth.onAuthStateChange((_,s) => updateUser(s?.user || null));
 </script>
-
 </body>
 </html>
