@@ -156,9 +156,6 @@ textarea{min-height:85px}
 .hidden{display:none!important}
 .cartitem{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
 .total{display:flex;justify-content:space-between;font-size:20px;font-weight:900;padding:15px 0}
-.assistant{background:linear-gradient(120deg,#171b38,#31236f);color:white;border-radius:18px;padding:22px}
-.assistant textarea{width:100%;background:#211d46;color:white}
-.out{background:white;color:var(--ink);padding:13px;border-radius:10px;margin-top:10px;white-space:pre-wrap;font-size:13px}
 footer{background:var(--dark);color:white;margin-top:40px;padding:28px 20px}
 footer .foot{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
@@ -461,7 +458,7 @@ header {
   background: #174ea6;
 }
 
-/* Fullscreen Lightbox Overlay (Matches Video Reference) */
+/* Fullscreen Lightbox Overlay */
 .fullscreen-lightbox {
   position: fixed;
   inset: 0;
@@ -864,14 +861,6 @@ header {
 <p class="muted">Online payments, delivery tracking, refunds and seller verification are still being developed. Orders can be submitted for seller confirmation. No online payment is taken at this stage.</p>
 </div>
 </div>
-</section>
-
-<section id="assistant" class="section assistant">
-<h2>Meet your shopping assistant ✨</h2>
-<p>This prototype uses simple built-in rules, not a connected live AI model.</p>
-<textarea id="question" placeholder="Try: Find sneakers under R700, or help me write a product advert."></textarea>
-<button class="btn light" onclick="askNova()">Ask Nova AI</button>
-<div id="answer" class="out">Hello! Ask me to find products within a budget or get basic seller tips.</div>
 </section>
 
 <section id="cart" class="section">
@@ -1451,14 +1440,6 @@ document.getElementById("search").oninput=render;
 document.getElementById("filter").onchange=e=>{active=e.target.value;initCategories();render();};
 document.getElementById("sort").onchange=render;
 
-function askNova(){
-  let q=document.getElementById("question").value.toLowerCase();
-  let budgetMatch=q.match(/(?:under|below|less than|budget|r)\s*r?\s*(\d+)/);
-  let budget=budgetMatch?Number(budgetMatch[1]):null;
-  let list=products.filter(p=>(!C.some(([n])=>q.includes(n.toLowerCase()))||q.includes(p.category.toLowerCase()))&&(budget===null||p.price<=budget)).sort((a,b)=>a.price-b.price).slice(0,5);
-  document.getElementById("answer").textContent=/sell|listing|describe|advert/.test(q)?"NOVA SELLER COACH\nUse a clear title, describe accurate features and condition, use authorised photos, set a fair price, and explain delivery honestly.":list.length?list.map((p,i)=>`${i+1}. ${p.name} — ${cash(p.price)} (${p.category})`).join("\n"):"I couldn't find a matching item. Try a product category and budget in rand.";
-}
-
 document.getElementById("year").textContent=new Date().getFullYear();
 initCategories();
 render();
@@ -1727,7 +1708,7 @@ body.categories-view #categories {
 <nav class="mobile-bottom-nav">
   <button onclick="go('shop')">🏠<span>Home</span></button>
   <button onclick="go('categories')">☰<span>Categories</span></button>
-  <button class="nav-ai" onclick="go('assistant')">🤖<span>Nova AI</span></button>
+  <button onclick="go('shop')">🤖<span>NOVA AI</span></button>
   <button onclick="go('wishlist')">❤️<span>Wishlist</span></button>
   <button onclick="window.location.href='seller.html'">🏷️<span>Sell</span></button>
 </nav>
