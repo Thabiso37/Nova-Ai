@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#101526">
-<title>NOVAAI | Secure Motors & Vehicles Portal</title>
+<title>NOVAAI | Secure Motors & Property Portal</title>
 <style>
 :root{--bg:#f5f7fb;--ink:#171c2d;--muted:#70778b;--p:#174ea6;--dark:#10284b;--line:#e1e6ee}
 *{box-sizing:border-box}
@@ -42,39 +42,39 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 </head>
 <body>
 
-<div class="top">🚗 NOVA AI MOTORS SHIELD · SECURE VEHICLE DEALER PORTAL</div>
+<div class="top">🛡️ NOVA AI TRUST SHIELD · MOTORS & PROPERTY ASSET PORTAL</div>
 <header>
   <div class="head">
-    <a class="logo" href="index.html">NOVA<span>AI</span> MOTORS</a>
+    <a class="logo" href="index.html">NOVA<span>AI</span> ASSETS</a>
     <a class="btn outline" href="index.html">← Back to Marketplace</a>
   </div>
 </header>
 
 <main>
 <section class="section">
-<h2>Nova AI Vehicle Seller Portal</h2>
-<p class="muted">Strict biometric face capture, phone fingerprinting, and manual admin verification required for all car dealerships and private auto sellers.</p>
+<h2>Nova AI Motors & Property Portal</h2>
+<p class="muted">Strict biometric face capture, phone fingerprinting, and manual admin verification required for all vehicle dealers and real estate agents.</p>
 
 <div class="two">
   <div class="panel">
-    <h3>🔐 Dealer & Seller Verification</h3>
+    <h3>🔐 Agent & Dealer Verification</h3>
     <div class="notice">
-      <strong>Zero-Tolerance Security:</strong> Every auto seller must complete live webcam face verification and phone hardware binding. Accounts remain pending until reviewed and approved by Nova AI administration.
+      <strong>Zero-Tolerance Security:</strong> Every seller must complete live webcam face verification and phone hardware binding. Accounts remain pending until reviewed and approved by Nova AI administration.
     </div>
     
     <div id="signedOut">
       <form id="authForm">
         <div class="field">
           <label for="email">Email address *</label>
-          <input id="email" type="email" autocomplete="email" required placeholder="dealer@example.com">
+          <input id="email" type="email" autocomplete="email" required placeholder="agent@example.com">
         </div>
         <div class="field">
           <label for="password">Password (at least 6 characters) *</label>
           <input id="password" type="password" minlength="6" autocomplete="current-password" required>
         </div>
         <div class="field">
-          <label for="sellerRealName">Dealer / Full Legal Name *</label>
-          <input id="sellerRealName" required placeholder="Johannes Motors">
+          <label for="sellerRealName">Full Legal Name / Agency *</label>
+          <input id="sellerRealName" required placeholder="Mandla Properties & Cars">
         </div>
         <div class="field">
           <label for="sellerPhone">Active Mobile Number *</label>
@@ -96,7 +96,7 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 
         <div class="field" style="display:flex;align-items:center;gap:8px;font-size:12px;margin-top:10px;">
           <input type="checkbox" id="novaTrustAgree" required style="width:auto;">
-          <label for="novaTrustAgree" style="margin:0;font-weight:normal;cursor:pointer;">I accept biometric liability, anti-fraud checks, and manual admin vehicle verification rules.</label>
+          <label for="novaTrustAgree" style="margin:0;font-weight:normal;cursor:pointer;">I accept biometric liability, anti-fraud rules, and manual admin verification terms.</label>
         </div>
         <button class="btn primary" type="submit" style="margin-top:12px;">Sign in securely</button>
         <button class="btn outline" type="button" id="signup" style="margin-top:8px;">Submit for admin verification</button>
@@ -108,7 +108,7 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
       <p>Signed in as <strong id="userEmail"></strong></p>
       <div id="approvalStatusBox" class="notice" style="background:#fffbeb;border-color:#fde68a;color:#92400e;margin:12px 0;">
         ⏳ <strong>Status: Pending Admin Approval</strong><br>
-        Your face scan and phone fingerprint have been securely logged. An administrator will verify your dealership profile within 5 minutes.
+        Your face scan and phone fingerprint have been securely logged. An administrator will review and approve your account within 5 minutes.
       </div>
       <button class="btn outline" id="signout">Sign out</button>
       <div id="userMsg" class="msg"></div>
@@ -116,61 +116,72 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 
     <hr style="margin:20px 0;border:0;border-top:1px solid var(--line)">
 
-    <h3>🚗 Publish Vehicle Listing (Up to 6 Photos)</h3>
+    <h3>🏠🚗 Publish Asset Listing (Cars or Property Rentals/Sales)</h3>
     <form id="sellerForm">
       <div class="field">
-        <label for="sellerName">Dealership or Seller Business Name *</label>
-        <input id="sellerName" maxlength="70" required placeholder="Sandton Auto Hub">
+        <label for="sellerName">Dealership or Agency Name *</label>
+        <input id="sellerName" maxlength="70" required placeholder="Pretoria Prime Assets">
       </div>
+
       <div class="field">
-        <label for="productName">Vehicle Make & Model *</label>
-        <input id="productName" maxlength="100" required placeholder="VW Polo 1.4 TSI Highline">
+        <label for="assetCategory">Select Asset Category *</label>
+        <select id="assetCategory" required>
+          <option value="Motors & Vehicles">🚗 Motors & Vehicles (Cars)</option>
+          <option value="Property For Sale">🏠 Property For Sale</option>
+          <option value="Property To Rent">🔑 Property To Rent</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="productName">Asset Title (e.g., VW Golf 7 GTI / 3 Bed House in Hatfield) *</label>
+        <input id="productName" maxlength="100" required placeholder="3 Bedroom Modern Townhouse">
       </div>
       
-      <div class="two">
-        <div class="field">
-          <label for="carYear">Year *</label>
-          <input id="carYear" type="number" min="1950" max="2030" required placeholder="2021">
-        </div>
-        <div class="field">
-          <label for="carMileage">Mileage (km) *</label>
-          <input id="carMileage" type="number" min="0" max="1000000" required placeholder="65000">
-        </div>
-      </div>
-
-      <div class="two">
-        <div class="field">
-          <label for="carTransmission">Transmission *</label>
-          <select id="carTransmission" required>
-            <option>Manual</option>
-            <option>Automatic</option>
-            <option>Semi-Automatic</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="carFuel">Fuel Type *</label>
-          <select id="carFuel" required>
-            <option>Petrol</option>
-            <option>Diesel</option>
-            <option>Hybrid</option>
-            <option>Electric</option>
-          </select>
+      <!-- CAR SPECIFIC FIELDS -->
+      <div id="carFields">
+        <div class="two">
+          <div class="field">
+            <label for="carYear">Vehicle Year *</label>
+            <input id="carYear" type="number" min="1950" max="2030" placeholder="2021">
+          </div>
+          <div class="field">
+            <label for="carMileage">Mileage (km) *</label>
+            <input id="carMileage" type="number" min="0" max="1000000" placeholder="65000">
+          </div>
         </div>
       </div>
 
-      <div class="field">
-        <label for="price">Asking Price in Rand (R) *</label>
-        <input id="price" type="number" min="1" max="10000000" step=".01" required placeholder="185000">
+      <!-- PROPERTY SPECIFIC FIELDS (Hidden by default) -->
+      <div id="propertyFields" class="hidden">
+        <div class="two">
+          <div class="field">
+            <label for="propBedrooms">Bedrooms *</label>
+            <input id="propBedrooms" type="number" min="0" max="20" placeholder="3">
+          </div>
+          <div class="field">
+            <label for="propBathrooms">Bathrooms *</label>
+            <input id="propBathrooms" type="number" min="0" max="20" step="0.5" placeholder="2">
+          </div>
+        </div>
+        <div class="field">
+          <label for="propLocation">Suburb / Location *</label>
+          <input id="propLocation" placeholder="Hatfield, Pretoria">
+        </div>
       </div>
 
       <div class="field">
-        <label for="photoFiles">Upload up to 6 vehicle photos (Exterior, Interior, Engine) *</label>
+        <label for="price">Price / Monthly Rent in Rand (R) *</label>
+        <input id="price" type="number" min="1" max="100000000" step=".01" required placeholder="8500">
+      </div>
+
+      <div class="field">
+        <label for="photoFiles">Upload up to 6 photos *</label>
         <input id="photoFiles" type="file" accept="image/jpeg,image/png,image/webp" multiple required>
       </div>
 
       <div class="field">
-        <label for="description">Vehicle Condition & Notes *</label>
-        <textarea id="description" maxlength="500" required placeholder="Full service history, accident-free, spare keys included, papers in order..."></textarea>
+        <label for="description">Detailed Description & Terms *</label>
+        <textarea id="description" maxlength="500" required placeholder="Describe condition, deposit terms, availability, features..."></textarea>
       </div>
 
       <button class="btn primary" id="publish" disabled>Pending admin approval</button>
@@ -179,24 +190,24 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 
     <hr style="margin:20px 0;border:0;border-top:1px solid var(--line)">
 
-    <h3>📋 My Vehicle Listings</h3>
-    <div id="myProductsMsg" class="msg">Sign in to view your vehicle listings.</div>
+    <h3>📋 My Asset Listings</h3>
+    <div id="myProductsMsg" class="msg">Sign in to view your listings.</div>
     <div id="myProductsList"></div>
   </div>
 
   <div class="panel">
-    <h3>🛡️ Secure Auto Marketplace Rules</h3>
+    <h3>🛡️ Secure Asset Marketplace Rules</h3>
     <div class="notice" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">
-      <strong>Trusted Car Trading:</strong><br>
-      1. <strong>Identity Locked:</strong> Every car dealer is biometrically bound to their phone and face scan.<br>
-      2. <strong>Verified Stock:</strong> No anonymous or scam vehicle listings allowed.<br>
-      3. <strong>Instant Admin Control:</strong> Review dealer signups in Supabase and unlock with 1 click.
+      <strong>High-Value Asset Safety:</strong><br>
+      1. <strong>Biometric Binding:</strong> Every property agent and car dealer is verified via face scan and hardware fingerprint.<br>
+      2. <strong>Zero Scams:</strong> No fake rentals or ghost cars allowed.<br>
+      3. <strong>Admin Control:</strong> Instant manual vetting on your R0 budget.
     </div>
-    <h3>Motors Hub Features</h3>
+    <h3>Hub Features</h3>
     <p class="muted">
-      ✓ Specific vehicle fields (Year, Mileage, Transmission, Fuel)<br>
-      ✓ Multi-photo gallery uploads<br>
-      ✓ Nova AI Biometric Dealer Shield<br>
+      ✓ Dynamic forms for Cars & Properties<br>
+      ✓ Multi-photo gallery uploads (up to 6 photos)<br>
+      ✓ Nova AI Biometric Shield<br>
       ✓ Manual Admin Approval Workflow
     </p>
   </div>
@@ -206,8 +217,8 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 
 <footer>
 <div class="foot">
-  <div><div class="logo">NOVA<span>AI</span> MOTORS</div><p>Protected automotive marketplace for trusted South African dealers and private sellers.</p></div>
-  <div><strong>Drive safe. Trade secure.</strong><p>© <span id="year"></span> NOVAAI.</p></div>
+  <div><div class="logo">NOVA<span>AI</span> ASSETS</div><p>Protected automotive and real estate marketplace for South Africa.</p></div>
+  <div><strong>Trust & Verification.</strong><p>© <span id="year"></span> NOVAAI.</p></div>
 </div>
 </footer>
 
@@ -236,6 +247,22 @@ function getDeviceFingerprint() {
   }
   return "dev_" + Math.abs(hash).toString(36);
 }
+
+// Toggle form fields based on asset category selection
+const assetCategorySelect = document.getElementById("assetCategory");
+const carFields = document.getElementById("carFields");
+const propertyFields = document.getElementById("propertyFields");
+
+assetCategorySelect.onchange = () => {
+  const val = assetCategorySelect.value;
+  if (val === "Motors & Vehicles") {
+    carFields.classList.remove("hidden");
+    propertyFields.classList.add("hidden");
+  } else {
+    carFields.classList.add("hidden");
+    propertyFields.classList.remove("hidden");
+  }
+};
 
 let capturedFaceBlob = null;
 const video = document.getElementById("webcam");
@@ -298,11 +325,11 @@ async function updateUser(u) {
 
     if (isApproved) {
       pubBtn.disabled = false;
-      pubBtn.textContent = "Publish verified vehicle listing";
+      pubBtn.textContent = "Publish verified asset listing";
       statusBox.style.background = "#f0fdf4";
       statusBox.style.borderColor = "#bbf7d0";
       statusBox.style.color = "#166534";
-      statusBox.innerHTML = "✔ <strong>Status: Approved by Admin</strong><br>Your dealer account is verified and fully active.";
+      statusBox.innerHTML = "✔ <strong>Status: Approved by Admin</strong><br>Your agent/dealer account is verified and fully active.";
       loadMyProducts();
     } else {
       pubBtn.disabled = true;
@@ -310,11 +337,11 @@ async function updateUser(u) {
       statusBox.style.background = "#fffbeb";
       statusBox.style.borderColor = "#fde68a";
       statusBox.style.color = "#92400e";
-      statusBox.innerHTML = "⏳ <strong>Status: Pending Admin Approval</strong><br>Your face scan and phone fingerprint are logged. An admin will review and approve your dealership within 5 minutes.";
+      statusBox.innerHTML = "⏳ <strong>Status: Pending Admin Approval</strong><br>Your face scan and phone fingerprint are logged. An admin will review and approve your account within 5 minutes.";
     }
   } else {
     document.getElementById("myProductsList").innerHTML = "";
-    document.getElementById("myProductsMsg").textContent = "Please sign in to view your vehicles.";
+    document.getElementById("myProductsMsg").textContent = "Please sign in to view your listings.";
   }
 }
 
@@ -353,7 +380,7 @@ document.getElementById("signup").onclick = async () => {
 
     const u = data.user || data.session?.user;
     if (u && capturedFaceBlob) {
-      const facePath = u.id + "/face_verification_motor_" + Date.now() + ".jpg";
+      const facePath = u.id + "/face_verification_asset_" + Date.now() + ".jpg";
       await sb.storage.from("Nova AI").upload(facePath, capturedFaceBlob, { contentType: "image/jpeg", upsert: true });
     }
 
@@ -376,28 +403,36 @@ document.getElementById("sellerForm").onsubmit = async e => {
   if (user.user_metadata?.approved !== true) { message("sellerMsg", "Your account is pending admin approval.", true); return; }
 
   const seller = document.getElementById("sellerName").value.trim();
+  const category = document.getElementById("assetCategory").value;
   const name = document.getElementById("productName").value.trim();
-  const year = document.getElementById("carYear").value;
-  const mileage = document.getElementById("carMileage").value;
-  const transmission = document.getElementById("carTransmission").value;
-  const fuel = document.getElementById("carFuel").value;
   const price = Number(document.getElementById("price").value);
   const rawDesc = document.getElementById("description").value.trim();
   const files = document.getElementById("photoFiles").files;
 
   if (!seller || !name || !rawDesc || !Number.isFinite(price) || price < 1) {
-    message("sellerMsg", "Please check all required vehicle fields.", true);
+    message("sellerMsg", "Please check all required fields.", true);
     return;
   }
   if (!files || files.length === 0) {
-    message("sellerMsg", "At least one vehicle photo is required.", true);
+    message("sellerMsg", "At least one photo is required.", true);
     return;
   }
 
-  const description = `[YEAR: ${year} | MILEAGE: ${mileage}km | TRANS: ${transmission} | FUEL: ${fuel}]\n\n${rawDesc}`;
+  let description = rawDesc;
+  if (category === "Motors & Vehicles") {
+    const year = document.getElementById("carYear").value;
+    const mileage = document.getElementById("carMileage").value;
+    description = `[VEHICLE | YEAR: ${year} | MILEAGE: ${mileage}km]\n\n${rawDesc}`;
+  } else {
+    const beds = document.getElementById("propBedrooms").value;
+    const baths = document.getElementById("propBathrooms").value;
+    const loc = document.getElementById("propLocation").value;
+    description = `[PROPERTY: ${category.toUpperCase()} | LOCATION: ${loc} | BEDS: ${beds} | BATHS: ${baths}]\n\n${rawDesc}`;
+  }
+
   const b = document.getElementById("publish");
   b.disabled = true;
-  b.textContent = "Publishing vehicle…";
+  b.textContent = "Publishing asset…";
 
   try {
     let uploadedImages = [];
@@ -406,7 +441,7 @@ document.getElementById("sellerForm").onsubmit = async e => {
       const file = files[i];
       const types = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"};
       if (!types[file.type]) continue;
-      const path = user.id + "/motor_" + Date.now() + "_" + i + "." + types[file.type];
+      const path = user.id + "/asset_" + Date.now() + "_" + i + "." + types[file.type];
       const { error: uploadError } = await sb.storage.from("Nova AI").upload(path, file, { contentType: file.type, upsert: false });
       if (!uploadError) {
         const { data: publicData } = sb.storage.from("Nova AI").getPublicUrl(path);
@@ -415,8 +450,7 @@ document.getElementById("sellerForm").onsubmit = async e => {
     }
 
     const { error } = await sb.from("Products").insert({
-      name, description, price,
-      category: "Motors & Vehicles",
+      name, description, price, category,
       image_url: uploadedImages[0] || "",
       images: uploadedImages,
       seller_name: seller,
@@ -427,13 +461,13 @@ document.getElementById("sellerForm").onsubmit = async e => {
     e.target.reset();
     document.getElementById("facePreview").style.display = "none";
     capturedFaceBlob = null;
-    message("sellerMsg", "Vehicle listed successfully with " + uploadedImages.length + " photo(s)!");
+    message("sellerMsg", "Asset listed successfully with " + uploadedImages.length + " photo(s)!");
     loadMyProducts();
   } catch (err) {
     message("sellerMsg", "Publishing failed: " + err.message, true);
   } finally {
     b.disabled = false;
-    b.textContent = "Publish verified vehicle listing";
+    b.textContent = "Publish verified asset listing";
   }
 };
 
@@ -441,24 +475,24 @@ async function loadMyProducts() {
   const box = document.getElementById("myProductsList");
   const msg = document.getElementById("myProductsMsg");
   if (!user) { msg.textContent = "Please sign in."; box.innerHTML = ""; return; }
-  msg.textContent = "Loading your vehicles…";
-  const { data, error } = await sb.from("Products").select("id,name,description,price").eq("seller_id", user.id).eq("category", "Motors & Vehicles").order("created_at", { ascending: false });
-  if (error) { msg.textContent = "Could not load vehicles: " + error.message; box.innerHTML = ""; return; }
-  msg.textContent = data.length ? "Your vehicle listings: " + data.length : "No vehicle listings yet.";
+  msg.textContent = "Loading your listings…";
+  const { data, error } = await sb.from("Products").select("id,name,description,price,category").eq("seller_id", user.id).in("category", ["Motors & Vehicles", "Property For Sale", "Property To Rent"]).order("created_at", { ascending: false });
+  if (error) { msg.textContent = "Could not load listings: " + error.message; box.innerHTML = ""; return; }
+  msg.textContent = data.length ? "Your asset listings: " + data.length : "No listings found.";
   box.innerHTML = data.map(p => `
     <div class="panel" style="margin:10px 0;box-shadow:none;border:1px solid var(--line)">
       <h4>${esc(p.name)}</h4>
-      <p>${cash(p.price)}</p>
+      <p>${esc(p.category)} · ${cash(p.price)}</p>
       <button class="btn outline" style="padding:6px 10px;font-size:12px" onclick="deleteMyProduct('${esc(p.id)}')">Delete</button>
     </div>
   `).join("");
 }
 
 async function deleteMyProduct(id) {
-  if (!user || !confirm("Delete this vehicle listing?")) return;
+  if (!user || !confirm("Delete this listing permanently?")) return;
   const { error } = await sb.from("Products").delete().eq("id", id).eq("seller_id", user.id);
   if (error) { alert("Delete failed: " + error.message); return; }
-  alert("Vehicle listing deleted.");
+  alert("Listing deleted.");
   loadMyProducts();
 }
 
