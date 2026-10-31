@@ -59,6 +59,20 @@ body.wishlist-view #wishlist {
   margin: 24px auto !important;
   max-width: 900px;
 }
+
+#retailMarketPage {
+  display: none;
+}
+body.retail-market-view main > *:not(#retailMarketPage) {
+  display: none !important;
+}
+body.retail-market-view #retailMarketPage {
+  display: block !important;
+  min-height: 70vh;
+  margin: 24px auto !important;
+  max-width: 1200px;
+}
+
 :root{--bg:#f5f7fb;--ink:#171c2d;--muted:#70778b;--p:#6654f5;--dark:#101526;--line:#e8eaf2}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Arial,sans-serif}
@@ -335,8 +349,8 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
     </form>
     <button class="btn outline" onclick="go('cart')">🛒 <span id="count">0</span></button>
     <button class="btn outline" onclick="window.location.href='seller.html'" aria-label="Account">👤</button>
-    <!-- RETAIL MARKET BUTTON FILTERING FOR REAL BRANDS -->
-    <button type="button" onclick="filterByRetailBrands()" style="font-size: 13px; font-weight: 700; color: #174ea6; background: #f0f4f9; padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; gap: 5px; border: 1px solid #d1dced; cursor: pointer;">🛍️ Retail Market</button>
+    <!-- RETAIL MARKET BUTTON OPENING DEDICATED PAGE -->
+    <button type="button" onclick="openRetailMarketPage()" style="font-size: 13px; font-weight: 700; color: #174ea6; background: #f0f4f9; padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; gap: 5px; border: 1px solid #d1dced; cursor: pointer;">🛍️ Retail Market</button>
   </div>
   <div class="delivery-bar">
     <span id="buyerLocation">📍 Deliver to: Your current location</span>
@@ -384,6 +398,17 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
 <button class="btn outline" onclick="resetFilters()">Reset filters</button>
 </div>
 <div id="products" class="grid"></div>
+</section>
+
+<section id="retailMarketPage" class="section panel">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+      <h2>🛍️ Official Retail Market</h2>
+      <p class="muted">Shop authentic products directly from major verified brands like Nike, Puma, Pick n Pay, and more.</p>
+    </div>
+    <button class="btn primary" onclick="closeRetailMarketPage()">← Back to Marketplace</button>
+  </div>
+  <div id="retailProductsGrid" class="grid"></div>
 </section>
 
 <section id="seller" class="section">
@@ -482,7 +507,7 @@ function safeImg(s){try{let u=new URL(s);return ["http:","https:"].includes(u.pr
 function go(id){
   const section = document.getElementById(id);
   if (!section) return;
-  document.body.classList.remove("wishlist-view", "categories-view");
+  document.body.classList.remove("wishlist-view", "categories-view", "retail-market-view");
   if (id === "wishlist") {
     document.body.classList.add("wishlist-view");
     renderWishlist();
@@ -497,15 +522,15 @@ function go(id){
   section.scrollIntoView({behavior:"smooth"});
 }
 
-function filterByRetailBrands() {
-  document.getElementById("search").value = "";
-  document.getElementById("filter").value = "All";
-  active = "All";
-  initCategories();
-  
-  // Filter products matching major retail stores like Nike, Puma, Pick n Pay
+function openRetailMarketPage() {
+  document.body.classList.add("retail-market-view");
   const retailList = products.filter(p => /nike|puma|pick n pay/i.test(p.seller));
-  renderCustomList(retailList.length ? retailList : products);
+  renderRetailMarketGrid(retailList.length ? retailList : products);
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function closeRetailMarketPage() {
+  document.body.classList.remove("retail-market-view");
   go("shop");
 }
 
@@ -524,15 +549,13 @@ document.getElementById("filter").innerHTML='<option>All</option>'+C.map(([n])=>
 document.getElementById("filter").value=active;
 }
 
-function renderCustomList(list) {
-  document.getElementById("productCount").textContent = list.length;
-  document.getElementById("products").innerHTML = list.length ? list.map(p => {
+function renderRetailMarketGrid(list) {
+  document.getElementById("retailProductsGrid").innerHTML = list.length ? list.map(p => {
     const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
     const firstImg = safeImg(imgList[0]);
     const hash = String(p.id).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
     const discountVal = (hash % 40) + 10;
     const soldCount = (hash % 450) + 25;
-    const isBestseller = hash % 3 === 0;
 
     return `<article class="product">
 <div class="prodimg" style="position:relative">
@@ -564,7 +587,35 @@ function render(){
   if(sort==="low")list.sort((a,b)=>a.price-b.price);
   if(sort==="high")list.sort((a,b)=>b.price-a.price);
   if(sort==="az")list.sort((a,b)=>a.name.localeCompare(b.name));
-  renderCustomList(list);
+  document.getElementById("productCount").textContent=products.length;
+
+  document.getElementById("products").innerHTML=list.length?list.map(p=>{
+    const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
+    const firstImg = safeImg(imgList[0]);
+    const hash = String(p.id).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    const discountVal = (hash % 40) + 10;
+    const soldCount = (hash % 450) + 25;
+    const isBestseller = hash % 3 === 0;
+
+    return `<article class="product">
+<div class="prodimg" style="position:relative">
+  <button type="button" class="wishlist-btn" data-wishlist="${esc(p.id)}" aria-label="Add to wishlist" style="position:absolute;top:10px;right:10px;z-index:2;width:34px;height:34px;border:1px solid #e1e6ee;border-radius:50%;background:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.1)">♡</button>
+  <span class="shein-discount-badge">-${discountVal}%</span>
+  ${firstImg?`<img loading="lazy" src="${esc(firstImg)}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}
+</div>
+<div class="prodbody">
+  ${isBestseller ? `<span class="shein-bestseller">🔥 Bestseller</span>` : `<small style="color:#6654f5;font-weight:800">${esc(p.category)}</small>`}
+  <h3>${esc(p.name)}</h3>
+  <div class="shein-rating-row"><span class="shein-stars">★★★★★</span><span>(${soldCount}+ sold)</span></div>
+  <div class="price">${cash(p.price)}</div>
+  <div class="actions">
+    <button class="btn primary" data-add="${esc(p.id)}">Add to cart</button>
+    <button class="btn outline" data-info="${esc(p.id)}">Details</button>
+  </div>
+</div>
+</article>`;
+  }).join(""):'<div class="panel">No products found. Try another search or category.</div>';
+  bindProductEvents();
 }
 
 function bindProductEvents() {
@@ -708,7 +759,7 @@ renderWishlist();
     display: flex; position: fixed; bottom: 0; left: 0; width: 100%; height: 66px; background: #ffffff; border-top: 1px solid #e5e7eb; box-shadow: 0 -3px 12px rgba(0,0,0,.08); justify-content: space-around; align-items: center; z-index: 999;
   }
   .mobile-bottom-nav button, .mobile-bottom-nav a {
-    border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #174ea6; font-size: 20px; text-type: none; text-decoration: none;
+    border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #174ea6; font-size: 20px; text-decoration: none;
   }
   .mobile-bottom-nav span { font-size: 10px; font-weight: 700; }
   body { padding-bottom: 75px; }
@@ -736,7 +787,7 @@ if (locationDisplay) {
   locationDisplay.style.cursor = "pointer";
   locationDisplay.addEventListener("click", function () {
     if (!buyerCoordinates) { alert("Please press Use GPS first."); return; }
-    window.open("https://www.google.com/maps/search/?api=1&query=" + buyerCoordinates.latitude + "," +buyerCoordinates.longitude, "_blank");
+    window.open("https://www.google.com/maps/search/?api=1&query=" + buyerCoordinates.latitude + "," + buyerCoordinates.longitude, "_blank");
   });
 }
 
