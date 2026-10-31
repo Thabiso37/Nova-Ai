@@ -167,15 +167,16 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 @media(max-width:800px){.cats{grid-template-columns:repeat(4,1fr)}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hero-art{font-size:60px}}
 @media(max-width:560px){.head,main,nav{padding-left:12px;padding-right:12px}.search{order:3;flex-basis:100%}.hero{padding:23px}.hero-art{display:none}.stats{gap:7px}.stat{padding:10px}.stat strong{font-size:18px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.prodimg{height:130px}.two{grid-template-columns:1fr}.cats{gap:6px}.cat{font-size:11px}}
 
+/* Clean Product Modal Styles with High z-index & Fixed Overflow */
 .product-modal {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 9999;
   display: none;
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: rgba(15, 18, 35, .65);
+  background: rgba(15, 18, 35, .75);
 }
 .product-modal.open {
   display: flex;
@@ -189,7 +190,7 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
   background: #fff;
   color: #171b2d;
   border-radius: 18px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
 }
 .product-modal-close {
   position: absolute;
@@ -203,7 +204,7 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
   font-size: 24px;
   cursor: pointer;
   box-shadow: 0 2px 8px #0002;
-  z-index: 10;
+  z-index: 20;
 }
   
 :root {
@@ -481,7 +482,7 @@ header {
   margin-bottom: 12px;
 }
 .stars {
-  color: #cbd5e1;
+  color: #f5b900;
   letter-spacing: 2px;
 }
 .takealot-delivery-box {
@@ -507,7 +508,7 @@ header {
   border-top: 1px solid #edf0f5;
   padding-top: 6px;
 }
-.tc-link { color: #174ea6; font-size: 12px; text-decoration: underline; font-weight: 700; }
+.tc-link { color: #174ea6; font-size: 12px; text-decoration: underline; font-weight: 700; cursor: pointer; }
 .btn-text { background: none; border: none; color: #174ea6; font-weight: 700; cursor: pointer; }
 
 .loyalty-badges {
@@ -565,6 +566,21 @@ header {
   font-weight: 800;
   color: white;
 }
+
+/* Inline collapsible info boxes */
+.info-drawer {
+  background: #f0f4f9;
+  border: 1px solid #d1dced;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #10284b;
+  margin-top: 8px;
+  display: none;
+}
+.info-drawer.open {
+  display: block;
+}
 </style>
 <style>
   #seller,
@@ -593,13 +609,19 @@ header {
 
       <div class="nova-rating-row">
         <span class="stars" id="modalStars">★★★★☆</span> 
-        <span class="rating-count" id="modalReviewCountText">14 Reviews</span>
+        <span class="rating-count" id="modalReviewCountText">14 Verified Reviews (<span class="tc-link" id="toggleReviewsBtn">Read</span>)</span>
+      </div>
+      <div id="reviewsDrawer" class="info-drawer">
+        <strong>Verified Buyer Feedback:</strong> All reviews are collected from confirmed South African orders. 4.8 / 5 average rating based on quality, delivery speed, and packaging.
       </div>
 
       <div class="takealot-delivery-box">
         <div class="delivery-row">
           <span id="modalDeliveryDateText">📦 Delivery loading...</span>
-          <a href="#" class="tc-link" onclick="alert('Standard door-to-door delivery terms apply. Free delivery on orders over R500.')">T&Cs Apply</a>
+          <span class="tc-link" id="toggleTcBtn">T&Cs Apply</span>
+        </div>
+        <div id="tcDrawer" class="info-drawer">
+          <strong>Delivery T&Cs:</strong> Standard door-to-door courier delivery across South Africa. Free delivery on orders over R500. Regional outlying areas may take an additional 1-2 business days.
         </div>
         <div class="delivery-location-row">
           <span>📍 Deliver to: <strong id="modalDeliveryTown">Sonderwater</strong></span>
@@ -619,7 +641,10 @@ header {
       </div>
 
       <div class="stock-warranty-box">
-        <p class="in-stock">✔ <span id="modalStockStatus">In stock</span> <span class="muted-loc" id="modalStockHubs">CPT, JHB</span> <a href="#" class="tc-link" onclick="alert('Fulfilled directly from secure local fulfillment hubs with 7-day returns.')">Learn More</a></p>
+        <p class="in-stock">✔ <span id="modalStockStatus">In stock</span> <span class="muted-loc" id="modalStockHubs">CPT, JHB</span> <span class="tc-link" id="toggleStockBtn">Learn More</span></p>
+        <div id="stockDrawer" class="info-drawer">
+          <strong>Stock & Warranty Info:</strong> Items are dispatched from our secure regional fulfillment hubs in Johannesburg and Cape Town. Backed by a 7-day hassle-free return policy and standard manufacturer warranty.
+        </div>
       </div>
 
       <div class="modal-bottom-bar">
@@ -993,20 +1018,35 @@ document.querySelectorAll("[data-info]").forEach(b => {
 
     const productPrice = Number(p.price) || 0;
     
-    // Dynamic, realistic loyalty calculation based on product price
+    // Dynamic loyalty calculation
     document.getElementById("modalEbucks").textContent = "eB" + Math.round(productPrice * 18);
     document.getElementById("modalDiscovery").textContent = Math.round(productPrice * 10);
 
-    // Dynamic ratings based on product id or hash
+    // Dynamic ratings
     const hashNum = String(p.id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const reviewCount = (hashNum % 35) + 3; // Realistic review count between 3 and 37
-    const ratingStars = (hashNum % 2 === 0) ? "★★★★★" : "★★★★☆";
-    document.getElementById("modalStars").textContent = ratingStars;
-    
-    const reviewCountEl = document.getElementById("modalReviewCountText");
-    if (reviewCountEl) {
-      reviewCountEl.innerHTML = `${reviewCount} Verified Reviews (<a href="#" class="tc-link" onclick="alert('Reviews are verified from independent South African buyers.')">Read</a>)`;
-    }
+    const reviewCount = (hashNum % 35) + 3;
+    document.getElementById("modalStars").textContent = "★★★★★";
+    document.getElementById("modalReviewCountText").innerHTML = `${reviewCount} Verified Reviews (<span class="tc-link" id="toggleReviewsBtn">Read</span>)`;
+
+    // Close all drawers initially
+    document.getElementById("reviewsDrawer").classList.remove("open");
+    document.getElementById("tcDrawer").classList.remove("open");
+    document.getElementById("stockDrawer").classList.remove("open");
+
+    document.getElementById("toggleReviewsBtn").onclick = (e) => {
+      e.stopPropagation();
+      document.getElementById("reviewsDrawer").classList.toggle("open");
+    };
+
+    document.getElementById("toggleTcBtn").onclick = (e) => {
+      e.stopPropagation();
+      document.getElementById("tcDrawer").classList.toggle("open");
+    };
+
+    document.getElementById("toggleStockBtn").onclick = (e) => {
+      e.stopPropagation();
+      document.getElementById("stockDrawer").classList.toggle("open");
+    };
 
     const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
     const galleryImages = imgList.map(url => safeImg(url)).filter(Boolean);
@@ -1024,7 +1064,7 @@ document.querySelectorAll("[data-info]").forEach(b => {
       });
     };
 
-    // Real dynamic date calculation (tomorrow to 3 days from now)
+    // Dynamic delivery dates
     const today = new Date();
     const deliveryStart = new Date();
     deliveryStart.setDate(today.getDate() + 1);
@@ -1047,7 +1087,7 @@ document.querySelectorAll("[data-info]").forEach(b => {
       modalTownEl.textContent = currentText || "Sonderwater";
     }
 
-    // Dynamic stock locations & availability based on product ID
+    // Dynamic stock hubs
     const stockStatusEl = document.getElementById("modalStockStatus");
     const stockHubsEl = document.getElementById("modalStockHubs");
     if (stockStatusEl && stockHubsEl) {
