@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -459,48 +458,62 @@ header {
 </head>
 <body>
  
-<div id="productModal" class="product-modal" role="dialog"
-     aria-modal="true" aria-labelledby="modalProductName">
-
+<div id="productModal" class="product-modal" role="dialog" aria-modal="true" aria-labelledby="modalProductName">
   <div class="product-modal-card nova-product-page">
-
-    <button type="button" class="product-modal-close"
-            id="closeProductModal" aria-label="Close">×</button>
+    <button type="button" class="product-modal-close" id="closeProductModal" aria-label="Close">×</button>
 
     <div class="nova-product-photo">
       <div class="nova-gallery">
         <button type="button" id="galleryPrev" aria-label="Previous photo">‹</button>
-        <img id="modalProductImage" class="product-modal-image"
-             alt="Product image">
+        <img id="modalProductImage" class="product-modal-image" alt="Product image">
         <button type="button" id="galleryNext" aria-label="Next photo">›</button>
       </div>
       <div id="galleryDots" class="nova-gallery-dots"></div>
     </div>
 
     <div class="product-modal-content">
-      <div class="nova-product-label">NOVAAI MARKETPLACE</div>
+      <div class="nova-product-label" id="modalProductBrand">NOVAAI MARKETPLACE</div>
 
       <h2 id="modalProductName">Product name</h2>
 
-      <div class="nova-rating">☆ No reviews yet</div>
+      <div class="nova-rating" id="modalProductRating">☆ Be the first to Write Review</div>
 
       <div id="modalProductPrice" class="product-modal-price"></div>
       <div id="modalProductMeta" class="product-modal-meta"></div>
 
       <p id="modalProductDescription"></p>
 
-      <div class="nova-location">
-        <strong>📍 Delivery</strong>
-        <p id="modalDeliveryText">Confirm delivery with the seller.</p>
-        <button type="button" class="btn outline" id="modalChangeLocation">
-          Change location
-        </button>
+      <div class="takealot-delivery-box">
+        <div class="delivery-row">
+          <span>📦 Delivery 1 Nov - 3 Nov</span>
+          <a href="#" class="tc-link">T&Cs Apply</a>
+        </div>
+        <div class="delivery-location-row">
+          <span>📍 Deliver to: <strong id="modalDeliveryTown">Sonderwater</strong></span>
+          <button type="button" class="btn-text" id="modalChangeLocation">Change</button>
+        </div>
+      </div>
+
+      <div class="loyalty-badges">
+        <div class="loyalty-item">
+          <span class="badge-brand eboks">eBucks</span>
+          <span id="modalEbucks">eB1,880</span>
+        </div>
+        <div class="loyalty-item">
+          <span class="badge-brand discovery">Discovery MILES</span>
+          <span id="modalDiscovery">1,880</span>
+        </div>
+      </div>
+
+      <div class="stock-warranty-box">
+        <p class="in-stock">✔ In stock <span class="muted-loc">CPT, JHB</span> <a href="#">Learn More</a></p>
+        <p class="warranty-text">🔄 Hassle-Free Exchanges & Returns for 30 Days.</p>
+        <p class="warranty-text">🛡️ 6-Month Limited Warranty.</p>
       </div>
 
       <div class="field">
         <label for="modalProductOption">Size / colour (optional)</label>
-        <input id="modalProductOption"
-               placeholder="Ask seller about available options">
+        <input id="modalProductOption" placeholder="Ask seller about available options">
       </div>
 
       <div class="nova-delivery">
@@ -513,7 +526,7 @@ header {
       </div>
 
       <div class="nova-product-actions">
-        <button type="button" class="btn primary" id="modalAddToCart">
+        <button type="button" class="btn primary add-to-cart-btn" id="modalAddToCart">
           Add to Cart
         </button>
         <button type="button" class="btn outline" id="modalContinueShopping">
@@ -523,6 +536,7 @@ header {
     </div>
   </div>
 </div>
+
 <div class="top">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
 <header class="new-header">
   <div class="head">
@@ -543,23 +557,22 @@ header {
   </div>
 
   <div class="delivery-bar">
-  <span id="buyerLocation">
-    📍 Deliver to: Your current location
-  </span>
+    <span id="buyerLocation">
+      📍 Deliver to: Your current location
+    </span>
 
-  <div>
-    <button type="button" id="useMyLocation">
-      📍 Use GPS
-    </button>
+    <div>
+      <button type="button" id="useMyLocation">
+        📍 Use GPS
+      </button>
 
-    <button type="button" id="changeLocation">
-      Change
-    </button>
+      <button type="button" id="changeLocation">
+        Change
+      </button>
+    </div>
   </div>
-</div>
-
-  
 </header>
+
 <main>
 <section class="hero">
 <div>
@@ -570,15 +583,18 @@ header {
 <a class="btn outline" href="./seller.html">Start selling</a>
 </div><div class="hero-art">🛍️</div>
 </section>
+
 <section class="stats">
 <div class="stat"><strong id="productCount">0</strong><span>Products listed</span></div>
 <div class="stat"><strong>8</strong><span>Shopping categories</span></div>
 <div class="stat"><strong>R0</strong><span>Listing fee in this demo</span></div>
 </section>
+
 <section id="categories" class="section">
 <div class="section-head"><h2>Shop by category</h2><span class="muted">Find what you need, all in one place.</span></div>
 <div id="cats" class="cats"></div>
 </section>
+
 <section id="shop" class="section">
 <div class="section-head">
 <h2>Explore products</h2>
@@ -595,6 +611,7 @@ header {
 </div>
 <div id="products" class="grid"></div>
 </section>
+
 <section id="seller" class="section">
 <h2>Nova Seller Portal</h2>
 <p class="muted">Create an account or sign in to publish shared listings.</p>
@@ -643,15 +660,9 @@ header {
  
 <hr>
 <h3>📬 My Orders</h3>
-<p class="muted">
-  Orders containing products published by your seller account.
-</p>
-<button class="btn light" type="button" id="loadSellerOrders">
-  Refresh my orders
-</button>
-<div id="sellerOrdersMsg" class="msg" aria-live="polite">
-  Sign in to view orders for your products.
-</div>
+<p class="muted">Orders containing products published by your seller account.</p>
+<button class="btn light" type="button" id="loadSellerOrders">Refresh my orders</button>
+<div id="sellerOrdersMsg" class="msg" aria-live="polite">Sign in to view orders for your products.</div>
 <div id="sellerOrdersList"></div> 
 </div>
 <div class="panel">
@@ -663,6 +674,7 @@ header {
 </div>
 </div>
 </section>
+
 <section id="assistant" class="section assistant">
 <h2>Meet your shopping assistant ✨</h2>
 <p>This prototype uses simple built-in rules, not a connected live AI model.</p>
@@ -670,6 +682,7 @@ header {
 <button class="btn light" onclick="askNova()">Ask Nova AI</button>
 <div id="answer" class="out">Hello! Ask me to find products within a budget or get basic seller tips.</div>
 </section>
+
 <section id="cart" class="section">
 <h2>🛒 Your shopping cart</h2>
 <p class="muted">Review your demo cart before continuing.</p>
@@ -693,19 +706,16 @@ header {
 
   <div class="field">
     <label for="customerPhone">Phone number *</label>
-    <input id="customerPhone" type="tel" maxlength="30"
-      autocomplete="tel" required>
+    <input id="customerPhone" type="tel" maxlength="30" autocomplete="tel" required>
   </div>
 
   <div class="field">
     <label for="deliveryAddress">Delivery address *</label>
-    <textarea id="deliveryAddress" maxlength="500"
-      autocomplete="street-address" required></textarea>
+    <textarea id="deliveryAddress" maxlength="500" autocomplete="street-address" required></textarea>
   </div>
 
   <p class="notice">
-    Orders are submitted for seller confirmation.
-    No online payment is taken at this stage.
+    Orders are submitted for seller confirmation. No online payment is taken at this stage.
   </p>
 
   <button class="btn primary" id="placeOrderBtn" type="submit">
@@ -714,29 +724,14 @@ header {
 </form>
 </div>
 </section>
+
 <section id="customerOrders" class="section">
   <h2>📦 My Orders</h2>
-  <p class="muted">
-    Track orders placed using your signed-in NOVAAI account.
-  </p>
+  <p class="muted">Track orders placed using your signed-in NOVAAI account.</p>
 
   <div class="panel">
-    <button
-      class="btn primary"
-      type="button"
-      id="loadCustomerOrders"
-    >
-      View my orders
-    </button>
-
-    <div
-      id="customerOrdersMsg"
-      class="msg"
-      aria-live="polite"
-    >
-      Sign in to view your orders.
-    </div>
-
+    <button class="btn primary" type="button" id="loadCustomerOrders">View my orders</button>
+    <div id="customerOrdersMsg" class="msg" aria-live="polite">Sign in to view your orders.</div>
     <div id="customerOrdersList"></div>
   </div>
 </section>
@@ -746,12 +741,14 @@ header {
   <p>Your saved products will appear here.</p>
 </section>
 </main>
+
 <footer>
 <div class="foot">
 <div><div class="logo">NOVA<span>AI</span> MARKETPLACE</div><p>A marketplace prototype for South African shoppers and independent sellers. Confirm seller details before paying.</p></div>
 <div><strong>Shop smart. Sell more.</strong><p>© <span id="year"></span> NOVAAI. Built for South Africa.</p></div>
 </div>
 </footer>
+
 <div id="toast" class="toast hidden"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -802,9 +799,7 @@ function cash(n){return new Intl.NumberFormat("en-ZA",{style:"currency",currency
 function safeImg(s){try{let u=new URL(s);return ["http:","https:"].includes(u.protocol)?u.href:""}catch(e){return ""}}
 function go(id){
   const section = document.getElementById(id);
-
   if (!section) return;
-
   document.body.classList.remove("wishlist-view", "categories-view");
 
   if (id === "wishlist") {
@@ -813,17 +808,14 @@ function go(id){
     section.scrollIntoView({behavior:"smooth"});
     return;
   }
-
   if (id === "categories") {
     document.body.classList.add("categories-view");
     section.scrollIntoView({behavior:"smooth"});
     return;
   }
-
   if (id === "seller") {
     section.style.display = "block";
   }
-
   section.scrollIntoView({behavior:"smooth"});
 }
 function message(id,s,bad=false){let e=document.getElementById(id);e.textContent=s;e.className="msg "+(bad?"error":"success")}
@@ -834,7 +826,7 @@ document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{
   document.getElementById("filter").value=active;
   document.getElementById("search").value="";
   initCategories();
-    render();
+  render();
   go("shop");
 });
 document.getElementById("filter").innerHTML='<option>All</option>'+C.map(([n])=>`<option>${esc(n)}</option>`).join("");
@@ -877,11 +869,10 @@ document.querySelectorAll("[data-wishlist]").forEach(b=>{
     }else{
       wishlist.push(id);
     }
-
- localStorage.setItem("novaWishlist",JSON.stringify(wishlist));
-b.textContent=wishlist.includes(id)?"♥":"♡";
-b.style.color=wishlist.includes(id)?"#e11d48":"#17345b";
-renderWishlist();
+    localStorage.setItem("novaWishlist",JSON.stringify(wishlist));
+    b.textContent=wishlist.includes(id)?"♥":"♡";
+    b.style.color=wishlist.includes(id)?"#e11d48":"#17345b";
+    renderWishlist();
   };
 });
 document.querySelectorAll("[data-info]").forEach(b => {
@@ -892,25 +883,24 @@ document.querySelectorAll("[data-info]").forEach(b => {
     const modal = document.getElementById("productModal");
     const img = document.getElementById("modalProductImage");
 
-    // Product details
     document.getElementById("modalProductName").textContent = p.name;
     document.getElementById("modalProductPrice").textContent = cash(p.price);
-    document.getElementById("modalProductMeta").textContent =
-      p.category + " · Seller: " + p.seller;
-    document.getElementById("modalProductDescription").textContent =
-      p.description || "Contact the seller for more product details.";
+    document.getElementById("modalProductMeta").textContent = p.category + " · Seller: " + p.seller;
+    document.getElementById("modalProductDescription").textContent = p.description || "Contact the seller for more product details.";
+    
+    // Compute loyalty points based on price
+    const productPrice = Number(p.price) || 0;
+    document.getElementById("modalEbucks").textContent = "eB" + Math.round(productPrice * 5);
+    document.getElementById("modalDiscovery").textContent = Math.round(productPrice * 5);
 
-    // Product image
     const imageUrl = safeImg(p.image || p.image_url);
     img.style.display = imageUrl ? "block" : "none";
-
     if (imageUrl) {
       img.src = imageUrl;
     } else {
       img.removeAttribute("src");
     }
 
-    // Gallery: currently one image per product
     let galleryImages = imageUrl ? [imageUrl] : [];
     let galleryIndex = 0;
 
@@ -926,7 +916,6 @@ document.querySelectorAll("[data-info]").forEach(b => {
         next.style.display = "none";
         return;
       }
-
       galleryIndex = (index + galleryImages.length) % galleryImages.length;
       img.src = galleryImages[galleryIndex];
       img.style.display = "block";
@@ -936,30 +925,23 @@ document.querySelectorAll("[data-info]").forEach(b => {
       next.style.display = multiple ? "block" : "none";
 
       dots.innerHTML = galleryImages
-        .map((_, i) =>
-          `<span class="nova-gallery-dot ${i === galleryIndex ? "active" : ""}"></span>`
-        )
+        .map((_, i) => `<span class="nova-gallery-dot ${i === galleryIndex ? "active" : ""}"></span>`)
         .join("");
     }
 
     prev.onclick = () => showGalleryImage(galleryIndex - 1);
     next.onclick = () => showGalleryImage(galleryIndex + 1);
+    showGalleryImage(0);
 
-    showGalleryImage(0)
-    
-    const deliveryText = document.getElementById("modalDeliveryText");
-    const locationDisplay = document.getElementById("buyerLocation");
-    if (deliveryText && locationDisplay) {
-      deliveryText.textContent = locationDisplay.textContent.replace("📍 Deliver to: ", "");
-    }
+    const deliveryTown = document.getElementById("modalDeliveryTown");
+    const locationDisplay = document.getElementById("locationDisplay");
 
     document.getElementById("modalChangeLocation").onclick = () => {
       const town = prompt("Enter your delivery town or suburb:");
       if (town && town.trim()) {
-        const newLocation = "📍 Deliver to: " + town.trim();
-
-        if (locationDisplay) locationDisplay.textContent = newLocation;
-        if (deliveryText) deliveryText.textContent = town.trim();
+        const newText = town.trim();
+        if (deliveryTown) deliveryTown.textContent = newText;
+        if (locationDisplay) locationDisplay.textContent = "📍 Deliver to: " + newText;
       }
     };
 
@@ -971,8 +953,8 @@ document.querySelectorAll("[data-info]").forEach(b => {
     modal.classList.add("open");
   };
 });
+}
 
-  }
 function renderWishlist(){
   const section = document.getElementById("wishlist");
   if(!section) return;
@@ -997,7 +979,7 @@ function renderWishlist(){
     `}
   `;
 }
-  function resetFilters(){document.getElementById("search").value="";document.getElementById("filter").value="All";document.getElementById("sort").value="featured";active="All";initCategories();render()}
+function resetFilters(){document.getElementById("search").value="";document.getElementById("filter").value="All";document.getElementById("sort").value="featured";active="All";initCategories();render()}
 function add(id){let p=products.find(x=>x.id===id);let i=cart.find(x=>x.id===id);if(i)i.qty++;else cart.push({id,qty:1});saveCart();renderCart();toast(p.name+" added to cart.")}
 function renderCart(){
 cart=cart.filter(i=>products.some(p=>p.id===i.id));
@@ -1013,94 +995,69 @@ function qty(id,n){let i=cart.find(x=>x.id===id);if(!i)return;i.qty+=n;if(i.qty<
 function clearCart(){cart=[];saveCart();renderCart();document.getElementById("checkoutMsg").textContent=""}
 function checkout(){
   const form = document.getElementById("checkoutForm");
-
   if (!cart.length) {
     form.classList.add("hidden");
     message("checkoutMsg", "Your cart is empty.", true);
     return;
   }
-
   if (!user) {
     form.classList.add("hidden");
     message("checkoutMsg", "Please sign in using the Seller Portal, then return to your cart.", true);
     return;
   }
-
   const invalidItems = cart.filter(item => {
     const product = products.find(p => p.id === item.id);
     return !product || !product.dbId;
   });
-
   if (invalidItems.length) {
     form.classList.add("hidden");
-    message(
-      "checkoutMsg",
-      "Your cart contains demo products. Remove them and add real products published by sellers before ordering.",
-      true
-    );
+    message("checkoutMsg", "Your cart contains demo products. Remove them and add real products published by sellers before ordering.", true);
     return;
   }
-
   form.classList.remove("hidden");
   message("checkoutMsg", "Enter your name, phone number and delivery address below.");
   form.scrollIntoView({ behavior: "smooth", block: "start" });
 }
+
 document.getElementById("checkoutForm").addEventListener("submit", async e => {
   e.preventDefault();
-
   const btn = document.getElementById("placeOrderBtn");
-
   if (!cart.length) {
     message("checkoutMsg", "Your cart is empty.", true);
     return;
   }
-
   const items = cart.map(item => {
     const p = products.find(x => x.id === item.id);
     if (!p || !p.dbId) return null;
-
     return {
       product_id: Number(p.dbId),
       quantity: Number(item.qty)
     };
   });
-
-  if (items.some(item =>
-    !item ||
-    !Number.isSafeInteger(item.product_id) ||
-    !Number.isSafeInteger(item.quantity) ||
-    item.quantity < 1
-  )) {
+  if (items.some(item => !item || !Number.isSafeInteger(item.product_id) || !Number.isSafeInteger(item.quantity) || item.quantity < 1)) {
     message("checkoutMsg", "Remove demo products and add real seller listings before ordering.", true);
     return;
   }
-
   btn.disabled = true;
   btn.textContent = "Submitting order…";
 
   try {
     const { data: authData, error: authError } = await sb.auth.getUser();
-
     if (authError || !authData.user) {
       throw new Error("Please sign in again before ordering.");
     }
-
     const { data, error } = await sb.rpc("place_novaai_order", {
       p_customer_name: document.getElementById("customerName").value.trim(),
       p_customer_phone: document.getElementById("customerPhone").value.trim(),
       p_delivery_address: document.getElementById("deliveryAddress").value.trim(),
       p_items: items
     });
-
     if (error) throw error;
-
     cart = [];
     saveCart();
     renderCart();
-
     document.getElementById("checkoutForm").reset();
     document.getElementById("checkoutForm").classList.add("hidden");
-
     message("checkoutMsg", "Order submitted successfully! Reference: " + data + ". No payment has been taken.");
   } catch (err) {
     message("checkoutMsg", "Order failed: " + err.message, true);
@@ -1109,7 +1066,9 @@ document.getElementById("checkoutForm").addEventListener("submit", async e => {
     btn.textContent = "Place order";
   }
 });
-  function toast(s){let t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2400)}
+
+function toast(s){let t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2400)}
+
 async function loadShared(){
 try{
 let{data,error}=await sb.from("Products").select("id,name,description,price,category,image_url,seller_name").order("created_at",{ascending:false});
@@ -1121,7 +1080,7 @@ render();renderCart();
 }catch(e){
 console.error(e);
 document.getElementById("dbStatus").textContent="DATABASE CHECK NEEDED";
-document.getElementById("catalogueMessage").textContent="Demo catalogue is available; shared listings could not be loaded. Check Supabase table and policies.";
+document.getElementById("catalogueMessage").textContent="Demo catalogue is available; shared listings could not be loaded.";
 render();
 }
 }
@@ -1133,8 +1092,6 @@ function updateUser(u){
   document.getElementById("userEmail").textContent=u?.email||"";
   document.getElementById("publish").disabled=!u;
   document.getElementById("publish").textContent=u?"Publish shared listing":"Sign in to publish";
-
-  
   if (u) {
     loadMyProducts();
     const ordersMsg = document.getElementById("sellerOrdersMsg");
@@ -1148,12 +1105,14 @@ function updateUser(u){
     }
   }
 }
+
 document.getElementById("authForm").onsubmit=async e=>{
 e.preventDefault();message("authMsg","Signing in…");
 let{data,error}=await sb.auth.signInWithPassword({email:document.getElementById("email").value.trim(),password:document.getElementById("password").value});
 if(error){message("authMsg",error.message,true);return}
 updateUser(data.user);message("userMsg","Signed in successfully.");
 };
+
 document.getElementById("signup").onclick=async()=>{
 let email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;
 if(!email||password.length<6){message("authMsg","Enter a valid email and password of at least 6 characters.",true);return}
@@ -1163,6 +1122,7 @@ if(error){message("authMsg",error.message,true);return}
 if(data.session){updateUser(data.user);message("userMsg","Account created and signed in.")}
 else message("authMsg","Account request submitted. Check your email and confirm your address, then return here to sign in.");
 };
+
 document.getElementById("signout").onclick=async()=>{
 let{error}=await sb.auth.signOut();
 if(error)message("userMsg",error.message,true);
@@ -1171,15 +1131,12 @@ else{updateUser(null);message("authMsg","You have signed out.")}
 
 document.getElementById("sellerForm").onsubmit = async e => {
   e.preventDefault();
-
   if (!user) {
     message("sellerMsg", "Please sign in before publishing.", true);
     return;
   }
-
   const { data: authData, error: authError } = await sb.auth.getUser();
   const u = authData?.user;
-
   if (authError || !u) {
     updateUser(null);
     message("sellerMsg", "Please sign in again.", true);
@@ -1198,7 +1155,6 @@ document.getElementById("sellerForm").onsubmit = async e => {
     message("sellerMsg", "Choose a photo OR an image URL, not both.", true);
     return;
   }
-
   if (!seller || !name || !description || !Number.isFinite(price) || price < 1) {
     message("sellerMsg", "Check all required fields and enter a valid price.", true);
     return;
@@ -1207,61 +1163,35 @@ document.getElementById("sellerForm").onsubmit = async e => {
   const b = document.getElementById("publish");
   b.disabled = true;
   b.textContent = "Publishing…";
-
   let uploadedImage = image;
 
   try {
     if (file) {
-      const types = {
-        "image/jpeg": "jpg",
-        "image/png": "png",
-        "image/webp": "webp"
-      };
-
-      if (!types[file.type]) {
-        throw new Error("Choose a JPG, PNG, or WebP photo.");
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        throw new Error("Photo must be smaller than 5 MB.");
-      }
+      const types = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"};
+      if (!types[file.type]) throw new Error("Choose a JPG, PNG, or WebP photo.");
+      if (file.size > 5 * 1024 * 1024) throw new Error("Photo must be smaller than 5 MB.");
 
       const path = u.id + "/" + Date.now() + "." + types[file.type];
-
-      const { error: uploadError } = await sb.storage
-        .from("Nova AI")
-        .upload(path, file, {
-          contentType: file.type,
-          upsert: false
-        });
-
+      const { error: uploadError } = await sb.storage.from("Nova AI").upload(path, file, { contentType: file.type, upsert: false });
       if (uploadError) throw uploadError;
 
-      const { data: publicData } = sb.storage
-        .from("Nova AI")
-        .getPublicUrl(path);
-
+      const { data: publicData } = sb.storage.from("Nova AI").getPublicUrl(path);
       uploadedImage = publicData.publicUrl;
     }
 
     const { error } = await sb.from("Products").insert({
-      name,
-      description,
-      price,
-      category,
+      name, description, price, category,
       image_url: uploadedImage || null,
       seller_name: seller,
       seller_id: u.id
     });
-
     if (error) throw error;
 
     e.target.reset();
     message("sellerMsg", "Product published successfully!");
-await loadShared();
-await loadMyProducts();
-go("shop");
-
+    await loadShared();
+    await loadMyProducts();
+    go("shop");
   } catch (err) {
     message("sellerMsg", "Publishing failed: " + err.message, true);
   } finally {
@@ -1269,11 +1199,10 @@ go("shop");
     b.textContent = "Publish shared listing";
   }
 };
-let sessionReady = false;
 
+let sessionReady = false;
 const sessionPromise = sb.auth.getSession().then(({ data, error }) => {
   if (error) throw error;
-
   updateUser(data?.session?.user || null);
   sessionReady = true;
 }).catch(err => {
@@ -1286,82 +1215,41 @@ sb.auth.onAuthStateChange((_event, session) => {
   sessionReady = true;
 });
 
-document.getElementById("searchForm").onsubmit=e=>{
-  e.preventDefault();
-  render();
-  go("shop");
-};
-
+document.getElementById("searchForm").onsubmit=e=>{e.preventDefault();render();go("shop");};
 document.getElementById("search").oninput=render;
-
-document.getElementById("filter").onchange=e=>{
-  active=e.target.value;
-  initCategories();
-  render();
-};
-
+document.getElementById("filter").onchange=e=>{active=e.target.value;initCategories();render();};
 document.getElementById("sort").onchange=render;
 
 function askNova(){
   let q=document.getElementById("question").value.toLowerCase();
-
   let budgetMatch=q.match(/(?:under|below|less than|budget|r)\s*r?\s*(\d+)/);
   let budget=budgetMatch?Number(budgetMatch[1]):null;
-
-  let list=products
-    .filter(p=>
-      (!C.some(([n])=>q.includes(n.toLowerCase()))||
-      q.includes(p.category.toLowerCase()))&&
-      (budget===null||p.price<=budget)
-    )
-    .sort((a,b)=>a.price-b.price)
-    .slice(0,5);
-
-  document.getElementById("answer").textContent=
-    /sell|listing|describe|advert/.test(q)
-    ?"NOVA SELLER COACH\nUse a clear title, describe accurate features and condition, use authorised photos, set a fair price, and explain delivery honestly."
-    :list.length
-      ?list.map((p,i)=>
-        `${i+1}. ${p.name} — ${cash(p.price)} (${p.category})`
-      ).join("\n")
-      :"I couldn't find a matching item. Try a product category and budget in rand.";
+  let list=products.filter(p=>(!C.some(([n])=>q.includes(n.toLowerCase()))||q.includes(p.category.toLowerCase()))&&(budget===null||p.price<=budget)).sort((a,b)=>a.price-b.price).slice(0,5);
+  document.getElementById("answer").textContent=/sell|listing|describe|advert/.test(q)?"NOVA SELLER COACH\nUse a clear title, describe accurate features and condition, use authorised photos, set a fair price, and explain delivery honestly.":list.length?list.map((p,i)=>`${i+1}. ${p.name} — ${cash(p.price)} (${p.category})`).join("\n"):"I couldn't find a matching item. Try a product category and budget in rand.";
 }
 
-document.getElementById("year").textContent=
-  new Date().getFullYear();
-
+document.getElementById("year").textContent=new Date().getFullYear();
 initCategories();
 render();
 renderCart();
 loadShared();
+
 async function loadMyProducts() {
   const box = document.getElementById("myProductsList");
   const msg = document.getElementById("myProductsMsg");
-
   if (!user) {
     msg.textContent = "Please sign in to manage your products.";
     box.innerHTML = "";
     return;
   }
-
   msg.textContent = "Loading your products…";
-
-  const { data, error } = await sb
-    .from("Products")
-    .select("id,name,description,price,category,seller_id")
-    .eq("seller_id", user.id)
-    .order("created_at", { ascending: false });
-
+  const { data, error } = await sb.from("Products").select("id,name,description,price,category,seller_id").eq("seller_id", user.id).order("created_at", { ascending: false });
   if (error) {
     msg.textContent = "Could not load products: " + error.message;
     box.innerHTML = "";
     return;
   }
-
-  msg.textContent = data.length
-    ? "Your published products: " + data.length
-    : "You haven't published any products yet.";
-
+  msg.textContent = data.length ? "Your published products: " + data.length : "You haven't published any products yet.";
   box.innerHTML = data.map(p => `
     <div class="panel" style="margin:10px 0">
       <h4>${esc(p.name)}</h4>
@@ -1371,43 +1259,30 @@ async function loadMyProducts() {
       <button class="btn outline" data-delete-product="${esc(p.id)}">Delete</button>
     </div>
   `).join("");
-
-  box.querySelectorAll("[data-edit-product]").forEach(b => {
-    b.onclick = () => editMyProduct(b.dataset.editProduct);
-  });
-
-  box.querySelectorAll("[data-delete-product]").forEach(b => {
-    b.onclick = () => deleteMyProduct(b.dataset.deleteProduct);
-  });
+  box.querySelectorAll("[data-edit-product]").forEach(b => b.onclick = () => editMyProduct(b.dataset.editProduct));
+  box.querySelectorAll("[data-delete-product]").forEach(b => b.onclick = () => deleteMyProduct(b.dataset.deleteProduct));
 }
-
 
 async function loadSellerOrders() {
   const msg = document.getElementById("sellerOrdersMsg");
   const box = document.getElementById("sellerOrdersList");
   const btn = document.getElementById("loadSellerOrders");
-
   if (!user) {
     msg.textContent = "Please sign in to view seller orders.";
     box.innerHTML = "";
     return;
   }
-
   msg.textContent = "Loading your orders...";
   box.innerHTML = "";
   btn.disabled = true;
-
   try {
     const { data, error } = await sb.rpc("get_my_seller_orders");
     if (error) throw error;
-
     if (!data || data.length === 0) {
       msg.textContent = "No orders found for your products yet.";
       return;
     }
-
     msg.textContent = "Orders found: " + data.length;
-
     box.innerHTML = data.map(o => `
       <div class="panel" style="margin:10px 0">
         <h4>${esc(o.product_name)}</h4>
@@ -1419,15 +1294,12 @@ async function loadSellerOrders() {
         <p><b>Unit price:</b> ${cash(o.unit_price)}</p>
         <p><b>Item total:</b> ${cash(o.line_total)}</p>
         <p><b>Order status:</b></p>
-<select id="status-${esc(o.order_id)}">
-  ${["pending","accepted","rejected","processing","shipped","delivered","cancelled"].map(s =>
-    `<option value="${s}" ${o.order_status === s ? "selected" : ""}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
-  ).join("")}
-</select>
-<button class="btn" type="button"
-  onclick="saveSellerOrderStatus('${esc(o.order_id)}')">
-  Save status
-</button>
+        <select id="status-${esc(o.order_id)}">
+          ${["pending","accepted","rejected","processing","shipped","delivered","cancelled"].map(s =>
+            `<option value="${s}" ${o.order_status === s ? "selected" : ""}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
+          ).join("")}
+        </select>
+        <button class="btn" type="button" onclick="saveSellerOrderStatus('${esc(o.order_id)}')">Save status</button>
         <p><b>Payment status:</b> ${esc(o.payment_status)}</p>
         <p class="muted">${esc(o.order_created_at)}</p>
       </div>
@@ -1440,123 +1312,53 @@ async function loadSellerOrders() {
   }
 }
 
-document.getElementById("loadSellerOrders")
-  .addEventListener("click", loadSellerOrders);
-  
+document.getElementById("loadSellerOrders").addEventListener("click", loadSellerOrders);
 
 async function saveSellerOrderStatus(orderId) {
   const select = document.getElementById("status-" + orderId);
   const msg = document.getElementById("sellerOrdersMsg");
-
   if (!user || !select) {
     msg.textContent = "Please sign in and select an order status.";
     return;
   }
-
   const newStatus = select.value;
   select.disabled = true;
   msg.textContent = "Saving status: " + newStatus + "...";
-  
-alert("Save button clicked. Selected status: " + newStatus);
   try {
-    const { data, error } = await sb.rpc(
-      "update_my_seller_order_status",
-      {
-        p_order_id: orderId,
-        p_status: newStatus
-      }
-    );
-
-    if (error) {
-      console.error("Status update error:", error);
-      throw error;
-    }
-
-    msg.textContent = "Saved. Checking the database status...";
-
-    const { data: orders, error: readError } =
-      await sb.rpc("get_my_seller_orders");
-
-    if (readError) throw readError;
-
-    const updatedOrder = orders?.find(
-      o => o.order_id === orderId
-    );
-
-    if (updatedOrder) {
-      msg.textContent =
-        "Database status: " + updatedOrder.order_status;
-    } else {
-      msg.textContent =
-        "Status saved, but the order could not be reloaded.";
-    }
-
-        await loadSellerOrders();
-
-const updatedSelect = document.getElementById("status-" + orderId);
-
-if (updatedSelect) {
-  updatedSelect.value = newStatus;
-  updatedSelect.disabled = false;
-}
-
-msg.textContent =
-  "SUCCESS: Order status saved as " +
-  newStatus.charAt(0).toUpperCase() +
-  newStatus.slice(1) +
-  ".";
-msg.className = "msg success";
+    const { error } = await sb.rpc("update_my_seller_order_status", { p_order_id: orderId, p_status: newStatus });
+    if (error) throw error;
+    msg.textContent = "Saved successfully.";
+    await loadSellerOrders();
   } catch (err) {
-    console.error("Could not save order status:", err);
-    msg.textContent =
-      "Save failed: " + (err.message || String(err));
+    msg.textContent = "Save failed: " + (err.message || String(err));
     select.disabled = false;
   }
 }
 
 async function editMyProduct(id) {
-  const { data: rows, error } = await sb
-    .from("Products")
-    .select("id,name,description,price")
-    .eq("id", id)
-    .eq("seller_id", user.id);
-
+  const { data: rows, error } = await sb.from("Products").select("id,name,description,price").eq("id", id).eq("seller_id", user.id);
   if (error || !rows || !rows.length) {
-    alert("Product not found or you do not have permission to edit it.");
+    alert("Product not found or permission denied.");
     return;
   }
-
   const p = rows[0];
   const name = prompt("Product name:", p.name);
   if (name === null) return;
-
   const priceText = prompt("Price in rand:", p.price);
   if (priceText === null) return;
-
   const price = Number(priceText);
   if (!name.trim() || !Number.isFinite(price) || price < 1) {
     alert("Enter a product name and a valid price.");
     return;
   }
-
   const description = prompt("Product description:", p.description || "");
   if (description === null) return;
 
-  const { error: updateError } = await sb
-    .from("Products")
-    .update({
-      name: name.trim(),
-      price,
-      description: description.trim()
-    })
-    .eq("id", id)
-    .eq("seller_id", user.id);
-
+  const { error: updateError } = await sb.from("Products").update({ name: name.trim(), price, description: description.trim() }).eq("id", id).eq("seller_id", user.id);
   if (updateError) {
     alert("Update failed: " + updateError.message);
     return;
   }
-
   alert("Product updated.");
   await loadShared();
   await loadMyProducts();
@@ -1564,79 +1366,51 @@ async function editMyProduct(id) {
 
 async function deleteMyProduct(id) {
   if (!user || !confirm("Delete this product permanently?")) return;
-
-  const { error } = await sb
-    .from("Products")
-    .delete()
-    .eq("id", id)
-    .eq("seller_id", user.id);
-
+  const { error } = await sb.from("Products").delete().eq("id", id).eq("seller_id", user.id);
   if (error) {
     alert("Delete failed: " + error.message);
     return;
   }
-
   alert("Product deleted.");
   await loadShared();
   await loadMyProducts();
 }
-  
+
 async function loadCustomerOrders() {
   const msg = document.getElementById("customerOrdersMsg");
   const box = document.getElementById("customerOrdersList");
   const btn = document.getElementById("loadCustomerOrders");
 
-  
-if (!sessionReady) {
-  msg.textContent = "Checking your sign-in session...";
-  try {
-    await sessionPromise;
-  } catch (err) {
-    msg.textContent =
-      "Could not check your sign-in session. Please refresh and try again.";
+  if (!sessionReady) {
+    msg.textContent = "Checking your sign-in session...";
+    try { await sessionPromise; } catch (err) {
+      msg.textContent = "Could not check your sign-in session.";
+      return;
+    }
+  }
+  if (!user) {
+    msg.textContent = "Please sign in to view your orders.";
+    box.innerHTML = "";
     return;
   }
-}
-
-
-if (!user) {
-  msg.textContent = "Please sign in to view your orders.";
-  box.innerHTML = "";
-  return;
-}
 
   btn.disabled = true;
   msg.textContent = "Loading your orders...";
   box.innerHTML = "";
 
   try {
-    const { data: orders, error } = await sb
-      .from("orders")
-      .select("id,order_status,payment_status,total_amount,created_at")
-      .eq("customer_id", user.id)
-      .order("created_at", { ascending: false });
-
+    const { data: orders, error } = await sb.from("orders").select("id,order_status,payment_status,total_amount,created_at").eq("customer_id", user.id).order("created_at", { ascending: false });
     if (error) throw error;
-
     if (!orders || orders.length === 0) {
       msg.textContent = "You have no orders yet.";
       return;
     }
-
     const ids = orders.map(o => o.id);
-
-    const { data: items, error: itemsError } = await sb
-      .from("order_items")
-      .select("order_id,product_name,quantity,unit_price")
-      .in("order_id", ids);
-
+    const { data: items, error: itemsError } = await sb.from("order_items").select("order_id,product_name,quantity,unit_price").in("order_id", ids);
     if (itemsError) throw itemsError;
 
     box.innerHTML = orders.map(o => {
-      const orderItems = (items || []).filter(
-        item => item.order_id === o.id
-      );
-
+      const orderItems = (items || []).filter(item => item.order_id === o.id);
       return `
         <div class="panel" style="margin:10px 0">
           <h3>Order ${esc(o.id)}</h3>
@@ -1645,52 +1419,34 @@ if (!user) {
           <p><b>Payment status:</b> ${esc(o.payment_status)}</p>
           <p><b>Order total:</b> ${cash(o.total_amount)}</p>
           <h4>Items</h4>
-          ${orderItems.map(item => `
-            <p>
-              ${esc(item.product_name)}
-              × ${esc(item.quantity)}
-              — ${cash(item.unit_price)}
-            </p>
-          `).join("")}
+          ${orderItems.map(item => `<p>${esc(item.product_name)} × ${esc(item.quantity)} — ${cash(item.unit_price)}</p>`).join("")}
         </div>
       `;
     }).join("");
-
     msg.textContent = "Your orders have loaded successfully.";
   } catch (err) {
-    console.error("Customer orders error:", err);
     msg.textContent = "Could not load orders: " + err.message;
   } finally {
     btn.disabled = false;
   }
 }
 
-document.getElementById("loadCustomerOrders")
-  .addEventListener("click", loadCustomerOrders);
+document.getElementById("loadCustomerOrders").addEventListener("click", loadCustomerOrders);
 
 function closeProductModal(){
   document.getElementById("productModal").classList.remove("open");
 }
-
 document.getElementById("closeProductModal").onclick=closeProductModal;
 document.getElementById("modalContinueShopping").onclick=closeProductModal;
-
-document.getElementById("productModal").onclick=function(e){
-  if(e.target===this)closeProductModal();
-};
-
-document.addEventListener("keydown",function(e){
-  if(e.key==="Escape")closeProductModal();
-});
-
-  renderWishlist();
+document.getElementById("productModal").onclick=function(e){if(e.target===this)closeProductModal();};
+document.addEventListener("keydown",function(e){if(e.key==="Escape")closeProductModal();});
+renderWishlist();
 </script>
 
 <style>
 .mobile-bottom-nav {
   display: none;
 }
-
 @media (max-width: 768px) {
   .mobile-bottom-nav {
     display: flex;
@@ -1706,7 +1462,6 @@ document.addEventListener("keydown",function(e){
     align-items: center;
     z-index: 999;
   }
-
   .mobile-bottom-nav button {
     border: 0;
     background: transparent;
@@ -1717,12 +1472,10 @@ document.addEventListener("keydown",function(e){
     color: #174ea6;
     font-size: 20px;
   }
-
   .mobile-bottom-nav button span {
     font-size: 10px;
     font-weight: 700;
   }
-
   body {
     padding-bottom: 75px;
   }
@@ -1730,106 +1483,64 @@ document.addEventListener("keydown",function(e){
 #categories {
   display: none;
 }
-  body.categories-view main > *:not(#categories) {
+body.categories-view main > *:not(#categories) {
   display: none !important;
 }
-
 body.categories-view #categories {
   display: block !important;
   min-height: 70vh;
   margin: 24px auto !important;
   max-width: 900px;
 }
-
 </style>
 
 <nav class="mobile-bottom-nav">
-  <button onclick="go('shop')">
-    🏠<span>Home</span>
-  </button>
-  <button onclick="go('categories')">
-    ☰<span>Categories</span>
-  </button>
-  <button class="nav-ai" onclick="go('assistant')">
-    🤖<span>Nova AI</span>
-  </button>
-  <button onclick="go('wishlist')">
-  ❤️<span>Wishlist</span>
-</button>
-  <button onclick="window.location.href='seller.html'">
-  🏷️<span>Sell</span>
-</button>
+  <button onclick="go('shop')">🏠<span>Home</span></button>
+  <button onclick="go('categories')">☰<span>Categories</span></button>
+  <button class="nav-ai" onclick="go('assistant')">🤖<span>Nova AI</span></button>
+  <button onclick="go('wishlist')">❤️<span>Wishlist</span></button>
+  <button onclick="window.location.href='seller.html'">🏷️<span>Sell</span></button>
 </nav>
+
 <script>
 const locationDisplay = document.getElementById("buyerLocation");
 const gpsButton = document.getElementById("useMyLocation");
 const changeButton = document.getElementById("changeLocation");
-
 let buyerCoordinates = null;
-
-  locationDisplay.style.cursor = "pointer";
+locationDisplay.style.cursor = "pointer";
 
 locationDisplay.addEventListener("click", function () {
   if (!buyerCoordinates) {
     alert("Please press Use GPS first.");
     return;
   }
-
-  const lat = buyerCoordinates.latitude;
-  const lng = buyerCoordinates.longitude;
-
-  const mapsUrl =
-    "https://www.google.com/maps/search/?api=1&query=" +
-    lat + "," + lng;
-
+  const mapsUrl = "https://www.google.com/maps/search/?api=1&query=" + buyerCoordinates.latitude + "," + buyerCoordinates.longitude;
   window.open(mapsUrl, "_blank");
 });
+
 gpsButton.addEventListener("click", function () {
   if (!navigator.geolocation) {
     locationDisplay.textContent = "📍 GPS is not supported";
     return;
   }
-
   locationDisplay.textContent = "📍 Finding your location...";
-
   navigator.geolocation.getCurrentPosition(
-  function (position) {
-    buyerCoordinates = {
-      latitude: position.coords.latitude,
-      longitude: position.coords.longitude
-    };
-
-    locationDisplay.textContent =
-      "📍 Your GPS: " +
-      position.coords.latitude.toFixed(5) + ", " +
-      position.coords.longitude.toFixed(5);
-  },
-  function (error) {
-    if (error.code === 1) {
-      locationDisplay.textContent = "📍 Permission denied";
-    } else if (error.code === 2) {
-      locationDisplay.textContent = "📍 GPS position unavailable";
-    } else if (error.code === 3) {
-      locationDisplay.textContent = "📍 GPS request timed out";
-    } else {
+    function (position) {
+      buyerCoordinates = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+      locationDisplay.textContent = "📍 Your GPS: " + position.coords.latitude.toFixed(5) + ", " + position.coords.longitude.toFixed(5);
+    },
+    function (error) {
       locationDisplay.textContent = "📍 GPS error: " + error.message;
-    }
-  },
-  {
-    enableHighAccuracy: false,
-    timeout: 30000,
-    maximumAge: 60000
-  }
+    },
+    { enableHighAccuracy: false, timeout: 30000, maximumAge: 60000 }
   );
 });
 
 changeButton.addEventListener("click", function () {
-    const town = prompt("Enter your town or suburb:");
-
+  const town = prompt("Enter your town or suburb:");
   if (town && town.trim()) {
     buyerCoordinates = null;
-    locationDisplay.textContent =
-      "📍 Deliver to: " + town.trim();
+    locationDisplay.textContent = "📍 Deliver to: " + town.trim();
   }
 });
 </script>
@@ -1839,86 +1550,101 @@ changeButton.addEventListener("click", function () {
   max-width: 520px;
   border-radius: 14px;
 }
-
 .nova-product-photo {
   background: #fff;
   padding: 12px;
   border-bottom: 1px solid #e5e8ee;
 }
-
 .nova-product-page .product-modal-image {
   height: 280px;
   object-fit: contain;
 }
-
 .nova-product-page .product-modal-content {
   padding: 18px;
 }
-
 .nova-product-label {
   color: #174ea6;
   font-size: 12px;
   font-weight: 800;
   margin-bottom: 12px;
 }
-
 .nova-product-page h2 {
   font-size: 21px;
   line-height: 1.4;
   margin: 8px 0;
 }
-
 .nova-product-page .product-modal-meta {
   color: #174ea6;
   font-weight: 700;
 }
-
-.nova-delivery {
-  background: #f0f7f2;
-  border-left: 4px solid #16834b;
+.takealot-delivery-box {
+  background: #f8faff;
+  border: 1px solid #e1e6ee;
+  border-radius: 8px;
   padding: 12px;
-  margin-top: 18px;
+  margin: 14px 0;
   font-size: 13px;
 }
-
-.nova-delivery p {
-  margin-bottom: 0;
+.takealot-delivery-box .delivery-row {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  color: #10284b;
+  margin-bottom: 6px;
 }
-
-.nova-location {
-  padding: 15px 0;
-  border-bottom: 1px solid #e5e8ee;
-  font-size: 13px;
-}
-
-.nova-price-area {
+.takealot-delivery-box .delivery-location-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 0;
+  color: #555;
+  border-top: 1px solid #edf0f5;
+  padding-top: 6px;
+}
+.tc-link { color: #174ea6; font-size: 11px; text-decoration: underline; }
+.btn-text { background: none; border: none; color: #174ea6; font-weight: 700; cursor: pointer; }
+
+.loyalty-badges {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.loyalty-item {
+  border: 1px solid #e1e6ee;
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.badge-brand { font-size: 10px; padding: 2px 5px; border-radius: 4px; color: white; }
+.badge-brand.eboks { background: #e65c00; }
+.badge-brand.discovery { background: #003366; }
+
+.stock-warranty-box {
+  font-size: 12px;
+  color: #444;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+.stock-warranty-box .in-stock { color: #08774f; font-weight: 700; }
+.muted-loc { color: #777; font-weight: 400; }
+
+.add-to-cart-btn {
+  background: #174ea6 !important;
+  width: 100%;
+  border-radius: 8px !important;
+  padding: 14px !important;
   font-size: 15px;
-}
-
-.nova-price-area strong {
-  font-size: 25px;
-  color: #17345b;
-}
-
-.nova-product-page .product-modal-actions {
-  flex-direction: column;
-}
-
-.nova-product-page #modalAddToCart {
-  background: #16834b;
-  border-radius: 30px;
-  padding: 15px;
+  font-weight: 800;
 }
 
 @media(max-width:560px) {
   .nova-product-page {
     max-height: 94vh;
   }
-
   .nova-product-page .product-modal-image {
     height: 240px;
   }
