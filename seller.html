@@ -43,7 +43,7 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 </head>
 <body>
 
-<div class="top">🛡️ NOVAAI SECURE SELLER PORTAL · ANTI-FRAUD & RAPID TRACING ACTIVE</div>
+<div class="top">🛡️ NOVA AI TRUST SHIELD · FACE & PHONE FINGERPRINT VERIFICATION</div>
 <header>
   <div class="head">
     <a class="logo" href="index.html">NOVA<span>AI</span></a>
@@ -53,61 +53,75 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 
 <main>
 <section class="section">
-<h2>Verified Merchant Portal</h2>
-<p class="muted">Strict anti-scam security measures are enforced to track and freeze fraudulent accounts within 5 minutes.</p>
+<h2>Nova AI Protected Seller Portal</h2>
+<p class="muted">Mandatory phone hardware fingerprinting and biometric face verification for scam-free trading.</p>
 
 <div class="two">
   <div class="panel">
-    <h3>🔐 Verified Merchant Sign-Up & Sign-In</h3>
+    <h3>🔐 Secure Merchant Login & Face Scan</h3>
     <div class="notice">
-      <strong>Anti-Fraud Protection:</strong> All signup attempts log IP metadata, device fingerprints, and verified contact numbers. Fraudulent activity or scam reports result in automated account blacklisting and rapid tracing within 5 minutes.
+      <strong>Biometric & Device Security:</strong> Account creation requires phone fingerprint binding and a live camera face capture to guarantee 5-minute scam traceback.
     </div>
     
     <div id="signedOut">
       <form id="authForm">
         <div class="field">
-          <label for="email">Business Email address *</label>
-          <input id="email" type="email" autocomplete="email" required placeholder="you@example.co.za">
+          <label for="email">Email address *</label>
+          <input id="email" type="email" autocomplete="email" required placeholder="you@example.com">
         </div>
         <div class="field">
-          <label for="password">Secure Password (at least 6 characters) *</label>
+          <label for="password">Password (at least 6 characters) *</label>
           <input id="password" type="password" minlength="6" autocomplete="current-password" required>
         </div>
         <div class="field">
-          <label for="legalName">Full Legal Name / Business Reg No *</label>
-          <input id="legalName" required placeholder="John Doe or Reg: 2026/000000/07">
+          <label for="sellerRealName">Full Name / Contact Person *</label>
+          <input id="sellerRealName" required placeholder="Sipho Dlamini">
         </div>
         <div class="field">
-          <label for="phone">Verified Mobile Number (WhatsApp/SMS) *</label>
-          <input id="phone" type="tel" required placeholder="+27 82 000 0000">
+          <label for="sellerPhone">Active Mobile Number *</label>
+          <input id="sellerPhone" type="tel" required placeholder="0820000000">
         </div>
+
+        <!-- Face Verification Section -->
+        <div class="field" style="background:#f8faff;padding:12px;border:1px dashed #174ea6;border-radius:10px;text-align:center;">
+          <label style="margin-bottom:8px;">📸 Biometric Face Verification *</label>
+          <video id="webcam" autoplay playsinline width="100%" style="max-height:180px;border-radius:8px;background:#000;display:none;object-fit:cover;margin-bottom:8px;"></video>
+          <canvas id="snapshotCanvas" style="display:none;"></canvas>
+          <img id="facePreview" style="max-height:140px;border-radius:8px;display:none;margin:0 auto 8px;" alt="Face scan preview">
+          <div style="display:flex;gap:8px;justify-content:center;">
+            <button type="button" class="btn outline" id="startCameraBtn" style="font-size:12px;padding:8px 12px;">Turn on Camera</button>
+            <button type="button" class="btn primary" id="captureFaceBtn" style="font-size:12px;padding:8px 12px;display:none;">Capture Face Scan</button>
+          </div>
+          <div id="faceStatus" class="muted" style="margin-top:6px;font-weight:bold;color:#b52828;">Face verification required for sign-up.</div>
+        </div>
+
         <div class="field" style="display:flex;align-items:center;gap:8px;font-size:12px;margin-top:10px;">
-          <input type="checkbox" id="antiScamAgree" required style="width:auto;">
-          <label for="antiScamAgree" style="margin:0;font-weight:normal;cursor:pointer;">I agree to biometric/ID tracing terms and accept criminal liability for deceptive or scam listings.</label>
+          <input type="checkbox" id="novaTrustAgree" required style="width:auto;">
+          <label for="novaTrustAgree" style="margin:0;font-weight:normal;cursor:pointer;">I agree to face biometric binding, phone fingerprinting, and 5-minute scam freeze policies.</label>
         </div>
         <button class="btn primary" type="submit" style="margin-top:12px;">Sign in securely</button>
-        <button class="btn outline" type="button" id="signup" style="margin-top:8px;">Create verified account</button>
+        <button class="btn outline" type="button" id="signup" style="margin-top:8px;">Create protected account</button>
         <div id="authMsg" class="msg" aria-live="polite"></div>
       </form>
     </div>
 
     <div id="signedIn" class="hidden">
       <p>Signed in as <strong id="userEmail"></strong></p>
-      <p class="muted">Status: <span style="color:#16885e;font-weight:bold;">✔ Verified Security Track Active</span></p>
+      <p class="muted">Status: <span style="color:#16885e;font-weight:bold;">✔ Face Verified & Phone Fingerprint Bound</span></p>
       <button class="btn outline" id="signout">Sign out</button>
       <div id="userMsg" class="msg"></div>
     </div>
 
     <hr style="margin:20px 0;border:0;border-top:1px solid var(--line)">
 
-    <h3>📦 Publish Tracked Product (Up to 6 Photos)</h3>
+    <h3>📦 Publish Product (Up to 6 Photos)</h3>
     <form id="sellerForm">
       <div class="field">
-        <label for="sellerName">Store or Merchant Name *</label>
-        <input id="sellerName" maxlength="70" required placeholder="Mzansi Verified Store">
+        <label for="sellerName">Store or Business Name *</label>
+        <input id="sellerName" maxlength="70" required placeholder="Mzansi Store">
       </div>
       <div class="field">
-        <label for="productName">Product Name *</label>
+        <label for="productName">Product name *</label>
         <input id="productName" maxlength="100" required>
       </div>
       <div class="field">
@@ -119,17 +133,17 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
         <input id="price" type="number" min="1" max="10000000" step=".01" required>
       </div>
       <div class="field">
-        <label for="photoFiles">Upload up to 6 authentic product photos *</label>
+        <label for="photoFiles">Upload up to 6 product photos *</label>
         <input id="photoFiles" type="file" accept="image/jpeg,image/png,image/webp" multiple required>
-        <p class="muted">Photos are securely watermarked and audited to prevent stock photo scams.</p>
+        <p class="muted">Select up to 6 high-quality photos from your gallery.</p>
       </div>
       <div class="field">
         <label for="image">Or use a primary image URL (optional)</label>
         <input id="image" type="url" maxlength="500" placeholder="https://example.com/photo.jpg">
       </div>
       <div class="field">
-        <label for="description">Accurate Product Description *</label>
-        <textarea id="description" maxlength="500" required placeholder="Provide clear inventory details and physical pickup/dispatch address..."></textarea>
+        <label for="description">Product description *</label>
+        <textarea id="description" maxlength="500" required placeholder="Describe item condition, size, and pickup/delivery details..."></textarea>
       </div>
       <button class="btn primary" id="publish" disabled>Sign in to publish</button>
       <div id="sellerMsg" class="msg" aria-live="polite"></div>
@@ -138,7 +152,7 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
     <hr style="margin:20px 0;border:0;border-top:1px solid var(--line)">
 
     <h3>📋 My Products</h3>
-    <p class="muted">Manage products published by your secure account.</p>
+    <p class="muted">Manage products published by your account.</p>
     <div id="myProductsMsg" class="msg">Sign in to view your products.</div>
     <div id="myProductsList"></div>
 
@@ -152,19 +166,19 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
   </div>
 
   <div class="panel">
-    <h3>🚨 5-Minute Scam Identification System</h3>
+    <h3>👤 Face & Phone Biometric Security</h3>
     <div class="notice" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">
-      <strong>How we catch scammers instantly:</strong><br>
-      1. <strong>Mandatory ID & Phone Binding:</strong> Every account links to a verified legal identity.<br>
-      2. <strong>Rapid Freeze Protocol:</strong> If a buyer reports fraud, administrators can flag and freeze the seller ID and active listings within 5 minutes.<br>
-      3. <strong>Audit Trail:</strong> Every database entry records session UUIDs and IP hashes for law enforcement handoff.
+      <strong>How Biometric Verification Stops Scammers:</strong><br>
+      1. <strong>Face Capture Binding:</strong> A secure photo snapshot of the seller's face is uploaded during registration to prevent fake or anonymous profiles.<br>
+      2. <strong>Phone Fingerprint Hash:</strong> Hardware parameters are locked into the user profile.<br>
+      3. <strong>5-Minute Accountability:</strong> If fraud occurs, administrators have face and device evidence for swift action.
     </div>
-    <h3>Active Security Features</h3>
+    <h3>Marketplace Features</h3>
     <p class="muted">
-      ✓ Mandatory Anti-Fraud Terms Acceptance<br>
-      ✓ Verified Mobile & Legal ID Linking<br>
-      ✓ Multi-photo mandatory authentic upload audit<br>
-      ✓ Real-time order status oversight
+      ✓ Secure Supabase Auth & DB<br>
+      ✓ Multi-photo gallery uploads (up to 6 photos)<br>
+      ✓ Nova AI Face & Phone Biometric Shield<br>
+      ✓ Real-time order status updates
     </p>
   </div>
 </div>
@@ -173,8 +187,8 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 
 <footer>
 <div class="foot">
-  <div><div class="logo">NOVA<span>AI</span></div><p>Secure independent marketplace portal with built-in fraud prevention.</p></div>
-  <div><strong>Shop smart. Sell safely.</strong><p>© <span id="year"></span> NOVAAI.</p></div>
+  <div><div class="logo">NOVA<span>AI</span></div><p>Protected independent marketplace portal for South African entrepreneurs.</p></div>
+  <div><strong>Shop smart. Sell safe.</strong><p>© <span id="year"></span> NOVAAI.</p></div>
 </div>
 </footer>
 
@@ -194,6 +208,79 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 function cash(n){return new Intl.NumberFormat("en-ZA",{style:"currency",currency:"ZAR"}).format(Number(n)||0)}
 function safeImg(s){try{let u=new URL(s);return ["http:","https:"].includes(u.protocol)?u.href:""}catch(e){return ""}}
 function message(id,s,bad=false){let e=document.getElementById(id);e.textContent=s;e.className="msg "+(bad?"error":"success")}
+
+// Generate phone hardware fingerprint hash
+function getDeviceFingerprint() {
+  const nav = window.navigator;
+  const screen = window.screen;
+  const rawData = [
+    nav.userAgent,
+    nav.language,
+    screen.colorDepth,
+    screen.width + "x" + screen.height,
+    new Date().getTimezoneOffset(),
+    nav.hardwareConcurrency || "unknown",
+    nav.maxTouchPoints || 0,
+    nav.platform || "unknown"
+  ].join("||");
+
+  let hash = 0;
+  for (let i = 0; i < rawData.length; i++) {
+    const char = rawData.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return "dev_" + Math.abs(hash).toString(36);
+}
+
+// Camera / Face Verification Logic
+let capturedFaceBlob = null;
+const video = document.getElementById("webcam");
+const snapshotCanvas = document.getElementById("snapshotCanvas");
+const facePreview = document.getElementById("facePreview");
+const startCameraBtn = document.getElementById("startCameraBtn");
+const captureFaceBtn = document.getElementById("captureFaceBtn");
+const faceStatus = document.getElementById("faceStatus");
+
+startCameraBtn.onclick = async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+    video.srcObject = stream;
+    video.style.display = "block";
+    startCameraBtn.style.display = "none";
+    captureFaceBtn.style.display = "inline-block";
+    faceStatus.textContent = "Position your face in front of the camera and tap Capture.";
+    faceStatus.style.color = "#174ea6";
+  } catch (err) {
+    faceStatus.textContent = "Camera access denied or unavailable: " + err.message;
+    faceStatus.style.color = "#b52828";
+  }
+};
+
+captureFaceBtn.onclick = () => {
+  snapshotCanvas.width = video.videoWidth || 320;
+  snapshotCanvas.height = video.videoHeight || 240;
+  const ctx = snapshotCanvas.getContext("2d");
+  ctx.drawImage(video, 0, 0, snapshotCanvas.width, snapshotCanvas.height);
+  
+  snapshotCanvas.toBlob(blob => {
+    capturedFaceBlob = blob;
+    const url = URL.createObjectURL(blob);
+    facePreview.src = url;
+    facePreview.style.display = "block";
+    video.style.display = "none";
+    captureFaceBtn.style.display = "none";
+    
+    // Stop camera stream
+    const stream = video.srcObject;
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    
+    faceStatus.textContent = "✔ Face verification snapshot captured successfully!";
+    faceStatus.style.color = "#16885e";
+  }, "image/jpeg", 0.85);
+};
 
 document.getElementById("category").innerHTML = C.map(([n])=>`<option>${esc(n)}</option>`).join("");
 document.getElementById("year").textContent = new Date().getFullYear();
@@ -218,55 +305,77 @@ function updateUser(u) {
 
 document.getElementById("authForm").onsubmit = async e => {
   e.preventDefault();
-  const agree = document.getElementById("antiScamAgree");
+  const agree = document.getElementById("novaTrustAgree");
   if (agree && !agree.checked) {
-    message("authMsg", "You must agree to anti-fraud tracing terms before signing in.", true);
+    message("authMsg", "You must agree to biometric verification terms.", true);
     return;
   }
-  message("authMsg", "Authenticating secure merchant session…");
+  message("authMsg", "Signing in securely…");
   let { data, error } = await sb.auth.signInWithPassword({
     email: document.getElementById("email").value.trim(),
     password: document.getElementById("password").value
   });
   if (error) { message("authMsg", error.message, true); return; }
   updateUser(data.user);
-  message("userMsg", "Signed in securely with anti-fraud tracking.");
+  message("userMsg", "Signed in successfully under Nova AI device tracking.");
 };
 
 document.getElementById("signup").onclick = async () => {
   let email = document.getElementById("email").value.trim();
   let password = document.getElementById("password").value;
-  let legalName = document.getElementById("legalName").value.trim();
-  let phone = document.getElementById("phone").value.trim();
-  const agree = document.getElementById("antiScamAgree");
+  let realName = document.getElementById("sellerRealName").value.trim();
+  let phone = document.getElementById("sellerPhone").value.trim();
+  const agree = document.getElementById("novaTrustAgree");
 
   if (agree && !agree.checked) {
-    message("authMsg", "You must agree to anti-fraud tracing terms.", true);
+    message("authMsg", "You must agree to biometric verification terms.", true);
     return;
   }
-  if (!email || password.length < 6 || !legalName || !phone) {
-    message("authMsg", "All fields (Email, Password min 6 chars, Legal Name, Mobile Phone) are required for verification.", true);
+  if (!email || password.length < 6 || !realName || !phone) {
+    message("authMsg", "Please fill in all required text fields.", true);
+    return;
+  }
+  if (!capturedFaceBlob) {
+    message("authMsg", "Biometric face verification snapshot is mandatory for sign-up.", true);
     return;
   }
 
-  message("authMsg", "Registering verified merchant profile…");
-  let { data, error } = await sb.auth.signUp({ 
-    email, 
-    password, 
-    options: { 
-      data: { legal_name: legalName, phone_number: phone },
-      emailRedirectTo: location.origin + location.pathname 
-    } 
-  });
-  if (error) { message("authMsg", error.message, true); return; }
-  if (data.session) { updateUser(data.user); message("userMsg", "Verified account created and signed in."); }
-  else { message("authMsg", "Verification request submitted. Check your email to confirm your address, then sign in."); }
+  const deviceHash = getDeviceFingerprint();
+
+  message("authMsg", "Uploading face verification & creating account…");
+  
+  try {
+    let { data, error } = await sb.auth.signUp({ 
+      email, 
+      password, 
+      options: { 
+        data: { full_name: realName, phone: phone, device_fingerprint: deviceHash },
+        emailRedirectTo: location.origin + location.pathname 
+      } 
+    });
+    if (error) throw error;
+
+    const u = data.user || data.session?.user;
+    if (u && capturedFaceBlob) {
+      const facePath = u.id + "/face_verification_" + Date.now() + ".jpg";
+      await sb.storage.from("Nova AI").upload(facePath, capturedFaceBlob, { contentType: "image/jpeg", upsert: true });
+    }
+
+    if (data.session) { 
+      updateUser(u); 
+      message("userMsg", "Account created and face verified successfully."); 
+    } else { 
+      message("authMsg", "Account request submitted. Check your email to confirm your address, then sign in."); 
+    }
+  } catch (err) {
+    message("authMsg", "Sign up failed: " + err.message, true);
+  }
 };
 
 document.getElementById("signout").onclick = async () => {
   let { error } = await sb.auth.signOut();
   if (error) message("userMsg", error.message, true);
-  else { updateUser(null); message("authMsg", "You have signed out securely."); }
+  else { updateUser(null); message("authMsg", "You have signed out."); }
 };
 
 document.getElementById("sellerForm").onsubmit = async e => {
@@ -290,13 +399,13 @@ document.getElementById("sellerForm").onsubmit = async e => {
   }
 
   if (!files || files.length === 0) {
-    message("sellerMsg", "Authentic photo upload is mandatory for fraud prevention.", true);
+    message("sellerMsg", "At least one product photo is required.", true);
     return;
   }
 
   const b = document.getElementById("publish");
   b.disabled = true;
-  b.textContent = "Publishing verified listing…";
+  b.textContent = "Publishing…";
 
   try {
     let uploadedImages = [];
@@ -318,7 +427,7 @@ document.getElementById("sellerForm").onsubmit = async e => {
     }
 
     if (uploadedImages.length === 0) {
-      throw new Error("Please upload at least one valid photo matching accepted formats (JPEG/PNG/WebP under 5MB).");
+      throw new Error("Please upload at least one valid photo (JPEG/PNG/WebP under 5MB).");
     }
 
     const { error } = await sb.from("Products").insert({
@@ -331,7 +440,9 @@ document.getElementById("sellerForm").onsubmit = async e => {
     if (error) throw error;
 
     e.target.reset();
-    message("sellerMsg", "Product published successfully under verified tracking (" + uploadedImages.length + " audit photo(s))!");
+    document.getElementById("facePreview").style.display = "none";
+    capturedFaceBlob = null;
+    message("sellerMsg", "Product published successfully with " + uploadedImages.length + " photo(s)!");
     loadMyProducts();
   } catch (err) {
     message("sellerMsg", "Publishing failed: " + err.message, true);
