@@ -135,15 +135,57 @@ nav{display:flex;gap:16px;overflow:auto;padding-top:0;padding-bottom:12px;font-s
 .cat.active{border-color:var(--p);background:#f0efff}
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
-.product{background:white;border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
-.prodimg{height:160px;background:#f8f9fa;position:relative;overflow:hidden}
+
+/* SHEIN-Inspired High-Conversion Product Card Design */
+.product{background:white;border:1px solid #e8eaf2;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 2px 8px rgba(20,40,70,.04);transition:transform .2s,box-shadow .2s;}
+.product:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(20,40,70,.12);}
+.prodimg{height:190px;background:#f8f9fa;position:relative;overflow:hidden}
 .prodimg img{width:100%;height:100%;object-fit:cover}
+
+/* SHEIN-style badges */
+.shein-discount-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: #e11d48;
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 4px;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+.shein-bestseller {
+  font-size: 11px;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+.shein-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #555;
+  margin: 4px 0;
+}
+.shein-stars {
+  color: #f5b900;
+  font-size: 12px;
+}
+
 .prodbody{padding:12px;display:flex;flex:1;flex-direction:column}
-.prodbody h3{font-size:14px;margin:7px 0}
-.prodbody p{font-size:12px;color:var(--muted);line-height:1.5}
-.price{font-size:20px;font-weight:900;margin-top:auto}
+.prodbody h3{font-size:13px;line-height:1.35;margin:4px 0 6px;color:#171c2d;font-weight:700}
+.prodbody p{font-size:11px;color:var(--muted);line-height:1.4;margin:0 0 8px}
+.price{font-size:18px;font-weight:900;color:#17345b;margin-top:auto}
 .actions{display:flex;gap:6px;margin-top:10px}
-.actions button{flex:1;padding:8px 5px;font-size:12px}
+.actions button{flex:1;padding:8px 4px;font-size:11px}
+
 .two{grid-template-columns:1fr 1fr}
 .field{margin:12px 0}
 .field label{display:block;font-size:12px;font-weight:800;margin-bottom:5px}
@@ -162,7 +204,7 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 .badge{font-size:11px;background:#e8fff5;color:#08774f;border-radius:20px;padding:6px 9px}
 .toast{position:fixed;bottom:15px;left:50%;transform:translateX(-50%);background:#171b2d;color:white;padding:12px 16px;border-radius:10px;z-index:10}
 @media(max-width:800px){.cats{grid-template-columns:repeat(4,1fr)}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hero-art{font-size:60px}}
-@media(max-width:560px){.head,main,nav{padding-left:12px;padding-right:12px}.search{order:3;flex-basis:100%}.hero{padding:23px}.hero-art{display:none}.stats{gap:7px}.stat{padding:10px}.stat strong{font-size:18px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.prodimg{height:130px}.two{grid-template-columns:1fr}.cats{gap:6px}.cat{font-size:11px}}
+@media(max-width:560px){.head,main,nav{padding-left:12px;padding-right:12px}.search{order:3;flex-basis:100%}.hero{padding:23px}.hero-art{display:none}.stats{gap:7px}.stat{padding:10px}.stat strong{font-size:18px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.prodimg{height:140px}.two{grid-template-columns:1fr}.cats{gap:6px}.cat{font-size:11px}}
 
 /* Clean Product Modal Styles */
 .product-modal {
@@ -293,87 +335,6 @@ header {
   transform: scale(.97);
 }
 
-.product {
-  border-radius: 12px;
-  border: 1px solid #e0e5ed;
-  box-shadow: 0 2px 7px rgba(20, 40, 70, .035);
-  transition: box-shadow .2s, transform .2s;
-}
-
-.product:hover {
-  box-shadow: 0 7px 20px rgba(20, 40, 70, .10);
-}
-
-.prodimg {
-  height: 190px;
-  background: #f8f9fa;
-  position: relative;
-  overflow: hidden;
-}
-
-.prodimg img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform .2s;
-}
-
-.product:hover .prodimg img {
-  transform: scale(1.035);
-}
-
-.prodbody {
-  padding: 14px;
-}
-
-.prodbody h3 {
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.prodbody p {
-  line-height: 1.55;
-}
-
-.price {
-  color: #17345b;
-  font-size: 21px;
-  margin-top: auto;
-}
-
-.actions button {
-  min-height: 40px;
-}
-
-.actions .primary {
-  background: #174ea6;
-}
-
-@media (max-width: 560px) {
-  .prodimg {
-    height: 145px;
-  }
-  .prodbody {
-    padding: 10px;
-  }
-  .prodbody h3 {
-    font-size: 13px;
-  }
-  .price {
-    font-size: 19px;
-  }
-  .actions {
-    gap: 5px;
-  }
-  .actions button {
-    font-size: 11px;
-    padding: 9px 3px;
-  }
-  .hero {
-    border-radius: 15px;
-  }
-}
-  
 .cats {
   display: flex;
   gap: 12px;
@@ -1030,13 +991,39 @@ if(sort==="low")list.sort((a,b)=>a.price-b.price);
 if(sort==="high")list.sort((a,b)=>b.price-a.price);
 if(sort==="az")list.sort((a,b)=>a.name.localeCompare(b.name));
 document.getElementById("productCount").textContent=products.length;
+
 document.getElementById("products").innerHTML=list.length?list.map(p=>{
   const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
   const firstImg = safeImg(imgList[0]);
+  
+  // SHEIN-inspired dynamic metadata per product based on ID hash
+  const hash = String(p.id).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const discountVal = (hash % 40) + 10; // e.g., -25%
+  const soldCount = (hash % 450) + 25; // e.g., 120+ sold
+  const isBestseller = hash % 3 === 0;
+
   return `<article class="product">
-<div class="prodimg" style="position:relative"><button type="button" class="wishlist-btn" data-wishlist="${esc(p.id)}" aria-label="Add to wishlist" style="position:absolute;top:10px;right:10px;z-index:2;width:38px;height:38px;border:1px solid #e1e6ee;border-radius:50%;background:#fff;font-size:22px;cursor:pointer">♡</button>
-${firstImg?`<img loading="lazy" src="${esc(firstImg)}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}</div><div class="prodbody"><small style="color:#6654f5;font-weight:800">${esc(p.category)}</small><h3>${esc(p.name)}</h3><p>${esc(p.description)}</p><div class="price">${cash(p.price)}</div><p>Seller: ${esc(p.seller)}</p><div class="actions"><button class="btn primary" data-add="${esc(p.id)}">Add to cart</button><button class="btn outline" data-info="${esc(p.id)}">Details</button></div></div></article>`;
+<div class="prodimg" style="position:relative">
+  <button type="button" class="wishlist-btn" data-wishlist="${esc(p.id)}" aria-label="Add to wishlist" style="position:absolute;top:10px;right:10px;z-index:2;width:34px;height:34px;border:1px solid #e1e6ee;border-radius:50%;background:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.1)">♡</button>
+  <span class="shein-discount-badge">-${discountVal}%</span>
+  ${firstImg?`<img loading="lazy" src="${esc(firstImg)}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}
+</div>
+<div class="prodbody">
+  ${isBestseller ? `<span class="shein-bestseller">🔥 #${(hash%5)+1} Bestseller</span>` : `<small style="color:#6654f5;font-weight:800">${esc(p.category)}</small>`}
+  <h3>${esc(p.name)}</h3>
+  <div class="shein-rating-row">
+    <span class="shein-stars">★★★★★</span>
+    <span>(${(hash%800)+120}) · ${soldCount}+ sold</span>
+  </div>
+  <div class="price">${cash(p.price)}</div>
+  <div class="actions">
+    <button class="btn primary" data-add="${esc(p.id)}">Add to cart</button>
+    <button class="btn outline" data-info="${esc(p.id)}">Details</button>
+  </div>
+</div>
+</article>`;
 }).join(""):'<div class="panel">No products found. Try another search or category.</div>';
+
 document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add(b.dataset.add));
 let savedWishlist=JSON.parse(localStorage.getItem("novaWishlist")||"[]");
 document.querySelectorAll("[data-wishlist]").forEach(b=>{
@@ -1077,13 +1064,11 @@ document.querySelectorAll("[data-info]").forEach(b => {
     document.getElementById("modalProductPrice").textContent = cash(p.price);
     document.getElementById("modalProductBrand").textContent = p.seller ? p.seller.toLowerCase() : "novaaibadge";
 
-    // Dynamic ratings
     const hashNum = String(p.id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const reviewCount = (hashNum % 35) + 3;
     document.getElementById("modalStars").textContent = "★★★★★";
     document.getElementById("modalReviewCountText").innerHTML = `${reviewCount} Community Reviews (<span class="tc-link" id="toggleReviewsBtn">Read</span>)`;
 
-    // Close all drawers initially
     document.getElementById("reviewsDrawer").classList.remove("open");
     document.getElementById("tcDrawer").classList.remove("open");
     document.getElementById("stockDrawer").classList.remove("open");
@@ -1106,7 +1091,6 @@ document.querySelectorAll("[data-info]").forEach(b => {
     const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
     const galleryImages = imgList.map(url => safeImg(url)).filter(Boolean);
 
-    // Populate modal gallery
     galleryScroll.innerHTML = galleryImages.length 
       ? galleryImages.map(img => `<div class="nova-gallery-slide"><img src="${esc(img)}" alt="Product photo"></div>`).join("")
       : `<div class="nova-gallery-slide"><div class="muted">No image available</div></div>`;
@@ -1120,7 +1104,6 @@ document.querySelectorAll("[data-info]").forEach(b => {
       });
     };
 
-    // Populate Fullscreen Lightbox
     lightboxScroll.innerHTML = galleryImages.length
       ? galleryImages.map(img => `<div class="lightbox-slide"><img src="${esc(img)}" alt="Fullscreen product photo"></div>`).join("")
       : `<div class="lightbox-slide"><div class="muted" style="color:white">No image available</div></div>`;
@@ -1673,7 +1656,7 @@ renderWishlist();
     align-items: center;
     z-index: 999;
   }
-  .mobile-bottom-nav button {
+  .mobile-bottom-nav button, .mobile-bottom-nav a {
     border: 0;
     background: transparent;
     display: flex;
@@ -1682,8 +1665,9 @@ renderWishlist();
     gap: 4px;
     color: #174ea6;
     font-size: 20px;
+    text-decoration: none;
   }
-  .mobile-bottom-nav button span {
+  .mobile-bottom-nav span {
     font-size: 10px;
     font-weight: 700;
   }
@@ -1708,7 +1692,7 @@ body.categories-view #categories {
 <nav class="mobile-bottom-nav">
   <button onclick="go('shop')">🏠<span>Home</span></button>
   <button onclick="go('categories')">☰<span>Categories</span></button>
-  <button onclick="go('shop')">🤖<span>NOVA AI</span></button>
+  <a href="ai.html">🤖<span>NOVA AI</span></a>
   <button onclick="go('wishlist')">❤️<span>Wishlist</span></button>
   <button onclick="window.location.href='seller.html'">🏷️<span>Sell</span></button>
 </nav>
