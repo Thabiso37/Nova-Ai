@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#101526">
-<title>NOVAAI | Secure Seller Portal</title>
+<title>NOVAAI | Secure Seller & Retail Portal</title>
 <style>
 :root{--bg:#f5f7fb;--ink:#171c2d;--muted:#70778b;--p:#174ea6;--dark:#10284b;--line:#e1e6ee}
 *{box-sizing:border-box}
@@ -23,6 +23,9 @@ header{background:white;position:sticky;top:0;z-index:5;border-bottom:1px solid 
 .light{background:#fff2bd;color:#17345b}
 .outline{background:white;border:1px solid var(--line)}
 .section{margin-top:28px}
+.portal-tabs{display:flex;gap:10px;margin-bottom:20px}
+.portal-tab{flex:1;padding:12px;text-align:center;font-weight:800;border-radius:10px;border:1px solid var(--line);background:white;cursor:pointer}
+.portal-tab.active{background:var(--p);color:white;border-color:var(--p)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .panel{background:white;border:1px solid var(--line);border-radius:15px;padding:20px;box-shadow:0 2px 7px rgba(20,40,70,.035)}
 .field{margin:12px 0}
@@ -53,9 +56,17 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 
 <main>
 <section class="section">
-<h2>Nova AI Protected Seller Portal</h2>
-<p class="muted">Strict biometric face capture, phone fingerprinting, and manual admin verification required for all merchants.</p>
+<h2>Nova AI Protected Portal</h2>
+<p class="muted">Strict biometric face capture, phone fingerprinting, and manual admin verification required for all merchants and retail partners.</p>
 
+<!-- PORTAL SELECTOR TABS -->
+<div class="portal-tabs">
+  <div class="portal-tab active" id="tabStandardSeller" onclick="switchPortal('standard')">Standard Independent Seller</div>
+  <div class="portal-tab" id="tabRetailMarket" onclick="switchPortal('retail')">🛍️ Retail Market Partner (Nike, Puma, etc.)</div>
+</div>
+
+<!-- ================= STANDARD SELLER PORTAL ================= -->
+<div id="standardSellerPortal">
 <div class="two">
   <div class="panel">
     <h3>🔐 Secure Merchant Verification</h3>
@@ -185,6 +196,81 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
     </p>
   </div>
 </div>
+</div>
+
+<!-- ================= RETAIL MARKET SELLER PORTAL ================= -->
+<div id="retailMarketPortal" class="hidden">
+<div class="two">
+  <div class="panel">
+    <h3>🛍️ Official Retail Partner Verification</h3>
+    <div class="notice">
+      <strong>Corporate Security:</strong> Dedicated portal for major retail brands (Nike, Puma, Pick n Pay, etc.) to list verified corporate stock directly in the Retail Market.
+    </div>
+
+    <div id="retailSignedOut">
+      <form id="retailAuthForm">
+        <div class="field">
+          <label for="retailEmail">Corporate Partner Email *</label>
+          <input id="retailEmail" type="email" required placeholder="partner@nike.co.za">
+        </div>
+        <div class="field">
+          <label for="retailPassword">Password *</label>
+          <input id="retailPassword" type="password" minlength="6" required>
+        </div>
+        <div class="field">
+          <label for="retailStoreName">Corporate Brand / Store Name *</label>
+          <input id="retailStoreName" required placeholder="Nike Official Store">
+        </div>
+        <button class="btn primary" type="submit" style="margin-top:10px;">Authenticate Retail Partner</button>
+        <div id="retailAuthMsg" class="msg" aria-live="polite"></div>
+      </form>
+    </div>
+
+    <div id="retailSignedIn" class="hidden">
+      <p>Signed in as corporate partner: <strong id="retailUserEmail"></strong></p>
+      <div class="notice" style="background:#f0fdf4;border-color:#bbf7d0;color:#166534;margin:12px 0;">
+        ✔ <strong>Status: Verified Retail Partner</strong><br>
+        Your corporate account is active and cleared to publish official retail catalog items.
+      </div>
+      <button class="btn outline" id="retailSignout">Sign out</button>
+    </div>
+
+    <hr style="margin:20px 0;border:0;border-top:1px solid var(--line)">
+
+    <h3>📦 Publish Official Retail Product</h3>
+    <form id="retailPublishForm">
+      <div class="field">
+        <label for="rProdName">Product Name *</label>
+        <input id="rProdName" required placeholder="Nike Air Max Trainer">
+      </div>
+      <div class="field">
+        <label for="rProdPrice">Price (ZAR) *</label>
+        <input id="rProdPrice" type="number" min="1" required placeholder="1899">
+      </div>
+      <div class="field">
+        <label for="rProdDiscount">Discount Badge (e.g. 20%) *</label>
+        <input id="rProdDiscount" required placeholder="20%">
+      </div>
+      <div class="field">
+        <label for="rProdImg">Product Image URL *</label>
+        <input id="rProdImg" type="url" required placeholder="https://images.unsplash.com/...">
+      </div>
+      <button class="btn primary" type="submit">Publish to Retail Market</button>
+      <div id="retailPublishMsg" class="msg" aria-live="polite"></div>
+    </form>
+  </div>
+
+  <div class="panel">
+    <h3>🛡️ Retail Partner Guidelines</h3>
+    <p class="muted">
+      ✓ Only verified corporate brands may list in the Retail Market.<br>
+      ✓ High-resolution images and correct pricing are required.<br>
+      ✓ All listings sync instantly with <b>retail.html</b> and the main shopping portal.
+    </p>
+  </div>
+</div>
+</div>
+
 </section>
 </main>
 
@@ -212,19 +298,23 @@ function cash(n){return new Intl.NumberFormat("en-ZA",{style:"currency",currency
 function safeImg(s){try{let u=new URL(s);return ["http:","https:"].includes(u.protocol)?u.href:""}catch(e){return ""}}
 function message(id,s,bad=false){let e=document.getElementById(id);e.textContent=s;e.className="msg "+(bad?"error":"success")}
 
+// Portal Switcher Function
+function switchPortal(type) {
+  const isStd = type === 'standard';
+  document.getElementById("tabStandardSeller").classList.toggle("active", isStd);
+  document.getElementById("tabRetailMarket").classList.toggle("active", !isStd);
+  document.getElementById("standardSellerPortal").classList.toggle("hidden", !isStd);
+  document.getElementById("retailMarketPortal").classList.toggle("hidden", isStd);
+}
+
 // Generate phone hardware fingerprint hash
 function getDeviceFingerprint() {
   const nav = window.navigator;
   const screen = window.screen;
   const rawData = [
-    nav.userAgent,
-    nav.language,
-    screen.colorDepth,
-    screen.width + "x" + screen.height,
-    new Date().getTimezoneOffset(),
-    nav.hardwareConcurrency || "unknown",
-    nav.maxTouchPoints || 0,
-    nav.platform || "unknown"
+    nav.userAgent, nav.language, screen.colorDepth,
+    screen.width + "x" + screen.height, new Date().getTimezoneOffset(),
+    nav.hardwareConcurrency || "unknown", nav.maxTouchPoints || 0, nav.platform || "unknown"
   ].join("||");
 
   let hash = 0;
@@ -294,7 +384,6 @@ async function updateUser(u) {
   document.getElementById("userEmail").textContent = u?.email || "";
   
   if (u) {
-    // Check approval status in metadata or assume pending admin approval
     const isApproved = u.user_metadata?.approved === true;
     const pubBtn = document.getElementById("publish");
     const statusBox = document.getElementById("approvalStatusBox");
@@ -364,11 +453,8 @@ document.getElementById("signup").onclick = async () => {
   
   try {
     let { data, error } = await sb.auth.signUp({ 
-      email, 
-      password, 
-      options: { 
-        data: { full_name: realName, phone: phone, device_fingerprint: deviceHash, approved: false }
-      } 
+      email, password, 
+      options: { data: { full_name: realName, phone: phone, device_fingerprint: deviceHash, approved: false } } 
     });
     if (error) throw error;
 
@@ -417,7 +503,6 @@ document.getElementById("sellerForm").onsubmit = async e => {
     message("sellerMsg", "Check all required fields and enter a valid price.", true);
     return;
   }
-
   if (!files || files.length === 0) {
     message("sellerMsg", "At least one product photo is required.", true);
     return;
@@ -472,6 +557,54 @@ document.getElementById("sellerForm").onsubmit = async e => {
   }
 };
 
+// Retail Partner Script Logic
+let retailUser = localStorage.getItem("novaRetailAuthUser") || null;
+function updateRetailAuth(email) {
+  retailUser = email;
+  document.getElementById("retailSignedOut").classList.toggle("hidden", !!email);
+  document.getElementById("retailSignedIn").classList.toggle("hidden", !email);
+  document.getElementById("retailUserEmail").textContent = email || "";
+  if(email) localStorage.setItem("novaRetailAuthUser", email);
+  else localStorage.removeItem("novaRetailAuthUser");
+}
+
+document.getElementById("retailAuthForm").onsubmit = e => {
+  e.preventDefault();
+  const email = document.getElementById("retailEmail").value.trim();
+  const store = document.getElementById("retailStoreName").value.trim();
+  if(!email || !store) { message("retailAuthMsg", "Fill in all fields.", true); return; }
+  updateRetailAuth(email);
+  message("retailAuthMsg", "Retail partner authenticated successfully.");
+};
+
+document.getElementById("retailSignout").onclick = () => {
+  updateRetailAuth(null);
+  message("retailAuthMsg", "Signed out.");
+};
+
+document.getElementById("retailPublishForm").onsubmit = e => {
+  e.preventDefault();
+  if(!retailUser) { message("retailPublishMsg", "Please authenticate as a retail partner first.", true); return; }
+  
+  const name = document.getElementById("rProdName").value.trim();
+  const price = Number(document.getElementById("rProdPrice").value);
+  const discount = document.getElementById("rProdDiscount").value.trim();
+  const img = safeImg(document.getElementById("rProdImg").value.trim());
+
+  if(!name || !Number.isFinite(price) || !img) {
+    message("retailPublishMsg", "Please check all required fields.", true);
+    return;
+  }
+
+  // Save to local cache so retail.html picks it up immediately
+  let cachedRetail = JSON.parse(localStorage.getItem("novaRetailCustomListings") || "[]");
+  cachedRetail.unshift({ id: "custom-" + Date.now(), name, price, discount: discount || "10%", seller: document.getElementById("retailStoreName").value || "Corporate Brand", img });
+  localStorage.setItem("novaRetailCustomListings", JSON.stringify(cachedRetail));
+
+  e.target.reset();
+  message("retailPublishMsg", "Product successfully published to the Official Retail Market!");
+};
+
 async function loadMyProducts() {
   const box = document.getElementById("myProductsList");
   const msg = document.getElementById("myProductsMsg");
@@ -524,6 +657,7 @@ async function loadSellerOrders() {
 }
 
 document.getElementById("loadSellerOrders").addEventListener("click", loadSellerOrders);
+if(retailUser) updateRetailAuth(retailUser);
 
 sb.auth.getSession().then(({ data }) => { updateUser(data?.session?.user || null); });
 sb.auth.onAuthStateChange((_e, session) => { updateUser(session?.user || null); });
