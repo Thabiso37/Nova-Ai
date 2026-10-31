@@ -950,8 +950,7 @@ document.querySelectorAll("[data-info]").forEach(b => {
 
     // Delivery location
     const deliveryText = document.getElementById("modalDeliveryText");
-    const locationDisplay = document.getElementById("locationDisplay");
-
+    const locationDisplay = document.getElementById("buyerLocation");
     if (deliveryText && locationDisplay) {
       deliveryText.textContent = locationDisplay.textContent.replace("📍 Deliver to: ", "");
     }
@@ -1747,7 +1746,8 @@ body.categories-view #categories {
 }
 
 </style>
- class="mobile-bottom-nav">
+
+<nav class="mobile-bottom-nav">
   <button onclick="go('shop')">
     🏠<span>Home</span>
   </button>
@@ -1828,7 +1828,7 @@ gpsButton.addEventListener("click", function () {
 });
 
 changeButton.addEventListener("click", function () {
-  const town = prompt("Enter your town or suburb:");
+    const town = prompt("Enter your town or suburb:");
 
   if (town && town.trim()) {
     buyerCoordinates = null;
