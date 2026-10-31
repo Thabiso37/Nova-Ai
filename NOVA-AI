@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101526">
+<title>NOVA AI Assistant | Buyer Protection & Support</title>
+<style>
+:root{--bg:#f5f7fb;--ink:#171c2d;--muted:#70778b;--p:#174ea6;--dark:#10284b;--line:#e8eaf2}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Arial,sans-serif;padding-bottom:75px}
+a{color:inherit;text-decoration:none}
+.top{background:var(--dark);color:white;text-align:center;padding:10px;font-size:12px;font-weight:700}
+header{background:white;position:sticky;top:0;z-index:50;border-bottom:1px solid var(--line);box-shadow:0 3px 12px rgba(20, 40, 70, .06)}
+.head{max-width:1200px;margin:auto;padding:15px 20px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:25px;font-weight:900;color:var(--p)}
+.logo span{color:#f5b900}
+main{max-width:800px;margin:24px auto;padding:0 16px}
+.assistant-card{background:linear-gradient(120deg,#10284b,#174ea6 72%,#3878cf);color:white;border-radius:18px;padding:24px;box-shadow:0 8px 24px rgba(16,40,75,.15);margin-bottom:20px}
+.assistant-card h2{margin:0 0 8px;font-size:24px}
+.assistant-card p{color:#e0dfff;font-size:14px;line-height:1.6;margin-bottom:16px}
+.assistant-card textarea{width:100%;background:#0d203a;color:white;border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:12px;font:inherit;min-height:90px;resize:vertical}
+.btn{border:0;border-radius:9px;padding:11px 16px;font-weight:750;cursor:pointer}
+.light{background:#fff2bd;color:#17345b;margin-top:10px}
+.out{background:white;color:var(--ink);padding:15px;border-radius:12px;margin-top:14px;white-space:pre-wrap;font-size:14px;line-height:1.6;box-shadow:0 4px 12px rgba(0,0,0,.05)}
+.panel{background:white;border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(20,40,70,.04)}
+.panel h3{margin-top:0;color:var(--dark);font-size:18px}
+.protection-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:600px){.protection-grid{grid-template-columns:1fr}}
+.protection-item{background:#f8faff;border:1px solid #e1e6ee;border-radius:10px;padding:14px;font-size:13px;line-height:1.5}
+.protection-item strong{display:block;color:var(--p);margin-bottom:4px}
+
+/* Mobile Bottom Nav */
+.mobile-bottom-nav {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 66px;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  box-shadow: 0 -3px 12px rgba(0,0,0,.08);
+  justify-content: space-around;
+  align-items: center;
+  z-index: 999;
+}
+.mobile-bottom-nav button, .mobile-bottom-nav a {
+  border: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--p);
+  font-size: 20px;
+  text-decoration: none;
+}
+.mobile-bottom-nav span {
+  font-size: 10px;
+  font-weight: 700;
+}
+</style>
+</head>
+<body>
+
+<div class="top">🇿🇦 NOVA AI · INDEPENDENT MARKETPLACE & BUYER PROTECTION</div>
+<header>
+  <div class="head">
+    <a class="logo" href="index.html">NOVA<span>AI</span></a>
+    <a href="index.html" class="btn light" style="padding:7px 12px;font-size:12px">← Back to Marketplace</a>
+  </div>
+</header>
+
+<main>
+  <div class="assistant-card">
+    <h2>Meet Nova AI Assistant ✨</h2>
+    <p>Ask me to find items within your budget, check marketplace policies, or get guidance on safe transactions with independent South African sellers.</p>
+    <textarea id="aiQuestion" placeholder="Try: Find electronics under R500, or how does buyer protection work?"></textarea>
+    <button class="btn light" onclick="askNovaAI()">Ask Nova AI</button>
+    <div id="aiAnswer" class="out">Hello! I am connected to the NOVAAI marketplace catalogue. Ask me anything about products, prices, or buyer safety.</div>
+  </div>
+
+  <div class="panel">
+    <h3>🛡️ NOVAAI Buyer Protection Guarantee</h3>
+    <p style="font-size:13px;color:#555;line-height:1.6;">Every transaction on NOVAAI is backed by our independent merchant safeguards to ensure you shop with confidence across South Africa.</p>
+    <div class="protection-grid">
+      <div class="protection-item">
+        <strong>Verified Merchants</strong>
+        All active independent sellers go through verification checks before listing products on our marketplace.
+      </div>
+      <div class="protection-item">
+        <strong>7-Day Buyer Protection</strong>
+        Report delivery issues or item discrepancies within 7 days for direct dispute resolution and assistance.
+      </div>
+      <div class="protection-item">
+        <strong>Direct Communication</strong>
+        Chat securely with sellers regarding custom sizes, item condition, or local pickup arrangements.
+      </div>
+      <div class="protection-item">
+        <strong>Secure Order Tracking</strong>
+        Track submitted orders directly from your customer dashboard with transparent status updates.
+      </div>
+    </div>
+  </div>
+</main>
+
+<nav class="mobile-bottom-nav">
+  <a href="index.html">🏠<span>Home</span></a>
+  <a href="index.html#categories">☰<span>Categories</span></a>
+  <a href="ai.html" style="color:#f5b900">🤖<span>NOVA AI</span></a>
+  <a href="index.html#wishlist">❤️<span>Wishlist</span></a>
+  <a href="seller.html">🏷️<span>Sell</span></a>
+</nav>
+
+<script>
+function askNovaAI() {
+  const q = document.getElementById("aiQuestion").value.toLowerCase();
+  const answerEl = document.getElementById("aiAnswer");
+
+  if (!q.trim()) {
+    answerEl.textContent = "Please type a question or search request for Nova AI.";
+    return;
+  }
+
+  if (/protect|guarantee|safe|trust|fraud/.test(q)) {
+    answerEl.textContent = "NOVAAI Buyer Protection ensures all independent merchants are verified, orders are tracked through secure merchant dashboards, and you are backed by our 7-day buyer protection policy.";
+    return;
+  }
+
+  if (/hello|hi|hey/.test(q)) {
+    answerEl.textContent = "Hello! I'm your NOVAAI shopping and safety assistant. How can I help you find local products today?";
+    return;
+  }
+
+  let budgetMatch = q.match(/(?:under|below|less than|budget|r)\s*r?\s*(\d+)/);
+  let budget = budgetMatch ? Number(budgetMatch[1]) : null;
+
+  answerEl.textContent = `Nova AI Analysis:\n- Query: "${q}"\n- Protection Status: Active\n- Recommendation: Always confirm specifications and delivery timelines directly with independent sellers through our secure communication tools before final confirmation.`;
+}
+</script>
+
+</body>
+</html>
