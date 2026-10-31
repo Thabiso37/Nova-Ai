@@ -43,7 +43,7 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 </head>
 <body>
 
-<div class="top">🛡️ NOVA AI TRUST SHIELD · FACE & PHONE FINGERPRINT VERIFICATION</div>
+<div class="top">🛡️ NOVA AI TRUST SHIELD · SECURE ADMIN-VERIFIED MARKETPLACE</div>
 <header>
   <div class="head">
     <a class="logo" href="index.html">NOVA<span>AI</span></a>
@@ -54,13 +54,13 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 <main>
 <section class="section">
 <h2>Nova AI Protected Seller Portal</h2>
-<p class="muted">Mandatory phone hardware fingerprinting and biometric face verification for scam-free trading.</p>
+<p class="muted">Strict biometric face capture, phone fingerprinting, and manual admin verification required for all merchants.</p>
 
 <div class="two">
   <div class="panel">
-    <h3>🔐 Secure Merchant Login & Face Scan</h3>
+    <h3>🔐 Secure Merchant Verification</h3>
     <div class="notice">
-      <strong>Biometric & Device Security:</strong> Account creation requires phone fingerprint binding and a live camera face capture to guarantee 5-minute scam traceback.
+      <strong>Zero-Tolerance Security:</strong> Every seller must complete a live webcam face verification and phone hardware bind. Accounts remain pending until reviewed and approved by Nova AI administration.
     </div>
     
     <div id="signedOut">
@@ -74,7 +74,7 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
           <input id="password" type="password" minlength="6" autocomplete="current-password" required>
         </div>
         <div class="field">
-          <label for="sellerRealName">Full Name / Contact Person *</label>
+          <label for="sellerRealName">Full Legal Name *</label>
           <input id="sellerRealName" required placeholder="Sipho Dlamini">
         </div>
         <div class="field">
@@ -84,7 +84,7 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
 
         <!-- Face Verification Section -->
         <div class="field" style="background:#f8faff;padding:12px;border:1px dashed #174ea6;border-radius:10px;text-align:center;">
-          <label style="margin-bottom:8px;">📸 Biometric Face Verification *</label>
+          <label style="margin-bottom:8px;">📸 Mandatory Biometric Face Scan *</label>
           <video id="webcam" autoplay playsinline width="100%" style="max-height:180px;border-radius:8px;background:#000;display:none;object-fit:cover;margin-bottom:8px;"></video>
           <canvas id="snapshotCanvas" style="display:none;"></canvas>
           <img id="facePreview" style="max-height:140px;border-radius:8px;display:none;margin:0 auto 8px;" alt="Face scan preview">
@@ -92,22 +92,25 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
             <button type="button" class="btn outline" id="startCameraBtn" style="font-size:12px;padding:8px 12px;">Turn on Camera</button>
             <button type="button" class="btn primary" id="captureFaceBtn" style="font-size:12px;padding:8px 12px;display:none;">Capture Face Scan</button>
           </div>
-          <div id="faceStatus" class="muted" style="margin-top:6px;font-weight:bold;color:#b52828;">Face verification required for sign-up.</div>
+          <div id="faceStatus" class="muted" style="margin-top:6px;font-weight:bold;color:#b52828;">Face scan snapshot required for account submission.</div>
         </div>
 
         <div class="field" style="display:flex;align-items:center;gap:8px;font-size:12px;margin-top:10px;">
           <input type="checkbox" id="novaTrustAgree" required style="width:auto;">
-          <label for="novaTrustAgree" style="margin:0;font-weight:normal;cursor:pointer;">I agree to face biometric binding, phone fingerprinting, and 5-minute scam freeze policies.</label>
+          <label for="novaTrustAgree" style="margin:0;font-weight:normal;cursor:pointer;">I accept biometric liability, criminal tracking terms, and manual admin verification rules.</label>
         </div>
         <button class="btn primary" type="submit" style="margin-top:12px;">Sign in securely</button>
-        <button class="btn outline" type="button" id="signup" style="margin-top:8px;">Create protected account</button>
+        <button class="btn outline" type="button" id="signup" style="margin-top:8px;">Submit for admin verification</button>
         <div id="authMsg" class="msg" aria-live="polite"></div>
       </form>
     </div>
 
     <div id="signedIn" class="hidden">
       <p>Signed in as <strong id="userEmail"></strong></p>
-      <p class="muted">Status: <span style="color:#16885e;font-weight:bold;">✔ Face Verified & Phone Fingerprint Bound</span></p>
+      <div id="approvalStatusBox" class="notice" style="background:#fffbeb;border-color:#fde68a;color:#92400e;margin:12px 0;">
+        ⏳ <strong>Status: Pending Admin Approval</strong><br>
+        Your face scan and phone fingerprint have been securely logged. An administrator will verify your profile within 5 minutes. Product publishing will unlock upon approval.
+      </div>
       <button class="btn outline" id="signout">Sign out</button>
       <div id="userMsg" class="msg"></div>
     </div>
@@ -145,7 +148,7 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
         <label for="description">Product description *</label>
         <textarea id="description" maxlength="500" required placeholder="Describe item condition, size, and pickup/delivery details..."></textarea>
       </div>
-      <button class="btn primary" id="publish" disabled>Sign in to publish</button>
+      <button class="btn primary" id="publish" disabled>Pending admin approval</button>
       <div id="sellerMsg" class="msg" aria-live="polite"></div>
     </form>
 
@@ -166,19 +169,19 @@ footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
   </div>
 
   <div class="panel">
-    <h3>👤 Face & Phone Biometric Security</h3>
+    <h3>🛡️ How Admin Verification Works (R0 Budget)</h3>
     <div class="notice" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">
-      <strong>How Biometric Verification Stops Scammers:</strong><br>
-      1. <strong>Face Capture Binding:</strong> A secure photo snapshot of the seller's face is uploaded during registration to prevent fake or anonymous profiles.<br>
-      2. <strong>Phone Fingerprint Hash:</strong> Hardware parameters are locked into the user profile.<br>
-      3. <strong>5-Minute Accountability:</strong> If fraud occurs, administrators have face and device evidence for swift action.
+      <strong>Maximum Marketplace Integrity:</strong><br>
+      1. <strong>Biometric Binding:</strong> Sellers submit their facial snapshot and phone hardware signature.<br>
+      2. <strong>Pending State:</strong> New accounts cannot publish products until checked.<br>
+      3. <strong>Instant Approval:</strong> You review the signup in Supabase and unlock their selling status with 1 click.
     </div>
     <h3>Marketplace Features</h3>
     <p class="muted">
       ✓ Secure Supabase Auth & DB<br>
       ✓ Multi-photo gallery uploads (up to 6 photos)<br>
       ✓ Nova AI Face & Phone Biometric Shield<br>
-      ✓ Real-time order status updates
+      ✓ Manual Admin Approval Workflow
     </p>
   </div>
 </div>
@@ -271,13 +274,10 @@ captureFaceBtn.onclick = () => {
     video.style.display = "none";
     captureFaceBtn.style.display = "none";
     
-    // Stop camera stream
     const stream = video.srcObject;
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
+    if (stream) stream.getTracks().forEach(track => track.stop());
     
-    faceStatus.textContent = "✔ Face verification snapshot captured successfully!";
+    faceStatus.textContent = "✔ Biometric face scan captured successfully!";
     faceStatus.style.color = "#16885e";
   }, "image/jpeg", 0.85);
 };
@@ -287,16 +287,35 @@ document.getElementById("year").textContent = new Date().getFullYear();
 
 let user = null;
 
-function updateUser(u) {
+async function updateUser(u) {
   user = u;
   document.getElementById("signedOut").classList.toggle("hidden", !!u);
   document.getElementById("signedIn").classList.toggle("hidden", !u);
   document.getElementById("userEmail").textContent = u?.email || "";
-  document.getElementById("publish").disabled = !u;
-  document.getElementById("publish").textContent = u ? "Publish verified listing" : "Sign in to publish";
+  
   if (u) {
-    loadMyProducts();
-    loadSellerOrders();
+    // Check approval status in metadata or assume pending admin approval
+    const isApproved = u.user_metadata?.approved === true;
+    const pubBtn = document.getElementById("publish");
+    const statusBox = document.getElementById("approvalStatusBox");
+
+    if (isApproved) {
+      pubBtn.disabled = false;
+      pubBtn.textContent = "Publish verified listing";
+      statusBox.style.background = "#f0fdf4";
+      statusBox.style.borderColor = "#bbf7d0";
+      statusBox.style.color = "#166534";
+      statusBox.innerHTML = "✔ <strong>Status: Approved by Admin</strong><br>Your merchant account is verified and fully active.";
+      loadMyProducts();
+      loadSellerOrders();
+    } else {
+      pubBtn.disabled = true;
+      pubBtn.textContent = "Pending admin approval";
+      statusBox.style.background = "#fffbeb";
+      statusBox.style.borderColor = "#fde68a";
+      statusBox.style.color = "#92400e";
+      statusBox.innerHTML = "⏳ <strong>Status: Pending Admin Approval</strong><br>Your face scan and phone fingerprint are logged. An admin will review and approve your store within 5 minutes.";
+    }
   } else {
     document.getElementById("myProductsList").innerHTML = "";
     document.getElementById("myProductsMsg").textContent = "Please sign in to view your products.";
@@ -307,7 +326,7 @@ document.getElementById("authForm").onsubmit = async e => {
   e.preventDefault();
   const agree = document.getElementById("novaTrustAgree");
   if (agree && !agree.checked) {
-    message("authMsg", "You must agree to biometric verification terms.", true);
+    message("authMsg", "You must agree to biometric and admin verification terms.", true);
     return;
   }
   message("authMsg", "Signing in securely…");
@@ -317,7 +336,7 @@ document.getElementById("authForm").onsubmit = async e => {
   });
   if (error) { message("authMsg", error.message, true); return; }
   updateUser(data.user);
-  message("userMsg", "Signed in successfully under Nova AI device tracking.");
+  message("userMsg", "Signed in successfully.");
 };
 
 document.getElementById("signup").onclick = async () => {
@@ -328,7 +347,7 @@ document.getElementById("signup").onclick = async () => {
   const agree = document.getElementById("novaTrustAgree");
 
   if (agree && !agree.checked) {
-    message("authMsg", "You must agree to biometric verification terms.", true);
+    message("authMsg", "You must agree to biometric terms.", true);
     return;
   }
   if (!email || password.length < 6 || !realName || !phone) {
@@ -336,21 +355,19 @@ document.getElementById("signup").onclick = async () => {
     return;
   }
   if (!capturedFaceBlob) {
-    message("authMsg", "Biometric face verification snapshot is mandatory for sign-up.", true);
+    message("authMsg", "Biometric face verification snapshot is mandatory.", true);
     return;
   }
 
   const deviceHash = getDeviceFingerprint();
-
-  message("authMsg", "Uploading face verification & creating account…");
+  message("authMsg", "Submitting verification details…");
   
   try {
     let { data, error } = await sb.auth.signUp({ 
       email, 
       password, 
       options: { 
-        data: { full_name: realName, phone: phone, device_fingerprint: deviceHash },
-        emailRedirectTo: location.origin + location.pathname 
+        data: { full_name: realName, phone: phone, device_fingerprint: deviceHash, approved: false }
       } 
     });
     if (error) throw error;
@@ -363,9 +380,9 @@ document.getElementById("signup").onclick = async () => {
 
     if (data.session) { 
       updateUser(u); 
-      message("userMsg", "Account created and face verified successfully."); 
+      message("userMsg", "Account submitted successfully. Waiting for admin approval."); 
     } else { 
-      message("authMsg", "Account request submitted. Check your email to confirm your address, then sign in."); 
+      message("authMsg", "Account submitted for admin review. Sign in once approved."); 
     }
   } catch (err) {
     message("authMsg", "Sign up failed: " + err.message, true);
@@ -381,9 +398,12 @@ document.getElementById("signout").onclick = async () => {
 document.getElementById("sellerForm").onsubmit = async e => {
   e.preventDefault();
   if (!user) { message("sellerMsg", "Please sign in before publishing.", true); return; }
-  const { data: authData, error: authError } = await sb.auth.getUser();
-  const u = authData?.user;
-  if (authError || !u) { updateUser(null); message("sellerMsg", "Please sign in again.", true); return; }
+  
+  const isApproved = user.user_metadata?.approved === true;
+  if (!isApproved) {
+    message("sellerMsg", "Your account is pending admin approval. Publishing is locked.", true);
+    return;
+  }
 
   const seller = document.getElementById("sellerName").value.trim();
   const name = document.getElementById("productName").value.trim();
@@ -418,7 +438,7 @@ document.getElementById("sellerForm").onsubmit = async e => {
       if (!types[file.type]) continue;
       if (file.size > 5 * 1024 * 1024) continue;
 
-      const path = u.id + "/" + Date.now() + "_" + i + "." + types[file.type];
+      const path = user.id + "/" + Date.now() + "_" + i + "." + types[file.type];
       const { error: uploadError } = await sb.storage.from("Nova AI").upload(path, file, { contentType: file.type, upsert: false });
       if (!uploadError) {
         const { data: publicData } = sb.storage.from("Nova AI").getPublicUrl(path);
@@ -435,7 +455,7 @@ document.getElementById("sellerForm").onsubmit = async e => {
       image_url: uploadedImages[0],
       images: uploadedImages,
       seller_name: seller,
-      seller_id: u.id
+      seller_id: user.id
     });
     if (error) throw error;
 
