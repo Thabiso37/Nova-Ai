@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#101526">
-<title>NOVAAI | South African Marketplace</title>
+<title>NOVA-AI | South African Marketplace</title>
 <style>
 #cats.cats {
   display: grid;
@@ -609,19 +609,19 @@ header {
 
       <div class="nova-rating-row">
         <span class="stars" id="modalStars">★★★★☆</span> 
-        <span class="rating-count" id="modalReviewCountText">14 Verified Reviews (<span class="tc-link" id="toggleReviewsBtn">Read</span>)</span>
+        <span class="rating-count" id="modalReviewCountText">14 Community Reviews (<span class="tc-link" id="toggleReviewsBtn">Read</span>)</span>
       </div>
       <div id="reviewsDrawer" class="info-drawer">
-        <strong>Verified Buyer Feedback:</strong> All reviews are collected from confirmed South African orders. 4.8 / 5 average rating based on quality, delivery speed, and packaging.
+        <strong>Community Feedback:</strong> Authentic ratings and feedback submitted by verified NOVAAI marketplace shoppers across South Africa.
       </div>
 
       <div class="takealot-delivery-box">
         <div class="delivery-row">
-          <span id="modalDeliveryDateText">📦 Delivery loading...</span>
-          <span class="tc-link" id="toggleTcBtn">T&Cs Apply</span>
+          <span id="modalDeliveryDateText">⚡ Ships in 24h · Arrives in 2–4 Days</span>
+          <span class="tc-link" id="toggleTcBtn">Policy</span>
         </div>
         <div id="tcDrawer" class="info-drawer">
-          <strong>Delivery T&Cs:</strong> Standard door-to-door courier delivery across South Africa. Free delivery on orders over R500. Regional outlying areas may take an additional 1-2 business days.
+          <strong>Shipping Policy:</strong> Reliable door-to-door courier delivery across South Africa. Free delivery on marketplace orders over R500. Regional or outlying areas may require 1–2 additional business days.
         </div>
         <div class="delivery-location-row">
           <span>📍 Deliver to: <strong id="modalDeliveryTown">Sonderwater</strong></span>
@@ -643,7 +643,7 @@ header {
       <div class="stock-warranty-box">
         <p class="in-stock">✔ <span id="modalStockStatus">In stock</span> <span class="muted-loc" id="modalStockHubs">CPT, JHB</span> <span class="tc-link" id="toggleStockBtn">Learn More</span></p>
         <div id="stockDrawer" class="info-drawer">
-          <strong>Stock & Warranty Info:</strong> Items are dispatched from our secure regional fulfillment hubs in Johannesburg and Cape Town. Backed by a 7-day hassle-free return policy and standard manufacturer warranty.
+          <strong>Stock & Fulfillment:</strong> Dispatched directly from verified independent merchant stockists and regional fulfillment nodes in Johannesburg and Cape Town. Backed by NOVAAI buyer protection.
         </div>
       </div>
 
@@ -1026,7 +1026,7 @@ document.querySelectorAll("[data-info]").forEach(b => {
     const hashNum = String(p.id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const reviewCount = (hashNum % 35) + 3;
     document.getElementById("modalStars").textContent = "★★★★★";
-    document.getElementById("modalReviewCountText").innerHTML = `${reviewCount} Verified Reviews (<span class="tc-link" id="toggleReviewsBtn">Read</span>)`;
+    document.getElementById("modalReviewCountText").innerHTML = `${reviewCount} Community Reviews (<span class="tc-link" id="toggleReviewsBtn">Read</span>)`;
 
     // Close all drawers initially
     document.getElementById("reviewsDrawer").classList.remove("open");
@@ -1063,21 +1063,6 @@ document.querySelectorAll("[data-info]").forEach(b => {
         dot.classList.toggle("active", i === index);
       });
     };
-
-    // Dynamic delivery dates
-    const today = new Date();
-    const deliveryStart = new Date();
-    deliveryStart.setDate(today.getDate() + 1);
-    const deliveryEnd = new Date();
-    deliveryEnd.setDate(today.getDate() + 3);
-
-    const options = { month: 'short', day: 'numeric' };
-    const dateString = deliveryStart.toLocaleDateString('en-ZA', options) + " - " + deliveryEnd.toLocaleDateString('en-ZA', options);
-    
-    const deliveryDateEl = document.getElementById("modalDeliveryDateText");
-    if (deliveryDateEl) {
-      deliveryDateEl.textContent = "📦 Delivery " + dateString;
-    }
 
     const modalTownEl = document.getElementById("modalDeliveryTown");
     const globalHeaderLocation = document.getElementById("buyerLocation");
