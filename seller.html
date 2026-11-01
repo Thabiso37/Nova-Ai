@@ -502,7 +502,68 @@ const refreshOrdersBtn = document.getElementById("loadOrdersBtn");
 if (refreshOrdersBtn) {
   refreshOrdersBtn.onclick = loadSellerOrders;
 }
+async function updateFulfillmentStatus(orderId) {
+  const targetUser = user;
+  const currentVersion = authVersion;
 
+  if (!targetUser) {
+    alert("Please sign in again.");
+    return;
+  }
+
+  if (String(storeData?.status || "").toLowerCase() !== "approved") {
+    alert("Your store must be approved.");
+    return;
+  }
+
+  const selectEl = document.getElementById(
+    `fulfillment_status_${orderId}`
+  );
+
+  if (!selectEl) return;
+
+  const newStatus = selectEl.value;
+
+  const allowedStatuses = [
+    "pending",
+    "processing",
+    "shipped",
+    "delivered",
+    "cancelled"
+  ];
+
+  if (!allowedStatuses.includes(newStatus)) {
+    alert("Invalid fulfillment status.");
+    return;
+  }
+
+  const { data, error } = await sb
+    .from("seller_fulfillments")
+    .update({
+      fulfillment_status: newStatus,
+      updated_at: new Date().toISOString()
+    })
+    .eq("order_id", orderId)
+    .eq("seller_id", targetUser.id)
+    .select("id")
+    .maybeSingle();
+
+  if (currentVersion !== authVersion || user !== targetUser) return;
+
+  if (error) {
+    alert("Failed to update status: " + error.message);
+    return;
+  }
+
+  if (!data) {
+    alert("No fulfillment record was updated. Check seller permissions and the fulfillment record.");
+    return;
+  }
+
+  alert("Fulfillment updated to " + newStatus.toUpperCase());
+
+  await loadSellerOrders();
+}
 </script>
 </body>
 </html>
