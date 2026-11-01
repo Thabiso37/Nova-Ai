@@ -347,7 +347,7 @@ document.getElementById("sellerForm").onsubmit = async e => {
         throw new Error("This product is no longer rejected.");
       }
 
-      // Keep existing photos unless replacements are selected
+  
       imgs = Array.isArray(existing.images) ? existing.images : [];
 
       if (!imgs.length && existing.image_url) {
@@ -403,7 +403,6 @@ document.getElementById("sellerForm").onsubmit = async e => {
         "Changes saved. Your product has been resubmitted for approval.";
     }
 
-    // Publishing a brand-new product
     else {
       if (!files.length) {
         throw new Error("Please upload at least one product photo.");
@@ -509,60 +508,14 @@ async function loadMyProducts() {
       rejected: "#d64c59",
       hidden: "#6579dc"
     };
-async function editProduct(id) {
-  if (!user) return;
 
-  const { data: product, error } = await sb
-    .from("Products")
-    .select("id,name,description,price,category,seller_name,status")
-    .eq("id", id)
-    .eq("seller_id", user.id)
-    .single();
-
-  if (error || !product) {
-    document.getElementById("myProductsMsg").textContent =
-      "Could not load product for editing.";
-    return;
-  }
-
-  if (product.status !== "rejected") {
-    document.getElementById("myProductsMsg").textContent =
-      "Only rejected products can be edited here.";
-    return;
-  }
-
-  editingProductId = product.id;
-
-  document.getElementById("productName").value = product.name || "";
-  document.getElementById("description").value = product.description || "";
-  document.getElementById("price").value = product.price || "";
-  document.getElementById("category").value = product.category || "";
-  document.getElementById("sellerName").value = product.seller_name || "";
-
-  const submitButton = document.querySelector(
-    '#sellerForm button[type="submit"]'
-  );
-
-  if (submitButton) {
-    submitButton.textContent = "Save Changes & Resubmit";
-  }
-
-  document.getElementById("sellerMsg").textContent =
-    "Editing rejected product. You can keep its existing photos or select replacements.";
-
-  document.getElementById("sellerForm").scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
-}
     return `
       <div style="padding:12px;border-bottom:1px solid var(--line);">
 
         <div style="display:flex;gap:10px;align-items:center;">
 
           ${image ? `
-            <img
-              src="${escapeHTML(image)}"
+            <img src="${escapeHTML(image)}"
               alt=""
               style="width:65px;height:65px;object-fit:cover;border-radius:8px;">
           ` : ""}
@@ -602,19 +555,62 @@ async function editProduct(id) {
           : ""}
 
         ${status === "rejected"
-  ? `
-    <button class="btn outline"
-      type="button"
-      onclick="editProduct(${Number(p.id)})">
-      Edit Product
-    </button>
-  `
-  : ""}
+          ? `<button class="btn outline"
+              type="button"
+              onclick="editProduct(${Number(p.id)})">
+              Edit Product
+            </button>`
+          : ""}
 
       </div>
     `;
   }).join("");
 }
+
+
+// EDIT REJECTED PRODUCT
+async function editProduct(id) {
+  if (!user) return;
+
+  const { data: product, error } = await sb
+    .from("Products")
+    .select("id,name,description,price,category,seller_name,status")
+    .eq("id", id)
+    .eq("seller_id", user.id)
+    .single();
+
+  if (error || !product) {
+    document.getElementById("myProductsMsg").textContent =
+      "Could not load product: " + (error?.message || "Product not found.");
+    return;
+  }
+
+  if (product.status !== "rejected") {
+    document.getElementById("myProductsMsg").textContent =
+      "Only rejected products can be edited.";
+    return;
+  }
+
+  editingProductId = product.id;
+
+  document.getElementById("productName").value = product.name || "";
+  document.getElementById("description").value = product.description || "";
+  document.getElementById("price").value = product.price || "";
+  document.getElementById("category").value = product.category || "";
+  document.getElementById("sellerName").value = product.seller_name || "";
+
+  document.getElementById("publish").textContent =
+    "Save Changes & Resubmit";
+
+  document.getElementById("sellerMsg").textContent =
+    "Editing rejected product. Existing photos will be kept unless you select replacements.";
+
+  document.getElementById("sellerForm").scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+}
+
 window.editProduct = editProduct;
  
   async function resubmitProduct(id) {
@@ -885,15 +881,14 @@ async function loadSellerOrders() {
 }
 
 
-// REFRESH ORDERS BUTTON
+
 const refreshOrdersBtn = document.getElementById("loadOrdersBtn");
 
 if (refreshOrdersBtn) {
   refreshOrdersBtn.onclick = loadSellerOrders;
 }
 
-
-// SAVE SHIPPING DETAILS
+  
 async function saveShippingDetails(orderId) {
 
   const targetUser = user;
