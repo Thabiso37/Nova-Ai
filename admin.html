@@ -38,6 +38,45 @@ small,.muted{color:#aab7ce}
 .product{grid-template-columns:85px 1fr}
 .product img{width:85px;height:85px}
 }
+.product img {
+  cursor: zoom-in;
+  transition: transform .2s;
+}
+
+.product img:hover {
+  transform: scale(1.04);
+}
+
+#imageModal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,.92);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+#imageModal.open {
+  display: flex;
+}
+
+#imageModal img {
+  max-width: 95%;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+#closeImage {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: #d64c59;
+  color: white;
+  font-size: 22px;
+}
 </style>
 </head>
 
@@ -96,6 +135,14 @@ small,.muted{color:#aab7ce}
 </section>
 
 </main>
+
+<div id="imageModal" onclick="closeImage()">
+  <button id="closeImage" onclick="closeImage()">✕</button>
+  <img id="previewImage"
+       src=""
+       alt="Full product image"
+       onclick="event.stopPropagation()">
+</div>
 
 <script>
 const ADMIN_ID = "2fc320e9-40b6-407f-9e71-e8a1999956a7";
@@ -199,7 +246,7 @@ message("Loading products...");
 
 const {data,error}=await sb
 .from("Products")
-.select("id,name,description,price,category,image_url,images,seller_name,seller_id,status,created_at")
+.select("id,name,description,price,category,image_url,images,seller_name,seller_id,status,rejection_reason,created_at")
 .order("created_at",{ascending:false});
 
 if(error){
