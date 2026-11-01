@@ -372,7 +372,7 @@ async function loadMyProducts() {
 
   const { data, error } = await sb
     .from("Products")
-    .select("id,name,price,category,image_url,images,created_at")
+    .select("id,name,price,category,image_url,images,status,rejection_reason,created_at")
     .eq("seller_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -388,27 +388,107 @@ async function loadMyProducts() {
     products.length + " product(s) in your inventory.";
 
   list.innerHTML = products.map(p => {
-    const image = p.image_url || "";
+    const image = p.image_url ||
+      (Array.isArray(p.images) ? p.images[0] : "");
+
+    const status = p.status || "pending";
+
+    const statusColors = {
+      pending: "#d18a24",
+      approved: "#16a36a",
+      rejected: "#d64c59",
+      hidden: "#6579dc"
+    };
 
     return `
-      <div style="display:flex;gap:10px;padding:10px;border-bottom:1px solid var(--line);align-items:center;">
-        ${image ? `
-          <img
-            src="${escapeHTML(image)}"
-            alt=""
-            style="width:65px;height:65px;object-fit:cover;border-radius:8px;">
-        ` : ""}
+      <div style="padding:12px;border-bottom:1px solid var(--line);">
 
-        <div>
-          <b>${escapeHTML(p.name)}</b>
-          <div>R${Number(p.price || 0).toFixed(2)}</div>
-          <small>${escapeHTML(p.category || "")}</small>
+        <div style="display:flex;gap:10px;align-items:center;">
+
+          ${image ? `
+            <img
+              src="${escapeHTML(image)}"
+              alt=""
+              style="width:65px;height:65px;object-fit:cover;border-radius:8px;">
+          ` : ""}
+
+          <div>
+            <b>${escapeHTML(p.name)}</b>
+            <div>R${Number(p.price || 0).toFixed(2)}</div>
+            <small>${escapeHTML(p.category || "")}</small>
+          </div>
+
         </div>
+
+        <p>
+          Approval Status:
+          <strong style="color:${statusColors[status] || "#aaa"}">
+            ${escapeHTML(status.toUpperCase())}
+          </strong>
+        </p>
+
+        ${status === "rejected" && p.rejection_reason
+          ? `<p style="color:#d64c59">
+              Rejection reason:
+              ${escapeHTML(p.rejection_reason)}
+            </p>`
+          : ""}
+
+        ${status === "pending"
+          ? `<small>Your product is awaiting administrator review.</small>`
+          : ""}
+
+        ${status === "approved"
+          ? `<small>Your product is approved for the marketplace.</small>`
+          : ""}
+
+        ${status === "hidden"
+          ? `<small>Your product is currently hidden.</small>`
+          : ""}
+
+        ${status === "rejected"
+          ? `<button class="btn outline"
+              type="button"
+              onclick="resubmitProduct(${Number(p.id)})">
+              Resubmit for Approval
+            </button>`
+          : ""}
+
       </div>
     `;
   }).join("");
 }
-// Retail Portal Logic
+
+ async function resubmitProduct(id) {
+
+  if (!user) return;
+
+  const confirmed = confirm(
+    "Resubmit this product for administrator review?"
+  );
+
+  if (!confirmed) return;
+
+  const { error } = await sb
+    .from("Products")
+    .update({
+      status: "pending",
+      rejection_reason: null
+    })
+    .eq("id", id)
+    .eq("seller_id", user.id);
+
+  if (error) {
+    document.getElementById("myProductsMsg").textContent =
+      "Resubmission failed: " + error.message;
+    return;
+  }
+
+  document.getElementById("myProductsMsg").textContent =
+    "Product resubmitted successfully.";
+
+  await loadMyProducts();
+} // Retail Portal Logic
 let retailUser = localStorage.getItem("novaRetailUser");
 function updateRetailAuth(e) {
   retailUser = e;
