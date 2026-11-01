@@ -304,7 +304,7 @@ return `
 <div>
 ${safeImage
 ? `<img src="${safeImage}" alt="Product image"
-    onclick="openImage('${safeImage}')">`
+    onclick="openImage(this.src)"
 : `<div class="muted">No image</div>`}
 </div>
 
@@ -323,28 +323,30 @@ ${safeImage
 
 <p>Status: <span class="status">${escapeHTML(p.status)}</span></p>
 
-<div class="actions">
-
-${p.status!=="approved"
-? `<button class="approve" onclick="changeStatus(${Number(p.id)},'approved')">Approve</button>`
-:""}
-
-<p>Status: <span class="status">${escapeHTML(p.status)}</span></p>
-
 ${p.rejection_reason
 ? `<p style="color:#ff8b94">
-     <strong>Rejection reason:</strong>
-     ${escapeHTML(p.rejection_reason)}
-   </p>`
+<strong>Rejection reason:</strong>
+${escapeHTML(p.rejection_reason)}
+</p>`
 : ""}
 
-${p.status!=="hidden"
-? `<button class="hide" onclick="changeStatus(${Number(p.id)},'hidden')">Hide</button>`
-:""}
+<div class="actions">
 
-${p.status!=="approved"
+${p.status !== "approved"
+? `<button class="approve" onclick="changeStatus(${Number(p.id)},'approved')">Approve</button>`
+: ""}
+
+${p.status !== "rejected"
+? `<button class="reject" onclick="changeStatus(${Number(p.id)},'rejected')">Reject</button>`
+: ""}
+
+${p.status !== "hidden"
+? `<button class="hide" onclick="changeStatus(${Number(p.id)},'hidden')">Hide</button>`
+: ""}
+
+${p.status !== "pending"
 ? `<button class="restore" onclick="changeStatus(${Number(p.id)},'pending')">Return to Pending</button>`
-:""}
+: ""}
 
 </div>
 </div>
