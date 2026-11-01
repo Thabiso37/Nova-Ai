@@ -285,6 +285,8 @@ approved ? "Your store is approved." :
 await loadMyProducts();
 
 if (version !== authVersion) return;
+
+await loadSellerOrders();
 }
 
 document.getElementById("authForm").onsubmit = async e => {
@@ -429,6 +431,104 @@ document.getElementById("retailPublishForm").onsubmit = e => {
 if(retailUser) updateRetailAuth(retailUser);
 sb.auth.getSession().then(({data}) => updateUser(data?.session?.user || null));
 sb.auth.onAuthStateChange((_,s) => updateUser(s?.user || null));
+
+  
+async function loadSellerOrders() {
+  const msgEl = document.getElementById("sellerOrdersMsg");
+  const list = document.getElementById("sellerOrdersList");
+
+  const targetUser = user;
+  const currentVersion = authVersion;
+
+  if (!targetUser) {
+    msgEl.textContent = "Sign in to view orders.";
+    list.innerHTML = "";
+    return;
+  }
+
+  if (storeData?.status !== "approved") {
+    msgEl.textContent = "Your store must be approved to view orders.";
+    list.innerHTML = "";
+    return;
+  }
+
+  msgEl.textContent = "Loading orders...";
+
+  const { data, error } = await sb
+    .from("order_items")
+    .select(`
+      id,
+      quantity,
+      unit_price,
+      product_id,
+      order_id,
+      created_at,
+      orders(
+        order_status
+      ),
+      Products!inner(
+        id,
+        name,
+        seller_id
+      )
+    `)
+    .eq("Products.seller_id", targetUser.id)
+    .order("created_at", { ascending: false });
+
+  if (currentVersion !== authVersion || user !== targetUser) return;
+
+  if (error) {
+    msgEl.textContent = "Unable to load orders: " + error.message;
+    list.innerHTML = "";
+    return;
+  }
+
+  const items = data || [];
+
+  msgEl.textContent =
+    `${items.length} customer order item(s) found.`;
+
+  list.innerHTML = items.length
+    ? items.map(item => {
+        const order = Array.isArray(item.orders)
+          ? item.orders[0]
+          : item.orders;
+
+        const product = Array.isArray(item.Products)
+          ? item.Products[0]
+          : item.Products;
+
+        return `
+          <div style="padding:12px;margin-top:10px;background:#fff;border:1px solid var(--line);border-radius:8px;">
+
+            <b>Order ID:</b>
+            #${escapeHTML(String(item.order_id || "").slice(0, 8))}
+
+            <div><b>Product:</b>
+            ${escapeHTML(product?.name || "Item")}</div>
+
+            <div><b>Quantity:</b>
+            ${Number(item.quantity || 0)}</div>
+
+            <div><b>Unit Price:</b>
+            R${Number(item.unit_price || 0).toFixed(2)}</div>
+
+            <div><b>Fulfillment Status:</b>
+            ${escapeHTML(order?.order_status || "Pending")}</div>
+
+          </div>
+        `;
+      }).join("")
+    : "<p>No customer orders found for your store yet.</p>";
+}
+
+// Refresh Orders button
+const refreshOrdersBtn =
+  document.getElementById("loadOrdersBtn");
+
+if (refreshOrdersBtn) {
+  refreshOrdersBtn.onclick = loadSellerOrders;
+}
 </script>
 </body>
 </html>
