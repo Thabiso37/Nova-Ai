@@ -323,6 +323,10 @@ document.getElementById("sellerForm").onsubmit = async e => {
 ) {
   return msg("sellerMsg", "Account not approved yet.", true);
 }
+
+document.getElementById("sellerMsg").textContent =
+  "APPROVED! Checking product photos...";
+
   let files = document.getElementById("photoFiles").files, imgs = [];
   for(let i=0; i<Math.min(files.length, 6); i++) {
     let path = `${user.id}/${Date.now()}_${i}.jpg`;
