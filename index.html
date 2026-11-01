@@ -812,7 +812,114 @@ document.getElementById("checkoutForm").addEventListener("submit", async e => {
 });
 
 function toast(s){let t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2400)}
+let customerAuthMode = "signin";
 
+function updateCustomerAccountUI() {
+  const btn = document.getElementById("customerAccountBtn");
+  const signOut = document.getElementById("customerAuthSignOutBtn");
+  btn.textContent = user ? "👤 Account" : "👤 Sign in";
+  signOut.classList.toggle("hidden", !user);
+}
+
+function openCustomerAuth() {
+  document.getElementById("customerAuthModal").classList.remove("hidden");
+  renderCustomerAuthMode();
+}
+
+function closeCustomerAuth() {
+  document.getElementById("customerAuthModal").classList.add("hidden");
+}
+
+function renderCustomerAuthMode() {
+  const registering = customerAuthMode === "register";
+
+  document.getElementById("customerAuthDescription").textContent =
+    registering ? "Create your NOVAAI customer account." : "Sign in to your customer account.";
+
+  document.getElementById("customerNameField").classList.toggle("hidden", !registering);
+  document.getElementById("customerAuthName").required = registering;
+
+  document.getElementById("customerAuthSubmit").textContent =
+    registering ? "Create account" : "Sign in";
+
+  document.getElementById("customerAuthModeBtn").textContent =
+    registering ? "Already have an account? Sign in" : "Don't have an account? Register";
+
+  document.getElementById("customerAuthMsg").textContent = "";
+}
+
+document.getElementById("customerAccountBtn").onclick = openCustomerAuth;
+document.getElementById("customerAuthClose").onclick = closeCustomerAuth;
+
+document.getElementById("customerAuthModeBtn").onclick = () => {
+  customerAuthMode = customerAuthMode === "signin" ? "register" : "signin";
+  renderCustomerAuthMode();
+};
+
+document.getElementById("customerAuthSignOutBtn").onclick = async () => {
+  const { error } = await sb.auth.signOut();
+  if (error) {
+    document.getElementById("customerAuthMsg").textContent = error.message;
+    return;
+  }
+  document.getElementById("customerAuthMsg").textContent = "You have signed out.";
+};
+
+document.getElementById("customerAuthForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const email = document.getElementById("customerAuthEmail").value.trim();
+  const password = document.getElementById("customerAuthPassword").value;
+  const name = document.getElementById("customerAuthName").value.trim();
+  const msg = document.getElementById("customerAuthMsg");
+  const submit = document.getElementById("customerAuthSubmit");
+
+  submit.disabled = true;
+  msg.textContent = "Please wait...";
+
+  try {
+    if (customerAuthMode === "register") {
+      const { data, error } = await sb.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: name },
+          emailRedirectTo: window.location.origin + window.location.pathname
+        }
+      });
+
+      if (error) throw error;
+
+      if (!data.session) {
+        msg.textContent = "Account created. Check your email to confirm, then sign in.";
+      } else {
+        msg.textContent = "Account created successfully.";
+        closeCustomerAuth();
+      }
+    } else {
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      closeCustomerAuth();
+    }
+  } catch (error) {
+    msg.textContent = error.message || "Authentication failed.";
+  } finally {
+    submit.disabled = false;
+  }
+});
+
+sb.auth.getSession().then(({ data, error }) => {
+  if (error) console.error("Session error:", error);
+  user = data?.session?.user || null;
+  updateCustomerAccountUI();
+});
+
+sb.auth.onAuthStateChange((_event, session) => {
+  user = session?.user || null;
+  updateCustomerAccountUI();
+});
+
+updateCustomerAccountUI();
 async function loadShared(){
 try{
 let{data,error}=await sb.from("Products").select("id,name,description,price,category,image_url,images,seller_name").order("created_at",{ascending:false});
