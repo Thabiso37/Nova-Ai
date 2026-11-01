@@ -185,6 +185,7 @@ function switchPortal(t) {
 }
 
 let faceBlob = null, user = null, storeData = null;
+let editingProductId = null;
 let authVersion = 0;
 const video = document.getElementById("webcam"), canvas = document.getElementById("snapshotCanvas"), preview = document.getElementById("facePreview");
 
@@ -447,12 +448,14 @@ async function loadMyProducts() {
           : ""}
 
         ${status === "rejected"
-          ? `<button class="btn outline"
-              type="button"
-              onclick="resubmitProduct(${Number(p.id)})">
-              Resubmit for Approval
-            </button>`
-          : ""}
+  ? `
+    <button class="btn outline"
+      type="button"
+      onclick="editProduct(${Number(p.id)})">
+      Edit Product
+    </button>
+  `
+  : ""}
 
       </div>
     `;
