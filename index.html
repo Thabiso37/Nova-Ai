@@ -1004,19 +1004,72 @@ sb.auth.onAuthStateChange((_event, session) => {
 });
 
 updateCustomerAccountUI();
-async function loadShared(){
-try{
-let{data,error}=await sb.from("Products").select("id,name,description,price,category,image_url,images,seller_name").order("created_at",{ascending:false});
-if(error)throw error;
-products=[...demo.map(a=>({id:a[0],name:a[1],category:a[2],price:a[3],seller:a[4],description:a[5],images:[a[6]],tag:"Demo"})),...(data||[]).map(r=>({id:"db-"+r.id,dbId:r.id,name:r.name,category:r.category,price:Number(r.price),seller:r.seller_name||"Independent seller",description:r.description||"",images: Array.isArray(r.images) && r.images.length ? r.images : (r.image_url ? [r.image_url] : [])}))];
-document.getElementById("dbStatus").textContent="SUPABASE CONNECTED";
-document.getElementById("catalogueMessage").textContent="Demo products plus listings shared through Supabase across Retail, Motors, and Properties.";
-render();renderCart();
-}catch(e){
-console.error(e);
-document.getElementById("dbStatus").textContent="OFFLINE DEMO MODE";
-render();
-}
+async function loadShared() {
+  try {
+    
+    const { data: productData, error: productError } = await sb
+      .from("Products")
+      .select("id,name,description,price,category,image_url,images,seller_name,seller_id")
+      .order("created_at", { ascending: false });
+
+    if (productError) throw productError;
+
+    const { data: approvedStores, error: storeError } = await sb
+      .from("seller_stores")
+      .select("user_id")
+      .eq("status", "approved");
+
+    if (storeError) throw storeError;
+
+    const approvedSellerIds = new Set(
+      (approvedStores || []).map(store => store.user_id)
+    );
+
+    // Display genuine products from approved sellers only
+    products = (productData || [])
+      .filter(product =>
+        product.seller_id &&
+        approvedSellerIds.has(product.seller_id) &&
+        product.name &&
+        Number(product.price) > 0
+      )
+      .map(product => ({
+        id: "db-" + product.id,
+        dbId: product.id,
+        name: product.name,
+        category: product.category,
+        price: Number(product.price),
+        seller: product.seller_name || "Independent seller",
+        description: product.description || "",
+        images: Array.isArray(product.images) && product.images.length
+          ? product.images
+          : (product.image_url ? [product.image_url] : [])
+      }));
+
+    document.getElementById("dbStatus").textContent =
+      "REAL MARKETPLACE CONNECTED";
+
+    document.getElementById("catalogueMessage").textContent =
+      "Genuine products from approved NOVAAI sellers.";
+
+    render();
+    renderCart();
+
+  } catch (error) {
+    console.error("Marketplace loading error:", error);
+
+    // Never show demo products as a fallback
+    products = [];
+
+    document.getElementById("dbStatus").textContent =
+      "MARKETPLACE CONNECTION ERROR";
+
+    document.getElementById("catalogueMessage").textContent =
+      "Products could not be loaded. Please try again.";
+
+    render();
+    renderCart();
+  }
 }
 
 document.getElementById("searchForm").onsubmit=e=>{e.preventDefault();render();go("shop");};
@@ -1052,7 +1105,6 @@ body.categories-view main > *:not(#categories) { display: none !important; }
 body.categories-view #categories { display: block !important; min-height: 70vh; margin: 24px auto !important; max-width: 900px; }
 </style>
 
-<!-- BOTTOM NAVIGATION BAR -->
 <nav class="mobile-bottom-nav">
   <button onclick="go('shop')">🏠<span>Home</span></button>
   <button onclick="go('categories')">☰<span>Categories</span></button>
