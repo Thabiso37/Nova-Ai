@@ -314,9 +314,12 @@ document.getElementById("sellerForm").onsubmit = async e => {
   alert("SELLER FORM SUBMISSION STARTED");
   e.preventDefault();
 
-  if (!user || storeData?.status !== "approved") {
-    return msg("sellerMsg", "Account not approved yet.", true);
-  }
+  if (
+  !user ||
+  String(storeData?.status || "").toLowerCase() !== "approved"
+) {
+  return msg("sellerMsg", "Account not approved yet.", true);
+}
   let files = document.getElementById("photoFiles").files, imgs = [];
   for(let i=0; i<Math.min(files.length, 6); i++) {
     let path = `${user.id}/${Date.now()}_${i}.jpg`;
