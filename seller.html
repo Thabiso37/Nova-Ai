@@ -615,8 +615,9 @@ async function editProduct(id) {
     `;
   }).join("");
 }
-
- async function resubmitProduct(id) {
+window.editProduct = editProduct;
+ 
+  async function resubmitProduct(id) {
 
   if (!user) return;
 
