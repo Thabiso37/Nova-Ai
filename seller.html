@@ -444,29 +444,13 @@ if(retailUser) updateRetailAuth(retailUser);
 sb.auth.getSession().then(({data}) => updateUser(data?.session?.user || null));
 sb.auth.onAuthStateChange((_,s) => updateUser(s?.user || null));
 
-  
-async function loadSellerOrders() {
+  async function loadSellerOrders() {
   const msgEl = document.getElementById("sellerOrdersMsg");
   const list = document.getElementById("sellerOrdersList");
 
   const targetUser = user;
   const currentVersion = authVersion;
 
-  console.log("SELLER SESSION EMAIL:", targetUser?.email);
-console.log("SELLER SESSION ID:", targetUser?.id);
-
-  const list = document.getElementById("sellerOrdersList");
-
-  const targetUser = user;
-  const currentVersion = authVersion;
-
-  console.log("SELLER SESSION EMAIL:", targetUser?.email);
-console.log("SELLER SESSION ID:", targetUser?.id);
-
-  msgEl.textContent =
-  "Session email: " + (targetUser?.email || "None") +
-  " | Session ID: " + (targetUser?.id || "None");
- 
   if (!targetUser) {
     msgEl.textContent = "Sign in to view orders.";
     list.innerHTML = "";
@@ -478,18 +462,6 @@ console.log("SELLER SESSION ID:", targetUser?.id);
     list.innerHTML = "";
     return;
   }
-  if (!targetUser) {
-    msgEl.textContent = "Sign in to view orders.";
-    list.innerHTML = "";
-    return;
-  }
-
-  if (String(storeData?.status || "").toLowerCase() !== "approved") {
-    msgEl.textContent = "Your store must be approved to view orders.";
-    list.innerHTML = "";
-    return;
-  }
-
   msgEl.textContent = "Loading orders...";
 
   const { data, error } = await sb
@@ -522,7 +494,14 @@ console.log("SELLER SESSION ID:", targetUser?.id);
       `).join("")
     : "<p>No customer orders found for your store yet.</p>";
 }
-  </script>
+
+const refreshOrdersBtn = document.getElementById("loadOrdersBtn");
+
+if (refreshOrdersBtn) {
+  refreshOrdersBtn.onclick = loadSellerOrders;
+}
+
+</script>
 </body>
 </html>
 
