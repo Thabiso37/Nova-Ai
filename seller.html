@@ -452,6 +452,9 @@ async function loadSellerOrders() {
   const targetUser = user;
   const currentVersion = authVersion;
 
+  console.log("SELLER SESSION EMAIL:", targetUser?.email);
+console.log("SELLER SESSION ID:", targetUser?.id);
+  
   if (!targetUser) {
     msgEl.textContent = "Sign in to view orders.";
     list.innerHTML = "";
