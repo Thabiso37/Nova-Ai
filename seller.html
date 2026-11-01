@@ -314,39 +314,148 @@ document.getElementById("signout").onclick = () => sb.auth.signOut().then(()=>up
 document.getElementById("sellerForm").onsubmit = async e => {
   e.preventDefault();
 
-  alert("SELLER FORM SUBMISSION STARTED");
+  const form = e.target;
+  const msgEl = document.getElementById("sellerMsg");
+  const submitButton = form.querySelector('button[type="submit"]');
 
-  document.getElementById("sellerMsg").textContent =
-  "Form submission is working. Checking seller approval...";
-  if (
-  !user ||
-  String(storeData?.status || "").toLowerCase() !== "approved"
-) {
-  return msg("sellerMsg", "Account not approved yet.", true);
-}
-
-document.getElementById("sellerMsg").textContent =
-  "APPROVED! Checking product photos...";
-
-  let files = document.getElementById("photoFiles").files, imgs = [];
-  for(let i=0; i<Math.min(files.length, 6); i++) {
-    let path = `${user.id}/${Date.now()}_${i}.jpg`;
-    let {error} = await sb.storage.from("Nova AI").upload(path, files[i]);
-    if(!error) imgs.push(sb.storage.from("Nova AI").getPublicUrl(path).data.publicUrl);
+  if (!user || String(storeData?.status || "").toLowerCase() !== "approved") {
+    msg("sellerMsg", "Account not approved yet.", true);
+    return;
   }
-  if(!imgs.length) return msg("sellerMsg", "Upload at least one image.", true);
-  
-  let {error} = await sb.from("Products").insert({
-    name: document.getElementById("productName").value,
-    description: document.getElementById("description").value,
-    price: Number(document.getElementById("price").value),
-    category: document.getElementById("category").value,
-    image_url: imgs[0], images: imgs,
-    seller_name: document.getElementById("sellerName").value, seller_id: user.id
-  });
-  if(error) return msg("sellerMsg", error.message, true);
-  e.target.reset(); preview.style.display="none"; faceBlob=null;
-  msg("sellerMsg", "Published successfully!"); loadMyProducts();
+
+  const files = document.getElementById("photoFiles").files;
+  let imgs = [];
+
+  submitButton.disabled = true;
+  msgEl.textContent = "Checking product details...";
+
+  try {
+    // Editing an existing rejected product
+    if (editingProductId !== null) {
+      const { data: existing, error: fetchError } = await sb
+        .from("Products")
+        .select("id,status,image_url,images")
+        .eq("id", editingProductId)
+        .eq("seller_id", user.id)
+        .single();
+
+      if (fetchError || !existing) {
+        throw new Error("Could not find this product.");
+      }
+
+      if (existing.status !== "rejected") {
+        throw new Error("This product is no longer rejected.");
+      }
+
+      // Keep existing photos unless replacements are selected
+      imgs = Array.isArray(existing.images) ? existing.images : [];
+
+      if (!imgs.length && existing.image_url) {
+        imgs = [existing.image_url];
+      }
+
+      if (files.length > 0) {
+        imgs = [];
+
+        for (let i = 0; i < Math.min(files.length, 6); i++) {
+          const path = `${user.id}/${Date.now()}_${i}.jpg`;
+
+          const { error: uploadError } = await sb.storage
+            .from("Nova AI")
+            .upload(path, files[i]);
+
+          if (uploadError) {
+            throw uploadError;
+          }
+
+          const { data: urlData } = sb.storage
+            .from("Nova AI")
+            .getPublicUrl(path);
+
+          imgs.push(urlData.publicUrl);
+        }
+      }
+
+      if (!imgs.length) {
+        throw new Error("Please select at least one product photo.");
+      }
+
+      const { error } = await sb
+        .from("Products")
+        .update({
+          name: document.getElementById("productName").value.trim(),
+          description: document.getElementById("description").value.trim(),
+          price: Number(document.getElementById("price").value),
+          category: document.getElementById("category").value,
+          image_url: imgs[0],
+          images: imgs,
+          seller_name: document.getElementById("sellerName").value.trim(),
+          status: "pending",
+          rejection_reason: null
+        })
+        .eq("id", editingProductId)
+        .eq("seller_id", user.id);
+
+      if (error) throw error;
+
+      editingProductId = null;
+      msgEl.textContent =
+        "Changes saved. Your product has been resubmitted for approval.";
+    }
+
+    // Publishing a brand-new product
+    else {
+      if (!files.length) {
+        throw new Error("Please upload at least one product photo.");
+      }
+
+      for (let i = 0; i < Math.min(files.length, 6); i++) {
+        const path = `${user.id}/${Date.now()}_${i}.jpg`;
+
+        const { error: uploadError } = await sb.storage
+          .from("Nova AI")
+          .upload(path, files[i]);
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = sb.storage
+          .from("Nova AI")
+          .getPublicUrl(path);
+
+        imgs.push(urlData.publicUrl);
+      }
+
+      const { error } = await sb.from("Products").insert({
+        name: document.getElementById("productName").value.trim(),
+        description: document.getElementById("description").value.trim(),
+        price: Number(document.getElementById("price").value),
+        category: document.getElementById("category").value,
+        image_url: imgs[0],
+        images: imgs,
+        seller_name: document.getElementById("sellerName").value.trim(),
+        seller_id: user.id
+      });
+
+      if (error) throw error;
+
+      msgEl.textContent = "Product submitted successfully for approval.";
+    }
+
+    form.reset();
+    preview.style.display = "none";
+    faceBlob = null;
+
+    if (submitButton) {
+      submitButton.textContent = "Publish Product";
+    }
+
+    await loadMyProducts();
+
+  } catch (error) {
+    msgEl.textContent = "Could not save product: " + error.message;
+  } finally {
+    submitButton.disabled = false;
+  }
 };
 
 function escapeHTML(value) {
