@@ -400,7 +400,52 @@ async function loadMyProducts() {
       rejected: "#d64c59",
       hidden: "#6579dc"
     };
+async function editProduct(id) {
+  if (!user) return;
 
+  const { data: product, error } = await sb
+    .from("Products")
+    .select("id,name,description,price,category,seller_name,status")
+    .eq("id", id)
+    .eq("seller_id", user.id)
+    .single();
+
+  if (error || !product) {
+    document.getElementById("myProductsMsg").textContent =
+      "Could not load product for editing.";
+    return;
+  }
+
+  if (product.status !== "rejected") {
+    document.getElementById("myProductsMsg").textContent =
+      "Only rejected products can be edited here.";
+    return;
+  }
+
+  editingProductId = product.id;
+
+  document.getElementById("productName").value = product.name || "";
+  document.getElementById("description").value = product.description || "";
+  document.getElementById("price").value = product.price || "";
+  document.getElementById("category").value = product.category || "";
+  document.getElementById("sellerName").value = product.seller_name || "";
+
+  const submitButton = document.querySelector(
+    '#sellerForm button[type="submit"]'
+  );
+
+  if (submitButton) {
+    submitButton.textContent = "Save Changes & Resubmit";
+  }
+
+  document.getElementById("sellerMsg").textContent =
+    "Editing rejected product. You can keep its existing photos or select replacements.";
+
+  document.getElementById("sellerForm").scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+}
     return `
       <div style="padding:12px;border-bottom:1px solid var(--line);">
 
