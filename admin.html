@@ -398,7 +398,12 @@ message("Updating product...");
 
 const {error}=await sb
 .from("Products")
-.update({status:newStatus})
+.update({
+  status: newStatus,
+  rejection_reason: newStatus === "rejected"
+    ? rejectionReason
+    : null
+})
 .eq("id",id);
 
 if(error){
