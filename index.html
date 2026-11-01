@@ -803,12 +803,96 @@ function checkout(){
 
 document.getElementById("checkoutForm").addEventListener("submit", async e => {
   e.preventDefault();
-  alert("Order simulated successfully! No payment taken in demo.");
-  cart = [];
-  saveCart();
-  renderCart();
-  e.target.reset();
-  e.target.classList.add("hidden");
+
+  const form = e.target;
+  const button = form.querySelector('[type="submit"]');
+
+  try {
+    button.disabled = true;
+    button.textContent = "Placing order...";
+
+    // Verify the signed-in customer
+    const { data: authData, error: authError } = await sb.auth.getUser();
+
+    if (authError || !authData.user) {
+      throw new Error("Please sign in before placing an order.");
+    }
+
+    if (!cart.length) {
+      throw new Error("Your cart is empty.");
+    }
+
+    // Only real marketplace products can be ordered
+    const items = cart.map(item => {
+      const product = products.find(p => p.id === item.id);
+
+      if (!product || !product.dbId) {
+        throw new Error(
+          "Your cart contains a demo product. Remove it before checkout."
+        );
+      }
+
+      const quantity = Number(item.qty);
+
+      if (!Number.isInteger(quantity) || quantity < 1) {
+        throw new Error("One of your product quantities is invalid.");
+      }
+
+      return {
+        product_id: Number(product.dbId),
+        quantity: quantity
+      };
+    });
+
+    const customerName =
+      document.getElementById("customerName").value.trim();
+
+    const customerPhone =
+      document.getElementById("customerPhone").value.trim();
+
+    const deliveryAddress =
+      document.getElementById("deliveryAddress").value.trim();
+
+    if (!customerName || !customerPhone || !deliveryAddress) {
+      throw new Error("Please complete all delivery details.");
+    }
+
+    // Create the real order in Supabase
+    const { data: orderId, error: orderError } = await sb.rpc(
+      "place_order",
+      {
+        p_customer_name: customerName,
+        p_customer_phone: customerPhone,
+        p_delivery_address: deliveryAddress,
+        p_items: items
+      }
+    );
+
+    if (orderError) throw orderError;
+
+    if (!orderId) {
+      throw new Error("Supabase did not return an order number.");
+    }
+
+    alert(
+      "Order placed successfully!\n\nOrder reference: " + orderId
+    );
+
+    cart = [];
+    saveCart();
+    renderCart();
+
+    form.reset();
+    form.classList.add("hidden");
+
+  } catch (error) {
+    console.error("Checkout error:", error);
+    alert("Order failed: " + error.message);
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "Place Order";
+  }
 });
 
 function toast(s){let t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2400)}
