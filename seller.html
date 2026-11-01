@@ -73,23 +73,70 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
   </div>
 
   <div class="panel">
+    <!-- PUBLISH PRODUCT -->
     <h3>📦 Publish Product</h3>
+
     <form id="sellerForm">
-      <div class="field"><label>Store Name *</label><input id="sellerName" required></div>
-      <div class="field"><label>Product Name *</label><input id="productName" required></div>
-      <div class="field"><label>Category *</label><select id="category" required></select></div>
-      <div class="field"><label>Price (R) *</label><input id="price" type="number" min="1" required></div>
-      <div class="field"><label>Photos (Up to 6) *</label><input id="photoFiles" type="file" accept="image/*" multiple required></div>
-      <div class="field"><label>Description *</label><textarea id="description" required></textarea></div>
-      <button class="btn" id="publish" type="submit" disabled style="width:100%;">Pending Approval</button>
+      <div class="field">
+        <label>Store Name *</label>
+        <input id="sellerName" required>
+      </div>
+
+      <div class="field">
+        <label>Product Name *</label>
+        <input id="productName" required>
+      </div>
+
+      <div class="field">
+        <label>Category *</label>
+        <select id="category" required></select>
+      </div>
+
+      <div class="field">
+        <label>Price (R) *</label>
+        <input id="price" type="number" min="1" required>
+      </div>
+
+      <div class="field">
+        <label>Photos (Up to 6) *</label>
+        <input id="photoFiles" type="file" accept="image/*" multiple required>
+      </div>
+
+      <div class="field">
+        <label>Description *</label>
+        <textarea id="description" required></textarea>
+      </div>
+
+      <button class="btn" id="publish" type="submit" disabled style="width:100%;">
+        Pending Approval
+      </button>
+
       <div id="sellerMsg" class="msg"></div>
     </form>
-    <h3 style="margin-top:20px;">📋 My Products</h3>
-    <div id="myProductsMsg" class="msg">Sign in to view items.</div>
-    <div id="myProductsList"></div>
-  </div>
-</div>
 
+    <!-- MY PRODUCTS -->
+    <h3 style="margin-top:20px;">📋 My Products</h3>
+
+    <div id="myProductsMsg" class="msg">
+      Sign in to view items.
+    </div>
+
+    <div id="myProductsList"></div>
+
+    <!-- CUSTOMER ORDERS -->
+    <h3 style="margin-top:25px;">📦 Customer Orders & Fulfillment</h3>
+
+    <button class="btn outline" type="button" id="loadOrdersBtn">
+      Refresh Orders
+    </button>
+
+    <div id="sellerOrdersMsg" class="msg">
+      Sign in to view orders.
+    </div>
+
+    <div id="sellerOrdersList"></div>
+</div>
+</div>
 <!-- RETAIL PARTNER PORTAL -->
 <div id="portalRetail" class="grid hidden">
   <div class="panel">
@@ -137,7 +184,8 @@ function switchPortal(t) {
   document.getElementById("portalRetail").classList.toggle("hidden", t!=='retail');
 }
 
-let faceBlob = null, user = null;
+let faceBlob = null, user = null, storeData = null;
+let authVersion = 0;
 const video = document.getElementById("webcam"), canvas = document.getElementById("snapshotCanvas"), preview = document.getElementById("facePreview");
 
 document.getElementById("startCam").onclick = async () => {
