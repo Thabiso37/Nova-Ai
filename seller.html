@@ -271,11 +271,66 @@ document.getElementById("sellerForm").onsubmit = async e => {
   msg("sellerMsg", "Published successfully!"); loadMyProducts();
 };
 
-async function loadMyProducts() {
-  let {data} = await sb.from("Products").select("id,name,price").eq("seller_id", user.id);
-  document.getElementById("myProductsList").innerHTML = (data||[]).map(p=>`<div style="font-size:11px;padding:6px;border-bottom:1px solid var(--line)"><b>${p.name}</b> - R${p.price}</div>`).join("");
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
 }
 
+async function loadMyProducts() {
+  const msgEl = document.getElementById("myProductsMsg");
+  const list = document.getElementById("myProductsList");
+
+  if (!user) {
+    msgEl.textContent = "Please sign in to view items.";
+    list.innerHTML = "";
+    return;
+  }
+
+  msgEl.textContent = "Loading your products...";
+
+  const { data, error } = await sb
+    .from("Products")
+    .select("id,name,price,category,image_url,images,created_at")
+    .eq("seller_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    msgEl.textContent = "Could not load products: " + error.message;
+    list.innerHTML = "";
+    return;
+  }
+
+  const products = data || [];
+
+  msgEl.textContent =
+    products.length + " product(s) in your inventory.";
+
+  list.innerHTML = products.map(p => {
+    const image = p.image_url || "";
+
+    return `
+      <div style="display:flex;gap:10px;padding:10px;border-bottom:1px solid var(--line);align-items:center;">
+        ${image ? `
+          <img
+            src="${escapeHTML(image)}"
+            alt=""
+            style="width:65px;height:65px;object-fit:cover;border-radius:8px;">
+        ` : ""}
+
+        <div>
+          <b>${escapeHTML(p.name)}</b>
+          <div>R${Number(p.price || 0).toFixed(2)}</div>
+          <small>${escapeHTML(p.category || "")}</small>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
 // Retail Portal Logic
 let retailUser = localStorage.getItem("novaRetailUser");
 function updateRetailAuth(e) {
