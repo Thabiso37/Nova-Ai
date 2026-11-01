@@ -348,7 +348,7 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
       <button class="btn primary" type="submit">🔍</button>
     </form>
     <button class="btn outline" onclick="go('cart')">🛒 <span id="count">0</span></button>
-    <button class="btn outline" onclick="window.location.href='seller.html'" aria-label="Account">👤</button>
+    <button class="btn outline" type="button" id="customerAccountBtn">👤 Sign in</button>
     <!-- RETAIL MARKET BUTTON OPENING DEDICATED PAGE -->
     <button type="button" onclick="openRetailMarketPage()" style="font-size: 13px; font-weight: 700; color: #174ea6; background: #f0f4f9; padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; gap: 5px; border: 1px solid #d1dced; cursor: pointer;">🛍️ Retail Market</button>
   </div>
@@ -360,6 +360,64 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
     </div>
   </div>
 </header>
+<div id="customerAuthModal" class="hidden">
+  <div class="customer-auth-card">
+    <button type="button" id="customerAuthClose" class="auth-close">✕</button>
+
+    <h2>NOVA<span style="color:#2563eb">AI</span> Account</h2>
+    <p id="customerAuthDescription">Sign in to your customer account.</p>
+
+    <form id="customerAuthForm">
+      <div id="customerNameField" class="hidden">
+        <label for="customerAuthName">Full name</label>
+        <input id="customerAuthName" type="text" maxlength="100">
+      </div>
+
+      <label for="customerAuthEmail">Email address</label>
+      <input id="customerAuthEmail" type="email" required>
+
+      <label for="customerAuthPassword">Password</label>
+      <input id="customerAuthPassword" type="password" minlength="6" required>
+
+      <button type="submit" class="btn primary" id="customerAuthSubmit">Sign in</button>
+    </form>
+
+    <p id="customerAuthMsg"></p>
+    <button type="button" id="customerAuthModeBtn">Don't have an account? Register</button>
+    <button type="button" id="customerAuthSignOutBtn" class="hidden">Sign out</button>
+  </div>
+</div>
+
+<main>
+<section class="hero">
+  <!-- CUSTOMER AUTHENTICATION MODAL -->
+<div id="customerAuthModal" class="hidden">
+  <div class="customer-auth-card">
+    <button type="button" id="customerAuthClose" class="auth-close">✕</button>
+
+    <h2>NOVA<span style="color:#2563eb">AI</span> Account</h2>
+    <p id="customerAuthDescription">Sign in to your customer account.</p>
+
+    <form id="customerAuthForm">
+      <div id="customerNameField" class="hidden">
+        <label for="customerAuthName">Full name</label>
+        <input id="customerAuthName" type="text" maxlength="100">
+      </div>
+
+      <label for="customerAuthEmail">Email address</label>
+      <input id="customerAuthEmail" type="email" required>
+
+      <label for="customerAuthPassword">Password</label>
+      <input id="customerAuthPassword" type="password" minlength="6" required>
+
+      <button type="submit" class="btn primary" id="customerAuthSubmit">Sign in</button>
+    </form>
+
+    <p id="customerAuthMsg"></p>
+    <button type="button" id="customerAuthModeBtn">Don't have an account? Register</button>
+    <button type="button" id="customerAuthSignOutBtn" class="hidden">Sign out</button>
+  </div>
+</div>
 
 <main>
 <section class="hero">
