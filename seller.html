@@ -454,7 +454,30 @@ async function loadSellerOrders() {
 
   console.log("SELLER SESSION EMAIL:", targetUser?.email);
 console.log("SELLER SESSION ID:", targetUser?.id);
-  
+
+  const list = document.getElementById("sellerOrdersList");
+
+  const targetUser = user;
+  const currentVersion = authVersion;
+
+  console.log("SELLER SESSION EMAIL:", targetUser?.email);
+console.log("SELLER SESSION ID:", targetUser?.id);
+
+  msgEl.textContent =
+  "Session email: " + (targetUser?.email || "None") +
+  " | Session ID: " + (targetUser?.id || "None");
+ 
+  if (!targetUser) {
+    msgEl.textContent = "Sign in to view orders.";
+    list.innerHTML = "";
+    return;
+  }
+
+  if (String(storeData?.status || "").toLowerCase() !== "approved") {
+    msgEl.textContent = "Your store must be approved to view orders.";
+    list.innerHTML = "";
+    return;
+  }
   if (!targetUser) {
     msgEl.textContent = "Sign in to view orders.";
     list.innerHTML = "";
