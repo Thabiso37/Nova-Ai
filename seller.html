@@ -445,7 +445,6 @@ sb.auth.getSession().then(({data}) => updateUser(data?.session?.user || null));
 sb.auth.onAuthStateChange((_,s) => updateUser(s?.user || null));
 
 
-// LOAD SELLER ORDERS
 async function loadSellerOrders() {
   const msgEl = document.getElementById("sellerOrdersMsg");
   const list = document.getElementById("sellerOrdersList");
