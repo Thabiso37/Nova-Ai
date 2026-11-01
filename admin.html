@@ -304,7 +304,7 @@ return `
 <div>
 ${safeImage
 ? `<img src="${safeImage}" alt="Product image"
-    onclick="openImage(this.src)"
+    onclick="openImage(this.src)">`
 : `<div class="muted">No image</div>`}
 </div>
 
@@ -312,7 +312,6 @@ ${safeImage
 <h3>${escapeHTML(p.name)}</h3>
 
 <p>Price: R${Number(p.price || 0).toFixed(2)}</p>
-
 <p>Category: ${escapeHTML(p.category)}</p>
 
 <p>Seller: ${escapeHTML(p.seller_name)}</p>
