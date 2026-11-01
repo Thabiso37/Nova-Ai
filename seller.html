@@ -458,7 +458,7 @@ async function loadSellerOrders() {
     return;
   }
 
-  if (storeData?.status !== "approved") {
+  if (String(storeData?.status || "").toLowerCase() !== "approved") {
     msgEl.textContent = "Your store must be approved to view orders.";
     list.innerHTML = "";
     return;
@@ -466,26 +466,23 @@ async function loadSellerOrders() {
 
   msgEl.textContent = "Loading orders...";
 
-  const { data, error } = await sb
-    .from("order_items")
-    .select(`
-      id,
-      quantity,
-      unit_price,
-      product_id,
-      order_id,
-      created_at,
-      orders(
-        order_status
-      ),
-      Products!inner(
-        id,
-        name,
-        seller_id
-      )
-    `)
-    .eq("Products.seller_id", targetUser.id)
-    .order("created_at", { ascending: false });
+const { data, error } = await sb
+  .from("order_items")
+  .select(`
+    id,
+    quantity,
+    unit_price,
+    product_id,
+    product_name,
+    seller_id,
+    order_id,
+    created_at,
+    orders(
+      order_status
+    )
+  `)
+  .eq("seller_id", targetUser.id)
+  .order("created_at", { ascending: false });
 
   if (currentVersion !== authVersion || user !== targetUser) return;
 
@@ -517,7 +514,7 @@ async function loadSellerOrders() {
             #${escapeHTML(String(item.order_id || "").slice(0, 8))}
 
             <div><b>Product:</b>
-            ${escapeHTML(product?.name || "Item")}</div>
+            ${escapeHTML(item.product_name || "Item")}</div>
 
             <div><b>Quantity:</b>
             ${Number(item.quantity || 0)}</div>
