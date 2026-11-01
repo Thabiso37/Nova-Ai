@@ -444,7 +444,7 @@ if(retailUser) updateRetailAuth(retailUser);
 sb.auth.getSession().then(({data}) => updateUser(data?.session?.user || null));
 sb.auth.onAuthStateChange((_,s) => updateUser(s?.user || null));
 
-  async function loadSellerOrders() {
+async function loadSellerOrders() {
   const msgEl = document.getElementById("sellerOrdersMsg");
   const list = document.getElementById("sellerOrdersList");
 
@@ -464,38 +464,183 @@ sb.auth.onAuthStateChange((_,s) => updateUser(s?.user || null));
   }
 
   msgEl.textContent = "Loading orders...";
+  list.innerHTML = "";
 
-  const { data, error } = await sb
+  const { data: items, error: itemsError } = await sb
     .from("order_items")
-    .select("id, quantity, unit_price, product_id, product_name, seller_id, order_id, created_at")
+    .select("id, order_id, product_name, quantity, unit_price, created_at")
     .eq("seller_id", targetUser.id)
     .order("created_at", { ascending: false });
 
   if (currentVersion !== authVersion || user !== targetUser) return;
 
-  if (error) {
-    msgEl.textContent = "Unable to load orders: " + error.message;
-    list.innerHTML = "";
+  if (itemsError) {
+    msgEl.textContent = "Unable to load orders: " + itemsError.message;
     return;
   }
 
-  const items = data || [];
+  const { data: fulfillments, error: fulfillmentError } = await sb
+    .from("seller_fulfillments")
+    .select("id, order_id, fulfillment_status, item_subtotal")
+    .eq("seller_id", targetUser.id);
+
+  if (currentVersion !== authVersion || user !== targetUser) return;
+
+  if (fulfillmentError) {
+    msgEl.textContent =
+      "Unable to load fulfillment records: " + fulfillmentError.message;
+    return;
+  }
+
+  const fulfillmentMap = new Map(
+    (fulfillments || []).map(f => [String(f.order_id), f])
+  );
+
+  const groupedOrders = new Map();
+
+  (items || []).forEach(item => {
+    const orderId = String(item.order_id);
+
+    if (!groupedOrders.has(orderId)) {
+      groupedOrders.set(orderId, []);
+    }
+
+    groupedOrders.get(orderId).push(item);
+  });
 
   msgEl.textContent =
-    `${items.length} customer order item(s) found. Seller ID: ${targetUser.id}`;
+    `${(items || []).length} customer order item(s) found. ` +
+    `${groupedOrders.size} order(s). Seller ID: ${targetUser.id}`;
 
-  list.innerHTML = items.length
-    ? items.map(item => `
-        <div style="padding:12px;margin-top:10px;background:#fff;border:1px solid var(--line);border-radius:8px;">
-          <b>Order ID:</b> #${escapeHTML(String(item.order_id || "").slice(0, 8))}
+  if (groupedOrders.size === 0) {
+    list.innerHTML = "<p>No customer orders found for your store yet.</p>";
+    return;
+  }
+
+  const statuses = [
+    "pending",
+    "processing",
+    "shipped",
+    "delivered",
+    "cancelled"
+  ];
+
+  list.innerHTML = Array.from(groupedOrders.entries())
+    .map(([orderId, orderItems]) => {
+      const fulfillment = fulfillmentMap.get(orderId);
+
+      const currentStatus = fulfillment
+        ? String(fulfillment.fulfillment_status || "pending").toLowerCase()
+        : null;
+
+      const validStatus = statuses.includes(currentStatus);
+
+      const productsHTML = orderItems.map(item => `
+        <div style="padding:8px 0;border-bottom:1px solid var(--line);">
           <div><b>Product:</b> ${escapeHTML(item.product_name || "Item")}</div>
           <div><b>Quantity:</b> ${Number(item.quantity || 0)}</div>
           <div><b>Unit Price:</b> R${Number(item.unit_price || 0).toFixed(2)}</div>
-          <div><b>Order Status:</b> Awaiting status lookup</div>
         </div>
-      `).join("")
-    : "<p>No customer orders found for your store yet.</p>";
+      `).join("");
+
+      const statusHTML = fulfillment
+        ? `
+          <div style="margin-top:12px;">
+            <label><b>Fulfillment Status:</b></label>
+            <select
+              id="fulfillment_status_${escapeHTML(orderId)}"
+              style="display:block;width:100%;padding:10px;margin-top:6px;"
+              ${validStatus ? "" : "disabled"}
+            >
+              ${statuses.map(status => `
+                <option value="${status}"
+                  ${status === currentStatus ? "selected" : ""}>
+                  ${status.toUpperCase()}
+                </option>
+              `).join("")}
+            </select>
+
+            <button
+              type="button"
+              onclick="updateFulfillmentStatus('${escapeHTML(orderId)}')"
+              style="margin-top:10px;padding:10px 16px;"
+              ${validStatus ? "" : "disabled"}
+            >
+              Save Status
+            </button>
+          </div>
+        `
+        : `
+          <p style="color:#b45309;margin-top:12px;">
+            No fulfillment record found for this order.
+          </p>
+        `;
+
+      return `
+        <div style="padding:14px;margin-top:12px;background:#fff;
+          border:1px solid var(--line);border-radius:8px;">
+
+          <h3>Order #${escapeHTML(orderId.slice(0, 8))}</h3>
+
+          ${productsHTML}
+
+          ${statusHTML}
+        </div>
+      `;
+    }).join("");
 }
+  const { data: fulfillments, error: fulfillmentError } = await sb
+    .from("seller_fulfillments")
+    .select("id, order_id, fulfillment_status, item_subtotal")
+    .eq("seller_id", targetUser.id);
+
+  if (currentVersion !== authVersion || user !== targetUser) return;
+
+  if (fulfillmentError) {
+    msgEl.textContent =
+      "Unable to load fulfillment records: " + fulfillmentError.message;
+    return;
+  }
+
+  const fulfillmentMap = new Map(
+    (fulfillments || []).map(f => [String(f.order_id), f])
+  );
+
+  const groupedOrders = new Map();
+
+  (items || []).forEach(item => {
+    const orderId = String(item.order_id);
+
+    if (!groupedOrders.has(orderId)) {
+      groupedOrders.set(orderId, []);
+    }
+
+    groupedOrders.get(orderId).push(item);
+  });
+
+  msgEl.textContent =
+    `${(items || []).length} customer order item(s) found. ` +
+    `${groupedOrders.size} order(s). Seller ID: ${targetUser.id}`;
+
+  if (groupedOrders.size === 0) {
+    list.innerHTML = "<p>No customer orders found for your store yet.</p>";
+    return;
+  }
+
+  const statuses = [
+    "pending",
+    "processing",
+    "shipped",
+    "delivered",
+    "cancelled"
+  ];
+
+  list.innerHTML = Array.from(groupedOrders.entries())
+    .map(([orderId, orderItems]) => {
+      const fulfillment = fulfillmentMap.get(orderId);
+
+      const currentStatus = fulfillment
+        ? String(fulfillment.fulfillment_status || "pending
 
 const refreshOrdersBtn = document.getElementById("loadOrdersBtn");
 
