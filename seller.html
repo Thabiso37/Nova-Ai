@@ -311,9 +311,12 @@ document.getElementById("signup").onclick = async () => {
 document.getElementById("signout").onclick = () => sb.auth.signOut().then(()=>updateUser(null));
 
 document.getElementById("sellerForm").onsubmit = async e => {
-  alert("SELLER FORM SUBMISSION STARTED");
   e.preventDefault();
 
+  alert("SELLER FORM SUBMISSION STARTED");
+
+  document.getElementById("sellerMsg").textContent =
+  "Form submission is working. Checking seller approval...";
   if (
   !user ||
   String(storeData?.status || "").toLowerCase() !== "approved"
