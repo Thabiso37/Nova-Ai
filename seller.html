@@ -466,23 +466,11 @@ async function loadSellerOrders() {
 
   msgEl.textContent = "Loading orders...";
 
-const { data, error } = await sb
-  .from("order_items")
-  .select(`
-    id,
-    quantity,
-    unit_price,
-    product_id,
-    product_name,
-    seller_id,
-    order_id,
-    created_at,
-    orders(
-      order_status
-    )
-  `)
-  .eq("seller_id", targetUser.id)
-  .order("created_at", { ascending: false });
+  const { data, error } = await sb
+    .from("order_items")
+    .select("id, quantity, unit_price, product_id, product_name, seller_id, order_id, created_at")
+    .eq("seller_id", targetUser.id)
+    .order("created_at", { ascending: false });
 
   if (currentVersion !== authVersion || user !== targetUser) return;
 
@@ -494,45 +482,21 @@ const { data, error } = await sb
 
   const items = data || [];
 
-  msgEl.textContent =
-    `${items.length} customer order item(s) found.`;
+  msgEl.textContent = `${items.length} customer order item(s) found.`;
 
   list.innerHTML = items.length
-    ? items.map(item => {
-        const order = Array.isArray(item.orders)
-          ? item.orders[0]
-          : item.orders;
-         return `
+    ? items.map(item => `
         <div style="padding:12px;margin-top:10px;background:#fff;border:1px solid var(--line);border-radius:8px;">
-
-            <b>Order ID:</b>
-            #${escapeHTML(String(item.order_id || "").slice(0, 8))}
-
-            <div><b>Product:</b>
-            ${escapeHTML(item.product_name || "Item")}</div>
-
-            <div><b>Quantity:</b>
-            ${Number(item.quantity || 0)}</div>
-
-            <div><b>Unit Price:</b>
-            R${Number(item.unit_price || 0).toFixed(2)}</div>
-
-            <div><b>Order Status:</b>
-${escapeHTML(order?.order_status || "Pending")}</div>
-
-          </div>
-        `;
-      }).join("")
+          <b>Order ID:</b> #${escapeHTML(String(item.order_id || "").slice(0, 8))}
+          <div><b>Product:</b> ${escapeHTML(item.product_name || "Item")}</div>
+          <div><b>Quantity:</b> ${Number(item.quantity || 0)}</div>
+          <div><b>Unit Price:</b> R${Number(item.unit_price || 0).toFixed(2)}</div>
+          <div><b>Order Status:</b> Awaiting status lookup</div>
+        </div>
+      `).join("")
     : "<p>No customer orders found for your store yet.</p>";
 }
-
-// Refresh Orders button
-const refreshOrdersBtn =
-  document.getElementById("loadOrdersBtn");
-
-if (refreshOrdersBtn) {
-  refreshOrdersBtn.onclick = loadSellerOrders;
-}
-</script>
+  </script>
 </body>
 </html>
+
