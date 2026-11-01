@@ -214,16 +214,77 @@ function msg(id, txt, err=false) {
 }
 
 async function updateUser(u) {
-  user = u;
-  document.getElementById("signedOut").classList.toggle("hidden", !!u);
-  document.getElementById("signedIn").classList.toggle("hidden", !u);
-  document.getElementById("userEmail").textContent = u?.email || "";
-  if(u) {
-    const approved = u.user_metadata?.approved === true;
-    document.getElementById("publish").disabled = !approved;
-    document.getElementById("publish").textContent = approved ? "Publish Listing" : "Pending Approval";
-    if(approved) loadMyProducts();
-  } else { document.getElementById("myProductsList").innerHTML = ""; }
+const version = ++authVersion;
+
+user = u;
+storeData = null;
+
+const publish = document.getElementById("publish");
+
+document.getElementById("signedOut").classList.toggle("hidden", !!u);
+document.getElementById("signedIn").classList.toggle("hidden", !u);
+document.getElementById("userEmail").textContent = u?.email || "";
+
+if (!u) {
+publish.disabled = true;
+publish.textContent = "Pending Approval";
+document.getElementById("myProductsList").innerHTML = "";
+document.getElementById("myProductsMsg").textContent = "Sign in to view items.";
+document.getElementById("sellerOrdersList").innerHTML = "";
+document.getElementById("sellerOrdersMsg").textContent = "Sign in to view orders.";
+return;
+}
+
+document.getElementById("userMsg").textContent = "Checking store approval...";
+
+const { data, error } = await sb
+.from("seller_stores")
+.select("id,store_name,store_slug,status")
+.eq("user_id", u.id)
+.maybeSingle();
+
+if (version !== authVersion) return;
+
+if (error) {
+publish.disabled = true;
+publish.textContent = "Approval Check Failed";
+document.getElementById("userMsg").textContent =
+"Store verification failed: " + error.message;
+return;
+}
+
+storeData = data;
+
+if (!storeData) {
+publish.disabled = true;
+publish.textContent = "Store Registration Required";
+document.getElementById("approvalBox").textContent =
+"No seller store registered.";
+document.getElementById("userMsg").textContent =
+"No seller store found for this account.";
+return;
+}
+
+const approved =
+String(storeData.status || "").toLowerCase() === "approved";
+
+document.getElementById("approvalBox").textContent =
+approved ? "✔ Store Approved" :
+"⏳ Status: " + String(storeData.status || "pending").toUpperCase();
+
+publish.disabled = !approved;
+publish.textContent = approved ? "Publish Listing" : "Pending Approval";
+
+document.getElementById("sellerName").value =
+storeData.store_name || "";
+
+document.getElementById("userMsg").textContent =
+approved ? "Your store is approved." :
+"Your store is awaiting admin approval.";
+
+await loadMyProducts();
+
+if (version !== authVersion) return;
 }
 
 document.getElementById("authForm").onsubmit = async e => {
@@ -249,7 +310,9 @@ document.getElementById("signout").onclick = () => sb.auth.signOut().then(()=>up
 
 document.getElementById("sellerForm").onsubmit = async e => {
   e.preventDefault();
-  if(!user || !user.user_metadata?.approved) return msg("sellerMsg", "Account not approved yet.", true);
+  if (!user || storeData?.status !== "approved") {
+  return msg("sellerMsg", "Account not approved yet.", true);
+}
   let files = document.getElementById("photoFiles").files, imgs = [];
   for(let i=0; i<Math.min(files.length, 6); i++) {
     let path = `${user.id}/${Date.now()}_${i}.jpg`;
