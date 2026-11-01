@@ -303,7 +303,8 @@ return `
 
 <div>
 ${safeImage
-? `<img src="${safeImage}" alt="Product image">`
+? `<img src="${safeImage}" alt="Product image"
+    onclick="openImage('${safeImage}')">`
 : `<div class="muted">No image</div>`}
 </div>
 
@@ -328,9 +329,14 @@ ${p.status!=="approved"
 ? `<button class="approve" onclick="changeStatus(${Number(p.id)},'approved')">Approve</button>`
 :""}
 
-${p.status!=="rejected"
-? `<button class="reject" onclick="changeStatus(${Number(p.id)},'rejected')">Reject</button>`
-:""}
+<p>Status: <span class="status">${escapeHTML(p.status)}</span></p>
+
+${p.rejection_reason
+? `<p style="color:#ff8b94">
+     <strong>Rejection reason:</strong>
+     ${escapeHTML(p.rejection_reason)}
+   </p>`
+: ""}
 
 ${p.status!=="hidden"
 ? `<button class="hide" onclick="changeStatus(${Number(p.id)},'hidden')">Hide</button>`
@@ -347,8 +353,17 @@ ${p.status!=="approved"
 }).join("");
 
 }
+function openImage(url){
+  document.getElementById("previewImage").src = url;
+  document.getElementById("imageModal").classList.add("open");
+}
 
-async function changeStatus(id,newStatus){
+function closeImage(){
+  document.getElementById("imageModal").classList.remove("open");
+  document.getElementById("previewImage").src = "";
+}
+
+  async function changeStatus(id,newStatus){
 
 if(!currentAdmin)return;
 
@@ -358,8 +373,25 @@ const product=allProducts.find(p=>Number(p.id)===Number(id));
 
 if(!product)return;
 
+let rejectionReason = null;
+
+if(newStatus === "rejected"){
+  rejectionReason = prompt(
+    "Enter the reason for rejecting this product:"
+  );
+
+  if(rejectionReason === null)return;
+
+  rejectionReason = rejectionReason.trim();
+
+  if(!rejectionReason){
+    message("A rejection reason is required.");
+    return;
+  }
+}
+
 if(!confirm(
-"Change "+product.name+" status to "+newStatus.toUpperCase()+"?"
+  "Change "+product.name+" status to "+newStatus.toUpperCase()+"?"
 ))return;
 
 message("Updating product...");
