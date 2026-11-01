@@ -445,6 +445,7 @@ sb.auth.getSession().then(({data}) => updateUser(data?.session?.user || null));
 sb.auth.onAuthStateChange((_,s) => updateUser(s?.user || null));
 
 
+// LOAD SELLER ORDERS
 async function loadSellerOrders() {
   const msgEl = document.getElementById("sellerOrdersMsg");
   const list = document.getElementById("sellerOrdersList");
@@ -482,7 +483,15 @@ async function loadSellerOrders() {
 
   const { data: fulfillments, error: fulfillmentError } = await sb
     .from("seller_fulfillments")
-    .select("id, order_id, fulfillment_status, item_subtotal")
+    .select(`
+      id,
+      order_id,
+      fulfillment_status,
+      item_subtotal,
+      tracking_number,
+      courier_name,
+      delivery_date
+    `)
     .eq("seller_id", targetUser.id);
 
   if (currentVersion !== authVersion || user !== targetUser) return;
@@ -528,12 +537,11 @@ async function loadSellerOrders() {
 
   list.innerHTML = Array.from(groupedOrders.entries())
     .map(([orderId, orderItems]) => {
+
       const fulfillment = fulfillmentMap.get(orderId);
 
       const currentStatus = fulfillment
-        ? String(
-            fulfillment.fulfillment_status || "pending"
-          ).toLowerCase()
+        ? String(fulfillment.fulfillment_status || "pending").toLowerCase()
         : null;
 
       const validStatus = statuses.includes(currentStatus);
@@ -546,13 +554,60 @@ async function loadSellerOrders() {
         </div>
       `).join("");
 
+      const shippingHTML = fulfillment
+        ? `
+          <div style="margin-top:16px;padding:12px;
+            background:#f1f5f9;border-radius:8px;">
+
+            <h4>🚚 Shipping & Delivery</h4>
+
+            <label>Courier Name</label>
+            <input
+              type="text"
+              id="courier_${orderId}"
+              value="${escapeHTML(fulfillment.courier_name || "")}"
+              placeholder="Enter courier name"
+              style="display:block;width:100%;padding:10px;margin:6px 0 12px;"
+            >
+
+            <label>Tracking Number</label>
+            <input
+              type="text"
+              id="tracking_${orderId}"
+              value="${escapeHTML(fulfillment.tracking_number || "")}"
+              placeholder="Enter tracking number"
+              style="display:block;width:100%;padding:10px;margin:6px 0 12px;"
+            >
+
+            <label>Delivery Date</label>
+            <input
+              type="date"
+              id="delivery_${orderId}"
+              value="${fulfillment.delivery_date
+                ? escapeHTML(String(fulfillment.delivery_date).slice(0, 10))
+                : ""}"
+              style="display:block;width:100%;padding:10px;margin:6px 0 12px;"
+            >
+
+            <button
+              type="button"
+              onclick="saveShippingDetails('${orderId}')"
+              style="padding:10px 16px;"
+            >
+              Save Shipping Details
+            </button>
+          </div>
+        `
+        : `<p>No fulfillment record found for this order.</p>`;
+
       const statusHTML = fulfillment
         ? `
           <div style="margin-top:12px;">
+
             <label><b>Fulfillment Status:</b></label>
 
             <select
-              id="fulfillment_status_${escapeHTML(orderId)}"
+              id="fulfillment_status_${orderId}"
               style="display:block;width:100%;padding:10px;margin-top:6px;"
               ${validStatus ? "" : "disabled"}
             >
@@ -566,19 +621,16 @@ async function loadSellerOrders() {
 
             <button
               type="button"
-              onclick="updateFulfillmentStatus('${escapeHTML(orderId)}')"
+              onclick="updateFulfillmentStatus('${orderId}')"
               style="margin-top:10px;padding:10px 16px;"
               ${validStatus ? "" : "disabled"}
             >
               Save Status
             </button>
+
           </div>
         `
-        : `
-          <p style="color:#b45309;margin-top:12px;">
-            No fulfillment record found for this order.
-          </p>
-        `;
+        : "";
 
       return `
         <div style="padding:14px;margin-top:12px;background:#fff;
@@ -587,8 +639,9 @@ async function loadSellerOrders() {
           <h3>Order #${escapeHTML(orderId.slice(0, 8))}</h3>
 
           ${productsHTML}
-
           ${statusHTML}
+          ${shippingHTML}
+
         </div>
       `;
     }).join("");
@@ -603,8 +656,73 @@ if (refreshOrdersBtn) {
 }
 
 
+// SAVE SHIPPING DETAILS
+async function saveShippingDetails(orderId) {
+
+  const targetUser = user;
+  const currentVersion = authVersion;
+
+  if (!targetUser) {
+    alert("Please sign in again.");
+    return;
+  }
+
+  if (String(storeData?.status || "").toLowerCase() !== "approved") {
+    alert("Your store must be approved.");
+    return;
+  }
+
+  const courier = document.getElementById("courier_" + orderId);
+  const tracking = document.getElementById("tracking_" + orderId);
+  const delivery = document.getElementById("delivery_" + orderId);
+
+  if (!courier || !tracking || !delivery) return;
+
+  const courierName = courier.value.trim();
+  const trackingNumber = tracking.value.trim();
+  const deliveryDate = delivery.value;
+
+  if (deliveryDate && !/^\d{4}-\d{2}-\d{2}$/.test(deliveryDate)) {
+    alert("Invalid delivery date.");
+    return;
+  }
+
+  const { data, error } = await sb
+    .from("seller_fulfillments")
+    .update({
+      courier_name: courierName || null,
+      tracking_number: trackingNumber || null,
+      delivery_date: deliveryDate
+        ? new Date(deliveryDate + "T12:00:00").toISOString()
+        : null,
+      updated_at: new Date().toISOString()
+    })
+    .eq("order_id", orderId)
+    .eq("seller_id", targetUser.id)
+    .select("id")
+    .maybeSingle();
+
+  if (currentVersion !== authVersion || user !== targetUser) return;
+
+  if (error) {
+    alert("Shipping update failed: " + error.message);
+    return;
+  }
+
+  if (!data) {
+    alert("No shipping record was updated.");
+    return;
+  }
+
+  alert("Shipping details saved successfully.");
+
+  await loadSellerOrders();
+}
+
+
 // UPDATE FULFILLMENT STATUS
 async function updateFulfillmentStatus(orderId) {
+
   const targetUser = user;
   const currentVersion = authVersion;
 
@@ -658,7 +776,7 @@ async function updateFulfillmentStatus(orderId) {
   }
 
   if (!data) {
-    alert("No fulfillment record was updated. Check seller permissions and the fulfillment record.");
+    alert("No fulfillment record was updated.");
     return;
   }
 
