@@ -284,9 +284,73 @@ header { background: #ffffff; position: sticky; top: 0; z-index: 50; border-bott
   .mobile-bottom-nav span { font-size: 10px; font-weight: 700; }
   body { padding-bottom: 75px; }
 }
-#categories { display: none; }
-body.categories-view main > *:not(#categories) { display: none !important; }
 body.categories-view #categories { display: block !important; min-height: 70vh; margin: 24px auto !important; max-width: 900px; }
+#customerAuthModal {
+  position: fixed;
+  inset: 0;
+  z-index: 10010;
+  background: rgba(0,0,0,.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+#customerAuthModal.hidden {
+  display: none !important;
+}
+
+.customer-auth-card {
+  position: relative;
+  background: white;
+  color: #172033;
+  width: 100%;
+  max-width: 420px;
+  padding: 28px;
+  border-radius: 16px;
+  box-shadow: 0 15px 50px rgba(0,0,0,.3);
+}
+
+.customer-auth-card label {
+  display: block;
+  margin: 14px 0 6px;
+  font-weight: 600;
+}
+
+.customer-auth-card input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccd3df;
+  border-radius: 8px;
+}
+
+.customer-auth-card form button {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.auth-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+}
+
+#customerAuthModeBtn,
+#customerAuthSignOutBtn {
+  margin-top: 12px;
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+#customerAuthMsg {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
 </style>
 </head>
 <body>
@@ -389,38 +453,7 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
 </div>
 
 <main>
-<section class="hero">
-  <!-- CUSTOMER AUTHENTICATION MODAL -->
-<div id="customerAuthModal" class="hidden">
-  <div class="customer-auth-card">
-    <button type="button" id="customerAuthClose" class="auth-close">✕</button>
-
-    <h2>NOVA<span style="color:#2563eb">AI</span> Account</h2>
-    <p id="customerAuthDescription">Sign in to your customer account.</p>
-
-    <form id="customerAuthForm">
-      <div id="customerNameField" class="hidden">
-        <label for="customerAuthName">Full name</label>
-        <input id="customerAuthName" type="text" maxlength="100">
-      </div>
-
-      <label for="customerAuthEmail">Email address</label>
-      <input id="customerAuthEmail" type="email" required>
-
-      <label for="customerAuthPassword">Password</label>
-      <input id="customerAuthPassword" type="password" minlength="6" required>
-
-      <button type="submit" class="btn primary" id="customerAuthSubmit">Sign in</button>
-    </form>
-
-    <p id="customerAuthMsg"></p>
-    <button type="button" id="customerAuthModeBtn">Don't have an account? Register</button>
-    <button type="button" id="customerAuthSignOutBtn" class="hidden">Sign out</button>
-  </div>
-</div>
-
-<main>
-<section class="hero">
+<section class="hero"
 <div>
 <div style="color:#d5d0ff;letter-spacing:2px">YOUR MARKETPLACE. YOUR OPPORTUNITY.</div>
 <h1>Discover more.<br>Shop smarter.</h1>
