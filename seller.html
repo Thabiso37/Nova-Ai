@@ -462,6 +462,7 @@ sb.auth.onAuthStateChange((_,s) => updateUser(s?.user || null));
     list.innerHTML = "";
     return;
   }
+
   msgEl.textContent = "Loading orders...";
 
   const { data, error } = await sb
@@ -480,7 +481,8 @@ sb.auth.onAuthStateChange((_,s) => updateUser(s?.user || null));
 
   const items = data || [];
 
-  msgEl.textContent = `${items.length} customer order item(s) found.`;
+  msgEl.textContent =
+    `${items.length} customer order item(s) found. Seller ID: ${targetUser.id}`;
 
   list.innerHTML = items.length
     ? items.map(item => `
