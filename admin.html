@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NOVAAI | Admin Panel</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b1020;color:#fff;font-family:Arial,sans-serif}
+header{padding:20px;background:#151e35;border-bottom:1px solid #293653}
+header h1{margin:0;color:#65d9ff}
+header p{color:#aab7ce;font-size:13px}
+main{max-width:1100px;margin:auto;padding:20px}
+.panel{background:#151e35;border:1px solid #293653;border-radius:12px;padding:18px;margin-bottom:18px}
+input{width:100%;padding:13px;margin:7px 0;background:#0b1020;color:white;border:1px solid #43516d;border-radius:7px}
+button{padding:11px 15px;border:0;border-radius:7px;cursor:pointer;font-weight:bold;margin:4px}
+.primary{background:#19b9e6;color:#07111f}
+.approve{background:#16a36a;color:white}
+.reject{background:#d64c59;color:white}
+.hide{background:#d18a24;color:white}
+.restore{background:#6579dc;color:white}
+.logout{background:#394762;color:white}
+.hidden{display:none!important}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat{background:#202d49;padding:15px;border-radius:9px;text-align:center}
+.stat strong{display:block;font-size:25px;color:#65d9ff}
+.product{display:grid;grid-template-columns:110px 1fr;gap:15px;border-bottom:1px solid #35415b;padding:16px 0}
+.product img{width:110px;height:110px;object-fit:cover;border-radius:8px;background:#293653}
+small,.muted{color:#aab7ce}
+.status{font-weight:bold;color:#65d9ff}
+.actions{margin-top:10px}
+#message{padding:10px;color:#65d9ff}
+@media(max-width:600px){
+.stats{grid-template-columns:repeat(2,1fr)}
+.product{grid-template-columns:85px 1fr}
+.product img{width:85px;height:85px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>NOVAAI ADMINISTRATION</h1>
+<p>Secure Product Moderation Portal</p>
+</header>
+
+<main>
+
+<section id="loginPanel" class="panel">
+<h2>Administrator Sign In</h2>
+<p class="muted">Sign in using your NOVAAI administrator account.</p>
+
+<input id="email" type="email" placeholder="Administrator email">
+<input id="password" type="password" placeholder="Password">
+
+<button class="primary" id="loginBtn">Sign In</button>
+<p id="loginMessage"></p>
+</section>
+
+<section id="dashboard" class="hidden">
+
+<div class="panel">
+<h2>Administrator Dashboard</h2>
+<p>Signed in as: <strong id="adminEmail"></strong></p>
+<button class="logout" id="logoutBtn">Sign Out</button>
+</div>
+
+<div class="stats">
+<div class="stat"><strong id="pendingCount">0</strong>Pending</div>
+<div class="stat"><strong id="approvedCount">0</strong>Approved</div>
+<div class="stat"><strong id="rejectedCount">0</strong>Rejected</div>
+<div class="stat"><strong id="hiddenCount">0</strong>Hidden</div>
+</div>
+
+<div class="panel">
+<h2>Product Moderation</h2>
+
+<input id="search" placeholder="Search product or seller...">
+
+<select id="filter" style="width:100%;padding:12px;background:#0b1020;color:white;border-radius:7px">
+<option value="pending">Pending Products</option>
+<option value="approved">Approved Products</option>
+<option value="rejected">Rejected Products</option>
+<option value="hidden">Hidden Products</option>
+<option value="all">All Products</option>
+</select>
+
+<p id="message">Loading products...</p>
+<div id="products"></div>
+</div>
+
+</section>
+
+</main>
+
+<script>
+const ADMIN_ID = "2fc320e9-40b6-407f-9e71-e8a1999956a7";
+
+const sb = window.supabase.createClient(
+"https://nxplffvklkopwfjaqexo.supabase.co",
+"sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ"
+);
+
+let currentAdmin = null;
+let allProducts = [];
+
+function escapeHTML(value){
+return String(value ?? "").replace(/[&<>"']/g,c=>({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#39;"
+}[c]));
+}
+
+function message(text){
+document.getElementById("message").textContent=text;
+}
+
+async function checkAdmin(user){
+
+currentAdmin=null;
+
+document.getElementById("dashboard").classList.add("hidden");
+document.getElementById("loginPanel").classList.remove("hidden");
+
+if(!user){
+document.getElementById("loginMessage").textContent="Please sign in.";
+return;
+}
+
+if(user.id !== ADMIN_ID){
+document.getElementById("loginMessage").textContent=
+"This account is not authorised as a NOVAAI administrator.";
+return;
+}
+
+const {data,error}=await sb.rpc("is_novaai_admin");
+
+if(error || data !== true){
+document.getElementById("loginMessage").textContent=
+"Administrator verification failed. Access denied.";
+return;
+}
+
+currentAdmin=user;
+
+document.getElementById("loginPanel").classList.add("hidden");
+document.getElementById("dashboard").classList.remove("hidden");
+document.getElementById("adminEmail").textContent=user.email || "";
+
+await loadProducts();
+}
+
+async function login(){
+
+const email=document.getElementById("email").value.trim();
+const password=document.getElementById("password").value;
+
+if(!email || !password){
+document.getElementById("loginMessage").textContent=
+"Enter your email and password.";
+return;
+}
+
+document.getElementById("loginMessage").textContent="Signing in...";
+
+const {data,error}=await sb.auth.signInWithPassword({
+email,password
+});
+
+if(error){
+document.getElementById("loginMessage").textContent=error.message;
+return;
+}
+
+await checkAdmin(data.user);
+}
+
+async function logout(){
+await sb.auth.signOut();
+currentAdmin=null;
+allProducts=[];
+document.getElementById("dashboard").classList.add("hidden");
+document.getElementById("loginPanel").classList.remove("hidden");
+document.getElementById("loginMessage").textContent="Signed out.";
+}
+
+async function loadProducts(){
+
+if(!currentAdmin)return;
+
+message("Loading products...");
+
+const {data,error}=await sb
+.from("Products")
+.select("id,name,description,price,category,image_url,images,seller_name,seller_id,status,created_at")
+.order("created_at",{ascending:false});
+
+if(error){
+message("Could not load products: "+error.message);
+return;
+}
+
+allProducts=data || [];
+
+document.getElementById("pendingCount").textContent=
+allProducts.filter(p=>p.status==="pending").length;
+
+document.getElementById("approvedCount").textContent=
+allProducts.filter(p=>p.status==="approved").length;
+
+document.getElementById("rejectedCount").textContent=
+allProducts.filter(p=>p.status==="rejected").length;
+
+document.getElementById("hiddenCount").textContent=
+allProducts.filter(p=>p.status==="hidden").length;
+
+renderProducts();
+}
+
+function renderProducts(){
+
+const filter=document.getElementById("filter").value;
+const search=document.getElementById("search").value.toLowerCase();
+
+const filtered=allProducts.filter(p=>{
+
+const statusMatch=filter==="all" || p.status===filter;
+
+const textMatch=[
+p.name,p.seller_name,p.category,p.description
+].join(" ").toLowerCase().includes(search);
+
+return statusMatch && textMatch;
+});
+
+message(filtered.length+" product(s) found.");
+
+document.getElementById("products").innerHTML=
+filtered.map(p=>{
+
+const image=p.image_url ||
+(Array.isArray(p.images)?p.images[0]:"");
+
+const safeImage=String(image || "").startsWith("https://")
+? escapeHTML(image) : "";
+
+return `
+<div class="product">
+
+<div>
+${safeImage
+? `<img src="${safeImage}" alt="Product image">`
+: `<div class="muted">No image</div>`}
+</div>
+
+<div>
+<h3>${escapeHTML(p.name)}</h3>
+
+<p>Price: R${Number(p.price || 0).toFixed(2)}</p>
+
+<p>Category: ${escapeHTML(p.category)}</p>
+
+<p>Seller: ${escapeHTML(p.seller_name)}</p>
+
+<p>Seller ID: <small>${escapeHTML(p.seller_id)}</small></p>
+
+<p class="muted">${escapeHTML(p.description)}</p>
+
+<p>Status: <span class="status">${escapeHTML(p.status)}</span></p>
+
+<div class="actions">
+
+${p.status!=="approved"
+? `<button class="approve" onclick="changeStatus(${Number(p.id)},'approved')">Approve</button>`
+:""}
+
+${p.status!=="rejected"
+? `<button class="reject" onclick="changeStatus(${Number(p.id)},'rejected')">Reject</button>`
+:""}
+
+${p.status!=="hidden"
+? `<button class="hide" onclick="changeStatus(${Number(p.id)},'hidden')">Hide</button>`
+:""}
+
+${p.status!=="approved"
+? `<button class="restore" onclick="changeStatus(${Number(p.id)},'pending')">Return to Pending</button>`
+:""}
+
+</div>
+</div>
+</div>
+`;
+}).join("");
+
+}
+
+async function changeStatus(id,newStatus){
+
+if(!currentAdmin)return;
+
+if(!["pending","approved","rejected","hidden"].includes(newStatus))return;
+
+const product=allProducts.find(p=>Number(p.id)===Number(id));
+
+if(!product)return;
+
+if(!confirm(
+"Change "+product.name+" status to "+newStatus.toUpperCase()+"?"
+))return;
+
+message("Updating product...");
+
+const {error}=await sb
+.from("Products")
+.update({status:newStatus})
+.eq("id",id);
+
+if(error){
+message("Update failed: "+error.message);
+return;
+}
+
+message("Product status updated successfully.");
+
+await loadProducts();
+}
+
+document.getElementById("loginBtn").onclick=login;
+document.getElementById("logoutBtn").onclick=logout;
+document.getElementById("filter").onchange=renderProducts;
+document.getElementById("search").oninput=renderProducts;
+
+sb.auth.getSession().then(({data,error})=>{
+if(error){
+document.getElementById("loginMessage").textContent=error.message;
+return;
+}
+checkAdmin(data.session?.user || null);
+});
+
+sb.auth.onAuthStateChange((event,session)=>{
+if(event==="SIGNED_OUT"){
+currentAdmin=null;
+document.getElementById("dashboard").classList.add("hidden");
+document.getElementById("loginPanel").classList.remove("hidden");
+}else if(event==="SIGNED_IN"){
+checkAdmin(session?.user || null);
+}
+});
+</script>
+
+</body>
+</html>
