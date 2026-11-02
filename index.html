@@ -1316,14 +1316,37 @@ if (locationDisplay) {
 
 if (gpsButton) {
   gpsButton.addEventListener("click", function () {
-    if (!navigator.geolocation) { locationDisplay.textContent = "📍 GPS not supported"; return; }
+    if (!navigator.geolocation) {
+      locationDisplay.textContent = "📍 GPS not supported";
+      return;
+    }
+
     locationDisplay.textContent = "📍 Finding location...";
+
     navigator.geolocation.getCurrentPosition(
       pos => {
-        buyerCoordinates = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-        locationDisplay.textContent = "📍 GPS: " + pos.coords.latitude.toFixed(4) + ", " + pos.coords.longitude.toFixed(4);
+        buyerCoordinates = {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude
+        };
+
+        const gpsLocation = "📍 GPS: " +
+          pos.coords.latitude.toFixed(4) + ", " +
+          pos.coords.longitude.toFixed(4);
+
+        localStorage.setItem("buyerDeliveryLocation", gpsLocation);
+        localStorage.setItem("buyerLocationType", "gps");
+
+        locationDisplay.textContent = gpsLocation;
+
+        const cartLocation = document.getElementById("cartDeliveryLocation");
+        if (cartLocation) {
+          cartLocation.textContent = gpsLocation;
+        }
       },
-      err => { locationDisplay.textContent = "📍 GPS error"; }
+      err => {
+        locationDisplay.textContent = "📍 GPS error";
+      }
     );
   });
 }
