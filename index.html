@@ -1289,11 +1289,28 @@ const locationDisplay = document.getElementById("buyerLocation");
 const gpsButton = document.getElementById("useMyLocation");
 const changeButton = document.getElementById("changeLocation");
 let buyerCoordinates = null;
+
+// Restore the saved delivery location after reload
+const savedLocation = localStorage.getItem("buyerDeliveryLocation");
+
+if (locationDisplay && savedLocation) {
+  locationDisplay.textContent = "📍 Deliver to: " + savedLocation;
+}
+
 if (locationDisplay) {
   locationDisplay.style.cursor = "pointer";
+
   locationDisplay.addEventListener("click", function () {
-    if (!buyerCoordinates) { alert("Please press Use GPS first."); return; }
-    window.open("https://www.google.com/maps/search/?api=1&query=" + buyerCoordinates.latitude + "," + buyerCoordinates.longitude, "_blank");
+    if (!buyerCoordinates) {
+      alert("Please press Use GPS first.");
+      return;
+    }
+
+    window.open(
+      "https://www.google.com/maps/search/?api=1&query=" +
+      buyerCoordinates.latitude + "," + buyerCoordinates.longitude,
+      "_blank"
+    );
   });
 }
 
