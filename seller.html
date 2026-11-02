@@ -738,7 +738,29 @@ async function loadSellerOrders() {
   const fulfillmentMap = new Map(
     (fulfillments || []).map(f => [String(f.order_id), f])
   );
+const orderIds = [
+  ...new Set((items || []).map(item => String(item.order_id)))
+];
 
+const { data: orders, error: ordersError } = await sb
+  .from("orders")
+  .select("id, buyer_selected_location")
+  .in("id", orderIds);
+
+if (currentVersion !== authVersion || user !== targetUser) return;
+
+if (ordersError) {
+  msgEl.textContent =
+    "Unable to load buyer locations: " + ordersError.message;
+  return;
+}
+
+const orderLocationMap = new Map(
+  (orders || []).map(order => [
+    String(order.id),
+    order.buyer_selected_location
+  ])
+);
   const groupedOrders = new Map();
 
   (items || []).forEach(item => {
