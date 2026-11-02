@@ -102,12 +102,6 @@ nav{display:flex;gap:16px;overflow:auto;padding-top:0;padding-bottom:12px;font-s
 .stat strong{font-size:22px;display:block}
 .stat span,.muted{color:var(--muted);font-size:12px}
 .section{margin-top:28px;scroll-margin-top:140px}
-#cartModal:not(.hidden) {
-  display: flex !important;
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 99999 !important;
-}
 
 #cartModal.hidden {
   display: none !important;
@@ -361,6 +355,90 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
   font-size: 13px;
   overflow-wrap: anywhere;
 }
+
+#cartModal.cart-page {
+  position: fixed;
+  inset: 0;
+  z-index: 10005;
+  background: #f4f6f9;
+  overflow-y: auto;
+  min-height: 100vh;
+}
+
+#cartModal.cart-page.hidden {
+  display: none !important;
+}
+
+.cart-page-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 62px;
+  background: white;
+  border-bottom: 1px solid #e1e6ee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+
+.cart-page-header h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.cart-page-header button {
+  border: 0;
+  background: transparent;
+  color: #174ea6;
+  font-size: 25px;
+  padding: 8px;
+}
+
+.cart-delivery-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 16px;
+  background: white;
+  border-bottom: 1px solid #e1e6ee;
+  font-size: 13px;
+}
+
+.cart-delivery-bar button {
+  border: 0;
+  background: transparent;
+  color: #174ea6;
+  font-weight: 800;
+}
+
+.cart-page-content {
+  max-width: 1000px;
+  margin: auto;
+  padding: 20px 16px 40px;
+}
+
+.cart-page-content > h3 {
+  margin-top: 0;
+}
+
+.cart-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cart-actions button {
+  flex: 1;
+  min-width: 130px;
+}
+
+@media (max-width: 560px) {
+  .cart-page-content {
+    padding: 16px 12px 35px;
+  }
+}
 </style>
 </head>
 <body>
@@ -518,53 +596,64 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
 <p class="muted">Create an account or sign in to publish shared listings.</p>
 </section>
 
-<div id="cartModal" class="cart-modal hidden">
-  <div class="cart-modal-content">
-    <div class="cart-modal-header">
-  <h2>🛒 Your shopping cart</h2>
-  <button type="button" class="cart-close" onclick="closeCart()">✕</button>
+<div id="cartModal" class="cart-page hidden">
+
+  <div class="cart-page-header">
+    <button type="button" onclick="closeCart()">←</button>
+    <h2>Cart</h2>
+    <button type="button" onclick="openWishlistPage()">♡</button>
+  </div>
+
+  <div class="cart-delivery-bar">
+    <span id="cartDeliveryLocation">📍 Deliver to: Your current location</span>
+    <button type="button" id="cartChangeLocation">Change</button>
+  </div>
+
+  <div class="cart-page-content">
+
+    <h3>Your shopping cart</h3>
+    <p class="muted">Review your shopping cart.</p>
+
+    <div id="cartItems"></div>
+
+    <div class="total">
+      <span>Total</span>
+      <span id="total">R0.00</span>
+    </div>
+
+    <div class="cart-actions">
+      <button class="btn outline" onclick="clearCart()">Clear cart</button>
+      <button class="btn primary" onclick="checkout()">Continue to checkout</button>
+    </div>
+
+    <div id="checkoutMsg" class="msg" aria-live="polite"></div>
+
+    <form id="checkoutForm" class="hidden">
+      <h3>Customer details</h3>
+      <p class="muted">Sign in using your NOVAAI account before placing an order.</p>
+
+      <div class="field">
+        <label for="customerName">Full name *</label>
+        <input id="customerName" maxlength="100" required>
+      </div>
+
+      <div class="field">
+        <label for="customerPhone">Phone number *</label>
+        <input id="customerPhone" type="tel" maxlength="30" required>
+      </div>
+
+      <div class="field">
+        <label for="deliveryAddress">Delivery address *</label>
+        <textarea id="deliveryAddress" maxlength="500" required></textarea>
+      </div>
+
+      <p class="notice">Orders are submitted for seller confirmation. No online payment is taken at this stage.</p>
+
+      <button class="btn primary" id="placeOrderBtn" type="submit">Place order</button>
+    </form>
+
+  </div>
 </div>
-
-<p class="muted">Review your shopping cart.</p>
-
-<div id="cartItems"></div>
-
-<div class="total">
-  <span>Total</span>
-  <span id="total">R0.00</span>
-</div>
-
-<button class="btn outline" onclick="clearCart()">Clear cart</button>
-<button class="btn primary" onclick="checkout()">Continue to checkout</button>
-
-<div id="checkoutMsg" class="msg" aria-live="polite"></div>
-
-<form id="checkoutForm" class="hidden">
-  <h3>Customer details</h3>
-  <p class="muted">Sign in using your NOVAAI account before placing an order.</p>
-
-  <div class="field">
-    <label for="customerName">Full name *</label>
-    <input id="customerName" maxlength="100" required>
-  </div>
-
-  <div class="field">
-    <label for="customerPhone">Phone number *</label>
-    <input id="customerPhone" type="tel" maxlength="30" required>
-  </div>
-
-  <div class="field">
-    <label for="deliveryAddress">Delivery address *</label>
-    <textarea id="deliveryAddress" maxlength="500" required></textarea>
-  </div>
-
-  <p class="notice">Orders are submitted for seller confirmation. No online payment is taken at this stage.</p>
-
-  <button class="btn primary" id="placeOrderBtn" type="submit">Place order</button>
-</form>
-  </div>
-</div>
-
 <section id="customerOrders" class="section">
   <h2>📦 My Orders</h2>
   <p class="muted">Track orders placed using your signed-in NOVAAI account.</p>
@@ -1223,29 +1312,68 @@ if (gpsButton) {
 }
 
 if (changeButton) {
-  changeButton.addEventListener("click", function () {
-    const town = prompt("Enter your town or suburb:");
-    if (town && town.trim()) {
-      buyerCoordinates = null;
-      locationDisplay.textContent = "📍 Deliver to: " + town.trim();
+changeButton.addEventListener("click", function () {
+  const town = prompt("Enter your town or suburb:");
+
+  if (town && town.trim()) {
+    buyerCoordinates = null;
+
+    const locationText = "📍 Deliver to: " + town.trim();
+
+    locationDisplay.textContent = locationText;
+
+    const cartLocation = document.getElementById("cartDeliveryLocation");
+
+    if (cartLocation) {
+      cartLocation.textContent = locationText;
     }
+  }
+});
+}
+const cartChangeButton = document.getElementById("cartChangeLocation");
+
+if (cartChangeButton && changeButton) {
+  cartChangeButton.addEventListener("click", function () {
+    changeButton.click();
   });
 }
+let previousCartScrollPosition = 0;
 
 function openCart() {
-  const modal = document.getElementById("cartModal");
+  const cartPage = document.getElementById("cartModal");
 
-  if (!modal) {
-    alert("Cart popup not found. Check that the cart HTML exists.");
+  if (!cartPage) {
+    alert("Cart page not found.");
     return;
   }
 
-  modal.classList.remove("hidden");
+  previousCartScrollPosition = window.scrollY;
+const mainLocation = document.getElementById("buyerLocation");
+const cartLocation = document.getElementById("cartDeliveryLocation");
+
+if (mainLocation && cartLocation) {
+  cartLocation.textContent = mainLocation.textContent;
+}
+  cartPage.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+
+  if (typeof renderCart === "function") {
+    renderCart();
+  }
 }
 
 function closeCart() {
-  const modal = document.getElementById("cartModal");
-  if (modal) modal.classList.add("hidden");
+  const cartPage = document.getElementById("cartModal");
+
+  if (!cartPage) return;
+
+  cartPage.classList.add("hidden");
+  document.body.style.overflow = "";
+
+  window.scrollTo({
+    top: previousCartScrollPosition,
+    behavior: "auto"
+  });
 }
 </script>
 
