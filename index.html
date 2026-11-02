@@ -508,26 +508,40 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
 <p class="muted">Create an account or sign in to publish shared listings.</p>
 </section>
 
-<section id="cart" class="section">
-<h2>🛒 Your shopping cart</h2>
-<p class="muted">Review your demo cart before continuing.</p>
-<div class="panel">
-<div id="cartItems"></div>
-<div class="total"><span>Total</span><span id="total">R0.00</span></div>
-<button class="btn outline" onclick="clearCart()">Clear cart</button>
-<button class="btn primary" onclick="checkout()">Continue to checkout</button>
-<div id="checkoutMsg" class="msg" aria-live="polite"></div>
-<form id="checkoutForm" class="hidden">
-  <h3>Customer details</h3>
-  <p class="muted">Sign in using your NOVAAI account before placing an order.</p>
-  <div class="field"><label for="customerName">Full name *</label><input id="customerName" maxlength="100" required></div>
-  <div class="field"><label for="customerPhone">Phone number *</label><input id="customerPhone" type="tel" maxlength="30" autocomplete="tel" required></div>
-  <div class="field"><label for="deliveryAddress">Delivery address *</label><textarea id="deliveryAddress" maxlength="500" autocomplete="street-address" required></textarea></div>
-  <p class="notice">Orders are submitted for seller confirmation. No online payment is taken at this stage.</p>
-  <button class="btn primary" id="placeOrderBtn" type="submit">Place order</button>
-</form>
+<div id="cartModal" class="cart-modal hidden">
+  <div class="cart-modal-content">
+    <div class="cart-modal-header">
+      <h2>🛒 Your shopping cart</h2>
+      <button type="button" class="cart-close" onclick="closeCart()">✕</button>
+    </div>
+
+    <p class="muted">Review your shopping cart.</p>
+
+    <div id="cartItems"></div>
+
+    <div class="total">
+      <span>Total</span>
+      <span id="total">R0.00</span>
+    </div>
+
+    <button class="btn outline" onclick="clearCart()">Clear cart</button>
+    <button class="btn primary" onclick="checkout()">Continue to checkout</button>
+
+    <div id="checkoutMsg" class="msg" aria-live="polite"></div>
+
+    <form id="checkoutForm" class="hidden">
+      <h3>Customer details</h3>
+      <p class="muted">Sign in using your NOVAAI account before placing an order.</p>
+
+      <div class="field"><label for="customerName">Full name *</label><input id="customerName" maxlength="100" required></div>
+      <div class="field"><label for="customerPhone">Phone number *</label><input id="customerPhone" type="tel" maxlength="30" required></div>
+      <div class="field"><label for="deliveryAddress">Delivery address *</label><textarea id="deliveryAddress" maxlength="500" required></textarea></div>
+
+      <p class="notice">Orders are submitted for seller confirmation. No online payment is taken at this stage.</p>
+      <button class="btn primary" id="placeOrderBtn" type="submit">Place order</button>
+    </form>
+  </div>
 </div>
-</section>
 
 <section id="customerOrders" class="section">
   <h2>📦 My Orders</h2>
