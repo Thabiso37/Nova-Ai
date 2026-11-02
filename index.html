@@ -1362,6 +1362,8 @@ changeButton.addEventListener("click", function () {
    
   localStorage.setItem("buyerDeliveryLocation", town.trim());
     
+  localStorage.setItem("buyerLocationType", "town");
+   
     locationDisplay.textContent = locationText;
 
     const cartLocation = document.getElementById("cartDeliveryLocation");
