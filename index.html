@@ -1029,32 +1029,34 @@ document.getElementById("checkoutForm").addEventListener("submit", async e => {
     }
 
     // Create the real order in Supabase
-    const { data: orderId, error: orderError } = await sb.rpc(
-      "place_order",
-      {
-        p_customer_name: customerName,
-        p_customer_phone: customerPhone,
-        p_delivery_address: deliveryAddress,
-        p_items: items
-      }
-    );
+const { data: orderId, error: orderError } = await sb.rpc(
+  "place_order",
+  {
+    p_customer_name: customerName,
+    p_customer_phone: customerPhone,
+    p_delivery_address: deliveryAddress,
+    p_items: items,
+    p_buyer_selected_location:
+      localStorage.getItem("buyerDeliveryLocation") || ""
+  }
+);
 
-    if (orderError) throw orderError;
+if (orderError) throw orderError;
 
-    if (!orderId) {
-      throw new Error("Supabase did not return an order number.");
-    }
+if (!orderId) {
+  throw new Error("Supabase did not return an order number.");
+}
 
-    alert(
-      "Order placed successfully!\n\nOrder reference: " + orderId
-    );
+alert(
+  "Order placed successfully!\n\nOrder reference: " + orderId
+);
 
-    cart = [];
-    saveCart();
-    renderCart();
+cart = [];
+saveCart();
+renderCart();
 
-    form.reset();
-    form.classList.add("hidden");
+form.reset();
+form.classList.add("hidden");
 
   } catch (error) {
     console.error("Checkout error:", error);
