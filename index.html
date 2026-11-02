@@ -1177,12 +1177,14 @@ sb.auth.onAuthStateChange((_event, session) => {
 });
 
 updateCustomerAccountUI();
+
 async function loadShared() {
   try {
-    
+
     const { data: productData, error: productError } = await sb
       .from("Products")
-      .select("id,name,description,price,category,image_url,images,seller_name,seller_id")
+      .select("id,name,description,price,category,image_url,images,seller_name,seller_id,status")
+      .eq("status", "approved")
       .order("created_at", { ascending: false });
 
     if (productError) throw productError;
@@ -1198,9 +1200,10 @@ async function loadShared() {
       (approvedStores || []).map(store => store.user_id)
     );
 
-    // Display genuine products from approved sellers only
+    // Only show approved products belonging to approved sellers
     products = (productData || [])
       .filter(product =>
+        product.status === "approved" &&
         product.seller_id &&
         approvedSellerIds.has(product.seller_id) &&
         product.name &&
@@ -1223,7 +1226,7 @@ async function loadShared() {
       "REAL MARKETPLACE CONNECTED";
 
     document.getElementById("catalogueMessage").textContent =
-      "Genuine products from approved NOVAAI sellers.";
+      "Approved products from verified NOVAAI sellers.";
 
     render();
     renderCart();
@@ -1231,7 +1234,6 @@ async function loadShared() {
   } catch (error) {
     console.error("Marketplace loading error:", error);
 
-    // Never show demo products as a fallback
     products = [];
 
     document.getElementById("dbStatus").textContent =
