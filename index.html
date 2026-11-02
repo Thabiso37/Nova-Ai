@@ -1336,7 +1336,9 @@ changeButton.addEventListener("click", function () {
     buyerCoordinates = null;
 
     const locationText = "📍 Deliver to: " + town.trim();
-
+   
+  localStorage.setItem("buyerDeliveryLocation", town.trim());
+    
     locationDisplay.textContent = locationText;
 
     const cartLocation = document.getElementById("cartDeliveryLocation");
