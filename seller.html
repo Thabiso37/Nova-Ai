@@ -795,6 +795,9 @@ const orderLocationMap = new Map(
 
       const fulfillment = fulfillmentMap.get(orderId);
 
+     const buyerLocation =
+  orderLocationMap.get(orderId) || "Not provided";
+      
       const currentStatus = fulfillment
         ? String(fulfillment.fulfillment_status || "pending").toLowerCase()
         : null;
@@ -893,7 +896,12 @@ const orderLocationMap = new Map(
 
           <h3>Order #${escapeHTML(orderId.slice(0, 8))}</h3>
 
-          ${productsHTML}
+   <p>
+     <b>Buyer's Selected Location:</b>
+     ${escapeHTML(buyerLocation)}
+   </p>
+
+         ${productsHTML}
           ${statusHTML}
           ${shippingHTML}
 
