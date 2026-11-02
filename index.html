@@ -1149,6 +1149,22 @@ if (changeButton) {
     }
   });
 }
+
+function openCart() {
+  const modal = document.getElementById("cartModal");
+
+  if (!modal) {
+    alert("Cart popup not found. Check that the cart HTML exists.");
+    return;
+  }
+
+  modal.classList.remove("hidden");
+}
+
+function closeCart() {
+  const modal = document.getElementById("cartModal");
+  if (modal) modal.classList.add("hidden");
+}
 </script>
 
 </body>
