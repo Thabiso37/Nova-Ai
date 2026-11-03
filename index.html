@@ -1355,38 +1355,40 @@ msg.textContent = error.message || "Unable to load orders.";
 }
 }
 
-// NOVAAI MY ORDERS — OPEN AND LOAD
-document.addEventListener("DOMContentLoaded", () => {
+// NOVAAI — GLOBAL MY ORDERS CLICK HANDLER
 
-  const ordersButton = document.getElementById("loadCustomerOrders");
-  const ordersSection = document.getElementById("customerOrders");
+document.addEventListener("click", async function(e) {
 
-  if (!ordersButton || !ordersSection) {
-    console.error("NOVAAI: My Orders button or section missing.");
-    return;
-  }
+const button = e.target.closest("#loadCustomerOrders");
 
-  ordersButton.addEventListener("click", async () => {
+if (!button) return;
 
-    // Open My Orders
-    ordersSection.style.display = "block";
-    ordersSection.style.visibility = "visible";
-    ordersSection.style.opacity = "1";
+console.log("NOVAAI: MY ORDERS BUTTON CLICKED");
 
-    // Scroll to My Orders
-    ordersSection.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
+const section = document.getElementById("customerOrders");
 
-    // Load customer orders
-    await loadCustomerOrders();
+if (!section) {
+console.error("My Orders section not found!");
+alert("My Orders section not found!");
+return;
+}
 
-  });
+section.removeAttribute("hidden");
+section.style.setProperty("display", "block", "important");
+section.style.setProperty("visibility", "visible", "important");
+section.style.setProperty("opacity", "1", "important");
+
+section.scrollIntoView({
+behavior: "smooth",
+block: "start"
+});
+
+await loadCustomerOrders();
 
 });
+
 async function loadShared() {
-  try {
+try {
 
     const { data: productData, error: productError } = await sb
       .from("Products")
