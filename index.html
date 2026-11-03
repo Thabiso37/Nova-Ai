@@ -1355,10 +1355,36 @@ msg.textContent = error.message || "Unable to load orders.";
 }
 }
 
-// Connect My Orders button
-document
-.getElementById("loadCustomerOrders")
-.addEventListener("click", loadCustomerOrders);
+// NOVAAI MY ORDERS — OPEN AND LOAD
+document.addEventListener("DOMContentLoaded", () => {
+
+  const ordersButton = document.getElementById("loadCustomerOrders");
+  const ordersSection = document.getElementById("customerOrders");
+
+  if (!ordersButton || !ordersSection) {
+    console.error("NOVAAI: My Orders button or section missing.");
+    return;
+  }
+
+  ordersButton.addEventListener("click", async () => {
+
+    // Open My Orders
+    ordersSection.style.display = "block";
+    ordersSection.style.visibility = "visible";
+    ordersSection.style.opacity = "1";
+
+    // Scroll to My Orders
+    ordersSection.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+
+    // Load customer orders
+    await loadCustomerOrders();
+
+  });
+
+});
 async function loadShared() {
   try {
 
