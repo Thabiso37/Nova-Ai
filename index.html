@@ -1355,37 +1355,34 @@ msg.textContent = error.message || "Unable to load orders.";
 }
 }
 
-// NOVAAI — GLOBAL MY ORDERS CLICK HANDLER
+// NOVAAI MY ORDERS DIAGNOSTIC
 
-document.addEventListener("click", async function(e) {
+console.log("=== NOVAAI ORDERS DIAGNOSTIC ===");
 
-const button = e.target.closest("#loadCustomerOrders");
+console.log(
+  "Button:",
+  document.getElementById("loadCustomerOrders")
+);
 
-if (!button) return;
+console.log(
+  "Section:",
+  document.getElementById("customerOrders")
+);
 
-console.log("NOVAAI: MY ORDERS BUTTON CLICKED");
+console.log(
+  "Orders container:",
+  document.getElementById("customerOrdersList")
+);
 
-const section = document.getElementById("customerOrders");
+console.log(
+  "Orders message:",
+  document.getElementById("customerOrdersMsg")
+);
 
-if (!section) {
-console.error("My Orders section not found!");
-alert("My Orders section not found!");
-return;
-}
-
-section.removeAttribute("hidden");
-section.style.setProperty("display", "block", "important");
-section.style.setProperty("visibility", "visible", "important");
-section.style.setProperty("opacity", "1", "important");
-
-section.scrollIntoView({
-behavior: "smooth",
-block: "start"
-});
-
-await loadCustomerOrders();
-
-});
+console.log(
+  "Load function:",
+  typeof loadCustomerOrders
+);
 
 async function loadShared() {
 try {
