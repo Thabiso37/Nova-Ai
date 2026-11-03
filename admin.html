@@ -349,7 +349,9 @@ async function loadPaymentData() {
       .order("created_at", { ascending: false });
 
     if (orderError) throw orderError;
-
+ 
+    console.log("NOVAAI ORDERS RECEIVED:", orders);
+    
     const { data: fulfillments, error: fulfillmentError } = await sb
       .from("seller_fulfillments")
       .select(`
@@ -368,7 +370,9 @@ async function loadPaymentData() {
       .order("created_at", { ascending: false });
 
     if (fulfillmentError) throw fulfillmentError;
-
+   
+    console.log("NOVAAI FULFILLMENTS RECEIVED:", fulfillments);
+   
     allPaymentOrders = orders || [];
     allSellerFinancials = fulfillments || [];
 
