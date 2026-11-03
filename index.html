@@ -1177,7 +1177,158 @@ sb.auth.onAuthStateChange((_event, session) => {
 });
 
 updateCustomerAccountUI();
+// ==========================================
+// NOVAAI CUSTOMER MY ORDERS
+// ==========================================
 
+async function loadCustomerOrders() {
+
+const container = document.getElementById("customerOrdersList");
+const msg = document.getElementById("customerOrdersMsg");
+
+msg.textContent = "Loading your orders...";
+container.innerHTML = "";
+
+try {
+
+// Verify signed-in customer
+const { data: authData, error: authError } =
+  await sb.auth.getUser();
+
+if (authError || !authData.user) {
+  throw new Error("Please sign in to view your orders.");
+}
+
+const customerId = authData.user.id;
+
+// Retrieve customer's orders
+const { data: orders, error: ordersError } = await sb
+  .from("orders")
+  .select("*")
+  .eq("customer_id", customerId)
+  .order("created_at", { ascending: false });
+
+if (ordersError) throw ordersError;
+
+if (!orders || orders.length === 0) {
+  msg.textContent = "You haven't placed any orders yet.";
+  return;
+}
+
+const orderIds = orders.map(order => order.id);
+
+// Retrieve order products
+const { data: items, error: itemsError } = await sb
+  .from("order_items")
+  .select("*")
+  .in("order_id", orderIds);
+
+if (itemsError) throw itemsError;
+
+// Retrieve fulfilment information
+const { data: fulfillments, error: fulfillmentError } = await sb
+  .from("seller_fulfillments")
+  .select("*")
+  .in("order_id", orderIds);
+
+if (fulfillmentError) throw fulfillmentError;
+
+// Escape text before inserting into HTML
+const escapeHTML = value =>
+  String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[char]));
+
+container.innerHTML = orders.map(order => {
+
+  const orderItems = items.filter(
+    item => item.order_id === order.id
+  );
+
+  const orderFulfillments = fulfillments.filter(
+    item => item.order_id === order.id
+  );
+
+  return `
+    <div class="panel" style="margin:16px 0;padding:16px">
+
+      <h3>📦 Order #${escapeHTML(order.id)}</h3>
+
+      <p>
+        📅 ${escapeHTML(
+          new Date(order.created_at).toLocaleString("en-ZA")
+        )}
+      </p>
+
+      <h4>Products</h4>
+
+      ${orderItems.map(item => `
+        <div>
+          <strong>${escapeHTML(item.product_name)}</strong>
+          <p>Quantity: ${Number(item.quantity)}</p>
+          <p>Unit price: R${Number(item.unit_price).toFixed(2)}</p>
+          <p>Subtotal: R${Number(item.line_total).toFixed(2)}</p>
+        </div>
+      `).join("")}
+
+      <hr>
+
+      <h3>
+        Total: R${Number(order.total_amount).toFixed(2)}
+      </h3>
+
+      <p>
+        Payment:
+        ${escapeHTML(order.payment_status)}
+      </p>
+
+      <p>
+        Order status:
+        ${escapeHTML(order.order_status)}
+      </p>
+
+      <h4>🚚 Delivery tracking</h4>
+
+      ${orderFulfillments.length
+        ? orderFulfillments.map(f => `
+          <div>
+            <p>Status: ${escapeHTML(f.fulfillment_status)}</p>
+            <p>Courier: ${escapeHTML(f.courier_name || "Not assigned")}</p>
+            <p>Tracking: ${escapeHTML(f.tracking_number || "Not available")}</p>
+            <p>Delivery date: ${
+              f.delivery_date
+                ? escapeHTML(new Date(f.delivery_date).toLocaleDateString("en-ZA"))
+                : "Awaiting delivery"
+            }</p>
+          </div>
+        `).join("")
+        : "<p>Awaiting seller fulfilment.</p>"
+      }
+
+    </div>
+  `;
+
+}).join("");
+
+msg.textContent = orders.length + " order(s) found.";
+
+} catch (error) {
+
+console.error("NOVAAI My Orders:", error);
+
+msg.textContent = error.message || "Unable to load orders.";
+
+}
+}
+
+// Connect My Orders button
+document
+.getElementById("loadCustomerOrders")
+.addEventListener("click", loadCustomerOrders);
 async function loadShared() {
   try {
 
