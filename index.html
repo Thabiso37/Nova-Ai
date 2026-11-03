@@ -1099,7 +1099,20 @@ function openCustomerAuth() {
   document.getElementById("customerAuthModal").classList.remove("hidden");
   renderCustomerAuthMode();
 }
+function openCustomerOrders() {
+  const modal = document.getElementById("customerOrdersModal");
 
+  if (!modal) return;
+
+  modal.showModal();
+  loadCustomerOrders();
+}
+
+function closeCustomerOrders() {
+  const modal = document.getElementById("customerOrdersModal");
+
+  if (modal) modal.close();
+}
 function closeCustomerAuth() {
   document.getElementById("customerAuthModal").classList.add("hidden");
 }
