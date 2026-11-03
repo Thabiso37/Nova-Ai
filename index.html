@@ -1230,7 +1230,7 @@ if (authError || !authData.user) {
 }
 
 const customerId = authData.user.id;
-
+console.log("NOVAAI CUSTOMER ID:", customerId);
 // Retrieve customer's orders
 const { data: orders, error: ordersError } = await sb
   .from("orders")
