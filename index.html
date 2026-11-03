@@ -655,15 +655,27 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
 
   </div>
 </div>
-<section id="customerOrders" style="display:block!important;visibility:visible!important;opacity:1!important;background:#fff;padding:20px;margin:24px 0;border:3px solid red;min-height:150px">
-  <h2>📦 My Orders</h2>
-  <p class="muted">Track orders placed using your signed-in NOVAAI account.</p>
-  <div class="panel">
-    <button class="btn primary" type="button" id="loadCustomerOrders">View my orders</button>
-    <div id="customerOrdersMsg" class="msg" aria-live="polite">Sign in to view your orders.</div>
-    <div id="customerOrdersList"></div>
+<dialog id="customerOrdersModal"
+style="width:min(92vw,700px);max-height:85vh;overflow:auto;border:0;border-radius:16px;padding:20px;box-shadow:0 10px 40px #0005">
+
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <h2>📦 My Orders</h2>
+    <button type="button" onclick="closeCustomerOrders()" class="btn outline">✕</button>
   </div>
-</section>
+
+  <p class="muted">Track orders placed using your signed-in NOVAAI account.</p>
+
+  <section id="customerOrders">
+    <button class="btn primary" type="button" id="loadCustomerOrders">
+      View my orders
+    </button>
+    <div id="customerOrdersMsg" class="msg" aria-live="polite">
+      Sign in to view your orders.
+    </div>
+    <div id="customerOrdersList"></div>
+  </section>
+
+</dialog>
 
 <section id="wishlist" class="panel" style="margin:24px 0">
   <h2>❤️ My Wishlist</h2>
