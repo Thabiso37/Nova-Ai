@@ -132,6 +132,53 @@ small,.muted{color:#aab7ce}
 <div id="products"></div>
 </div>
 
+<!-- NOVAAI PAYMENT CONTROL CENTRE -->
+
+<div class="panel" id="paymentCentre">
+
+<h2>🛡️ NOVAAI PAYMENT CONTROL CENTRE</h2>
+
+<p class="muted">Marketplace financial monitoring.</p>
+
+<div class="stats">
+
+<div class="stat"><strong id="totalVolume">R0.00</strong>Total Sales</div>
+<div class="stat"><strong id="paidTotal">R0.00</strong>Recorded Paid</div>
+<div class="stat"><strong id="pendingTotal">R0.00</strong>Pending</div>
+<div class="stat"><strong id="failedTotal">R0.00</strong>Failed</div>
+<div class="stat"><strong id="refundTotal">R0.00</strong>Refunded</div>
+<div class="stat"><strong id="commissionTotal">R0.00</strong>NOVAAI Commission</div>
+<div class="stat"><strong id="payoutTotal">R0.00</strong>Seller Payouts</div>
+<div class="stat"><strong id="paymentOrderCount">0</strong>Total Orders</div>
+
+</div>
+
+<br>
+
+<button class="primary" onclick="loadPaymentData()">↻ Refresh Financial Data</button>
+
+<select id="paymentFilter" style="width:100%;padding:12px;background:#0b1020;color:white;border-radius:7px;margin-top:12px">
+<option value="all">All Payments</option>
+<option value="pending">Pending Payments</option>
+<option value="paid">Recorded Paid Payments</option>
+<option value="failed">Failed Payments</option>
+<option value="refunded">Refunded Orders</option>
+</select>
+
+<p id="paymentMessage" class="muted">Financial data will appear here.</p>
+
+<div id="paymentRecords"></div>
+
+<hr style="border-color:#35415b;margin:25px 0">
+
+<h2>💰 Seller Commissions & Payouts</h2>
+
+<div id="sellerFinancialRecords"></div>
+
+</div>
+
+<!-- END PAYMENT CONTROL CENTRE -->
+
 </section>
 
 </main>
