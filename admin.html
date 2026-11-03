@@ -365,7 +365,8 @@ async function loadPaymentData() {
         settlement_status,
         courier_name,
         tracking_number,
-        delivery_date
+        delivery_date,
+        created_at
       `)
       .order("created_at", { ascending: false });
 
@@ -629,12 +630,14 @@ return;
 message("Product status updated successfully.");
 
 await loadProducts();
+await loadPaymentData();
 }
 
 document.getElementById("loginBtn").onclick=login;
 document.getElementById("logoutBtn").onclick=logout;
 document.getElementById("filter").onchange=renderProducts;
 document.getElementById("search").oninput=renderProducts;
+document.getElementById("paymentFilter").onchange=renderPaymentRecords;
 
 sb.auth.getSession().then(({data,error})=>{
 if(error){
