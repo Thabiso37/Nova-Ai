@@ -767,22 +767,26 @@ function saveCart(){try{localStorage.setItem("novaMarketplaceCartV1",JSON.string
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function cash(n){return new Intl.NumberFormat("en-ZA",{style:"currency",currency:"ZAR"}).format(Number(n)||0)}
 function safeImg(s){try{let u=new URL(s);return ["http:","https:"].includes(u.protocol)?u.href:""}catch(e){return ""}}
-function go(id){
+function go(id) {
   const section = document.getElementById(id);
   if (!section) return;
-  document.body.classList.remove("wishlist-view", "categories-view", "retail-market-view");
+
+  document.body.classList.remove(
+    "wishlist-view",
+    "categories-view",
+    "retail-market-view"
+  );
+
   if (id === "wishlist") {
     document.body.classList.add("wishlist-view");
     renderWishlist();
-    section.scrollIntoView({behavior:"smooth"});
-    return;
   }
+
   if (id === "categories") {
     document.body.classList.add("categories-view");
-    section.scrollIntoView({behavior:"smooth"});
-    return;
   }
-  section.scrollIntoView({behavior:"smooth"});
+
+  section.scrollIntoView({ behavior: "smooth" });
 }
 
 function openRetailMarketPage() {
