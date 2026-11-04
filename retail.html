@@ -144,29 +144,6 @@ nav{display:flex;gap:16px;overflow:auto;padding-top:0;padding-bottom:12px;font-s
 .prodimg{height:190px;background:#f8f9fa;position:relative;overflow:hidden}
 .prodimg img{width:100%;height:100%;object-fit:cover}
 
-.shein-discount-badge {
-  position: absolute;
-  bottom: 8px;
-  left: 8px;
-  background: #e11d48;
-  color: white;
-  font-size: 11px;
-  font-weight: 800;
-  padding: 3px 7px;
-  border-radius: 4px;
-  z-index: 2;
-  box-shadow: 0 2px 6px rgba(0,0,0,.15);
-}
-.shein-bestseller {
-  font-size: 11px;
-  color: #b45309;
-  background: #fef3c7;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 700;
-  display: inline-block;
-  margin-bottom: 4px;
-}
 .shein-rating-row {
   display: flex;
   align-items: center;
@@ -415,24 +392,6 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
   color: #174ea6;
   font-size: 25px;
   padding: 8px;
-}
-
-.cart-delivery-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 13px 16px;
-  background: white;
-  border-bottom: 1px solid #e1e6ee;
-  font-size: 13px;
-}
-
-.cart-delivery-bar button {
-  border: 0;
-  background: transparent;
-  color: #174ea6;
-  font-weight: 800;
 }
 
 .cart-page-content {
@@ -1139,7 +1098,7 @@ const { data: orderId, error: orderError } = await sb.rpc(
     p_delivery_address: deliveryAddress,
     p_items: items,
     p_buyer_selected_location:
-      localStorage.getItem("buyerDeliveryLocation") || ""
+      ""
   }
 );
 
@@ -1603,12 +1562,6 @@ function openCart() {
   }
 
   previousCartScrollPosition = window.scrollY;
-const mainLocation = document.getElementById("buyerLocation");
-const cartLocation = document.getElementById("cartDeliveryLocation");
-
-if (mainLocation && cartLocation) {
-  cartLocation.textContent = mainLocation.textContent;
-}
   cartPage.classList.remove("hidden");
   document.body.style.overflow = "hidden";
 
