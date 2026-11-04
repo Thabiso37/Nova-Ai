@@ -136,6 +136,25 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
 @media(max-width:700px){.home-detail-layout{grid-template-columns:1fr;padding:14px;gap:12px}.home-detail-image{height:290px}.home-detail-back{margin:15px 14px 0}.home-detail-info{padding:8px 2px}}
 </style>
 
+
+<style>
+/* Homepage photo viewer and cart controls */
+#homeCartCount{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:99px;background:#f5b900;color:#10284b;font-size:11px}
+.home-product-buttons{display:grid;grid-template-columns:1fr 1fr;gap:7px;width:100%;margin-top:auto}
+.home-product-open,.home-add-cart{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;border:0;border-radius:8px;padding:10px 6px;font-size:11px;font-weight:850;cursor:pointer}
+.home-product-open{background:#174ea6;color:#fff}
+.home-add-cart{background:#fff2bd;color:#10284b;border:1px solid #f0d46d}
+.home-detail-main-wrap{position:relative;cursor:zoom-in}
+.home-detail-image{cursor:zoom-in}
+.home-photo-viewer{position:fixed;inset:0;z-index:10050;background:rgba(5,13,27,.94);display:none;align-items:center;justify-content:center;padding:22px}
+.home-photo-viewer.open{display:flex}
+.home-photo-viewer img{max-width:min(100%,1100px);max-height:88vh;object-fit:contain}
+.home-photo-close{position:absolute;top:16px;right:16px;border:0;border-radius:50%;width:44px;height:44px;background:#fff;color:#10284b;font-size:25px;cursor:pointer}
+.home-cart-toast{position:fixed;z-index:10060;left:50%;bottom:95px;transform:translateX(-50%);background:#10284b;color:#fff;padding:12px 18px;border-radius:10px;box-shadow:0 6px 22px #0003;font-size:13px;font-weight:800;display:none;max-width:calc(100% - 28px);text-align:center}
+.home-cart-toast.show{display:block}
+@media(max-width:420px){.home-product-buttons{grid-template-columns:1fr}.home-product-open,.home-add-cart{padding:9px 5px}}
+</style>
+
 </head>
 <body>
 <div class="top">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
@@ -144,7 +163,7 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
     <a class="logo" href="./index.html" aria-label="NOVAAI Market home">NOVA<span>AI</span> MARKET</a>
     <div class="head-actions">
       <div class="tag">YOUR MARKETPLACE.<br>YOUR OPPORTUNITY.</div>
-      <a class="cart-link" href="./retail.html?view=cart" aria-label="Open shopping cart">🛒 <span>Cart</span></a>
+      <a class="cart-link" href="./retail.html?view=cart" aria-label="Open shopping cart">🛒 <span>Cart</span> <b id="homeCartCount" aria-label="Items in cart">0</b></a>
     </div>
   </div>
   <div class="delivery-row"><div class="delivery-inner"><span id="homeDeliveryText">📍 Deliver to: Choose your area</span><button type="button" id="homeChangeArea">Change</button></div></div>
@@ -240,6 +259,41 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
   const escapeHTML=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const money=value=>new Intl.NumberFormat('en-ZA',{style:'currency',currency:'ZAR'}).format(Number(value)||0);
   const safeImage=value=>{try{const u=new URL(value);return ['https:','http:'].includes(u.protocol)?u.href:''}catch(e){return ''}};
+  const cartKey='novaMarketplaceCartV1';
+  function readCart(){try{const v=JSON.parse(localStorage.getItem(cartKey)||'[]');return Array.isArray(v)?v:[]}catch(e){return []}}
+  function updateCartCount(){const el=document.getElementById('homeCartCount');if(el)el.textContent=String(readCart().reduce((n,item)=>n+(Number(item.qty)||0),0));}
+  function toast(message){let el=document.getElementById('homeCartToast');if(!el){el=document.createElement('div');el.id='homeCartToast';el.className='home-cart-toast';el.setAttribute('role','status');document.body.appendChild(el);}el.textContent=message;el.classList.add('show');clearTimeout(window.__novaHomeToastTimer);window.__novaHomeToastTimer=setTimeout(()=>el.classList.remove('show'),2400);}
+  function addToCart(product){
+    const cart=readCart();
+    const id='db-'+String(product.id);
+    const snapshot={id,dbId:product.id,name:product.name,price:Number(product.price)||0,seller:product.seller_name||'Independent seller',category:product.category||'',images:Array.isArray(product.images)&&product.images.length?product.images:(product.image_url?[product.image_url]:[])};
+    const existing=cart.find(item=>String(item.id)===id);
+    if(existing){existing.qty=Math.max(1,Number(existing.qty)||1)+1;existing.product=snapshot;}
+    else cart.push({id,qty:1,product:snapshot});
+    try{localStorage.setItem(cartKey,JSON.stringify(cart));updateCartCount();toast(product.name+' added to your cart.');}
+    catch(e){toast('Your browser could not save the cart. Check available phone storage.');}
+  }
+  function ensurePhotoViewer(){
+    let viewer=document.getElementById('homePhotoViewer');
+    if(!viewer){viewer=document.createElement('div');viewer.id='homePhotoViewer';viewer.className='home-photo-viewer';viewer.innerHTML='<button type="button" class="home-photo-close" aria-label="Close photo">×</button><img alt="Enlarged product photo">';document.body.appendChild(viewer);
+      viewer.addEventListener('click',e=>{if(e.target===viewer||e.target.closest('.home-photo-close'))viewer.classList.remove('open');});
+      document.addEventListener('keydown',e=>{if(e.key==='Escape')viewer.classList.remove('open');});
+    }
+    return viewer;
+  }
+  function showPhoto(url,alt){if(!url)return;const viewer=ensurePhotoViewer();const img=viewer.querySelector('img');img.src=url;img.alt=alt||'Product photo';viewer.classList.add('open');}
+  function productPhotos(product){const list=Array.isArray(product.images)&&product.images.length?product.images:(product.image_url?[product.image_url]:[]);return list.map(safeImage).filter(Boolean);}
+  function renderDetail(detail){
+    const photos=productPhotos(detail);
+    const detailSection=document.createElement('section');
+    detailSection.className='home-detail';
+    detailSection.innerHTML='<a class="home-detail-back" href="./index.html">← Back to NOVAAI MARKET</a><div class="home-detail-layout"><div><div class="home-detail-main-wrap">'+(photos.length?'<img class="home-detail-image" id="homeDetailMainImage" src="'+escapeHTML(photos[0])+'" alt="'+escapeHTML(detail.name)+'">':'<div class="home-products-message">No product photo available.</div>')+'</div><div class="home-detail-gallery">'+photos.map((url,index)=>'<img class="home-detail-thumb" src="'+escapeHTML(url)+'" data-photo-index="'+index+'" alt="Product photo '+(index+1)+'">').join('')+'</div></div><div class="home-detail-info"><div class="category">'+escapeHTML(detail.category||'Marketplace product')+'</div><h1>'+escapeHTML(detail.name)+'</h1><div class="home-detail-price">'+money(detail.price)+'</div><div class="home-detail-seller">Sold by '+escapeHTML(detail.seller_name||'Independent seller')+'</div><div class="home-detail-description">'+escapeHTML(detail.description||'No product description has been provided.')+'</div><div class="home-detail-actions"><button type="button" id="homeDetailAddCart" class="home-add-cart" style="font-size:14px;padding:13px 18px">🛒 Add to cart</button><a class="secondary" href="./index.html">Back to home</a></div></div></div>';
+    document.querySelector('main').replaceChildren(detailSection);
+    const mainImage=document.getElementById('homeDetailMainImage');
+    if(mainImage)mainImage.addEventListener('click',()=>showPhoto(mainImage.src,detail.name));
+    detailSection.querySelectorAll('[data-photo-index]').forEach(thumb=>thumb.addEventListener('click',()=>{const selected=photos[Number(thumb.dataset.photoIndex)];if(mainImage&&selected)mainImage.src=selected;}));
+    document.getElementById('homeDetailAddCart')?.addEventListener('click',()=>addToCart(detail));
+  }
   async function loadHomeProducts(){
     try{
       if(!window.supabase)throw new Error('Marketplace service is unavailable.');
@@ -259,13 +313,8 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
           document.querySelector('main').innerHTML='<section class="home-detail"><div class="home-products-message">This product is unavailable or is no longer listed by an approved seller. <a href="./index.html">Return to homepage</a>.</div></section>';
           return;
         }
-        const gallery=Array.isArray(detail.images)&&detail.images.length?detail.images:(detail.image_url?[detail.image_url]:[]);
-        const photos=gallery.map(safeImage).filter(Boolean);
-        const detailSection=document.createElement('section');
-        detailSection.className='home-detail';
-        detailSection.innerHTML='<a class="home-detail-back" href="./index.html">← Back to NOVAAI MARKET</a><div class="home-detail-layout"><div><img class="home-detail-image" id="homeDetailMainImage" src="'+escapeHTML(photos[0]||'')+'" alt="'+escapeHTML(detail.name)+'" '+(photos.length?'':'hidden')+'><div class="home-detail-gallery">'+photos.map((url,index)=>'<img class="home-detail-thumb" src="'+escapeHTML(url)+'" data-photo-index="'+index+'" alt="Product photo '+(index+1)+'">').join('')+'</div>'+(!photos.length?'<div class="home-products-message">No product photo available.</div>':'')+'</div><div class="home-detail-info"><div class="category">'+escapeHTML(detail.category||'Marketplace product')+'</div><h1>'+escapeHTML(detail.name)+'</h1><div class="home-detail-price">'+money(detail.price)+'</div><div class="home-detail-seller">Sold by '+escapeHTML(detail.seller_name||'Independent seller')+'</div><div class="home-detail-description">'+escapeHTML(detail.description||'No product description has been provided.')+'</div><div class="home-detail-actions"><a href="./retail.html#shop">Browse more products</a><a class="secondary" href="./index.html">Back to home</a></div></div></div>';
-        document.querySelector('main').replaceChildren(detailSection);
-        detailSection.querySelectorAll('[data-photo-index]').forEach(thumb=>thumb.addEventListener('click',()=>{const selected=photos[Number(thumb.dataset.photoIndex)];const mainImage=document.getElementById('homeDetailMainImage');if(mainImage&&selected)mainImage.src=selected;}));
+        renderDetail(detail);
+        updateCartCount();
         return;
       }
       const items=(rows||[]).filter(p=>p.status==='approved'&&p.seller_id&&approved.has(p.seller_id)&&p.name&&Number(p.price)>0);
@@ -274,20 +323,23 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
         return;
       }
       grid.innerHTML=items.map(p=>{
-        const imgs=Array.isArray(p.images)&&p.images.length?p.images:(p.image_url?[p.image_url]:[]);
-        const img=safeImage(imgs[0]);
+        const imgs=productPhotos(p);
+        const img=imgs[0]||'';
         return '<article class="home-product-card">'+
           '<a class="home-product-photo" href="./index.html?product='+encodeURIComponent(p.id)+'" aria-label="View '+escapeHTML(p.name)+' details">'+(img?'<img src="'+escapeHTML(img)+'" alt="'+escapeHTML(p.name)+'" loading="lazy">':'<span class="home-no-photo">📦<small>Photo not available</small></span>')+'</a>'+
           '<div class="home-product-info"><div class="home-product-category">'+escapeHTML(p.category||'Marketplace product')+'</div>'+
           '<h3>'+escapeHTML(p.name)+'</h3><div class="home-product-price">'+money(p.price)+'</div>'+
           '<div class="home-product-seller">Sold by '+escapeHTML(p.seller_name||'Independent seller')+'</div>'+
-          '<a class="home-product-open" href="./index.html?product='+encodeURIComponent(p.id)+'">View product <span aria-hidden="true">→</span></a></div></article>';
+          '<div class="home-product-buttons"><a class="home-product-open" href="./index.html?product='+encodeURIComponent(p.id)+'">View product →</a><button type="button" class="home-add-cart" data-add-product="'+escapeHTML(p.id)+'">🛒 Add</button></div></div></article>';
       }).join('');
+      grid.querySelectorAll('[data-add-product]').forEach(button=>button.addEventListener('click',()=>{const p=items.find(item=>String(item.id)===button.dataset.addProduct);if(p)addToCart(p);}));
+      updateCartCount();
     }catch(error){
       console.error('Homepage product loading:',error);
       grid.innerHTML='<div class="home-products-message">We could not load marketplace products right now. Please open Retail to try the full catalogue.</div>';
     }
   }
+  updateCartCount();
   loadHomeProducts();
 })();
 </script>
