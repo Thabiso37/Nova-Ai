@@ -575,7 +575,7 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;backg
   <div id="lightboxDots" class="lightbox-dots"></div>
 </div>
 
-<div class="top">🇿🇦 NOVA AI TRUST SHIELD · SECURE BRAND-VERIFIED RETAIL MARKETPLACE</div>
+<div class="top">🇿🇦 NOVAAI MARKET · SOUTH AFRICAN INDEPENDENT SELLER MARKETPLACE</div>
 <header class="new-header">
   <div class="head">
     <a class="logo" href="#">NOVA<span>AI</span></a>
@@ -589,13 +589,7 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;backg
     <!-- RETAIL MARKET BUTTON OPENING DEDICATED PAGE -->
     <button type="button" onclick="openRetailMarketPage()" style="font-size: 13px; font-weight: 700; color: #174ea6; background: #f0f4f9; padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; gap: 5px; border: 1px solid #d1dced; cursor: pointer;">🛍️ Retail Market</button>
   </div>
-  <div class="delivery-bar">
-    <span id="buyerLocation">📍 Deliver to: Your current location</span>
-    <div>
-      <button type="button" id="useMyLocation">📍 Use GPS</button>
-      <button type="button" id="changeLocation">Change</button>
-    </div>
-  </div>
+  
 </header>
 <div id="customerAuthModal" class="hidden">
   <div class="customer-auth-card">
@@ -668,11 +662,10 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;backg
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
     <div>
       <h2>🛍️ Official Retail Market</h2>
-      <p class="muted">Authentic products directly from major verified brands like Nike, Puma, Pick n Pay, and more.</p>
+      <p class="muted">Browse listings from approved marketplace sellers. Product brand authenticity is not independently verified by NOVAAI.</p>
     </div>
     <button class="btn primary" onclick="closeRetailMarketPage()">← Back to Marketplace</button>
   </div>
-  <div class="trust-badge-box" style="margin-bottom: 20px;"><span>🛡️ Verified Corporate Retail Partners · 100% Authentic Guarantee</span></div>
   <div id="retailProductsGrid" class="grid"></div>
 </section>
 
@@ -688,11 +681,6 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;backg
     <button type="button" onclick="closeCart()">←</button>
     <h2>Cart</h2>
     <button type="button" onclick="openWishlistPage()">♡</button>
-  </div>
-
-  <div class="cart-delivery-bar">
-    <span id="cartDeliveryLocation">📍 Deliver to: Your current location</span>
-    <button type="button" id="cartChangeLocation">Change</button>
   </div>
 
   <div class="cart-page-content">
@@ -873,13 +861,9 @@ function renderRetailMarketGrid(list) {
   document.getElementById("retailProductsGrid").innerHTML = list.length ? list.map(p => {
     const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
     const firstImg = safeImg(imgList[0]);
-    const hash = String(p.id).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-    const discountVal = (hash % 40) + 10;
-
     return `<article class="product">
 <div class="prodimg" style="position:relative">
   <button type="button" class="wishlist-btn" data-wishlist="${esc(p.id)}" aria-label="Add to wishlist" style="position:absolute;top:10px;right:10px;z-index:2;width:34px;height:34px;border:1px solid #e1e6ee;border-radius:50%;background:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.1)">♡</button>
-  <span class="shein-discount-badge">-${discountVal}%</span>
   ${firstImg?`<img loading="lazy" src="${esc(firstImg)}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}
 </div>
 <div class="prodbody">
@@ -911,18 +895,13 @@ function render(){
   document.getElementById("products").innerHTML=list.length?list.map(p=>{
     const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
     const firstImg = safeImg(imgList[0]);
-    const hash = String(p.id).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-    const discountVal = (hash % 40) + 10;
-    const isBestseller = hash % 3 === 0;
-
     return `<article class="product">
 <div class="prodimg" style="position:relative">
   <button type="button" class="wishlist-btn" data-wishlist="${esc(p.id)}" aria-label="Add to wishlist" style="position:absolute;top:10px;right:10px;z-index:2;width:34px;height:34px;border:1px solid #e1e6ee;border-radius:50%;background:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.1)">♡</button>
-  <span class="shein-discount-badge">-${discountVal}%</span>
   ${firstImg?`<img loading="lazy" src="${esc(firstImg)}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}
 </div>
 <div class="prodbody">
-  ${isBestseller ? `<span class="shein-bestseller">🔥 Bestseller</span>` : `<small style="color:#6654f5;font-weight:800">${esc(p.category)}</small>`}
+  <small style="color:#6654f5;font-weight:800">${esc(p.category)}</small>
   <h3>${esc(p.name)}</h3>
   <div class="shein-rating-row"><span class="rating-count">Customer rating: Not rated yet</span></div>
   <div class="price">${cash(p.price)}</div>
@@ -1613,102 +1592,6 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
 </nav>
 
 <script>
-const locationDisplay = document.getElementById("buyerLocation");
-const gpsButton = document.getElementById("useMyLocation");
-const changeButton = document.getElementById("changeLocation");
-let buyerCoordinates = null;
-
-// Restore the saved delivery location after reload
-const savedLocation = localStorage.getItem("buyerDeliveryLocation");
-
-if (locationDisplay && savedLocation) {
-  locationDisplay.textContent = "📍 Deliver to: " + savedLocation;
-}
-
-if (locationDisplay) {
-  locationDisplay.style.cursor = "pointer";
-
-  locationDisplay.addEventListener("click", function () {
-    if (!buyerCoordinates) {
-      alert("Please press Use GPS first.");
-      return;
-    }
-
-    window.open(
-      "https://www.google.com/maps/search/?api=1&query=" +
-      buyerCoordinates.latitude + "," + buyerCoordinates.longitude,
-      "_blank"
-    );
-  });
-}
-
-if (gpsButton) {
-  gpsButton.addEventListener("click", function () {
-    if (!navigator.geolocation) {
-      locationDisplay.textContent = "📍 GPS not supported";
-      return;
-    }
-
-    locationDisplay.textContent = "📍 Finding location...";
-
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        buyerCoordinates = {
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude
-        };
-
-        const gpsLocation = "📍 GPS: " +
-          pos.coords.latitude.toFixed(4) + ", " +
-          pos.coords.longitude.toFixed(4);
-
-        localStorage.setItem("buyerDeliveryLocation", gpsLocation);
-        localStorage.setItem("buyerLocationType", "gps");
-
-        locationDisplay.textContent = gpsLocation;
-
-        const cartLocation = document.getElementById("cartDeliveryLocation");
-        if (cartLocation) {
-          cartLocation.textContent = gpsLocation;
-        }
-      },
-      err => {
-        locationDisplay.textContent = "📍 GPS error";
-      }
-    );
-  });
-}
-
-if (changeButton) {
-changeButton.addEventListener("click", function () {
-  const town = prompt("Enter your town or suburb:");
-
-  if (town && town.trim()) {
-    buyerCoordinates = null;
-
-    const locationText = "📍 Deliver to: " + town.trim();
-   
-  localStorage.setItem("buyerDeliveryLocation", town.trim());
-    
-  localStorage.setItem("buyerLocationType", "town");
-   
-    locationDisplay.textContent = locationText;
-
-    const cartLocation = document.getElementById("cartDeliveryLocation");
-
-    if (cartLocation) {
-      cartLocation.textContent = locationText;
-    }
-  }
-});
-}
-const cartChangeButton = document.getElementById("cartChangeLocation");
-
-if (cartChangeButton && changeButton) {
-  cartChangeButton.addEventListener("click", function () {
-    changeButton.click();
-  });
-}
 let previousCartScrollPosition = 0;
 
 function openCart() {
