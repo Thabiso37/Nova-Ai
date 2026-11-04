@@ -282,7 +282,7 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
   function addToCart(product){
     const cart=readCart();
     const id='db-'+String(product.id);
-    const snapshot={id,dbId:product.id,name:product.name,price:Number(product.price)||0,seller:product.seller_name||'Independent seller',category:product.category||'',images:Array.isArray(product.images)&&product.images.length?product.images:(product.image_url?[product.image_url]:[])};
+    const snapshot={id,dbId:product.id,sellerId:product.seller_id||null,name:product.name,price:Number(product.price)||0,seller:product.seller_name||'Independent seller',category:product.category||'',images:Array.isArray(product.images)&&product.images.length?product.images:(product.image_url?[product.image_url]:[])};
     const existing=cart.find(item=>String(item.id)===id);
     if(existing){existing.qty=Math.max(1,Number(existing.qty)||1)+1;existing.product=snapshot;}
     else cart.push({id,qty:1,product:snapshot});
