@@ -43,6 +43,47 @@ h1{font-size:clamp(32px,6vw,54px);line-height:1.08;letter-spacing:-1.7px;color:v
 footer{background:var(--navy);color:#fff;text-align:center;padding:23px 16px;font-size:12px}
 footer strong{color:var(--yellow)}
 @media(max-width:760px){.market-grid{grid-template-columns:1fr;gap:13px}.market-card{min-height:0}.card-content{padding:20px}.intro{padding-top:16px}main{padding:22px 14px 38px}.head{padding:15px}.tag{max-width:145px}}
+
+/* NOVAAI Takealot-inspired homepage refresh — homepage only */
+body{background:#f3f6fa}
+.top{background:#10284b;padding:8px 12px;font-size:10px}
+header{position:sticky;top:0;z-index:100}
+.head{padding:14px 20px}
+.logo{font-size:27px}
+.head-actions{display:flex;align-items:center;gap:10px}
+.cart-link{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border:1px solid #dce3ed;border-radius:10px;color:#174ea6;font-size:13px;font-weight:850}
+.delivery-row{background:#f8faff;border-top:1px solid #edf0f5}
+.delivery-inner{max-width:1160px;margin:auto;padding:9px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:#344054}
+.delivery-inner button{border:0;background:none;color:#174ea6;font-weight:850;cursor:pointer}
+.home-search-wrap{max-width:900px;margin:0 auto 22px;padding:0 12px}
+.home-search{display:flex;gap:0;background:#fff;border:1px solid #d9e1ec;border-radius:13px;overflow:hidden;box-shadow:0 5px 18px rgba(16,40,75,.07)}
+.home-search input{flex:1;min-width:0;border:0;outline:0;padding:15px 16px;font-size:14px;background:#fff}
+.home-search button{border:0;background:#174ea6;color:#fff;padding:0 20px;font-weight:850}
+.quick-links{display:flex;gap:10px;overflow-x:auto;padding:8px 2px 18px;scrollbar-width:none}
+.quick-links::-webkit-scrollbar{display:none}
+.quick-link{flex:0 0 auto;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e1e6ee;border-radius:999px;padding:9px 14px;font-size:12px;font-weight:800;color:#17345b;box-shadow:0 2px 8px rgba(16,40,75,.04)}
+.quick-link span{font-size:18px}
+.intro{text-align:left;background:linear-gradient(115deg,#10284b,#174ea6 75%,#3476c8);border-radius:18px;color:#fff;padding:30px;margin:12px 0 22px}
+.intro .eyebrow{background:#fff2bd;color:#10284b;border:0}
+.intro h1{color:#fff;font-size:clamp(30px,5vw,46px);margin:15px 0 9px}
+.intro p{color:#e8efff;margin:0;max-width:680px}
+.section-kicker{margin:24px 0 4px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.section-kicker h2{font-size:21px;color:#10284b;margin:0}
+.section-kicker a{font-size:12px;color:#174ea6;font-weight:850}
+.market-grid{margin:12px 0 22px;gap:14px}
+.market-card{border-radius:15px;min-height:275px;box-shadow:0 3px 12px rgba(16,40,75,.06)}
+.market-card:hover{transform:translateY(-3px)}
+.card-content{padding:20px}
+.card-content h2{font-size:20px}
+.icon{border-radius:50%;width:58px;height:58px}
+.promo-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:13px;margin:22px 0}
+.promo{border-radius:15px;padding:20px;color:#fff;background:linear-gradient(115deg,#174ea6,#3476c8);min-height:125px;display:flex;flex-direction:column;justify-content:center}
+.promo.alt{background:linear-gradient(115deg,#10284b,#28618e)}
+.promo strong{font-size:18px;margin-bottom:5px}
+.promo span{font-size:12px;line-height:1.5;color:#e7efff}
+.note{margin-top:16px}
+@media(max-width:760px){.market-grid{grid-template-columns:1fr}.promo-grid{grid-template-columns:1fr}.intro{text-align:left;padding:24px 19px}.head{padding:13px 14px}.delivery-inner{padding:9px 14px}main{padding:18px 14px 38px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.market-card{transition:none}}
 </style>
 <style>
 body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
@@ -58,15 +99,32 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
 <header>
   <div class="head">
     <a class="logo" href="./index.html" aria-label="NOVAAI Market home">NOVA<span>AI</span> MARKET</a>
-    <div class="tag">YOUR MARKETPLACE.<br>YOUR OPPORTUNITY.</div>
+    <div class="head-actions">
+      <div class="tag">YOUR MARKETPLACE.<br>YOUR OPPORTUNITY.</div>
+      <a class="cart-link" href="./retail.html?view=cart" aria-label="Open shopping cart">🛒 <span>Cart</span></a>
+    </div>
   </div>
+  <div class="delivery-row"><div class="delivery-inner"><span id="homeDeliveryText">📍 Deliver to: Choose your area</span><button type="button" id="homeChangeArea">Change</button></div></div>
 </header>
 <main>
+  <div class="home-search-wrap">
+    <form class="home-search" id="homeSearchForm" role="search">
+      <input id="homeSearchInput" type="search" placeholder="Find a market or category…" aria-label="Find a market or category">
+      <button type="submit" aria-label="Search">⌕ Search</button>
+    </form>
+    <div class="quick-links" aria-label="Quick market categories">
+      <a class="quick-link" href="./retail.html#shop"><span>🛍️</span> Retail & Deals</a>
+      <a class="quick-link" href="./seller-motors-houses.html?market=motors"><span>🚗</span> Cars & Motors</a>
+      <a class="quick-link" href="./seller-motors-houses.html?market=property"><span>🏡</span> Property</a>
+      <a class="quick-link" href="./seller.html"><span>🏪</span> Start Selling</a>
+    </div>
+  </div>
   <section class="intro">
     <span class="eyebrow">ONE DESTINATION · THREE MARKETS</span>
     <h1>Your Marketplace.<br>Your Opportunity.</h1>
     <p>Choose a market to get started. Discover products, vehicles and property opportunities from across South Africa.</p>
   </section>
+  <div class="section-kicker"><h2>Explore our markets</h2><a href="./retail.html">Shop retail →</a></div>
   <section class="market-grid" aria-label="Choose a marketplace">
     <a class="market-card retail" href="./retail.html">
       <div class="card-band"></div>
@@ -96,6 +154,10 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
       </div>
     </a>
   </section>
+  <section class="promo-grid" aria-label="Marketplace highlights">
+    <a class="promo" href="./retail.html"><strong>Discover products across South Africa</strong><span>Explore the retail catalogue, browse categories and shop independent sellers.</span></a>
+    <a class="promo alt" href="./seller.html"><strong>Your business belongs here</strong><span>Visit the existing Seller Portal to explore seller options.</span></a>
+  </section>
   <div class="note"><strong>About Cars & Property:</strong> These two markets currently open the existing combined Motors & Property page. Use its bottom navigation to choose Cars or Property. That existing page has not been changed.</div>
 </main>
 <footer><strong>NOVAAI MARKET</strong> · Built for South Africa · Your Marketplace. Your Opportunity.</footer>
@@ -108,5 +170,45 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
 <a class="nova-nav-item" href="./retail.html?view=cart"><svg viewBox="0 0 24 24"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg><span>Cart</span></a>
 <a class="nova-nav-item" href="./seller.html"><svg viewBox="0 0 24 24"><path d="M3 10h18l-2 11H5L3 10Z"/><path d="M7 10V7a5 5 0 0 1 10 0v3M9 14v3m6-3v3"/></svg><span>Sell</span></a>
 </nav>
+
+<script>
+(function(){
+  const areaText=document.getElementById('homeDeliveryText');
+  const areaButton=document.getElementById('homeChangeArea');
+  try{
+    const saved=localStorage.getItem('nova_home_delivery_area');
+    if(saved && areaText) areaText.textContent='📍 Deliver to: '+saved;
+  }catch(e){}
+  if(areaButton){
+    areaButton.addEventListener('click',function(){
+      let current='';
+      try{current=localStorage.getItem('nova_home_delivery_area')||'';}catch(e){}
+      const value=prompt('Enter your suburb, town or postal area:',current);
+      if(value===null)return;
+      const clean=value.trim().slice(0,80);
+      if(!clean){alert('Please enter an area, or cancel to leave it unchanged.');return;}
+      if(areaText)areaText.textContent='📍 Deliver to: '+clean;
+      try{localStorage.setItem('nova_home_delivery_area',clean);}catch(e){}
+    });
+  }
+  const form=document.getElementById('homeSearchForm');
+  const input=document.getElementById('homeSearchInput');
+  if(form && input){
+    form.addEventListener('submit',function(e){
+      e.preventDefault();
+      const q=input.value.trim().toLowerCase();
+      if(!q){input.focus();return;}
+      const links=Array.from(document.querySelectorAll('.market-card'));
+      const match=links.find(a=>(a.innerText+' '+a.className).toLowerCase().includes(q));
+      if(match){location.href=match.getAttribute('href');return;}
+      if(/shoe|cloth|fashion|beauty|phone|electronic|furniture|product|deal|retail|shop|grocery|toy/.test(q)){location.href='./retail.html#shop';return;}
+      if(/car|motor|vehicle|bike/.test(q)){location.href='./seller-motors-houses.html?market=motors';return;}
+      if(/house|home|rent|property|apartment|flat/.test(q)){location.href='./seller-motors-houses.html?market=property';return;}
+      alert('No matching market found. Try Retail, Cars & Motors, or Property.');
+    });
+  }
+})();
+</script>
+
 </body>
 </html>
