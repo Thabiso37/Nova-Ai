@@ -1,0 +1,1683 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101526">
+<title>NOVAAI | South African Multi-Marketplace</title>
+<style>
+#cats.cats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+#cats .cat {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 58px;
+  padding: 10px;
+  background: #fff;
+  color: #202638;
+  border: 1px solid #e8eaf0;
+  border-radius: 12px;
+  text-align: left;
+  box-shadow: 0 2px 6px rgba(0,0,0,.04);
+}
+#cats .cat .emoji {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f5fa;
+  border-radius: 9px;
+  font-size: 20px;
+}
+#cats .cat.active {
+  border-color: #6478e8;
+  background: #f5f6ff;
+}
+#cats .cat span:last-child {
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+#wishlist {
+  display: none;
+}
+body.wishlist-view main > *:not(#wishlist) {
+  display: none !important;
+}
+body.wishlist-view #wishlist {
+  display: block !important;
+  min-height: 70vh;
+  margin: 24px auto !important;
+  max-width: 900px;
+}
+
+#retailMarketPage {
+  display: none;
+}
+body.retail-market-view main > *:not(#retailMarketPage) {
+  display: none !important;
+}
+body.retail-market-view #retailMarketPage {
+  display: block !important;
+  min-height: 70vh;
+  margin: 24px auto !important;
+  max-width: 1200px;
+}
+
+:root{--bg:#f5f7fb;--ink:#171c2d;--muted:#70778b;--p:#6654f5;--dark:#101526;--line:#e8eaf2}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Arial,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+.top{background:var(--dark);color:white;text-align:center;padding:10px;font-size:12px}
+header{background:white;position:sticky;top:0;z-index:5;border-bottom:1px solid var(--line)}
+.head,nav,main,.foot{max-width:1200px;margin:auto;padding:15px 20px}
+.head{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.logo{font-size:24px;font-weight:900}
+.logo span{color:var(--p)}
+.search{display:flex;flex:1;min-width:200px}
+.search input{flex:1;min-width:0}
+.search input,input,select,textarea{padding:11px;border:1px solid #dfe2ed;border-radius:9px}
+.btn{border:0;border-radius:9px;padding:11px 14px;font-weight:750}
+.primary{background:var(--p);color:white}
+.light{background:#f0efff;color:#4939cc}
+.outline{background:white;border:1px solid var(--line)}
+nav{display:flex;gap:16px;overflow:auto;padding-top:0;padding-bottom:12px;font-size:13px;font-weight:700}
+.hero{background:linear-gradient(120deg,#171b38,#4031a5 65%,#8068ff);border-radius:22px;color:white;padding:35px;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.hero h1{font-size:clamp(32px,5vw,52px);line-height:1.1;margin:12px 0}
+.hero p{line-height:1.7;max-width:650px;color:#e0dfff}
+.hero-art{font-size:85px}
+.stats,.two{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+.stat,.panel{background:white;border:1px solid var(--line);border-radius:15px;padding:17px}
+.stat strong{font-size:22px;display:block}
+.stat span,.muted{color:var(--muted);font-size:12px}
+.section{margin-top:28px;scroll-margin-top:140px}
+
+#cartModal.hidden {
+  display: none !important;
+}
+.section h2{margin:0 0 5px}
+.section-head{margin-bottom:14px}
+.cats {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 12px 4px 18px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.cats::-webkit-scrollbar { display: none; }
+.cat {
+  flex: 0 0 105px;
+  min-height: 105px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  padding: 10px;
+  text-align: center;
+  scroll-snap-align: start;
+  box-shadow: 0 2px 8px rgba(20, 40, 70, .05);
+}
+.cat span { display: block; }
+.cat .emoji{font-size:24px;margin-bottom:5px}
+.cat.active{border-color:var(--p);background:#f0efff}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+
+.product{background:white;border:1px solid #e8eaf2;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 2px 8px rgba(20,40,70,.04);transition:transform .2s,box-shadow .2s;}
+.product:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(20,40,70,.12);}
+.prodimg{height:190px;background:#f8f9fa;position:relative;overflow:hidden}
+.prodimg img{width:100%;height:100%;object-fit:cover}
+
+.shein-discount-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: #e11d48;
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 4px;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+.shein-bestseller {
+  font-size: 11px;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+.shein-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #555;
+  margin: 4px 0;
+}
+.shein-stars { color: #f5b900; font-size: 12px; }
+
+.prodbody{padding:12px;display:flex;flex:1;flex-direction:column}
+.prodbody h3{font-size:13px;line-height:1.35;margin:4px 0 6px;color:#171c2d;font-weight:700}
+.prodbody p{font-size:11px;color:var(--muted);line-height:1.4;margin:0 0 8px}
+.price{font-size:18px;font-weight:900;color:#17345b;margin-top:auto}
+.actions{display:flex;gap:6px;margin-top:10px}
+.actions button{flex:1;padding:8px 4px;font-size:11px}
+
+.two{grid-template-columns:1fr 1fr}
+.field{margin:12px 0}
+.field label{display:block;font-size:12px;font-weight:800;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%}
+textarea{min-height:85px}
+.notice{padding:12px;background:#f0efff;border:1px solid #e0dcff;border-radius:10px;font-size:12px;line-height:1.6;color:#41349a}
+.msg{font-size:13px;margin-top:10px}
+.error{color:#b52828}
+.success{color:#16885e}
+.hidden{display:none!important}
+.cartitem{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.total{display:flex;justify-content:space-between;font-size:20px;font-weight:900;padding:15px 0}
+footer{background:var(--dark);color:white;margin-top:40px;padding:28px 20px}
+footer .foot{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+footer p{font-size:12px;color:#b9bfd0;line-height:1.7}
+.badge{font-size:11px;background:#e8fff5;color:#08774f;border-radius:20px;padding:6px 9px}
+.toast{position:fixed;bottom:15px;left:50%;transform:translateX(-50%);background:#171b2d;color:white;padding:12px 16px;border-radius:10px;z-index:10}
+
+@media(max-width:800px){.cats{grid-template-columns:repeat(4,1fr)}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hero-art{font-size:60px}}
+@media(max-width:560px){.head,main,nav{padding-left:12px;padding-right:12px}.search{order:3;flex-basis:100%}.hero{padding:23px}.hero-art{display:none}.stats{gap:7px}.stat{padding:10px}.stat strong{font-size:18px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.prodimg{height:140px}.two{grid-template-columns:1fr}.cats{gap:6px}.cat{font-size:11px}}
+
+.product-modal {
+  position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(15, 18, 35, .75);
+}
+.product-modal.open { display: flex; }
+.product-modal-card {
+  position: relative; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; background: #fff; color: #171b2d; border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.35);
+}
+.product-modal-close {
+  position: absolute; top: 10px; right: 10px; width: 38px; height: 38px; border: 0; border-radius: 50%; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px #0002; z-index: 20;
+}
+
+:root { --p: #174ea6; --dark: #10284b; --bg: #f4f6f9; --line: #e1e6ee; }
+.top { background: #10284b; font-weight: 700; letter-spacing: .3px; }
+header { background: #ffffff; position: sticky; top: 0; z-index: 50; border-bottom: 1px solid #e8edf5; box-shadow: 0 3px 12px rgba(20, 40, 70, .06); }
+.new-header .head { display: flex; align-items: center; gap: 12px; }
+.new-header .logo { color: #174ea6; font-size: 25px; font-weight: 900; letter-spacing: -1px; white-space: nowrap; }
+.new-header .logo span { color: #f5b900; }
+.delivery-bar { max-width: 1200px; margin: auto; padding: 8px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; border-top: 1px solid #f0f2f6; }
+.delivery-bar button { border: 0; background: none; color: #174ea6; font-weight: 700; }
+.search input { border-radius: 9px 0 0 9px; background: #f8faff; }
+.search .btn { border-radius: 0 9px 9px 0; }
+.primary { background: #174ea6; }
+.light { background: #fff2bd; color: #17345b; }
+.hero { background: linear-gradient(120deg, #10284b, #174ea6 72%, #3878cf); box-shadow: 0 8px 24px rgba(16, 40, 75, .12); }
+
+.nova-product-page { max-width: 520px; border-radius: 14px; }
+.nova-product-photo-container { background: #ffffff; position: relative; border-bottom: 1px solid #e5e8ee; cursor: pointer; }
+.nova-gallery-scroll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; gap: 0; width: 100%; }
+.nova-gallery-scroll::-webkit-scrollbar { display: none; }
+.nova-gallery-slide { flex: 0 0 100%; width: 100%; height: 280px; display: flex; align-items: center; justify-content: center; scroll-snap-align: start; background: #000; overflow: hidden; }
+.nova-gallery-slide img { width: 100%; height: 100%; object-fit: cover; }
+.nova-gallery-dots { display: flex; justify-content: center; gap: 6px; padding: 10px 0; background: #fff; }
+.nova-gallery-dot { width: 7px; height: 7px; border-radius: 50%; background: #cbd5e1; transition: background 0.2s; }
+.nova-gallery-dot.active { background: #174ea6; }
+
+.fullscreen-lightbox { position: fixed; inset: 0; z-index: 10000; background: #000; display: none; flex-direction: column; justify-content: space-between; }
+.fullscreen-lightbox.open { display: flex; }
+.lightbox-top-bar { display: flex; justify-content: flex-end; padding: 16px; }
+.lightbox-close-btn { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.2); color: white; border: 0; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.lightbox-scroll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; flex: 1; align-items: center; }
+.lightbox-scroll::-webkit-scrollbar { display: none; }
+.lightbox-slide { flex: 0 0 100%; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; scroll-snap-align: start; }
+.lightbox-slide img { max-width: 100%; max-height: 80vh; object-fit: contain; }
+.lightbox-dots { display: flex; justify-content: center; gap: 8px; padding: 20px 0; }
+.lightbox-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.3); transition: background 0.2s; }
+.lightbox-dot.active { background: #3b82f6; }
+
+.nova-product-content { padding: 18px; }
+.nova-product-label { color: #174ea6; font-size: 12px; font-weight: 800; margin-bottom: 4px; }
+.nova-product-page h2 { font-size: 18px; line-height: 1.4; margin: 6px 0; }
+.nova-rating-row { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 12px; }
+.stars { color: #f5b900; letter-spacing: 2px; }
+.takealot-delivery-box { background: #f8faff; border: 1px solid #e1e6ee; border-radius: 8px; padding: 12px; margin: 14px 0; font-size: 13px; }
+.takealot-delivery-box .delivery-row { display: flex; justify-content: space-between; font-weight: 700; color: #10284b; margin-bottom: 6px; }
+.takealot-delivery-box .delivery-location-row { display: flex; justify-content: space-between; align-items: center; color: #555; border-top: 1px solid #edf0f5; padding-top: 6px; }
+.tc-link { color: #174ea6; font-size: 12px; text-decoration: underline; font-weight: 700; cursor: pointer; }
+.btn-text { background: none; border: none; color: #174ea6; font-weight: 700; cursor: pointer; }
+
+.trust-badge-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #166534; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.stock-warranty-box { font-size: 12px; color: #444; margin-bottom: 16px; line-height: 1.6; }
+.stock-warranty-box .in-stock { color: #08774f; font-weight: 700; }
+
+.modal-bottom-bar { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e5e8ee; margin-top: 20px; padding-top: 14px; }
+.modal-price-display { display: flex; flex-direction: column; }
+.modal-bottom-bar .product-modal-price { font-size: 22px; font-weight: 900; color: #17345b; margin: 0; }
+.add-to-cart-btn { background: #174ea6 !important; border-radius: 8px !important; padding: 12px 24px !important; font-size: 15px; font-weight: 800; color: white; }
+
+.info-drawer { background: #f0f4f9; border: 1px solid #d1dced; border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #10284b; margin-top: 8px; display: none; }
+.info-drawer.open { display: block; }
+
+/* NOVAAI SECTION VISIBILITY */
+#seller {
+  display: none !important;
+}
+
+/* My Orders must remain visible inside its dialog */
+#customerOrders {
+  display: block !important;
+}
+
+.mobile-bottom-nav { display: none; }
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex; position: fixed; bottom: 0; left: 0; width: 100%; height: 66px; background: #ffffff; border-top: 1px solid #e5e7eb; box-shadow: 0 -3px 12px rgba(0,0,0,.08); justify-content: space-around; align-items: center; z-index: 999;
+  }
+  .mobile-bottom-nav button, .mobile-bottom-nav a {
+    border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #174ea6; font-size: 20px; text-decoration: none;
+  }
+  .mobile-bottom-nav span { font-size: 10px; font-weight: 700; }
+  body { padding-bottom: 75px; }
+}
+body.categories-view #categories { display: block !important; min-height: 70vh; margin: 24px auto !important; max-width: 900px; }
+#customerAuthModal {
+  position: fixed;
+  inset: 0;
+  z-index: 10010;
+  background: rgba(0,0,0,.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+#customerAuthModal.hidden {
+  display: none !important;
+}
+
+.customer-auth-card {
+  position: relative;
+  background: white;
+  color: #172033;
+  width: 100%;
+  max-width: 420px;
+  padding: 28px;
+  border-radius: 16px;
+  box-shadow: 0 15px 50px rgba(0,0,0,.3);
+}
+
+.customer-auth-card label {
+  display: block;
+  margin: 14px 0 6px;
+  font-weight: 600;
+}
+
+.customer-auth-card input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccd3df;
+  border-radius: 8px;
+}
+
+.customer-auth-card form button {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.auth-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+}
+
+#customerAuthModeBtn,
+#customerAuthSignOutBtn {
+  margin-top: 12px;
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+#customerAuthMsg {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+#cartModal.cart-page {
+  position: fixed;
+  inset: 0;
+  z-index: 10005;
+  background: #f4f6f9;
+  overflow-y: auto;
+  min-height: 100vh;
+}
+
+#cartModal.cart-page.hidden {
+  display: none !important;
+}
+
+.cart-page-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 62px;
+  background: white;
+  border-bottom: 1px solid #e1e6ee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+
+.cart-page-header h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.cart-page-header button {
+  border: 0;
+  background: transparent;
+  color: #174ea6;
+  font-size: 25px;
+  padding: 8px;
+}
+
+.cart-delivery-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 16px;
+  background: white;
+  border-bottom: 1px solid #e1e6ee;
+  font-size: 13px;
+}
+
+.cart-delivery-bar button {
+  border: 0;
+  background: transparent;
+  color: #174ea6;
+  font-weight: 800;
+}
+
+.cart-page-content {
+  max-width: 1000px;
+  margin: auto;
+  padding: 20px 16px 40px;
+}
+
+.cart-page-content > h3 {
+  margin-top: 0;
+}
+
+.cart-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cart-actions button {
+  flex: 1;
+  min-width: 130px;
+}
+
+@media (max-width: 560px) {
+  .cart-page-content {
+    padding: 16px 12px 35px;
+  }
+}
+</style>
+
+<style>
+/* NOVAAI HOMEPAGE BRAND OVERRIDES */
+:root {
+  --bg: #f5f7fb;
+  --ink: #10284b;
+  --muted: #667085;
+  --p: #174ea6;
+  --dark: #10284b;
+  --line: #e1e6ee;
+}
+body { background: #f5f7fb; color: #10284b; }
+.top, footer { background: #10284b; }
+.logo { color: #174ea6; }
+.logo span, .new-header .logo span { color: #f5b900; }
+.primary, .search .btn { background: #174ea6; color: #fff; }
+.light { background: #fff2bd; color: #10284b; }
+.hero {
+  background: linear-gradient(120deg, #10284b 0%, #174ea6 72%, #3878cf 100%);
+  color: #fff;
+}
+.hero p { color: #e7efff; }
+.cat.active, #cats .cat.active {
+  border-color: #174ea6;
+  background: #edf4ff;
+}
+.price, .prodbody .price { color: #174ea6; }
+.notice {
+  background: #edf4ff;
+  border-color: #c9dcfa;
+  color: #10284b;
+}
+.add-to-cart-btn, #modalAddToCart {
+  background: #f5b900 !important;
+  color: #10284b !important;
+  border: 0 !important;
+}
+.add-to-cart-btn:hover, #modalAddToCart:hover { background: #e6aa00 !important; }
+</style>
+
+</head>
+<body>
+
+<div id="productModal" class="product-modal" role="dialog" aria-modal="true" aria-labelledby="modalProductName">
+  <div class="product-modal-card nova-product-page">
+    <button type="button" class="product-modal-close" id="closeProductModal" aria-label="Close">×</button>
+    <div class="nova-product-photo-container" id="openLightboxBtn" title="Tap to view fullscreen">
+      <div id="modalGalleryScroll" class="nova-gallery-scroll"></div>
+      <div id="galleryDots" class="nova-gallery-dots"></div>
+    </div>
+    <div class="nova-product-content">
+      <div class="nova-product-label" id="modalProductBrand">novaaibadge</div>
+      <h2 id="modalProductName">Product name</h2>
+      <div class="nova-rating-row">
+        <span class="stars" id="modalStars">★★★★☆</span> 
+        <span class="rating-count" id="modalReviewCountText">14 Community Reviews (<span class="tc-link" id="toggleReviewsBtn">Read</span>)</span>
+      </div>
+      <div id="reviewsDrawer" class="info-drawer"><strong>Community Feedback:</strong> Authentic ratings and feedback submitted by verified NOVAAI marketplace shoppers across South Africa.</div>
+      <div class="takealot-delivery-box">
+        <div class="delivery-row">
+          <span id="modalDeliveryDateText">⚡ Ships in 24h · Arrives in 2–4 Days</span>
+          <span class="tc-link" id="toggleTcBtn">Policy</span>
+        </div>
+        <div id="tcDrawer" class="info-drawer"><strong>Shipping Policy:</strong> Reliable door-to-door courier delivery across South Africa. Free delivery on orders over R500.</div>
+        <div class="delivery-location-row">
+          <span>📍 Deliver to: <strong id="modalDeliveryTown">Sonderwater</strong></span>
+          <button type="button" class="btn-text" id="modalChangeLocation">Change</button>
+        </div>
+      </div>
+      <div class="trust-badge-box"><span>🛡️ Verified Independent Seller · 7-Day Buyer Protection</span></div>
+      <div class="stock-warranty-box">
+        <p class="in-stock">✔ <span id="modalStockStatus">In stock & ready to ship</span> <span class="tc-link" id="toggleStockBtn">Learn More</span></p>
+        <div id="stockDrawer" class="info-drawer"><strong>Stock & Fulfillment:</strong> Dispatched directly from verified independent merchant stockists.</div>
+      </div>
+      <div class="modal-bottom-bar">
+        <div class="modal-price-display">
+          <span class="muted" style="font-size:11px">Price:</span>
+          <span id="modalProductPrice" class="product-modal-price">R 0</span>
+        </div>
+        <button type="button" class="btn primary add-to-cart-btn" id="modalAddToCart">🛒 Add to Cart</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="fullscreenLightbox" class="fullscreen-lightbox" role="dialog" aria-modal="true">
+  <div class="lightbox-top-bar"><button type="button" class="lightbox-close-btn" id="closeLightboxBtn" aria-label="Close">×</button></div>
+  <div id="lightboxScroll" class="lightbox-scroll"></div>
+  <div id="lightboxDots" class="lightbox-dots"></div>
+</div>
+
+<div class="top">🇿🇦 NOVA AI TRUST SHIELD · SECURE BRAND-VERIFIED RETAIL MARKETPLACE</div>
+<header class="new-header">
+  <div class="head">
+    <a class="logo" href="#">NOVA<span>AI</span></a>
+    <form class="search" id="searchForm">
+      <input id="search" placeholder="Search products, brands or categories…">
+      <button class="btn primary" type="submit">🔍</button>
+    </form>
+    <button class="btn outline" type="button" onclick="openCart()">🛒 <span id="count">0</span></button>
+    <button class="btn outline" type="button" id="customerAccountBtn">👤 Sign in</button>
+    <button class="btn outline" type="button" onclick="openCustomerOrders()" title="My Orders" aria-label="My Orders">📦</button>
+    <!-- RETAIL MARKET BUTTON OPENING DEDICATED PAGE -->
+    <button type="button" onclick="openRetailMarketPage()" style="font-size: 13px; font-weight: 700; color: #174ea6; background: #f0f4f9; padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; gap: 5px; border: 1px solid #d1dced; cursor: pointer;">🛍️ Retail Market</button>
+  </div>
+  <div class="delivery-bar">
+    <span id="buyerLocation">📍 Deliver to: Your current location</span>
+    <div>
+      <button type="button" id="useMyLocation">📍 Use GPS</button>
+      <button type="button" id="changeLocation">Change</button>
+    </div>
+  </div>
+</header>
+<div id="customerAuthModal" class="hidden">
+  <div class="customer-auth-card">
+    <button type="button" id="customerAuthClose" class="auth-close">✕</button>
+
+    <h2>NOVA<span style="color:#2563eb">AI</span> Account</h2>
+    <p id="customerAuthDescription">Sign in to your customer account.</p>
+
+    <form id="customerAuthForm">
+      <div id="customerNameField" class="hidden">
+        <label for="customerAuthName">Full name</label>
+        <input id="customerAuthName" type="text" maxlength="100">
+      </div>
+
+      <label for="customerAuthEmail">Email address</label>
+      <input id="customerAuthEmail" type="email" required>
+
+      <label for="customerAuthPassword">Password</label>
+      <input id="customerAuthPassword" type="password" minlength="6" required>
+
+      <button type="submit" class="btn primary" id="customerAuthSubmit">Sign in</button>
+    </form>
+
+    <p id="customerAuthMsg"></p>
+    <button type="button" id="customerAuthModeBtn">Don't have an account? Register</button>
+    <button type="button" id="customerAuthSignOutBtn" class="hidden">Sign out</button>
+  </div>
+</div>
+
+<main>
+<section class="hero">
+<div>
+<div style="color:#d5d0ff;letter-spacing:2px">YOUR MARKETPLACE. YOUR OPPORTUNITY.</div>
+<h1>Discover more.<br>Shop smarter.</h1>
+<p>Find everyday essentials, electronics, fashion, sneakers, beauty products, cars, and property rentals. A marketplace where customers discover products and independent sellers grow.</p>
+<button class="btn light" onclick="go('shop')">Explore products →</button>
+<a class="btn outline" href="./seller.html">Start selling</a>
+</div><div class="hero-art">🛍️</div>
+</section>
+
+<section class="stats">
+<div class="stat"><strong id="productCount">0</strong><span>Products listed</span></div>
+<div class="stat"><strong>3</strong><span>Active Markets (Retail, Motors, Property)</span></div>
+<div class="stat"><strong>R0</strong><span>Listing fee in this demo</span></div>
+</section>
+
+<section id="categories" class="section">
+<div class="section-head"><h2>Shop by category</h2><span class="muted">Find what you need, all in one place.</span></div>
+<div id="cats" class="cats"></div>
+</section>
+
+<section id="shop" class="section">
+<div class="section-head">
+<h2>Explore products & assets</h2>
+<p class="muted" id="catalogueMessage">Demo products plus shared seller listings.</p>
+<span class="badge" id="dbStatus">CONNECTING</span>
+</div>
+<div class="filters">
+<select id="filter"><option>All</option></select>
+<select id="sort">
+<option value="featured">Featured</option><option value="low">Price: low to high</option>
+<option value="high">Price: high to low</option><option value="az">Name: A to Z</option>
+</select>
+<button class="btn outline" onclick="resetFilters()">Reset filters</button>
+</div>
+<div id="products" class="grid"></div>
+</section>
+
+<section id="retailMarketPage" class="section panel">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+    <div>
+      <h2>🛍️ Official Retail Market</h2>
+      <p class="muted">Authentic products directly from major verified brands like Nike, Puma, Pick n Pay, and more.</p>
+    </div>
+    <button class="btn primary" onclick="closeRetailMarketPage()">← Back to Marketplace</button>
+  </div>
+  <div class="trust-badge-box" style="margin-bottom: 20px;"><span>🛡️ Verified Corporate Retail Partners · 100% Authentic Guarantee</span></div>
+  <div id="retailProductsGrid" class="grid"></div>
+</section>
+
+<section id="seller" class="section">
+<h2>Nova Seller Portal</h2>
+<p class="muted">Create an account or sign in to publish shared listings.</p>
+</section>
+
+<div id="cartModal" class="cart-page hidden">
+
+  <div class="cart-page-header">
+    <button type="button" onclick="closeCart()">←</button>
+    <h2>Cart</h2>
+    <button type="button" onclick="openWishlistPage()">♡</button>
+  </div>
+
+  <div class="cart-delivery-bar">
+    <span id="cartDeliveryLocation">📍 Deliver to: Your current location</span>
+    <button type="button" id="cartChangeLocation">Change</button>
+  </div>
+
+  <div class="cart-page-content">
+
+    <h3>Your shopping cart</h3>
+    <p class="muted">Review your shopping cart.</p>
+
+    <div id="cartItems"></div>
+
+    <div class="total">
+      <span>Total</span>
+      <span id="total">R0.00</span>
+    </div>
+
+    <div class="cart-actions">
+      <button class="btn outline" onclick="clearCart()">Clear cart</button>
+      <button class="btn primary" onclick="checkout()">Continue to checkout</button>
+    </div>
+
+    <div id="checkoutMsg" class="msg" aria-live="polite"></div>
+
+    <form id="checkoutForm" class="hidden">
+      <h3>Customer details</h3>
+      <p class="muted">Sign in using your NOVAAI account before placing an order.</p>
+
+      <div class="field">
+        <label for="customerName">Full name *</label>
+        <input id="customerName" maxlength="100" required>
+      </div>
+
+      <div class="field">
+        <label for="customerPhone">Phone number *</label>
+        <input id="customerPhone" type="tel" maxlength="30" required>
+      </div>
+
+      <div class="field">
+        <label for="deliveryAddress">Delivery address *</label>
+        <textarea id="deliveryAddress" maxlength="500" required></textarea>
+      </div>
+
+      <p class="notice">Orders are submitted for seller confirmation. No online payment is taken at this stage.</p>
+
+      <button class="btn primary" id="placeOrderBtn" type="submit">Place order</button>
+    </form>
+
+  </div>
+</div>
+<dialog id="customerOrdersModal"
+style="width:min(92vw,700px);max-height:85vh;overflow:auto;border:0;border-radius:16px;padding:20px;box-shadow:0 10px 40px #0005">
+
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <h2>📦 My Orders</h2>
+    <button type="button" onclick="closeCustomerOrders()" class="btn outline">✕</button>
+  </div>
+
+  <p class="muted">Track orders placed using your signed-in NOVAAI account.</p>
+
+  <section id="customerOrders">
+   <button class="btn primary" type="button" id="loadCustomerOrders" onclick="loadCustomerOrders()">
+      View my orders
+    </button>
+    <div id="customerOrdersMsg" class="msg" aria-live="polite">
+      Sign in to view your orders.
+    </div>
+    <div id="customerOrdersList"></div>
+  </section>
+
+</dialog>
+
+<section id="wishlist" class="panel" style="margin:24px 0">
+  <h2>❤️ My Wishlist</h2>
+  <p>Your saved products will appear here.</p>
+</section>
+</main>
+
+<!-- NOVAAI SHOPPING CART POPUP -->
+<div id="cartModal" class="cart-modal hidden">
+  <div class="cart-modal-content">
+    <div class="cart-modal-header">
+      <h2>🛒 Your shopping cart</h2>
+      <button type="button" class="cart-close" onclick="closeCart()">✕</button>
+    </div>
+
+    <p class="muted">Review your shopping cart.</p>
+    <div id="cartItems"></div>
+
+    <div class="total">
+      <span>Total</span>
+      <span id="total">R0.00</span>
+    </div>
+
+    <button class="btn outline" onclick="clearCart()">Clear cart</button>
+    <button class="btn primary" onclick="checkout()">Continue to checkout</button>
+
+    <div id="checkoutMsg" class="msg" aria-live="polite"></div>
+
+    <form id="checkoutForm" class="hidden">
+      <h3>Customer details</h3>
+      <p class="muted">Sign in using your NOVAAI account before placing an order.</p>
+
+      <div class="field">
+        <label for="customerName">Full name *</label>
+        <input id="customerName" maxlength="100" required>
+      </div>
+
+      <div class="field">
+        <label for="customerPhone">Phone number *</label>
+        <input id="customerPhone" type="tel" maxlength="30" required>
+      </div>
+
+      <div class="field">
+        <label for="deliveryAddress">Delivery address *</label>
+        <textarea id="deliveryAddress" maxlength="500" required></textarea>
+      </div>
+
+      <p class="notice">Orders are submitted for seller confirmation. No online payment is taken at this stage.</p>
+      <button class="btn primary" id="placeOrderBtn" type="submit">Place order</button>
+    </form>
+  </div>
+</div>
+
+<footer>
+<div class="foot">
+<div><div class="logo">NOVA<span>AI</span> MARKETPLACE</div><p>A marketplace prototype for South African shoppers and independent sellers. Confirm seller details before paying.</p></div>
+<div><strong>Shop smart. Sell more.</strong><p>© <span id="year"></span> NOVAAI. Built for South Africa.</p></div>
+</div>
+</footer>
+
+<div id="toast" class="toast hidden"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+"use strict";
+const sb=window.supabase.createClient("https://nxplffvklkopwfjaqexo.supabase.co","sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ");
+const C=[
+["Auto","🚗"],
+["Luggage & Travel","🧳"],
+["Baby & Toddler","👶"],
+["Movies & Series","🎬"],
+["Beauty","💄"],
+["Music","🎵"],
+["Books","📚"],
+["Office & Stationery","🖊️"],
+["Cellphones","📱"],
+["Personal Care","🧴"],
+["Derma Skincare","🧖"],
+["Pets","🐾"],
+["Clothing Shoes & Accessories","👕"],
+["Photography","📷"],
+["Computers & Laptops","💻"],
+["Small Appliances","🔌"],
+["Garden Pool & Patio","🌿"],
+["Toys & Games","🧸"],
+["Groceries","🛒"],
+["TV Audio & Video","📺"],
+["Motors & Vehicles","🚙"],
+["Property For Sale","🏠"],
+["Property To Rent","🔑"]
+];
+const demo=[
+["demo-1","Nike Air Max Trainer","Clothing Shoes & Accessories",1899,"Nike Official Store","Official Nike athletic footwear and streetwear.","https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80"],
+["demo-2","Puma Running Hoodie","Clothing Shoes & Accessories",899,"Puma Retail","Comfortable activewear hoodie designed for peak performance.","https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80"],
+["demo-3","Pick n Pay Grocery Basket Bundle","Groceries",450,"Pick n Pay Hyper","Household essentials and grocery bundle pack.","https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=700&q=80"],
+["demo-4","Wireless Bluetooth Headphones","Electronics",349,"Nova Demo Store","Wireless listening for music, calls and everyday use.","https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"],
+["demo-5","Minimal Desk Lamp","Home & Living",279,"Nova Demo Store","A simple lamp for a desk or bedside table.","https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=700&q=80"]
+];
+let products=demo.map(a=>({id:a[0],name:a[1],category:a[2],price:a[3],seller:a[4],description:a[5],images:[a[6]],tag:"Demo"}));
+let cart=readCart(),active="All",user=null;
+function readCart(){try{return JSON.parse(localStorage.getItem("novaMarketplaceCartV1")||"[]")}catch(e){return []}}
+function saveCart(){try{localStorage.setItem("novaMarketplaceCartV1",JSON.stringify(cart))}catch(e){}}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function cash(n){return new Intl.NumberFormat("en-ZA",{style:"currency",currency:"ZAR"}).format(Number(n)||0)}
+function safeImg(s){try{let u=new URL(s);return ["http:","https:"].includes(u.protocol)?u.href:""}catch(e){return ""}}
+function go(id) {
+  const section = document.getElementById(id);
+  if (!section) return;
+
+  document.body.classList.remove(
+    "wishlist-view",
+    "categories-view",
+    "retail-market-view"
+  );
+
+  if (id === "wishlist") {
+    document.body.classList.add("wishlist-view");
+    renderWishlist();
+  }
+
+  if (id === "categories") {
+    document.body.classList.add("categories-view");
+  }
+
+  section.scrollIntoView({ behavior: "smooth" });
+}
+
+function openRetailMarketPage() {
+  document.body.classList.add("retail-market-view");
+  const retailList = products.filter(p => /nike|puma|pick n pay/i.test(p.seller));
+  renderRetailMarketGrid(retailList.length ? retailList : products);
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function closeRetailMarketPage() {
+  document.body.classList.remove("retail-market-view");
+  go("shop");
+}
+
+function message(id,s,bad=false){let e=document.getElementById(id);e.textContent=s;e.className="msg "+(bad?"error":"success")}
+function initCategories(){
+document.getElementById("cats").innerHTML=[["All","🌐"],...C].map(([n,ic])=>`<button class="cat ${active===n?"active":""}" data-cat="${esc(n)}"><span class="emoji">${ic}</span><span>${esc(n==="All"?"All products":n)}</span></button>`).join("");
+document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{
+  active=b.dataset.cat;
+  document.getElementById("filter").value=active;
+  document.getElementById("search").value="";
+  initCategories();
+  render();
+  go("shop");
+});
+document.getElementById("filter").innerHTML='<option>All</option>'+C.map(([n])=>`<option>${esc(n)}</option>`).join("");
+document.getElementById("filter").value=active;
+}
+
+function renderRetailMarketGrid(list) {
+  document.getElementById("retailProductsGrid").innerHTML = list.length ? list.map(p => {
+    const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
+    const firstImg = safeImg(imgList[0]);
+    const hash = String(p.id).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    const discountVal = (hash % 40) + 10;
+    const soldCount = (hash % 450) + 25;
+
+    return `<article class="product">
+<div class="prodimg" style="position:relative">
+  <button type="button" class="wishlist-btn" data-wishlist="${esc(p.id)}" aria-label="Add to wishlist" style="position:absolute;top:10px;right:10px;z-index:2;width:34px;height:34px;border:1px solid #e1e6ee;border-radius:50%;background:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.1)">♡</button>
+  <span class="shein-discount-badge">-${discountVal}%</span>
+  ${firstImg?`<img loading="lazy" src="${esc(firstImg)}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}
+</div>
+<div class="prodbody">
+  <small style="color:#08774f;font-weight:800">${esc(p.seller)}</small>
+  <h3>${esc(p.name)}</h3>
+  <div class="shein-rating-row"><span class="shein-stars">★★★★★</span><span>(${soldCount}+ sold)</span></div>
+  <div class="price">${cash(p.price)}</div>
+  <div class="actions">
+    <button class="btn primary" data-add="${esc(p.id)}">Add to cart</button>
+    <button class="btn outline" data-info="${esc(p.id)}">Details</button>
+  </div>
+</div>
+</article>`;
+  }).join("") : '<div class="panel">No retail products found.</div>';
+  bindProductEvents();
+}
+
+function render(){
+  let q=document.getElementById("search").value.toLowerCase(),cat=document.getElementById("filter").value,sort=document.getElementById("sort").value;
+  let list=products.filter(p=>{
+    const categoryMatch = (cat==="All" || p.category===cat);
+    return categoryMatch && [p.name,p.category,p.description,p.seller].join(" ").toLowerCase().includes(q);
+  });
+  if(sort==="low")list.sort((a,b)=>a.price-b.price);
+  if(sort==="high")list.sort((a,b)=>b.price-a.price);
+  if(sort==="az")list.sort((a,b)=>a.name.localeCompare(b.name));
+  document.getElementById("productCount").textContent=products.length;
+
+  document.getElementById("products").innerHTML=list.length?list.map(p=>{
+    const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
+    const firstImg = safeImg(imgList[0]);
+    const hash = String(p.id).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    const discountVal = (hash % 40) + 10;
+    const soldCount = (hash % 450) + 25;
+    const isBestseller = hash % 3 === 0;
+
+    return `<article class="product">
+<div class="prodimg" style="position:relative">
+  <button type="button" class="wishlist-btn" data-wishlist="${esc(p.id)}" aria-label="Add to wishlist" style="position:absolute;top:10px;right:10px;z-index:2;width:34px;height:34px;border:1px solid #e1e6ee;border-radius:50%;background:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.1)">♡</button>
+  <span class="shein-discount-badge">-${discountVal}%</span>
+  ${firstImg?`<img loading="lazy" src="${esc(firstImg)}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}
+</div>
+<div class="prodbody">
+  ${isBestseller ? `<span class="shein-bestseller">🔥 Bestseller</span>` : `<small style="color:#6654f5;font-weight:800">${esc(p.category)}</small>`}
+  <h3>${esc(p.name)}</h3>
+  <div class="shein-rating-row"><span class="shein-stars">★★★★★</span><span>(${soldCount}+ sold)</span></div>
+  <div class="price">${cash(p.price)}</div>
+  <div class="actions">
+    <button class="btn primary" data-add="${esc(p.id)}">Add to cart</button>
+    <button class="btn outline" data-info="${esc(p.id)}">Details</button>
+  </div>
+</div>
+</article>`;
+  }).join(""):'<div class="panel">No products found. Try another search or category.</div>';
+  bindProductEvents();
+}
+
+function bindProductEvents() {
+  document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add(b.dataset.add));
+  let savedWishlist=JSON.parse(localStorage.getItem("novaWishlist")||"[]");
+  document.querySelectorAll("[data-wishlist]").forEach(b=>{
+    if(savedWishlist.includes(b.dataset.wishlist)){
+      b.textContent="♥";
+      b.style.color="#e11d48";
+    }
+    b.onclick=()=>{
+      let wishlist=JSON.parse(localStorage.getItem("novaWishlist")||"[]");
+      const id=b.dataset.wishlist;
+      if(wishlist.includes(id)){wishlist=wishlist.filter(x=>x!==id);}else{wishlist.push(id);}
+      localStorage.setItem("novaWishlist",JSON.stringify(wishlist));
+      b.textContent=wishlist.includes(id)?"♥":"♡";
+      b.style.color=wishlist.includes(id)?"#e11d48":"#17345b";
+      renderWishlist();
+    };
+  });
+
+  document.querySelectorAll("[data-info]").forEach(b => {
+    b.onclick = () => {
+      const p = products.find(x => x.id === b.dataset.info);
+      if (!p) return;
+      const modal = document.getElementById("productModal");
+      const galleryScroll = document.getElementById("modalGalleryScroll");
+      const dotsContainer = document.getElementById("galleryDots");
+      const lightbox = document.getElementById("fullscreenLightbox");
+      const lightboxScroll = document.getElementById("lightboxScroll");
+      const lightboxDots = document.getElementById("lightboxDots");
+
+      document.getElementById("modalProductName").textContent = p.name;
+      document.getElementById("modalProductPrice").textContent = cash(p.price);
+      document.getElementById("modalProductBrand").textContent = p.seller ? p.seller.toLowerCase() : "novaaibadge";
+
+      const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
+      const galleryImages = imgList.map(url => safeImg(url)).filter(Boolean);
+
+      galleryScroll.innerHTML = galleryImages.length ? galleryImages.map(img => `<div class="nova-gallery-slide"><img src="${esc(img)}" alt="Product photo"></div>`).join("") : `<div class="nova-gallery-slide"><div class="muted">No image available</div></div>`;
+      dotsContainer.innerHTML = galleryImages.map((_, i) => `<span class="nova-gallery-dot ${i === 0 ? 'active' : ''}"></span>`).join("");
+
+      lightboxScroll.innerHTML = galleryImages.length ? galleryImages.map(img => `<div class="lightbox-slide"><img src="${esc(img)}" alt="Fullscreen photo"></div>`).join("") : `<div class="lightbox-slide"><div class="muted" style="color:white">No image available</div></div>`;
+      lightboxDots.innerHTML = galleryImages.map((_, i) => `<span class="lightbox-dot ${i === 0 ? 'active' : ''}"></span>`).join("");
+
+      document.getElementById("openLightboxBtn").onclick = () => lightbox.classList.add("open");
+      document.getElementById("closeLightboxBtn").onclick = () => lightbox.classList.remove("open");
+      lightbox.onclick = (e) => { if (e.target === lightbox) lightbox.classList.remove("open"); };
+
+      document.getElementById("modalAddToCart").onclick = () => {
+        add(p.id);
+        modal.classList.remove("open");
+        lightbox.classList.remove("open");
+      };
+      modal.classList.add("open");
+    };
+  });
+}
+
+function renderWishlist(){
+  const section = document.getElementById("wishlist");
+  if(!section) return;
+  const saved = JSON.parse(localStorage.getItem("novaWishlist") || "[]");
+  const favourites = saved.map(id => products.find(p => String(p.id) === String(id))).filter(Boolean);
+  section.innerHTML = `
+    <h2>❤️ My Wishlist</h2>
+    ${favourites.length ? favourites.map(p => `
+      <div class="panel" style="margin:10px 0">
+        <h3>${esc(p.name)}</h3>
+        <p>${cash(p.price)}</p>
+        <button class="btn primary" onclick="add('${esc(p.id)}')">Add to cart</button>
+      </div>
+    `).join("") : `<p>Your wishlist is empty. Tap a heart on a product to save it.</p>`}
+  `;
+}
+function resetFilters(){document.getElementById("search").value="";document.getElementById("filter").value="All";document.getElementById("sort").value="featured";active="All";initCategories();render()}
+function add(id){let p=products.find(x=>x.id===id);let i=cart.find(x=>x.id===id);if(i)i.qty++;else cart.push({id,qty:1});saveCart();renderCart();toast(p.name+" added to cart.")}
+function renderCart(){
+cart=cart.filter(i=>products.some(p=>p.id===i.id));
+document.getElementById("count").textContent=cart.reduce((s,i)=>s+i.qty,0);
+document.getElementById("cartItems").innerHTML=cart.length?cart.map(i=>{let p=products.find(x=>x.id===i.id);return`<div class="cartitem"><div><b>${esc(p.name)}</b><p class="muted">${cash(p.price)} each · Qty ${i.qty}</p></div><div><button class="btn outline" onclick="qty('${esc(i.id)}',-1)">−</button> <button class="btn outline" onclick="qty('${esc(i.id)}',1)">+</button> <button class="btn outline" onclick="cart=cart.filter(x=>x.id!=='${esc(i.id)}');saveCart();renderCart()">Remove</button></div></div>`}).join(""):'<p class="muted">Your cart is empty.</p>';
+document.getElementById("total").textContent=cash(cart.reduce((s,i)=>s+(products.find(p=>p.id===i.id)?.price||0)*i.qty,0));
+saveCart();
+}
+function qty(id,n){let i=cart.find(x=>x.id===id);if(!i)return;i.qty+=n;if(i.qty<1)cart=cart.filter(x=>x.id!==id);saveCart();renderCart()}
+function clearCart(){cart=[];saveCart();renderCart();}
+function checkout(){
+  const form = document.getElementById("checkoutForm");
+  if (!cart.length) { message("checkoutMsg", "Your cart is empty.", true); return; }
+  form.classList.print ? form.classList.print() : form.classList.remove("hidden");
+  form.scrollIntoView({ behavior: "smooth" });
+}
+
+document.getElementById("checkoutForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const form = e.target;
+  const button = form.querySelector('[type="submit"]');
+
+  try {
+    button.disabled = true;
+    button.textContent = "Placing order...";
+
+    // Verify the signed-in customer
+    const { data: authData, error: authError } = await sb.auth.getUser();
+
+    if (authError || !authData.user) {
+      throw new Error("Please sign in before placing an order.");
+    }
+
+    if (!cart.length) {
+      throw new Error("Your cart is empty.");
+    }
+
+    // Only real marketplace products can be ordered
+    const items = cart.map(item => {
+      const product = products.find(p => p.id === item.id);
+
+      if (!product || !product.dbId) {
+        throw new Error(
+          "Your cart contains a demo product. Remove it before checkout."
+        );
+      }
+
+      const quantity = Number(item.qty);
+
+      if (!Number.isInteger(quantity) || quantity < 1) {
+        throw new Error("One of your product quantities is invalid.");
+      }
+
+      return {
+        product_id: Number(product.dbId),
+        quantity: quantity
+      };
+    });
+
+    const customerName =
+      document.getElementById("customerName").value.trim();
+
+    const customerPhone =
+      document.getElementById("customerPhone").value.trim();
+
+    const deliveryAddress =
+      document.getElementById("deliveryAddress").value.trim();
+
+    if (!customerName || !customerPhone || !deliveryAddress) {
+      throw new Error("Please complete all delivery details.");
+    }
+
+    // Create the real order in Supabase
+const { data: orderId, error: orderError } = await sb.rpc(
+  "place_order",
+  {
+    p_customer_name: customerName,
+    p_customer_phone: customerPhone,
+    p_delivery_address: deliveryAddress,
+    p_items: items,
+    p_buyer_selected_location:
+      localStorage.getItem("buyerDeliveryLocation") || ""
+  }
+);
+
+if (orderError) throw orderError;
+
+if (!orderId) {
+  throw new Error("Supabase did not return an order number.");
+}
+
+alert(
+  "Order placed successfully!\n\nOrder reference: " + orderId
+);
+
+cart = [];
+saveCart();
+renderCart();
+
+form.reset();
+form.classList.add("hidden");
+
+  } catch (error) {
+    console.error("Checkout error:", error);
+    alert("Order failed: " + error.message);
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "Place Order";
+  }
+});
+
+function toast(s){let t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2400)}
+let customerAuthMode = "signin";
+
+function updateCustomerAccountUI() {
+  const btn = document.getElementById("customerAccountBtn");
+  const signOut = document.getElementById("customerAuthSignOutBtn");
+  btn.textContent = user ? "👤 Account" : "👤 Sign in";
+  signOut.classList.toggle("hidden", !user);
+}
+
+function openCustomerAuth() {
+  document.getElementById("customerAuthModal").classList.remove("hidden");
+  renderCustomerAuthMode();
+}
+function openCustomerOrders() {
+  const modal = document.getElementById("customerOrdersModal");
+
+  if (!modal) return;
+
+  modal.showModal();
+  loadCustomerOrders();
+}
+
+function closeCustomerOrders() {
+  const modal = document.getElementById("customerOrdersModal");
+
+  if (modal) modal.close();
+}
+function closeCustomerAuth() {
+  document.getElementById("customerAuthModal").classList.add("hidden");
+}
+
+function renderCustomerAuthMode() {
+  const registering = customerAuthMode === "register";
+
+  document.getElementById("customerAuthDescription").textContent =
+    registering ? "Create your NOVAAI customer account." : "Sign in to your customer account.";
+
+  document.getElementById("customerNameField").classList.toggle("hidden", !registering);
+  document.getElementById("customerAuthName").required = registering;
+
+  document.getElementById("customerAuthSubmit").textContent =
+    registering ? "Create account" : "Sign in";
+
+  document.getElementById("customerAuthModeBtn").textContent =
+    registering ? "Already have an account? Sign in" : "Don't have an account? Register";
+
+  document.getElementById("customerAuthMsg").textContent = "";
+}
+
+document.getElementById("customerAccountBtn").onclick = openCustomerAuth;
+document.getElementById("customerAuthClose").onclick = closeCustomerAuth;
+
+document.getElementById("customerAuthModeBtn").onclick = () => {
+  customerAuthMode = customerAuthMode === "signin" ? "register" : "signin";
+  renderCustomerAuthMode();
+};
+
+document.getElementById("customerAuthSignOutBtn").onclick = async () => {
+  const { error } = await sb.auth.signOut();
+  if (error) {
+    document.getElementById("customerAuthMsg").textContent = error.message;
+    return;
+  }
+  document.getElementById("customerAuthMsg").textContent = "You have signed out.";
+};
+
+document.getElementById("customerAuthForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const email = document.getElementById("customerAuthEmail").value.trim();
+  const password = document.getElementById("customerAuthPassword").value;
+  const name = document.getElementById("customerAuthName").value.trim();
+  const msg = document.getElementById("customerAuthMsg");
+  const submit = document.getElementById("customerAuthSubmit");
+
+  submit.disabled = true;
+  msg.textContent = "Please wait...";
+
+  try {
+    if (customerAuthMode === "register") {
+      const { data, error } = await sb.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: name },
+          emailRedirectTo: window.location.origin + window.location.pathname
+        }
+      });
+
+      if (error) throw error;
+
+      if (!data.session) {
+        msg.textContent = "Account created. Check your email to confirm, then sign in.";
+      } else {
+        msg.textContent = "Account created successfully.";
+        closeCustomerAuth();
+      }
+    } else {
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      closeCustomerAuth();
+    }
+  } catch (error) {
+    msg.textContent = error.message || "Authentication failed.";
+  } finally {
+    submit.disabled = false;
+  }
+});
+
+sb.auth.getSession().then(({ data, error }) => {
+  if (error) console.error("Session error:", error);
+  user = data?.session?.user || null;
+  updateCustomerAccountUI();
+});
+
+sb.auth.onAuthStateChange((_event, session) => {
+  user = session?.user || null;
+  updateCustomerAccountUI();
+});
+
+updateCustomerAccountUI();
+// ==========================================
+// NOVAAI CUSTOMER MY ORDERS
+// ==========================================
+
+async function loadCustomerOrders() {
+
+const container = document.getElementById("customerOrdersList");
+const msg = document.getElementById("customerOrdersMsg");
+
+msg.textContent = "Loading your orders...";
+container.innerHTML = "";
+
+try {
+
+// Verify signed-in customer
+const { data: authData, error: authError } =
+  await sb.auth.getUser();
+
+if (authError || !authData.user) {
+  throw new Error("Please sign in to view your orders.");
+}
+
+const customerId = authData.user.id;
+console.log("NOVAAI CUSTOMER ID:", customerId);
+// Retrieve customer's orders
+const { data: orders, error: ordersError } = await sb
+  .from("orders")
+  .select("*")
+  .eq("customer_id", customerId)
+  .order("created_at", { ascending: false });
+
+if (ordersError) throw ordersError;
+
+if (!orders || orders.length === 0) {
+  msg.textContent = "You haven't placed any orders yet.";
+  return;
+}
+
+const orderIds = orders.map(order => order.id);
+
+// Retrieve order products
+const { data: items, error: itemsError } = await sb
+  .from("order_items")
+  .select("*")
+  .in("order_id", orderIds);
+
+if (itemsError) throw itemsError;
+
+// Retrieve fulfilment information
+const { data: fulfillments, error: fulfillmentError } = await sb
+  .from("seller_fulfillments")
+  .select("*")
+  .in("order_id", orderIds);
+
+if (fulfillmentError) throw fulfillmentError;
+
+// Escape text before inserting into HTML
+const escapeHTML = value =>
+  String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[char]));
+
+container.innerHTML = orders.map(order => {
+
+  const orderItems = items.filter(
+    item => item.order_id === order.id
+  );
+
+  const orderFulfillments = fulfillments.filter(
+    item => item.order_id === order.id
+  );
+
+  return `
+    <div class="panel" style="margin:16px 0;padding:16px">
+
+      <h3>📦 Order #${escapeHTML(order.id)}</h3>
+
+      <p>
+        📅 ${escapeHTML(
+          new Date(order.created_at).toLocaleString("en-ZA")
+        )}
+      </p>
+
+      <h4>Products</h4>
+
+      ${orderItems.map(item => `
+        <div>
+          <strong>${escapeHTML(item.product_name)}</strong>
+          <p>Quantity: ${Number(item.quantity)}</p>
+          <p>Unit price: R${Number(item.unit_price).toFixed(2)}</p>
+          <p>Subtotal: R${Number(item.line_total).toFixed(2)}</p>
+        </div>
+      `).join("")}
+
+      <hr>
+
+      <h3>
+        Total: R${Number(order.total_amount).toFixed(2)}
+      </h3>
+
+      <p>
+        Payment:
+        ${escapeHTML(order.payment_status)}
+      </p>
+
+      <p>
+        Order status:
+        ${escapeHTML(order.order_status)}
+      </p>
+
+      <h4>🚚 Delivery tracking</h4>
+
+      ${orderFulfillments.length
+        ? orderFulfillments.map(f => `
+          <div>
+            <p>Status: ${escapeHTML(f.fulfillment_status)}</p>
+            <p>Courier: ${escapeHTML(f.courier_name || "Not assigned")}</p>
+            <p>Tracking: ${escapeHTML(f.tracking_number || "Not available")}</p>
+            <p>Delivery date: ${
+              f.delivery_date
+                ? escapeHTML(new Date(f.delivery_date).toLocaleDateString("en-ZA"))
+                : "Awaiting delivery"
+            }</p>
+          </div>
+        `).join("")
+        : "<p>Awaiting seller fulfilment.</p>"
+      }
+
+    </div>
+  `;
+
+}).join("");
+
+msg.textContent = orders.length + " order(s) found.";
+
+} catch (error) {
+
+console.error("NOVAAI My Orders:", error);
+
+msg.textContent = error.message || "Unable to load orders.";
+
+}
+}
+
+// NOVAAI MY ORDERS DIAGNOSTIC
+
+console.log("=== NOVAAI ORDERS DIAGNOSTIC ===");
+
+console.log(
+  "Button:",
+  document.getElementById("loadCustomerOrders")
+);
+
+console.log(
+  "Section:",
+  document.getElementById("customerOrders")
+);
+
+console.log(
+  "Orders container:",
+  document.getElementById("customerOrdersList")
+);
+
+console.log(
+  "Orders message:",
+  document.getElementById("customerOrdersMsg")
+);
+
+console.log(
+  "Load function:",
+  typeof loadCustomerOrders
+);
+
+async function loadShared() {
+try {
+
+    const { data: productData, error: productError } = await sb
+      .from("Products")
+      .select("id,name,description,price,category,image_url,images,seller_name,seller_id,status")
+      .eq("status", "approved")
+      .order("created_at", { ascending: false });
+
+    if (productError) throw productError;
+
+    const { data: approvedStores, error: storeError } = await sb
+      .from("seller_stores")
+      .select("user_id")
+      .eq("status", "approved");
+
+    if (storeError) throw storeError;
+
+    const approvedSellerIds = new Set(
+      (approvedStores || []).map(store => store.user_id)
+    );
+
+    // Only show approved products belonging to approved sellers
+    products = (productData || [])
+      .filter(product =>
+        product.status === "approved" &&
+        product.seller_id &&
+        approvedSellerIds.has(product.seller_id) &&
+        product.name &&
+        Number(product.price) > 0
+      )
+      .map(product => ({
+        id: "db-" + product.id,
+        dbId: product.id,
+        name: product.name,
+        category: product.category,
+        price: Number(product.price),
+        seller: product.seller_name || "Independent seller",
+        description: product.description || "",
+        images: Array.isArray(product.images) && product.images.length
+          ? product.images
+          : (product.image_url ? [product.image_url] : [])
+      }));
+
+    document.getElementById("dbStatus").textContent =
+      "REAL MARKETPLACE CONNECTED";
+
+    document.getElementById("catalogueMessage").textContent =
+      "Approved products from verified NOVAAI sellers.";
+
+    render();
+    renderCart();
+
+  } catch (error) {
+    console.error("Marketplace loading error:", error);
+
+    products = [];
+
+    document.getElementById("dbStatus").textContent =
+      "MARKETPLACE CONNECTION ERROR";
+
+    document.getElementById("catalogueMessage").textContent =
+      "Products could not be loaded. Please try again.";
+
+    render();
+    renderCart();
+  }
+}
+
+document.getElementById("searchForm").onsubmit=e=>{e.preventDefault();render();go("shop");};
+document.getElementById("search").oninput=render;
+document.getElementById("filter").onchange=e=>{active=e.target.value;initCategories();render();};
+document.getElementById("sort").onchange=render;
+document.getElementById("year").textContent=new Date().getFullYear();
+
+initCategories();
+render();
+renderCart();
+loadShared();
+
+function closeProductModal(){ document.getElementById("productModal").classList.remove("open"); }
+document.getElementById("closeProductModal").onclick=closeProductModal;
+renderWishlist();
+</script>
+
+<style>
+.mobile-bottom-nav { display: none; }
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex; position: fixed; bottom: 0; left: 0; width: 100%; height: 66px; background: #ffffff; border-top: 1px solid #e5e7eb; box-shadow: 0 -3px 12px rgba(0,0,0,.08); justify-content: space-around; align-items: center; z-index: 999;
+  }
+  .mobile-bottom-nav button, .mobile-bottom-nav a {
+    border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #174ea6; font-size: 20px; text-decoration: none;
+  }
+  .mobile-bottom-nav span { font-size: 10px; font-weight: 700; }
+  body { padding-bottom: 75px; }
+}
+#categories { display: none; }
+body.categories-view main > *:not(#categories) { display: none !important; }
+body.categories-view #categories { display: block !important; min-height: 70vh; margin: 24px auto !important; max-width: 900px; }
+</style>
+
+<nav class="mobile-bottom-nav">
+  <button onclick="go('shop')">🏠<span>Home</span></button>
+  <button onclick="go('categories')">☰<span>Categories</span></button>
+  <a href="seller-motors-houses.html" style="color:#d97706;">🚗🔑<span>Motors/Prop</span></a>
+  <button onclick="go('wishlist')">❤️<span>Wishlist</span></button>
+  <button onclick="window.location.href='seller.html'">🏷️<span>Retail Sell</span></button>
+</nav>
+
+<script>
+const locationDisplay = document.getElementById("buyerLocation");
+const gpsButton = document.getElementById("useMyLocation");
+const changeButton = document.getElementById("changeLocation");
+let buyerCoordinates = null;
+
+// Restore the saved delivery location after reload
+const savedLocation = localStorage.getItem("buyerDeliveryLocation");
+
+if (locationDisplay && savedLocation) {
+  locationDisplay.textContent = "📍 Deliver to: " + savedLocation;
+}
+
+if (locationDisplay) {
+  locationDisplay.style.cursor = "pointer";
+
+  locationDisplay.addEventListener("click", function () {
+    if (!buyerCoordinates) {
+      alert("Please press Use GPS first.");
+      return;
+    }
+
+    window.open(
+      "https://www.google.com/maps/search/?api=1&query=" +
+      buyerCoordinates.latitude + "," + buyerCoordinates.longitude,
+      "_blank"
+    );
+  });
+}
+
+if (gpsButton) {
+  gpsButton.addEventListener("click", function () {
+    if (!navigator.geolocation) {
+      locationDisplay.textContent = "📍 GPS not supported";
+      return;
+    }
+
+    locationDisplay.textContent = "📍 Finding location...";
+
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        buyerCoordinates = {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude
+        };
+
+        const gpsLocation = "📍 GPS: " +
+          pos.coords.latitude.toFixed(4) + ", " +
+          pos.coords.longitude.toFixed(4);
+
+        localStorage.setItem("buyerDeliveryLocation", gpsLocation);
+        localStorage.setItem("buyerLocationType", "gps");
+
+        locationDisplay.textContent = gpsLocation;
+
+        const cartLocation = document.getElementById("cartDeliveryLocation");
+        if (cartLocation) {
+          cartLocation.textContent = gpsLocation;
+        }
+      },
+      err => {
+        locationDisplay.textContent = "📍 GPS error";
+      }
+    );
+  });
+}
+
+if (changeButton) {
+changeButton.addEventListener("click", function () {
+  const town = prompt("Enter your town or suburb:");
+
+  if (town && town.trim()) {
+    buyerCoordinates = null;
+
+    const locationText = "📍 Deliver to: " + town.trim();
+   
+  localStorage.setItem("buyerDeliveryLocation", town.trim());
+    
+  localStorage.setItem("buyerLocationType", "town");
+   
+    locationDisplay.textContent = locationText;
+
+    const cartLocation = document.getElementById("cartDeliveryLocation");
+
+    if (cartLocation) {
+      cartLocation.textContent = locationText;
+    }
+  }
+});
+}
+const cartChangeButton = document.getElementById("cartChangeLocation");
+
+if (cartChangeButton && changeButton) {
+  cartChangeButton.addEventListener("click", function () {
+    changeButton.click();
+  });
+}
+let previousCartScrollPosition = 0;
+
+function openCart() {
+  const cartPage = document.getElementById("cartModal");
+
+  if (!cartPage) {
+    alert("Cart page not found.");
+    return;
+  }
+
+  previousCartScrollPosition = window.scrollY;
+const mainLocation = document.getElementById("buyerLocation");
+const cartLocation = document.getElementById("cartDeliveryLocation");
+
+if (mainLocation && cartLocation) {
+  cartLocation.textContent = mainLocation.textContent;
+}
+  cartPage.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+
+  if (typeof renderCart === "function") {
+    renderCart();
+  }
+}
+
+function closeCart() {
+  const cartPage = document.getElementById("cartModal");
+
+  if (!cartPage) return;
+
+  cartPage.classList.add("hidden");
+  document.body.style.overflow = "";
+
+  window.scrollTo({
+    top: previousCartScrollPosition,
+    behavior: "auto"
+  });
+}
+</script>
+
+</body>
+</html>
