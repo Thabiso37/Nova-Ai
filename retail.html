@@ -1476,6 +1476,17 @@ try {
     render();
     renderCart();
 
+    // Open the exact product when arriving from a homepage product card.
+    const requestedProductId = new URLSearchParams(window.location.search).get("product");
+    if (requestedProductId) {
+      const requestedProduct = products.find(p => String(p.dbId) === requestedProductId);
+      if (requestedProduct) {
+        const detailButton = Array.from(document.querySelectorAll("[data-info]"))
+          .find(button => button.dataset.info === requestedProduct.id);
+        if (detailButton) detailButton.click();
+      }
+    }
+
   } catch (error) {
     console.error("Marketplace loading error:", error);
 
