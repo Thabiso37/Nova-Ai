@@ -155,6 +155,14 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
 @media(max-width:420px){.home-product-buttons{grid-template-columns:1fr}.home-product-open,.home-add-cart{padding:9px 5px}}
 </style>
 
+
+<style>
+.home-location-button{border:0;background:#f5b900;color:#10284b;padding:0 13px;font-weight:900;white-space:nowrap;cursor:pointer}
+.home-location-status{margin:8px 4px 0;color:#667085;font-size:11px;line-height:1.5;text-align:left}
+.home-product-card[hidden]{display:none!important}
+@media(max-width:520px){.home-search{flex-wrap:wrap}.home-search input{flex:1 1 100%;min-height:48px}.home-search button{min-height:43px;flex:1}.home-search button[type=submit]{flex:1.2}}
+</style>
+
 </head>
 <body>
 <div class="top">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
@@ -166,14 +174,16 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
       <a class="cart-link" href="./retail.html?view=cart" aria-label="Open shopping cart">🛒 <span>Cart</span> <b id="homeCartCount" aria-label="Items in cart">0</b></a>
     </div>
   </div>
-  <div class="delivery-row"><div class="delivery-inner"><span id="homeDeliveryText">📍 Deliver to: Choose your area</span><button type="button" id="homeChangeArea">Change</button></div></div>
+  
 </header>
 <main>
   <div class="home-search-wrap">
     <form class="home-search" id="homeSearchForm" role="search">
-      <input id="homeSearchInput" type="search" placeholder="Find a market or category…" aria-label="Find a market or category">
-      <button type="submit" aria-label="Search">⌕ Search</button>
+      <input id="homeSearchInput" type="search" placeholder="Search products, categories or sellers…" aria-label="Search homepage products">
+      <button type="submit" aria-label="Search products">⌕ Search</button>
+      <button type="button" id="homeUseLocation" class="home-location-button">📍 Near me</button>
     </form>
+    <p id="homeLocationStatus" class="home-location-status" aria-live="polite">Search products above, or choose Near me to share your location.</p>
     <div class="quick-links" aria-label="Quick market categories">
       <a class="quick-link" href="./retail.html#shop"><span>🛍️</span> Retail & Deals</a>
       <a class="quick-link" href="./seller-motors-houses.html?market=motors"><span>🚗</span> Cars & Motors</a>
@@ -198,7 +208,7 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
     <a class="promo" href="./retail.html"><strong>Discover products across South Africa</strong><span>Explore the retail catalogue, browse categories and shop independent sellers.</span></a>
     <a class="promo alt" href="./seller.html"><strong>Your business belongs here</strong><span>Visit the existing Seller Portal to explore seller options.</span></a>
   </section>
-  <div class="note"><strong>About Cars & Property:</strong> These two markets currently open the existing combined Motors & Property page. Use its bottom navigation to choose Cars or Property. That existing page has not been changed.</div>
+  
 </main>
 <footer><strong><span style="color:#6da8ff">NOVA</span><span style="color:#f5b900">AI</span><span style="color:#ffffff"> MARKET</span></strong> · Built for South Africa · Your Marketplace. Your Opportunity.</footer>
 <nav class="nova-bottom-nav" aria-label="Main navigation">
@@ -213,38 +223,44 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
 
 <script>
 (function(){
-  const areaText=document.getElementById('homeDeliveryText');
-  const areaButton=document.getElementById('homeChangeArea');
-  try{
-    const saved=localStorage.getItem('nova_home_delivery_area');
-    if(saved && areaText) areaText.textContent='📍 Deliver to: '+saved;
-  }catch(e){}
-  if(areaButton){
-    areaButton.addEventListener('click',function(){
-      let current='';
-      try{current=localStorage.getItem('nova_home_delivery_area')||'';}catch(e){}
-      const value=prompt('Enter your suburb, town or postal area:',current);
-      if(value===null)return;
-      const clean=value.trim().slice(0,80);
-      if(!clean){alert('Please enter an area, or cancel to leave it unchanged.');return;}
-      if(areaText)areaText.textContent='📍 Deliver to: '+clean;
-      try{localStorage.setItem('nova_home_delivery_area',clean);}catch(e){}
-    });
-  }
   const form=document.getElementById('homeSearchForm');
   const input=document.getElementById('homeSearchInput');
-  if(form && input){
+  const locationButton=document.getElementById('homeUseLocation');
+  const status=document.getElementById('homeLocationStatus');
+  if(form&&input){
     form.addEventListener('submit',function(e){
       e.preventDefault();
       const q=input.value.trim().toLowerCase();
-      if(!q){input.focus();return;}
-      const links=Array.from(document.querySelectorAll('.market-card'));
-      const match=links.find(a=>(a.innerText+' '+a.className).toLowerCase().includes(q));
-      if(match){location.href=match.getAttribute('href');return;}
-      if(/shoe|cloth|fashion|beauty|phone|electronic|furniture|product|deal|retail|shop|grocery|toy/.test(q)){location.href='./retail.html#shop';return;}
-      if(/car|motor|vehicle|bike/.test(q)){location.href='./seller-motors-houses.html?market=motors';return;}
-      if(/house|home|rent|property|apartment|flat/.test(q)){location.href='./seller-motors-houses.html?market=property';return;}
-      alert('No matching market found. Try Retail, Cars & Motors, or Property.');
+      const cards=Array.from(document.querySelectorAll('#homeProductGrid .home-product-card'));
+      if(!q){cards.forEach(card=>card.hidden=false);if(status)status.textContent='Showing all available homepage products.';return;}
+      let shown=0;
+      cards.forEach(card=>{const match=card.innerText.toLowerCase().includes(q);card.hidden=!match;if(match)shown++;});
+      if(status)status.textContent=shown?('Showing '+shown+' matching homepage product'+(shown===1?'':'s')+'.'):'No homepage products match that search. Try another product name, category or seller.';
+      document.getElementById('homeFeatured')?.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+    input.addEventListener('input',function(){
+      if(!input.value.trim()){
+        document.querySelectorAll('#homeProductGrid .home-product-card').forEach(card=>card.hidden=false);
+        if(status)status.textContent='Search products above, or choose Near me to share your location.';
+      }
+    });
+  }
+  if(locationButton){
+    locationButton.addEventListener('click',function(){
+      if(!navigator.geolocation){if(status)status.textContent='Location is not supported by this browser.';return;}
+      locationButton.disabled=true;locationButton.textContent='Finding you…';
+      if(status)status.textContent='Requesting your location permission…';
+      navigator.geolocation.getCurrentPosition(
+        function(){
+          locationButton.disabled=false;locationButton.textContent='📍 Near me';
+          if(status)status.textContent='Your location was detected. Nearby product matching is not available yet because current seller listings do not include a suburb, town or GPS location. You can still search products by name, category or seller.';
+        },
+        function(error){
+          locationButton.disabled=false;locationButton.textContent='📍 Near me';
+          if(status)status.textContent=error.code===1?'Location permission was not granted. You can allow it in Chrome site settings.':'Could not get your location. Please try again or search by product name.';
+        },
+        {enableHighAccuracy:false,timeout:10000,maximumAge:300000}
+      );
     });
   }
 })();
