@@ -579,40 +579,10 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;backg
 </div>
 
 <main>
-<section class="hero">
-<div>
-<div style="color:#d5d0ff;letter-spacing:2px">YOUR MARKETPLACE. YOUR OPPORTUNITY.</div>
-<h1>Discover more.<br>Shop smarter.</h1>
-<p>Find everyday essentials, electronics, fashion, sneakers, beauty products, cars, and property rentals. A marketplace where customers discover products and independent sellers grow.</p>
-<button class="btn light" onclick="go('shop')">Explore products →</button>
-<a class="btn outline" href="./seller.html">Start selling</a>
-</div><div class="hero-art">🛍️</div>
-</section>
-
-<section class="stats">
-<div class="stat"><strong id="productCount">0</strong><span>Products listed</span></div>
-<div class="stat"><strong>3</strong><span>Active Markets (Retail, Motors, Property)</span></div>
-<div class="stat"><strong>R0</strong><span>Listing fee in this demo</span></div>
-</section>
-
 <section id="categories" class="section">
-<div class="section-head"><h2>Shop by category</h2><span class="muted">Find what you need, all in one place.</span></div>
-<div id="cats" class="cats"></div>
-</section>
-
-<section id="shop" class="section">
 <div class="section-head">
-<h2>Explore products & assets</h2>
-<p class="muted" id="catalogueMessage">Demo products plus shared seller listings.</p>
+<p class="muted" id="catalogueMessage">Browse available products from approved marketplace sellers.</p>
 <span class="badge" id="dbStatus">CONNECTING</span>
-</div>
-<div class="filters">
-<select id="filter"><option>All</option></select>
-<select id="sort">
-<option value="featured">Featured</option><option value="low">Price: low to high</option>
-<option value="high">Price: high to low</option><option value="az">Name: A to Z</option>
-</select>
-<button class="btn outline" onclick="resetFilters()">Reset filters</button>
 </div>
 <div id="products" class="grid"></div>
 </section>
@@ -806,14 +776,11 @@ function initCategories(){
 document.getElementById("cats").innerHTML=[["All","🌐"],...C].map(([n,ic])=>`<button class="cat ${active===n?"active":""}" data-cat="${esc(n)}"><span class="emoji">${ic}</span><span>${esc(n==="All"?"All products":n)}</span></button>`).join("");
 document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{
   active=b.dataset.cat;
-  document.getElementById("filter").value=active;
   document.getElementById("search").value="";
   initCategories();
   render();
   go("shop");
 });
-document.getElementById("filter").innerHTML='<option>All</option>'+C.map(([n])=>`<option>${esc(n)}</option>`).join("");
-document.getElementById("filter").value=active;
 }
 
 function renderRetailMarketGrid(list) {
@@ -840,15 +807,11 @@ function renderRetailMarketGrid(list) {
 }
 
 function render(){
-  let q=document.getElementById("search").value.toLowerCase(),cat=document.getElementById("filter").value,sort=document.getElementById("sort").value;
-  let list=products.filter(p=>{
-    const categoryMatch = (cat==="All" || p.category===cat);
+  const q=document.getElementById("search").value.toLowerCase();
+  const list=products.filter(p=>{
+    const categoryMatch = (active==="All" || p.category===active);
     return categoryMatch && [p.name,p.category,p.description,p.seller].join(" ").toLowerCase().includes(q);
   });
-  if(sort==="low")list.sort((a,b)=>a.price-b.price);
-  if(sort==="high")list.sort((a,b)=>b.price-a.price);
-  if(sort==="az")list.sort((a,b)=>a.name.localeCompare(b.name));
-  document.getElementById("productCount").textContent=products.length;
 
   document.getElementById("products").innerHTML=list.length?list.map(p=>{
     const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
@@ -1137,8 +1100,8 @@ let customerAuthMode = "signin";
 function updateCustomerAccountUI() {
   const btn = document.getElementById("customerAccountBtn");
   const signOut = document.getElementById("customerAuthSignOutBtn");
-  btn.textContent = user ? "👤 Account" : "👤 Sign in";
-  signOut.classList.toggle("hidden", !user);
+  if (btn) btn.textContent = user ? "👤 Account" : "👤 Sign in";
+  if (signOut) signOut.classList.toggle("hidden", !user);
 }
 
 function openCustomerAuth() {
@@ -1181,7 +1144,8 @@ function renderCustomerAuthMode() {
   document.getElementById("customerAuthMsg").textContent = "";
 }
 
-document.getElementById("customerAccountBtn").onclick = openCustomerAuth;
+const retailAccountButton = document.getElementById("customerAccountBtn");
+if (retailAccountButton) retailAccountButton.onclick = openCustomerAuth;
 document.getElementById("customerAuthClose").onclick = closeCustomerAuth;
 
 document.getElementById("customerAuthModeBtn").onclick = () => {
@@ -1518,8 +1482,6 @@ try {
 
 document.getElementById("searchForm").onsubmit=e=>{e.preventDefault();render();go("shop");};
 document.getElementById("search").oninput=render;
-document.getElementById("filter").onchange=e=>{active=e.target.value;initCategories();render();};
-document.getElementById("sort").onchange=render;
 document.getElementById("year").textContent=new Date().getFullYear();
 
 initCategories();
