@@ -491,7 +491,7 @@ body { background: #f5f7fb; color: #10284b; }
 <style>
 :root{--nova-navy:#10284B;--nova-blue:#174EA6;--nova-yellow:#F5B900;--nova-bg:#F5F7FB}
 body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;background:var(--nova-bg)}
-.nova-bottom-nav{position:fixed;z-index:9999;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;background:rgba(255,255,255,.97);border-top:1px solid #e3e8f0;padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));box-shadow:0 -5px 22px rgba(16,40,75,.08);backdrop-filter:blur(12px)}
+.nova-bottom-nav{position:fixed;z-index:9999;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0;background:rgba(255,255,255,.97);border-top:1px solid #e3e8f0;padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));box-shadow:0 -5px 22px rgba(16,40,75,.08);backdrop-filter:blur(12px)}
 .nova-nav-item{position:relative;display:flex;min-width:0;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#778195;font-size:10px;font-weight:700;line-height:1.15;text-decoration:none;transition:color .18s,transform .18s}
 .nova-nav-item svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .nova-nav-item.active{color:var(--nova-blue);transform:translateY(-1px)}
@@ -665,9 +665,10 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;backg
   <div id="retailProductsGrid" class="grid"></div>
 </section>
 
-<section id="seller" class="section">
+<section id="seller" class="section panel">
 <h2>Nova Seller Portal</h2>
-<p class="muted">Create an account or sign in to publish shared listings.</p>
+<p class="muted">Manage your seller account, products and orders in the secure seller workspace.</p>
+<a class="btn primary" href="./seller.html">Open Seller Portal →</a>
 </section>
 
 <div id="cartModal" class="cart-page hidden">
@@ -755,52 +756,6 @@ style="width:min(92vw,700px);max-height:85vh;overflow:auto;border:0;border-radiu
   <p>Your saved products will appear here.</p>
 </section>
 </main>
-
-<!-- NOVAAI SHOPPING CART POPUP -->
-<div id="cartModal" class="cart-modal hidden">
-  <div class="cart-modal-content">
-    <div class="cart-modal-header">
-      <h2>🛒 Your shopping cart</h2>
-      <button type="button" class="cart-close" onclick="closeCart()">✕</button>
-    </div>
-
-    <p class="muted">Review your shopping cart.</p>
-    <div id="cartItems"></div>
-
-    <div class="total">
-      <span>Total</span>
-      <span id="total">R0.00</span>
-    </div>
-
-    <button class="btn outline" onclick="clearCart()">Clear cart</button>
-    <button class="btn primary" onclick="checkout()">Continue to checkout</button>
-
-    <div id="checkoutMsg" class="msg" aria-live="polite"></div>
-
-    <form id="checkoutForm" class="hidden">
-      <h3>Customer details</h3>
-      <p class="muted">Sign in using your NOVAAI account before placing an order.</p>
-
-      <div class="field">
-        <label for="customerName">Full name *</label>
-        <input id="customerName" maxlength="100" required>
-      </div>
-
-      <div class="field">
-        <label for="customerPhone">Phone number *</label>
-        <input id="customerPhone" type="tel" maxlength="30" required>
-      </div>
-
-      <div class="field">
-        <label for="deliveryAddress">Delivery address *</label>
-        <textarea id="deliveryAddress" maxlength="500" required></textarea>
-      </div>
-
-      <p class="notice">Orders are submitted for seller confirmation. No online payment is taken at this stage.</p>
-      <button class="btn primary" id="placeOrderBtn" type="submit">Place order</button>
-    </form>
-  </div>
-</div>
 
 <footer>
 <div class="foot">
@@ -1045,13 +1000,24 @@ function renderWishlist(){
   `;
 }
 function resetFilters(){document.getElementById("search").value="";document.getElementById("filter").value="All";document.getElementById("sort").value="featured";active="All";initCategories();render()}
-function add(id){let p=products.find(x=>x.id===id);let i=cart.find(x=>x.id===id);if(i)i.qty++;else cart.push({id,qty:1});saveCart();renderCart();toast(p.name+" added to cart.")}
+function cartProduct(item){return item.product || products.find(p=>String(p.id)===String(item.id)) || {id:item.id,name:"Saved product",price:0,seller:"Marketplace seller"}}
+function add(id){
+  const p=products.find(x=>String(x.id)===String(id));
+  if(!p){toast("This product is not available right now.");return;}
+  let i=cart.find(x=>String(x.id)===String(id));
+  if(i){i.qty++;i.product={id:p.id,dbId:p.dbId||null,name:p.name,price:Number(p.price)||0,seller:p.seller||"",category:p.category||"",images:p.images||[]};}
+  else cart.push({id:p.id,qty:1,product:{id:p.id,dbId:p.dbId||null,name:p.name,price:Number(p.price)||0,seller:p.seller||"",category:p.category||"",images:p.images||[]}});
+  saveCart();renderCart();toast(p.name+" added to cart.");
+}
 function renderCart(){
-cart=cart.filter(i=>products.some(p=>p.id===i.id));
-document.getElementById("count").textContent=cart.reduce((s,i)=>s+i.qty,0);
-document.getElementById("cartItems").innerHTML=cart.length?cart.map(i=>{let p=products.find(x=>x.id===i.id);return`<div class="cartitem"><div><b>${esc(p.name)}</b><p class="muted">${cash(p.price)} each · Qty ${i.qty}</p></div><div><button class="btn outline" onclick="qty('${esc(i.id)}',-1)">−</button> <button class="btn outline" onclick="qty('${esc(i.id)}',1)">+</button> <button class="btn outline" onclick="cart=cart.filter(x=>x.id!=='${esc(i.id)}');saveCart();renderCart()">Remove</button></div></div>`}).join(""):'<p class="muted">Your cart is empty.</p>';
-document.getElementById("total").textContent=cash(cart.reduce((s,i)=>s+(products.find(p=>p.id===i.id)?.price||0)*i.qty,0));
-saveCart();
+  cart=cart.filter(i=>i&&i.id!=null&&Number.isInteger(Number(i.qty))&&Number(i.qty)>0);
+  cart.forEach(i=>{if(!i.product){const p=products.find(x=>String(x.id)===String(i.id));if(p)i.product={id:p.id,dbId:p.dbId||null,name:p.name,price:Number(p.price)||0,seller:p.seller||"",category:p.category||"",images:p.images||[]};}});
+  const count=cart.reduce((s,i)=>s+Number(i.qty),0);
+  const countEl=document.getElementById("count");if(countEl)countEl.textContent=count;
+  const itemsEl=document.getElementById("cartItems");
+  if(itemsEl)itemsEl.innerHTML=cart.length?cart.map(i=>{const p=cartProduct(i);return`<div class="cartitem"><div><b>${esc(p.name||"Saved product")}</b><p class="muted">${cash(p.price)} each · Qty ${i.qty}</p></div><div><button class="btn outline" onclick="qty('${esc(i.id)}',-1)">−</button> <button class="btn outline" onclick="qty('${esc(i.id)}',1)">+</button> <button class="btn outline" onclick="cart=cart.filter(x=>String(x.id)!=='${esc(i.id)}');saveCart();renderCart()">Remove</button></div></div>`}).join(""):'<p class="muted">Your cart is empty.</p>';
+  const totalEl=document.getElementById("total");if(totalEl)totalEl.textContent=cash(cart.reduce((s,i)=>s+(Number(cartProduct(i).price)||0)*Number(i.qty),0));
+  saveCart();
 }
 function qty(id,n){let i=cart.find(x=>x.id===id);if(!i)return;i.qty+=n;if(i.qty<1)cart=cart.filter(x=>x.id!==id);saveCart();renderCart()}
 function clearCart(){cart=[];saveCart();renderCart();}
@@ -1085,7 +1051,7 @@ document.getElementById("checkoutForm").addEventListener("submit", async e => {
 
     // Only real marketplace products can be ordered
     const items = cart.map(item => {
-      const product = products.find(p => p.id === item.id);
+      const product = item.product || products.find(p => String(p.id) === String(item.id));
 
       if (!product || !product.dbId) {
         throw new Error(
@@ -1513,8 +1479,6 @@ try {
   } catch (error) {
     console.error("Marketplace loading error:", error);
 
-    products = [];
-
     document.getElementById("dbStatus").textContent =
       "MARKETPLACE CONNECTION ERROR";
 
@@ -1704,7 +1668,8 @@ function closeCart() {
 }
 </script>
 
-<nav class="nova-bottom-nav" aria-label="Main navigation"><a class="nova-nav-item " href="./index.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Home</span></a><a class="nova-nav-item active" href="./retail.html#shop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><span>Retail</span></a><a class="nova-nav-item " href="./seller-motors-houses.html?market=motors"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 11 1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><path d="M3 11h18v7H3z"/><path d="M6 18v2m12-2v2M6 14h2m8 0h2"/></svg><span>Motors</span></a><a class="nova-nav-item " href="./seller-motors-houses.html?market=property"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h16v17M2 21h20M8 8h2m4 0h2M8 12h2m4 0h2M10 21v-5h4v5"/></svg><span>Property</span></a><a class="nova-nav-item " href="./retail.html?view=wishlist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.8c0 5.2-8.8 11-8.8 11s-8.8-5.8-8.8-11A4.8 4.8 0 0 1 12 6.1a4.8 4.8 0 0 1 8.8 2.7Z"/></svg><span>Wishlist</span></a><a class="nova-nav-item " href="./retail.html?view=cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg><span>Cart<b class="nova-nav-count" id="novaNavCartCount">0</b></span></a></nav>
+<nav class="nova-bottom-nav" aria-label="Main navigation"><a class="nova-nav-item " href="./index.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Home</span></a><a class="nova-nav-item active" href="./retail.html#shop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><span>Retail</span></a><a class="nova-nav-item " href="./seller-motors-houses.html?market=motors"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 11 1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><path d="M3 11h18v7H3z"/><path d="M6 18v2m12-2v2M6 14h2m8 0h2"/></svg><span>Motors</span></a><a class="nova-nav-item " href="./seller-motors-houses.html?market=property"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h16v17M2 21h20M8 8h2m4 0h2M8 12h2m4 0h2M10 21v-5h4v5"/></svg><span>Property</span></a><a class="nova-nav-item " href="./retail.html?view=wishlist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.8c0 5.2-8.8 11-8.8 11s-8.8-5.8-8.8-11A4.8 4.8 0 0 1 12 6.1a4.8 4.8 0 0 1 8.8 2.7Z"/></svg><span>Wishlist</span></a><a class="nova-nav-item " href="./retail.html?view=cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg><span>Cart<b class="nova-nav-count" id="novaNavCartCount">0</b></span></a>
+<a class="nova-nav-item" href="./seller.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h18l-2 11H5L3 10Z"/><path d="M7 10V7a5 5 0 0 1 10 0v3M9 14v3m6-3v3"/></svg><span>Sell</span></a></nav>
 <script>
 (function(){
  const q=new URLSearchParams(location.search);
