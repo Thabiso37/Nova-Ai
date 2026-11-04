@@ -480,10 +480,21 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;backg
 #products .price{font-size:17px;font-weight:900;color:var(--nova-navy);margin:8px 0}
 #products .actions{display:flex;gap:6px}
 #products .actions .btn{flex:1;min-width:0;padding:9px 6px;font-size:11px}
-#products .wishlist-btn{width:34px!important;height:34px!important;font-size:0!important}
+.product-open-card{cursor:pointer}.product-open-card .actions{cursor:default}.product-open-card .prodimg img{cursor:pointer}#products .wishlist-btn{width:34px!important;height:34px!important;font-size:0!important}
 #products .wishlist-btn:after{content:"♡";font-size:21px;color:var(--nova-navy)}
 #products .wishlist-btn[style*="color: rgb(225, 29, 72)"]:after{content:"♥";color:#e11d48}
 @media(min-width:760px){#products.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}}
+</style>
+<style>
+.product-open-card{cursor:pointer;transition:transform .18s,box-shadow .18s}
+.product-open-card:focus-visible{outline:3px solid #f5b900;outline-offset:3px}
+.product-open-card .prodimg img{cursor:zoom-in}
+.nova-detail-category{margin:12px 0 5px;color:#174ea6;font-size:12px;font-weight:850;text-transform:uppercase;letter-spacing:.5px}
+.nova-detail-seller{margin:8px 0 14px;color:#344054;font-size:13px}
+.nova-approved-label{display:inline-block;margin-left:6px;padding:4px 7px;border-radius:6px;background:#eaf7ef;color:#18794e;font-size:10px;font-weight:800}
+.nova-detail-reviews,.nova-detail-policy{margin:12px 0;padding:13px;border-radius:10px;font-size:12px;line-height:1.55}
+.nova-detail-description{margin:14px 0;color:#475467;font-size:14px;line-height:1.7;white-space:pre-wrap}
+.nova-view-store{width:100%;margin:6px 0 12px}
 </style>
 </head>
 <body>
@@ -500,22 +511,12 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;backg
       <h2 id="modalProductName">Product name</h2>
       <div class="nova-rating-row"><span class="rating-count" id="modalReviewCountText">Customer rating: Not rated yet</span></div>
       <div id="reviewsDrawer" class="info-drawer open"><strong>Customer reviews:</strong> Reviews will appear here once the marketplace review feature is available. No rating or review count is being displayed as verified.</div>
-      <div class="takealot-delivery-box">
-        <div class="delivery-row">
-          <span id="modalDeliveryDateText">⚡ Ships in 24h · Arrives in 2–4 Days</span>
-          <span class="tc-link" id="toggleTcBtn">Policy</span>
-        </div>
-        <div id="tcDrawer" class="info-drawer"><strong>Shipping Policy:</strong> Reliable door-to-door courier delivery across South Africa. Free delivery on orders over R500.</div>
-        <div class="delivery-location-row">
-          <span>📍 Deliver to: <strong id="modalDeliveryTown">Sonderwater</strong></span>
-          <button type="button" class="btn-text" id="modalChangeLocation">Change</button>
-        </div>
-      </div>
-      <div class="trust-badge-box"><span>🛡️ Verified Independent Seller · 7-Day Buyer Protection</span></div>
-      <div class="stock-warranty-box">
-        <p class="in-stock">✔ <span id="modalStockStatus">In stock & ready to ship</span> <span class="tc-link" id="toggleStockBtn">Learn More</span></p>
-        <div id="stockDrawer" class="info-drawer"><strong>Stock & Fulfillment:</strong> Dispatched directly from verified independent merchant stockists.</div>
-      </div>
+      <div class="nova-detail-category" id="modalProductCategory"></div>
+      <div class="nova-detail-seller"><strong>Seller:</strong> <span id="modalSellerName"></span> <span class="nova-approved-label">Approved seller store</span></div>
+      <div class="info-drawer open nova-detail-reviews"><strong>Customer reviews:</strong> Reviews will appear here once the marketplace review feature is available. No rating or review count is being displayed as verified.</div>
+      <div class="nova-detail-description" id="modalProductDescription"></div>
+      <div class="info-drawer open nova-detail-policy"><strong>Shipping and stock:</strong> Shipping times, delivery fees and available stock quantity are not confirmed in this listing. Please check the order details before placing an order.</div>
+      <button type="button" class="btn outline nova-view-store" id="modalSellerStoreButton" hidden>View seller store information</button>
       <div class="modal-bottom-bar">
         <div class="modal-price-display">
           <span class="muted" style="font-size:11px">Price:</span>
@@ -819,7 +820,7 @@ function renderRetailMarketGrid(list) {
   document.getElementById("retailProductsGrid").innerHTML = list.length ? list.map(p => {
     const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
     const firstImg = safeImg(imgList[0]);
-    return `<article class="product">
+    return `<article class="product product-open-card" data-open-product="${esc(p.id)}" tabindex="0" aria-label="Open ${esc(p.name)} details">
 <div class="prodimg" style="position:relative">
   <button type="button" class="wishlist-btn" data-wishlist="${esc(p.id)}" aria-label="Add to wishlist" style="position:absolute;top:10px;right:10px;z-index:2;width:34px;height:34px;border:1px solid #e1e6ee;border-radius:50%;background:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.1)">♡</button>
   ${firstImg?`<img loading="lazy" src="${esc(firstImg)}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}
@@ -831,7 +832,6 @@ function renderRetailMarketGrid(list) {
   <div class="price">${cash(p.price)}</div>
   <div class="actions">
     <button class="btn primary" data-add="${esc(p.id)}">Add to cart</button>
-    <button class="btn outline" data-info="${esc(p.id)}">Details</button>
   </div>
 </div>
 </article>`;
@@ -853,7 +853,7 @@ function render(){
   document.getElementById("products").innerHTML=list.length?list.map(p=>{
     const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
     const firstImg = safeImg(imgList[0]);
-    return `<article class="product">
+    return `<article class="product product-open-card" data-open-product="${esc(p.id)}" tabindex="0" aria-label="Open ${esc(p.name)} details">
 <div class="prodimg" style="position:relative">
   <button type="button" class="wishlist-btn" data-wishlist="${esc(p.id)}" aria-label="Add to wishlist" style="position:absolute;top:10px;right:10px;z-index:2;width:34px;height:34px;border:1px solid #e1e6ee;border-radius:50%;background:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.1)">♡</button>
   ${firstImg?`<img loading="lazy" src="${esc(firstImg)}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}
@@ -865,7 +865,6 @@ function render(){
   <div class="price">${cash(p.price)}</div>
   <div class="actions">
     <button class="btn primary" data-add="${esc(p.id)}">Add to cart</button>
-    <button class="btn outline" data-info="${esc(p.id)}">Details</button>
   </div>
 </div>
 </article>`;
@@ -873,63 +872,67 @@ function render(){
   bindProductEvents();
 }
 
+function openProductDetails(p) {
+  if(!p)return;
+  const modal=document.getElementById("productModal");
+  const galleryScroll=document.getElementById("modalGalleryScroll");
+  const dotsContainer=document.getElementById("galleryDots");
+  const lightbox=document.getElementById("fullscreenLightbox");
+  const lightboxScroll=document.getElementById("lightboxScroll");
+  const lightboxDots=document.getElementById("lightboxDots");
+  const images=(Array.isArray(p.images)&&p.images.length?p.images:[p.image_url||""]).map(safeImg).filter(Boolean);
+  document.getElementById("modalProductName").textContent=p.name||"Product";
+  document.getElementById("modalProductPrice").textContent=cash(p.price);
+  document.getElementById("modalProductBrand").textContent=p.seller||"Independent seller";
+  document.getElementById("modalProductCategory").textContent=p.category||"Marketplace product";
+  document.getElementById("modalSellerName").textContent=p.seller||"Independent seller";
+  document.getElementById("modalProductDescription").textContent=p.description||"The seller has not provided a product description.";
+  galleryScroll.innerHTML=images.length?images.map(img=>'<div class="nova-gallery-slide"><img src="'+esc(img)+'" alt="'+esc(p.name||"Product photo")+'"></div>').join(""):'<div class="nova-gallery-slide"><div class="muted">No product photo supplied</div></div>';
+  dotsContainer.innerHTML=images.map((_,i)=>'<span class="nova-gallery-dot '+(i===0?"active":"")+'"></span>').join("");
+  lightboxScroll.innerHTML=images.length?images.map(img=>'<div class="lightbox-slide"><img src="'+esc(img)+'" alt="Fullscreen '+esc(p.name||"product photo")+'"></div>').join(""):'<div class="lightbox-slide"><div class="muted" style="color:white">No product photo supplied</div></div>';
+  lightboxDots.innerHTML=images.map((_,i)=>'<span class="lightbox-dot '+(i===0?"active":"")+'"></span>').join("");
+  document.getElementById("openLightboxBtn").onclick=()=>lightbox.classList.add("open");
+  document.getElementById("closeLightboxBtn").onclick=()=>lightbox.classList.remove("open");
+  lightbox.onclick=e=>{if(e.target===lightbox)lightbox.classList.remove("open");};
+  const storeButton=document.getElementById("modalSellerStoreButton");
+  if(p.sellerId&&sellerStoresById[String(p.sellerId)]){
+    storeButton.hidden=false;
+    storeButton.onclick=()=>openCartSeller(p.sellerId);
+  }else{
+    storeButton.hidden=true;
+    storeButton.onclick=null;
+  }
+  document.getElementById("modalAddToCart").onclick=()=>{add(p.id);modal.classList.remove("open");lightbox.classList.remove("open");};
+  modal.classList.add("open");
+}
 function bindProductEvents() {
-  document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add(b.dataset.add));
+  document.querySelectorAll("[data-add]").forEach(b=>b.onclick=e=>{e.stopPropagation();add(b.dataset.add);});
   let savedWishlist=JSON.parse(localStorage.getItem("novaWishlist")||"[]");
   document.querySelectorAll("[data-wishlist]").forEach(b=>{
-    if(savedWishlist.includes(b.dataset.wishlist)){
-      b.textContent="♥";
-      b.style.color="#e11d48";
-    }
-    b.onclick=()=>{
+    if(savedWishlist.includes(b.dataset.wishlist)){b.textContent="♥";b.style.color="#e11d48";}
+    b.onclick=e=>{
+      e.stopPropagation();
       let wishlist=JSON.parse(localStorage.getItem("novaWishlist")||"[]");
       const id=b.dataset.wishlist;
-      if(wishlist.includes(id)){wishlist=wishlist.filter(x=>x!==id);}else{wishlist.push(id);}
+      if(wishlist.includes(id))wishlist=wishlist.filter(x=>x!==id);else wishlist.push(id);
       localStorage.setItem("novaWishlist",JSON.stringify(wishlist));
       b.textContent=wishlist.includes(id)?"♥":"♡";
       b.style.color=wishlist.includes(id)?"#e11d48":"#17345b";
       renderWishlist();
     };
   });
-
-  document.querySelectorAll("[data-info]").forEach(b => {
-    b.onclick = () => {
-      const p = products.find(x => x.id === b.dataset.info);
-      if (!p) return;
-      const modal = document.getElementById("productModal");
-      const galleryScroll = document.getElementById("modalGalleryScroll");
-      const dotsContainer = document.getElementById("galleryDots");
-      const lightbox = document.getElementById("fullscreenLightbox");
-      const lightboxScroll = document.getElementById("lightboxScroll");
-      const lightboxDots = document.getElementById("lightboxDots");
-
-      document.getElementById("modalProductName").textContent = p.name;
-      document.getElementById("modalProductPrice").textContent = cash(p.price);
-      document.getElementById("modalProductBrand").textContent = p.seller ? p.seller.toLowerCase() : "novaaibadge";
-
-      const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
-      const galleryImages = imgList.map(url => safeImg(url)).filter(Boolean);
-
-      galleryScroll.innerHTML = galleryImages.length ? galleryImages.map(img => `<div class="nova-gallery-slide"><img src="${esc(img)}" alt="Product photo"></div>`).join("") : `<div class="nova-gallery-slide"><div class="muted">No image available</div></div>`;
-      dotsContainer.innerHTML = galleryImages.map((_, i) => `<span class="nova-gallery-dot ${i === 0 ? 'active' : ''}"></span>`).join("");
-
-      lightboxScroll.innerHTML = galleryImages.length ? galleryImages.map(img => `<div class="lightbox-slide"><img src="${esc(img)}" alt="Fullscreen photo"></div>`).join("") : `<div class="lightbox-slide"><div class="muted" style="color:white">No image available</div></div>`;
-      lightboxDots.innerHTML = galleryImages.map((_, i) => `<span class="lightbox-dot ${i === 0 ? 'active' : ''}"></span>`).join("");
-
-      document.getElementById("openLightboxBtn").onclick = () => lightbox.classList.add("open");
-      document.getElementById("closeLightboxBtn").onclick = () => lightbox.classList.remove("open");
-      lightbox.onclick = (e) => { if (e.target === lightbox) lightbox.classList.remove("open"); };
-
-      document.getElementById("modalAddToCart").onclick = () => {
-        add(p.id);
-        modal.classList.remove("open");
-        lightbox.classList.remove("open");
-      };
-      modal.classList.add("open");
+  document.querySelectorAll("[data-open-product]").forEach(card=>{
+    card.onclick=e=>{
+      if(e.target.closest("button,a"))return;
+      const p=products.find(x=>String(x.id)===String(card.dataset.openProduct));
+      openProductDetails(p);
+    };
+    card.onkeydown=e=>{
+      if(e.target!==card)return;
+      if(e.key==="Enter"||e.key===" "){e.preventDefault();openProductDetails(products.find(x=>String(x.id)===String(card.dataset.openProduct)));}
     };
   });
 }
-
 function renderWishlist(){
   const section = document.getElementById("wishlist");
   if(!section) return;
