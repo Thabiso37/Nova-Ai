@@ -194,7 +194,21 @@ textarea{min-height:85px}
 .error{color:#b52828}
 .success{color:#16885e}
 .hidden{display:none!important}
-.cartitem{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.cartitem{display:flex;justify-content:space-between;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);align-items:center}
+.cart-item-main{display:flex;align-items:flex-start;gap:12px;min-width:0;flex:1}
+.cart-item-photo{width:92px;height:92px;flex:0 0 92px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:10px}
+.cart-item-copy{min-width:0}.cart-item-copy b{display:block;line-height:1.4}.cart-item-copy .muted{margin:6px 0}
+.cart-store-button{border:0;background:#edf4ff;color:#174ea6;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:850;margin-top:7px}
+.cart-item-controls{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.cart-seller-modal{position:fixed;inset:0;z-index:10030;background:rgba(7,18,38,.72);display:none;align-items:center;justify-content:center;padding:16px}
+.cart-seller-modal.open{display:flex}.cart-seller-card{width:min(100%,560px);max-height:88vh;overflow:auto;background:#fff;border-radius:16px;padding:20px;box-shadow:0 18px 50px #0004}
+.cart-seller-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.cart-seller-close{border:0;background:#edf4ff;color:#174ea6;border-radius:50%;width:36px;height:36px;font-size:22px}
+.cart-seller-meta{background:#f5f8fc;border:1px solid var(--line);border-radius:10px;padding:13px;margin:14px 0}
+.cart-seller-products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.cart-seller-product{border:1px solid var(--line);border-radius:10px;padding:9px;min-width:0}
+.cart-seller-product img{width:100%;height:105px;object-fit:contain;background:#fff}
+@media(max-width:480px){.cartitem{align-items:flex-start;flex-direction:column}.cart-item-main{width:100%}.cart-item-controls{width:100%;justify-content:flex-start}.cart-item-photo{width:78px;height:78px;flex-basis:78px}}
 .total{display:flex;justify-content:space-between;font-size:20px;font-weight:900;padding:15px 0}
 footer{background:var(--dark);color:white;margin-top:40px;padding:28px 20px}
 footer .foot{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
@@ -526,11 +540,8 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;backg
     <div class="nova-product-content">
       <div class="nova-product-label" id="modalProductBrand">novaaibadge</div>
       <h2 id="modalProductName">Product name</h2>
-      <div class="nova-rating-row">
-        <span class="stars" id="modalStars">★★★★☆</span> 
-        <span class="rating-count" id="modalReviewCountText">14 Community Reviews (<span class="tc-link" id="toggleReviewsBtn">Read</span>)</span>
-      </div>
-      <div id="reviewsDrawer" class="info-drawer"><strong>Community Feedback:</strong> Authentic ratings and feedback submitted by verified NOVAAI marketplace shoppers across South Africa.</div>
+      <div class="nova-rating-row"><span class="rating-count" id="modalReviewCountText">Customer rating: Not rated yet</span></div>
+      <div id="reviewsDrawer" class="info-drawer open"><strong>Customer reviews:</strong> Reviews will appear here once the marketplace review feature is available. No rating or review count is being displayed as verified.</div>
       <div class="takealot-delivery-box">
         <div class="delivery-row">
           <span id="modalDeliveryDateText">⚡ Ships in 24h · Arrives in 2–4 Days</span>
@@ -803,6 +814,7 @@ const demo=[
 ];
 let products=demo.map(a=>({id:a[0],name:a[1],category:a[2],price:a[3],seller:a[4],description:a[5],images:[a[6]],tag:"Demo"}));
 let cart=readCart(),active="All",user=null;
+let sellerStoresById=Object.create(null);
 function readCart(){try{return JSON.parse(localStorage.getItem("novaMarketplaceCartV1")||"[]")}catch(e){return []}}
 function saveCart(){try{localStorage.setItem("novaMarketplaceCartV1",JSON.stringify(cart))}catch(e){}}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -863,7 +875,6 @@ function renderRetailMarketGrid(list) {
     const firstImg = safeImg(imgList[0]);
     const hash = String(p.id).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
     const discountVal = (hash % 40) + 10;
-    const soldCount = (hash % 450) + 25;
 
     return `<article class="product">
 <div class="prodimg" style="position:relative">
@@ -874,7 +885,7 @@ function renderRetailMarketGrid(list) {
 <div class="prodbody">
   <small style="color:#08774f;font-weight:800">${esc(p.seller)}</small>
   <h3>${esc(p.name)}</h3>
-  <div class="shein-rating-row"><span class="shein-stars">★★★★★</span><span>(${soldCount}+ sold)</span></div>
+  <div class="shein-rating-row"><span class="rating-count">Customer rating: Not rated yet</span></div>
   <div class="price">${cash(p.price)}</div>
   <div class="actions">
     <button class="btn primary" data-add="${esc(p.id)}">Add to cart</button>
@@ -902,7 +913,6 @@ function render(){
     const firstImg = safeImg(imgList[0]);
     const hash = String(p.id).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
     const discountVal = (hash % 40) + 10;
-    const soldCount = (hash % 450) + 25;
     const isBestseller = hash % 3 === 0;
 
     return `<article class="product">
@@ -914,7 +924,7 @@ function render(){
 <div class="prodbody">
   ${isBestseller ? `<span class="shein-bestseller">🔥 Bestseller</span>` : `<small style="color:#6654f5;font-weight:800">${esc(p.category)}</small>`}
   <h3>${esc(p.name)}</h3>
-  <div class="shein-rating-row"><span class="shein-stars">★★★★★</span><span>(${soldCount}+ sold)</span></div>
+  <div class="shein-rating-row"><span class="rating-count">Customer rating: Not rated yet</span></div>
   <div class="price">${cash(p.price)}</div>
   <div class="actions">
     <button class="btn primary" data-add="${esc(p.id)}">Add to cart</button>
@@ -1005,19 +1015,76 @@ function add(id){
   const p=products.find(x=>String(x.id)===String(id));
   if(!p){toast("This product is not available right now.");return;}
   let i=cart.find(x=>String(x.id)===String(id));
-  if(i){i.qty++;i.product={id:p.id,dbId:p.dbId||null,name:p.name,price:Number(p.price)||0,seller:p.seller||"",category:p.category||"",images:p.images||[]};}
-  else cart.push({id:p.id,qty:1,product:{id:p.id,dbId:p.dbId||null,name:p.name,price:Number(p.price)||0,seller:p.seller||"",category:p.category||"",images:p.images||[]}});
+  if(i){i.qty++;i.product={id:p.id,dbId:p.dbId||null,sellerId:p.sellerId||null,name:p.name,price:Number(p.price)||0,seller:p.seller||"",category:p.category||"",images:p.images||[]};}
+  else cart.push({id:p.id,qty:1,product:{id:p.id,dbId:p.dbId||null,sellerId:p.sellerId||null,name:p.name,price:Number(p.price)||0,seller:p.seller||"",category:p.category||"",images:p.images||[]}});
   saveCart();renderCart();toast(p.name+" added to cart.");
 }
 function renderCart(){
   cart=cart.filter(i=>i&&i.id!=null&&Number.isInteger(Number(i.qty))&&Number(i.qty)>0);
-  cart.forEach(i=>{if(!i.product){const p=products.find(x=>String(x.id)===String(i.id));if(p)i.product={id:p.id,dbId:p.dbId||null,name:p.name,price:Number(p.price)||0,seller:p.seller||"",category:p.category||"",images:p.images||[]};}});
+  cart.forEach(i=>{
+    const saved=i.product||{};
+    const dbId=saved.dbId||i.dbId||String(i.id).replace(/^db-/,"");
+    const live=products.find(x=>x.dbId&&String(x.dbId)===String(dbId));
+    if(live){
+      i.product={...live,...saved,id:live.id,dbId:live.dbId,sellerId:live.sellerId||saved.sellerId||null,
+        name:saved.name||live.name,price:Number(saved.price??live.price)||0,
+        seller:saved.seller||live.seller,category:saved.category||live.category,
+        images:Array.isArray(saved.images)&&saved.images.length?saved.images:(live.images||[])};
+    }else if(!i.product){
+      const p=products.find(x=>String(x.id)===String(i.id));
+      if(p)i.product={id:p.id,dbId:p.dbId||null,sellerId:p.sellerId||null,name:p.name,price:Number(p.price)||0,seller:p.seller||"",category:p.category||"",images:p.images||[]};
+    }
+  });
   const count=cart.reduce((s,i)=>s+Number(i.qty),0);
   const countEl=document.getElementById("count");if(countEl)countEl.textContent=count;
   const itemsEl=document.getElementById("cartItems");
-  if(itemsEl)itemsEl.innerHTML=cart.length?cart.map(i=>{const p=cartProduct(i);return`<div class="cartitem"><div><b>${esc(p.name||"Saved product")}</b><p class="muted">${cash(p.price)} each · Qty ${i.qty}</p></div><div><button class="btn outline" onclick="qty('${esc(i.id)}',-1)">−</button> <button class="btn outline" onclick="qty('${esc(i.id)}',1)">+</button> <button class="btn outline" onclick="cart=cart.filter(x=>String(x.id)!=='${esc(i.id)}');saveCart();renderCart()">Remove</button></div></div>`}).join(""):'<p class="muted">Your cart is empty.</p>';
-  const totalEl=document.getElementById("total");if(totalEl)totalEl.textContent=cash(cart.reduce((s,i)=>s+(Number(cartProduct(i).price)||0)*Number(i.qty),0));
+  if(itemsEl)itemsEl.innerHTML=cart.length?cart.map(i=>{
+    const p=cartProduct(i),photos=Array.isArray(p.images)?p.images:[],photo=safeImg(photos[0]||"");
+    const sellerId=p.sellerId||"";
+    return `<article class="cartitem">
+      <div class="cart-item-main">
+        ${photo?`<img class="cart-item-photo" src="${esc(photo)}" alt="${esc(p.name||"Product photo")}" onerror="this.style.display='none'">`:`<div class="cart-item-photo" style="display:grid;place-items:center;color:#98a2b3">📦</div>`}
+        <div class="cart-item-copy"><b>${esc(p.name||"Saved product")}</b>
+          <p class="muted">${cash(p.price)} each · Quantity: ${i.qty}</p>
+          <p class="muted">Seller: ${esc(p.seller||"Independent seller")}</p>
+          ${sellerId?`<button type="button" class="cart-store-button" onclick="openCartSeller('${esc(sellerId)}')">View seller store →</button>`:'<span class="muted">Seller store details are unavailable for this saved item.</span>'}
+        </div>
+      </div>
+      <div class="cart-item-controls">
+        <button class="btn outline" onclick="qty('${esc(i.id)}',-1)" aria-label="Decrease quantity">−</button>
+        <button class="btn outline" onclick="qty('${esc(i.id)}',1)" aria-label="Increase quantity">+</button>
+        <button class="btn outline" onclick="cart=cart.filter(x=>String(x.id)!=='${esc(i.id)}');saveCart();renderCart()">Remove</button>
+      </div>
+    </article>`;
+  }).join(""):'<p class="muted">Your cart is empty. Add a product to see its photo and seller details here.</p>';
+  const totalEl=document.getElementById("total");if(totalEl)totalEl.textContent=cash(cart.reduce((sum,i)=>sum+(Number(cartProduct(i).price)||0)*Number(i.qty),0));
   saveCart();
+}
+function closeCartSeller(){const modal=document.getElementById("cartSellerModal");if(modal)modal.classList.remove("open");}
+function openCartSeller(sellerId){
+  const store=sellerStoresById[String(sellerId)];
+  if(!store){toast("Seller store information is not available. Please try again after the store loads.");return;}
+  let modal=document.getElementById("cartSellerModal");
+  if(!modal){modal=document.createElement("div");document.body.appendChild(modal);}
+  modal.id="cartSellerModal";modal.className="cart-seller-modal";
+  const storeProducts=products.filter(p=>String(p.sellerId||"")===String(sellerId));
+  const phone=String(store.phone||"").trim();
+  modal.innerHTML=`<section class="cart-seller-card" role="dialog" aria-modal="true" aria-label="Seller store information">
+    <div class="cart-seller-head"><div><small class="home-product-category">APPROVED SELLER STORE</small><h2>${esc(store.store_name||"Seller store")}</h2></div><button type="button" class="cart-seller-close" onclick="closeCartSeller()" aria-label="Close">×</button></div>
+    <div class="cart-seller-meta">
+      <p><strong>Store:</strong> ${esc(store.store_name||"Seller store")}</p>
+      ${store.store_slug?`<p><strong>Store ID:</strong> ${esc(store.store_slug)}</p>`:""}
+      <p><strong>About:</strong> ${esc(store.description||"The seller has not added a store description yet.")}</p>
+      ${phone?`<p><strong>Phone:</strong> <a href="tel:${esc(phone)}">${esc(phone)}</a></p>`:'<p>Phone number not provided.</p>'}
+      <p><strong>Customer rating:</strong> Not rated yet</p>
+      <p class="muted">Customer reviews are not available yet. No rating has been assumed.</p>
+    </div>
+    <h3>Products from this store</h3>
+    <div class="cart-seller-products">${storeProducts.length?storeProducts.map(p=>{const img=safeImg((p.images||[])[0]||"");return `<div class="cart-seller-product">${img?`<img src="${esc(img)}" alt="${esc(p.name)}">`:'<div style="height:105px;display:grid;place-items:center">📦</div>'}<strong>${esc(p.name)}</strong><p class="muted">${cash(p.price)}</p></div>`}).join(""):'<p class="muted">No other approved products are currently listed for this store.</p>'}</div>
+  </section>`;
+  modal.onclick=e=>{if(e.target===modal)closeCartSeller();};
+  if(!modal.dataset.escapeBound){document.addEventListener("keydown",e=>{if(e.key==="Escape")closeCartSeller();});modal.dataset.escapeBound="1";}
+  modal.classList.add("open");
 }
 function qty(id,n){let i=cart.find(x=>x.id===id);if(!i)return;i.qty+=n;if(i.qty<1)cart=cart.filter(x=>x.id!==id);saveCart();renderCart()}
 function clearCart(){cart=[];saveCart();renderCart();}
@@ -1436,11 +1503,13 @@ try {
 
     const { data: approvedStores, error: storeError } = await sb
       .from("seller_stores")
-      .select("user_id")
+      .select("user_id,store_name,store_slug,phone,description,status")
       .eq("status", "approved");
 
     if (storeError) throw storeError;
 
+    sellerStoresById=Object.create(null);
+    (approvedStores||[]).forEach(store=>{sellerStoresById[String(store.user_id)]=store;});
     const approvedSellerIds = new Set(
       (approvedStores || []).map(store => store.user_id)
     );
@@ -1461,6 +1530,7 @@ try {
         category: product.category,
         price: Number(product.price),
         seller: product.seller_name || "Independent seller",
+        sellerId: product.seller_id,
         description: product.description || "",
         images: Array.isArray(product.images) && product.images.length
           ? product.images
