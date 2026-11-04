@@ -2,491 +2,559 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1457d9">
-<title>NOVAAI | Administration</title>
+<title>NOVAAI | Admin Dashboard</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-:root{
---blue:#1457d9;
---blue-dark:#1047b4;
---blue-soft:#eaf1ff;
---ink:#17243b;
---muted:#718096;
---line:#e7ecf3;
---surface:#fff;
---page:#f4f7fb;
---green:#16865b;
---amber:#b7791f;
---red:#c43d4d;
---shadow:0 8px 24px rgba(22,45,82,.06);
---radius:18px;
+:root {
+  --blue: #1457d9;
+  --dark: #10234b;
+  --page: #f4f7fb;
+  --white: #ffffff;
+  --text: #17243b;
+  --muted: #718096;
+  --line: #e5eaf2;
+  --green: #16865b;
+  --red: #c43d4d;
+  --amber: #b7791f;
+  --radius: 16px;
 }
-*{box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:88px}
-body{
-margin:0;
-background:var(--page);
-color:var(--ink);
-font-family:Arial,system-ui,sans-serif
+
+* {
+  box-sizing: border-box;
 }
-button,input,select{font:inherit}
-button{cursor:pointer}
-.hidden{display:none!important}
-.topbar{
-min-height:76px;
-background:var(--blue);
-color:#fff;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:12px 20px;
-position:sticky;
-top:0;
-z-index:50;
-box-shadow:0 4px 18px rgba(15,56,135,.18)
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text);
+  font-family: Arial, sans-serif;
 }
-.brand{
-display:flex;
-align-items:center;
-gap:12px;
-color:#fff;
-text-decoration:none;
-font-weight:850;
-font-size:20px
+
+button, input, select {
+  font: inherit;
 }
-.brand-mark{
-width:38px;
-height:38px;
-border-radius:12px;
-background:#fff;
-color:var(--blue);
-display:grid;
-place-items:center;
-font-weight:900
+
+button {
+  cursor: pointer;
 }
-.brand small{
-display:block;
-font-size:10px;
-letter-spacing:.15em;
-margin-top:3px
+
+.hidden {
+  display: none !important;
 }
-.top-actions{display:flex;align-items:center;gap:10px}
-.icon-btn,.profile-btn{
-border:1px solid rgba(255,255,255,.24);
-background:rgba(255,255,255,.12);
-color:#fff;
-border-radius:13px;
-min-width:42px;
-height:42px
+
+.topbar {
+  background: var(--blue);
+  color: white;
+  padding: 17px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
-.profile-btn{padding:0 12px;font-weight:700}
-.login-wrap{
-min-height:calc(100vh - 76px);
-display:grid;
-place-items:center;
-padding:24px
+
+.topbar h1 {
+  font-size: 21px;
+  margin: 0;
 }
-.login-card{
-width:min(100%,430px);
-background:#fff;
-border:1px solid var(--line);
-border-radius:24px;
-padding:30px;
-box-shadow:var(--shadow)
+
+.topbar p {
+  margin: 5px 0 0;
+  font-size: 12px;
+  opacity: .85;
 }
-.login-card h1{margin:0 0 8px;font-size:27px}
-.field{
-display:block;
-width:100%;
-border:1px solid #dce4ef;
-background:#fff;
-border-radius:12px;
-padding:14px 15px;
-margin:9px 0 14px;
-color:var(--ink);
-outline:none
+
+.app-shell {
+  max-width: 1450px;
+  margin: auto;
+  padding: 25px;
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 24px;
 }
-.field:focus{
-border-color:var(--blue);
-box-shadow:0 0 0 3px rgba(20,87,217,.1)
+
+.sidebar {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 14px;
+  align-self: start;
+  position: sticky;
+  top: 95px;
 }
-.btn{
-border:0;
-border-radius:11px;
-padding:11px 15px;
-font-weight:750
+
+.sidebar h2 {
+  color: var(--blue);
+  margin: 0 10px 5px;
 }
-.btn-primary{background:var(--blue);color:#fff}
-.btn-light{background:var(--blue-soft);color:var(--blue)}
-.btn-danger{background:#fff0f1;color:var(--red)}
-.btn-success{background:#e8f7ef;color:var(--green)}
-.btn-warn{background:#fff6e7;color:var(--amber)}
-.app-shell{
-max-width:1440px;
-margin:auto;
-display:grid;
-grid-template-columns:248px minmax(0,1fr);
-gap:26px;
-padding:26px 28px 44px
+
+.sidebar-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  margin: 5px 10px 20px;
 }
-.sidebar{
-align-self:start;
-position:sticky;
-top:100px;
-background:#fff;
-border:1px solid var(--line);
-border-radius:var(--radius);
-padding:16px 12px;
-box-shadow:var(--shadow)
+
+.sidebar nav a {
+  display: block;
+  padding: 13px 12px;
+  text-decoration: none;
+  color: #526078;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 13px;
 }
-.side-label{
-font-size:10px;
-font-weight:850;
-color:#98a4b6;
-letter-spacing:.15em;
-padding:12px
+
+.sidebar nav a:hover {
+  background: #eaf1ff;
+  color: var(--blue);
 }
-.nav-link{
-width:100%;
-display:flex;
-align-items:center;
-gap:12px;
-padding:12px;
-border:0;
-background:transparent;
-border-radius:12px;
-text-align:left;
-color:#5d6b80;
-font-weight:700;
-font-size:13px
+
+.main-content {
+  min-width: 0;
 }
-.nav-link:hover,.nav-link.active{
-background:var(--blue-soft);
-color:var(--blue)
+
+.welcome-panel {
+  margin-bottom: 20px;
 }
-.main-content{min-width:0}
-.welcome{
-display:flex;
-align-items:flex-start;
-justify-content:space-between;
-gap:16px;
-margin:2px 0 22px
+
+.welcome-panel h2 {
+  margin: 0 0 8px;
+  font-size: 27px;
 }
-.eyebrow{
-font-size:11px;
-font-weight:850;
-color:var(--blue);
-letter-spacing:.14em
+
+.welcome-panel p {
+  color: var(--muted);
+  font-size: 13px;
 }
-.welcome h1{
-font-size:clamp(25px,3vw,34px);
-margin:7px 0
+
+.panel {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 5px 20px rgba(20, 40, 80, .04);
 }
-.welcome p{color:var(--muted);font-size:14px}
-.section-title{
-display:flex;
-align-items:center;
-justify-content:space-between;
-gap:12px;
-margin:28px 0 14px
+
+.panel h2 {
+  margin-top: 0;
+  font-size: 19px;
 }
-.section-title h2{font-size:19px;margin:0}
-.card{
-background:var(--surface);
-border:1px solid var(--line);
-border-radius:var(--radius);
-padding:19px;
-box-shadow:var(--shadow)
+
+.panel h3 {
+  font-size: 15px;
 }
-.stats-grid{
-display:grid;
-grid-template-columns:repeat(4,minmax(0,1fr));
-gap:13px
+
+.muted {
+  color: var(--muted);
+  font-size: 13px;
 }
-.stat-card{min-height:122px}
-.stat-top{
-display:flex;
-justify-content:space-between;
-color:var(--muted);
-font-size:12px;
-font-weight:700
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 13px;
+  margin-bottom: 22px;
 }
-.stat-value{
-font-size:29px;
-font-weight:850;
-margin:13px 0 3px
+
+.stat {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 19px;
+  min-height: 100px;
+  color: var(--muted);
+  font-size: 12px;
 }
-.stat-note{font-size:11px;color:var(--muted)}
-.module-grid{
-display:grid;
-grid-template-columns:repeat(3,minmax(0,1fr));
-gap:13px
+
+.stat strong {
+  display: block;
+  font-size: 27px;
+  color: var(--text);
+  margin-bottom: 8px;
 }
-.module-card{
-display:flex;
-gap:14px;
-align-items:flex-start;
-min-height:120px;
-text-decoration:none;
-color:inherit
+
+input, select {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #dce4ef;
+  border-radius: 10px;
+  margin: 8px 0 13px;
+  background: white;
+  color: var(--text);
 }
-.module-icon{
-width:43px;
-height:43px;
-flex:0 0 auto;
-border-radius:14px;
-background:var(--blue-soft);
-color:var(--blue);
-display:grid;
-place-items:center
+
+input:focus, select:focus {
+  outline: 2px solid #d5e3ff;
+  border-color: var(--blue);
 }
-.module-card h3{font-size:14px;margin:2px 0 6px}
-.module-card p{font-size:12px;line-height:1.5;color:var(--muted)}
-.toolbar{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-margin:14px 0
+
+button {
+  border: 0;
+  border-radius: 9px;
+  padding: 11px 15px;
+  font-weight: bold;
 }
-.toolbar .field{margin:0;flex:1;min-width:180px}
-.product-row{
-display:grid;
-grid-template-columns:82px minmax(0,1fr);
-gap:15px;
-padding:16px 0;
-border-top:1px solid var(--line)
+
+.primary {
+  background: var(--blue);
+  color: white;
 }
-.product-row img{
-width:82px;
-height:82px;
-object-fit:cover;
-border-radius:12px;
-background:#f1f4f8;
-cursor:zoom-in
+
+.logout {
+  background: #fff0f1;
+  color: var(--red);
+  width: 100%;
+  margin-top: 20px;
 }
-.product-actions{
-display:flex;
-gap:7px;
-flex-wrap:wrap;
-margin-top:10px
+
+.approve {
+  background: #e8f7ef;
+  color: var(--green);
 }
-.pill{
-display:inline-flex;
-border-radius:30px;
-padding:5px 9px;
-font-size:11px;
-font-weight:800;
-background:#eef2f7;
-color:#58677d
+
+.reject {
+  background: #fff0f1;
+  color: var(--red);
 }
-.pill.pending{background:#fff5df;color:#9a6717}
-.pill.approved,.pill.paid{background:#e8f7ef;color:#16734f}
-.pill.rejected,.pill.failed{background:#fff0f1;color:#b83243}
-.records-grid{
-display:grid;
-grid-template-columns:repeat(2,minmax(0,1fr));
-gap:12px
+
+.hide {
+  background: #fff6e7;
+  color: var(--amber);
 }
-.record{
-border:1px solid var(--line);
-border-radius:14px;
-padding:15px
+
+.restore {
+  background: #eaf1ff;
+  color: var(--blue);
 }
-.record p{font-size:12px;color:var(--muted)}
-.notice{
-border:1px solid #dce7fb;
-background:#f3f7ff;
-color:#4b5f80;
-padding:13px 15px;
-border-radius:13px;
-font-size:12px;
-line-height:1.55;
-margin:12px 0
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
 }
-.empty-state{
-padding:25px 12px;
-text-align:center;
-color:var(--muted);
-font-size:13px
+
+.actions button {
+  font-size: 12px;
 }
-.bottom-nav{display:none}
-#imageModal{
-position:fixed;
-inset:0;
-z-index:1000;
-background:rgba(12,22,40,.9);
-display:none;
-align-items:center;
-justify-content:center;
-padding:20px
+
+.toolbar {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 10px;
 }
-#imageModal.open{display:flex}
-#imageModal img{
-max-width:95%;
-max-height:85vh;
-object-fit:contain;
-border-radius:12px
+
+.toolbar input,
+.toolbar select {
+  margin-bottom: 10px;
 }
-#closeImage{
-position:absolute;
-top:18px;
-right:18px
+
+.product {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 15px;
+  padding: 17px 0;
+  border-top: 1px solid var(--line);
 }
-@media(max-width:1100px){
-.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+.product img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 12px;
+  cursor: zoom-in;
+  background: #f1f4f8;
 }
-@media(max-width:760px){
-.topbar{min-height:66px;padding:10px 16px}
-.brand{font-size:17px}
-.app-shell{display:block;padding:21px 15px 105px}
-.sidebar{display:none}
-.stats-grid{gap:10px}
-.stat-card{padding:14px;min-height:112px}
-.stat-value{font-size:25px}
-.module-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.module-card{padding:14px;min-height:135px;display:block}
-.module-icon{margin-bottom:11px}
-.records-grid{grid-template-columns:1fr}
-.card{padding:16px}
-.bottom-nav{
-position:fixed;
-display:grid;
-grid-template-columns:repeat(5,1fr);
-left:0;right:0;bottom:0;
-z-index:80;
-background:#fff;
-border-top:1px solid var(--line);
-padding:8px 7px
+
+.product h3 {
+  margin: 0 0 8px;
 }
-.bottom-nav a,.bottom-nav button{
-border:0;
-background:transparent;
-color:#7a8799;
-text-decoration:none;
-font-size:10px;
-font-weight:750;
-min-height:48px
+
+.product p {
+  font-size: 13px;
+  margin: 6px 0;
+  overflow-wrap: anywhere;
 }
-.product-row{grid-template-columns:68px minmax(0,1fr);gap:11px}
-.product-row img{width:68px;height:68px}
+
+.status {
+  display: inline-block;
+  background: #edf2f8;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: bold;
 }
-@media(max-width:380px){
-.module-grid{grid-template-columns:1fr}
-.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+.record {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 15px;
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+
+.record p {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+#imageModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .9);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+#imageModal.open {
+  display: flex;
+}
+
+#previewImage {
+  max-width: 95%;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+#closeImage {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: white;
+  color: #111;
+}
+
+@media(max-width: 850px) {
+  .app-shell {
+    display: block;
+    padding: 15px;
+  }
+
+  .sidebar {
+    position: static;
+    margin-bottom: 18px;
+  }
+
+  .sidebar nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .sidebar nav a {
+    padding: 9px;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media(max-width: 520px) {
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .product {
+    grid-template-columns: 75px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .product img {
+    width: 75px;
+    height: 75px;
+  }
+
+  .panel {
+    padding: 15px;
+  }
+
+  .topbar h1 {
+    font-size: 18px;
+  }
 }
 </style>
 </head>
+
 <body>
 
-<header>
-<h1>NOVAAI ADMINISTRATION</h1>
-<p>Secure Product Moderation Portal</p>
+<header class="topbar">
+  <div>
+    <h1>NOVAAI ADMINISTRATION</h1>
+    <p>Secure Marketplace Management</p>
+  </div>
+  <span>🛡️ ADMIN</span>
 </header>
 
-<main>
+<section id="loginPanel" class="panel" style="max-width:430px;margin:45px auto;padding:28px;">
+  <h2>Administrator Login</h2>
+  <p class="muted">Sign in using your authorised administrator account.</p>
 
-<section id="loginPanel" class="panel">
-<h2>Administrator Sign In</h2>
-<p class="muted">Sign in using your NOVAAI administrator account.</p>
+  <label for="email">Email address</label>
+  <input id="email" type="email" placeholder="Administrator email">
 
-<input id="email" type="email" placeholder="Administrator email">
-<input id="password" type="password" placeholder="Password">
+  <label for="password">Password</label>
+  <input id="password" type="password" placeholder="Password">
 
-<button class="primary" id="loginBtn">Sign In</button>
-<p id="loginMessage"></p>
+  <button class="primary" id="loginBtn" style="width:100%">Sign In</button>
+  <p id="loginMessage"></p>
 </section>
 
 <section id="dashboard" class="hidden">
 
-<div class="panel">
-<h2>Administrator Dashboard</h2>
-<p>Signed in as: <strong id="adminEmail"></strong></p>
-<button class="logout" id="logoutBtn">Sign Out</button>
-</div>
+  <div class="app-shell">
 
-<div class="stats">
-<div class="stat"><strong id="pendingCount">0</strong>Pending</div>
-<div class="stat"><strong id="approvedCount">0</strong>Approved</div>
-<div class="stat"><strong id="rejectedCount">0</strong>Rejected</div>
-<div class="stat"><strong id="hiddenCount">0</strong>Hidden</div>
-</div>
+    <aside class="sidebar">
+      <h2>NOVAAI</h2>
+      <p class="sidebar-label">ADMINISTRATION</p>
 
-<div class="panel">
-<h2>Product Moderation</h2>
+      <nav>
+        <a href="#overview">Dashboard</a>
+        <a href="#productsSection">Product Moderation</a>
+        <a href="#paymentCentre">Payment Centre</a>
+        <a href="#sellerFinancialRecords">Seller Finances</a>
+      </nav>
 
-<input id="search" placeholder="Search product or seller...">
+      <button class="logout" id="logoutBtn">Sign Out</button>
+    </aside>
 
-<select id="filter" style="width:100%;padding:12px;background:#0b1020;color:white;border-radius:7px">
-<option value="pending">Pending Products</option>
-<option value="approved">Approved Products</option>
-<option value="rejected">Rejected Products</option>
-<option value="hidden">Hidden Products</option>
-<option value="all">All Products</option>
-</select>
+    <main class="main-content">
 
-<p id="message">Loading products...</p>
-<div id="products"></div>
-</div>
+      <section id="overview">
+        <div class="welcome-panel">
+          <h2>Administrator Dashboard</h2>
+          <p>Signed in as: <strong id="adminEmail"></strong></p>
+        </div>
 
-<!-- NOVAAI PAYMENT CONTROL CENTRE -->
+        <div class="stats">
+          <div class="stat">
+            <strong id="pendingCount">0</strong>
+            Pending Products
+          </div>
 
-<div class="panel" id="paymentCentre">
+          <div class="stat">
+            <strong id="approvedCount">0</strong>
+            Approved Products
+          </div>
 
-<h2>🛡️ NOVAAI PAYMENT CONTROL CENTRE</h2>
+          <div class="stat">
+            <strong id="rejectedCount">0</strong>
+            Rejected Products
+          </div>
 
-<p class="muted">Marketplace financial monitoring.</p>
+          <div class="stat">
+            <strong id="hiddenCount">0</strong>
+            Hidden Products
+          </div>
+        </div>
+      </section>
 
-<div class="stats">
+      <section class="panel" id="productsSection">
+        <h2>Product Moderation</h2>
+        <p class="muted">Review and manage seller product listings.</p>
 
-<div class="stat"><strong id="totalVolume">R0.00</strong>Total Sales</div>
-<div class="stat"><strong id="paidTotal">R0.00</strong>Recorded Paid</div>
-<div class="stat"><strong id="pendingTotal">R0.00</strong>Pending</div>
-<div class="stat"><strong id="failedTotal">R0.00</strong>Failed</div>
-<div class="stat"><strong id="refundTotal">R0.00</strong>Refunded</div>
-<div class="stat"><strong id="commissionTotal">R0.00</strong>NOVAAI Commission</div>
-<div class="stat"><strong id="payoutTotal">R0.00</strong>Seller Payouts</div>
-<div class="stat"><strong id="paymentOrderCount">0</strong>Total Orders</div>
+        <div class="toolbar">
+          <input id="search" type="search" placeholder="Search products or sellers...">
 
-</div>
+          <select id="filter">
+            <option value="all">All Products</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="hidden">Hidden</option>
+          </select>
+        </div>
 
-<br>
+        <p id="message">Loading products...</p>
+        <div id="products"></div>
+      </section>
 
-<button class="primary" onclick="loadPaymentData()">↻ Refresh Financial Data</button>
+      <section class="panel" id="paymentCentre">
+        <h2>🛡️ NOVAAI PAYMENT CONTROL CENTRE</h2>
+        <p class="muted">Marketplace financial monitoring.</p>
 
-<select id="paymentFilter" style="width:100%;padding:12px;background:#0b1020;color:white;border-radius:7px;margin-top:12px">
-<option value="all">All Payments</option>
-<option value="pending">Pending Payments</option>
-<option value="paid">Recorded Paid Payments</option>
-<option value="failed">Failed Payments</option>
-<option value="refunded">Refunded Orders</option>
-</select>
+        <div class="stats">
+          <div class="stat">
+            <strong id="totalVolume">R0.00</strong>
+            Total Sales
+          </div>
 
-<p id="paymentMessage" class="muted">Financial data will appear here.</p>
+          <div class="stat">
+            <strong id="paidTotal">R0.00</strong>
+            Recorded Paid
+          </div>
 
-<div id="paymentRecords"></div>
+          <div class="stat">
+            <strong id="pendingTotal">R0.00</strong>
+            Pending
+          </div>
 
-<hr style="border-color:#35415b;margin:25px 0">
+          <div class="stat">
+            <strong id="failedTotal">R0.00</strong>
+            Failed
+          </div>
 
-<h2>💰 Seller Commissions & Payouts</h2>
+          <div class="stat">
+            <strong id="refundTotal">R0.00</strong>
+            Refunded
+          </div>
 
-<div id="sellerFinancialRecords"></div>
+          <div class="stat">
+            <strong id="commissionTotal">R0.00</strong>
+            NOVAAI Commission
+          </div>
 
-</div>
+          <div class="stat">
+            <strong id="payoutTotal">R0.00</strong>
+            Seller Payouts
+          </div>
 
-<!-- END PAYMENT CONTROL CENTRE -->
+          <div class="stat">
+            <strong id="paymentOrderCount">0</strong>
+            Total Orders
+          </div>
+        </div>
 
+        <button class="primary" onclick="loadPaymentData()">
+          Refresh Financial Data
+        </button>
+
+        <select id="paymentFilter">
+          <option value="all">All Payments</option>
+          <option value="pending">Pending Payments</option>
+          <option value="paid">Recorded Paid Payments</option>
+          <option value="failed">Failed Payments</option>
+          <option value="refunded">Refunded Orders</option>
+        </select>
+
+        <p id="paymentMessage" class="muted">Financial data will appear here.</p>
+
+        <div id="paymentRecords"></div>
+
+        <hr style="border:0;border-top:1px solid #e5eaf2;margin:25px 0">
+
+        <h2>Seller Commissions & Payouts</h2>
+        <div id="sellerFinancialRecords"></div>
+      </section>
+
+    </main>
+  </div>
 </section>
 
-</main>
-
 <div id="imageModal" onclick="closeImage()">
-  <button id="closeImage" onclick="closeImage()">✕</button>
-  <img id="previewImage"
-       src=""
-       alt="Full product image"
+  <button id="closeImage" onclick="event.stopPropagation();closeImage()">✕</button>
+  <img id="previewImage" src="" alt="Product image preview"
        onclick="event.stopPropagation()">
 </div>
 
@@ -494,133 +562,133 @@ min-height:48px
 const ADMIN_ID = "2fc320e9-40b6-407f-9e71-e8a1999956a7";
 
 const sb = window.supabase.createClient(
-"https://nxplffvklkopwfjaqexo.supabase.co",
-"sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ"
+  "https://nxplffvklkopwfjaqexo.supabase.co",
+  "sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ"
 );
 
 let currentAdmin = null;
 let allProducts = [];
-
-function escapeHTML(value){
-return String(value ?? "").replace(/[&<>"']/g,c=>({
-"&":"&amp;",
-"<":"&lt;",
-">":"&gt;",
-'"':"&quot;",
-"'":"&#39;"
-}[c]));
-}
-
-function message(text){
-document.getElementById("message").textContent=text;
-}
-
-async function checkAdmin(user){
-
-currentAdmin=null;
-
-document.getElementById("dashboard").classList.add("hidden");
-document.getElementById("loginPanel").classList.remove("hidden");
-
-if(!user){
-document.getElementById("loginMessage").textContent="Please sign in.";
-return;
-}
-
-if(user.id !== ADMIN_ID){
-document.getElementById("loginMessage").textContent=
-"This account is not authorised as a NOVAAI administrator.";
-return;
-}
-
-const {data,error}=await sb.rpc("is_novaai_admin");
-
-if(error || data !== true){
-document.getElementById("loginMessage").textContent=
-"Administrator verification failed. Access denied.";
-return;
-}
-
-currentAdmin=user;
-
-document.getElementById("loginPanel").classList.add("hidden");
-document.getElementById("dashboard").classList.remove("hidden");
-document.getElementById("adminEmail").textContent=user.email || "";
-
-await loadProducts();
-}
-
-async function login(){
-
-const email=document.getElementById("email").value.trim();
-const password=document.getElementById("password").value;
-
-if(!email || !password){
-document.getElementById("loginMessage").textContent=
-"Enter your email and password.";
-return;
-}
-
-document.getElementById("loginMessage").textContent="Signing in...";
-
-const {data,error}=await sb.auth.signInWithPassword({
-email,password
-});
-
-if(error){
-document.getElementById("loginMessage").textContent=error.message;
-return;
-}
-
-await checkAdmin(data.user);
-}
-
-async function logout(){
-await sb.auth.signOut();
-currentAdmin=null;
-allProducts=[];
-document.getElementById("dashboard").classList.add("hidden");
-document.getElementById("loginPanel").classList.remove("hidden");
-document.getElementById("loginMessage").textContent="Signed out.";
-}
-
-async function loadProducts(){
-
-if(!currentAdmin)return;
-
-message("Loading products...");
-
-const {data,error}=await sb
-.from("Products")
-.select("id,name,description,price,category,image_url,images,seller_name,seller_id,status,rejection_reason,created_at")
-.order("created_at",{ascending:false});
-
-if(error){
-message("Could not load products: "+error.message);
-return;
-}
-
-allProducts=data || [];
-
-document.getElementById("pendingCount").textContent=
-allProducts.filter(p=>p.status==="pending").length;
-
-document.getElementById("approvedCount").textContent=
-allProducts.filter(p=>p.status==="approved").length;
-
-document.getElementById("rejectedCount").textContent=
-allProducts.filter(p=>p.status==="rejected").length;
-
-document.getElementById("hiddenCount").textContent=
-allProducts.filter(p=>p.status==="hidden").length;
-
-renderProducts();
-}
 let allPaymentOrders = [];
 let allSellerFinancials = [];
 
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[c]));
+}
+
+function message(text) {
+  document.getElementById("message").textContent = text;
+}
+
 function money(value) {
   return "R" + Number(value || 0).toFixed(2);
+}
+
+async function checkAdmin(user) {
+  currentAdmin = null;
+
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("loginPanel").classList.remove("hidden");
+
+  if (!user) {
+    document.getElementById("loginMessage").textContent = "Please sign in.";
+    return;
+  }
+
+  if (user.id !== ADMIN_ID) {
+    document.getElementById("loginMessage").textContent =
+      "This account is not authorised as a NOVAAI administrator.";
+    return;
+  }
+
+  const { data, error } = await sb.rpc("is_novaai_admin");
+
+  if (error || data !== true) {
+    document.getElementById("loginMessage").textContent =
+      "Administrator verification failed. Access denied.";
+    return;
+  }
+
+  currentAdmin = user;
+
+  document.getElementById("loginPanel").classList.add("hidden");
+  document.getElementById("dashboard").classList.remove("hidden");
+  document.getElementById("adminEmail").textContent = user.email || "";
+
+  await loadProducts();
+}
+
+async function login() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if (!email || !password) {
+    document.getElementById("loginMessage").textContent =
+      "Enter your email and password.";
+    return;
+  }
+
+  document.getElementById("loginMessage").textContent = "Signing in...";
+
+  const { data, error } = await sb.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    document.getElementById("loginMessage").textContent = error.message;
+    return;
+  }
+
+  await checkAdmin(data.user);
+}
+
+async function logout() {
+  await sb.auth.signOut();
+
+  currentAdmin = null;
+  allProducts = [];
+
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("loginPanel").classList.remove("hidden");
+  document.getElementById("loginMessage").textContent = "Signed out.";
+}
+
+async function loadProducts() {
+  if (!currentAdmin) return;
+
+  message("Loading products...");
+
+  const { data, error } = await sb
+    .from("Products")
+    .select("id,name,description,price,category,image_url,images,seller_name,seller_id,status,rejection_reason,created_at")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    message("Could not load products: " + error.message);
+    return;
+  }
+
+  allProducts = data || [];
+
+  document.getElementById("pendingCount").textContent =
+    allProducts.filter(p => p.status === "pending").length;
+
+  document.getElementById("approvedCount").textContent =
+    allProducts.filter(p => p.status === "approved").length;
+
+  document.getElementById("rejectedCount").textContent =
+    allProducts.filter(p => p.status === "rejected").length;
+
+  document.getElementById("hiddenCount").textContent =
+    allProducts.filter(p => p.status === "hidden").length;
+
+  renderProducts();
 }
 
 async function loadPaymentData() {
@@ -648,9 +716,7 @@ async function loadPaymentData() {
       .order("created_at", { ascending: false });
 
     if (orderError) throw orderError;
- 
-    console.log("NOVAAI ORDERS RECEIVED:", orders);
-    
+
     const { data: fulfillments, error: fulfillmentError } = await sb
       .from("seller_fulfillments")
       .select(`
@@ -670,9 +736,7 @@ async function loadPaymentData() {
       .order("created_at", { ascending: false });
 
     if (fulfillmentError) throw fulfillmentError;
-   
-    console.log("NOVAAI FULFILLMENTS RECEIVED:", fulfillments);
-   
+
     allPaymentOrders = orders || [];
     allSellerFinancials = fulfillments || [];
 
@@ -737,24 +801,27 @@ function renderPaymentRecords() {
 
   const records = allPaymentOrders.filter(order => {
     if (filter === "all") return true;
+
     if (filter === "refunded") {
       return order.payment_status === "refunded" || !!order.refunded_at;
     }
+
     return order.payment_status === filter;
   });
 
   if (!records.length) {
-    container.innerHTML = "<p class='muted'>No matching payment records.</p>";
+    container.innerHTML =
+      "<p class='muted'>No matching payment records.</p>";
     return;
   }
 
   container.innerHTML = records.map(order => `
-    <div class="panel">
+    <div class="record">
       <strong>Order: ${escapeHTML(order.id)}</strong>
       <p>Customer: ${escapeHTML(order.customer_name || "Not provided")}</p>
       <p>Email: ${escapeHTML(order.customer_email || "Not provided")}</p>
       <p>Amount: <strong>${money(order.total_amount)}</strong></p>
-      <p>Payment status: <span class="status">${escapeHTML(order.payment_status || "Unknown")}</span></p>
+      <p>Payment status: ${escapeHTML(order.payment_status || "Unknown")}</p>
       <p>Gateway: ${escapeHTML(order.gateway_provider || "Not recorded")}</p>
       <p>Transaction reference: ${escapeHTML(order.gateway_transaction_reference || "Not recorded")}</p>
       <p>Order status: ${escapeHTML(order.order_status || "Unknown")}</p>
@@ -767,12 +834,13 @@ function renderSellerFinancials() {
   const container = document.getElementById("sellerFinancialRecords");
 
   if (!allSellerFinancials.length) {
-    container.innerHTML = "<p class='muted'>No seller financial records found.</p>";
+    container.innerHTML =
+      "<p class='muted'>No seller financial records found.</p>";
     return;
   }
 
   container.innerHTML = allSellerFinancials.map(record => `
-    <div class="panel">
+    <div class="record">
       <strong>Seller: ${escapeHTML(record.seller_id)}</strong>
       <p>Order: ${escapeHTML(record.order_id)}</p>
       <p>Item subtotal: ${money(record.item_subtotal)}</p>
@@ -785,175 +853,189 @@ function renderSellerFinancials() {
     </div>
   `).join("");
 }
-function renderProducts(){
 
-const filter=document.getElementById("filter").value;
-const search=document.getElementById("search").value.toLowerCase();
+function renderProducts() {
+  const filter = document.getElementById("filter").value;
+  const search = document.getElementById("search").value.toLowerCase();
 
-const filtered=allProducts.filter(p=>{
+  const filtered = allProducts.filter(p => {
+    const statusMatch = filter === "all" || p.status === filter;
 
-const statusMatch=filter==="all" || p.status===filter;
+    const textMatch = [
+      p.name,
+      p.seller_name,
+      p.category,
+      p.description
+    ].join(" ").toLowerCase().includes(search);
 
-const textMatch=[
-p.name,p.seller_name,p.category,p.description
-].join(" ").toLowerCase().includes(search);
+    return statusMatch && textMatch;
+  });
 
-return statusMatch && textMatch;
-});
+  message(filtered.length + " product(s) found.");
 
-message(filtered.length+" product(s) found.");
+  document.getElementById("products").innerHTML =
+    filtered.map(p => {
+      const image = p.image_url ||
+        (Array.isArray(p.images) ? p.images[0] : "");
 
-document.getElementById("products").innerHTML=
-filtered.map(p=>{
+      const safeImage = String(image || "").startsWith("https://")
+        ? escapeHTML(image)
+        : "";
 
-const image=p.image_url ||
-(Array.isArray(p.images)?p.images[0]:"");
+      return `
+        <div class="product">
 
-const safeImage=String(image || "").startsWith("https://")
-? escapeHTML(image) : "";
+          <div>
+            ${safeImage
+              ? `<img src="${safeImage}" alt="Product image"
+                  onclick="openImage(this.src)">`
+              : `<div class="muted">No image</div>`}
+          </div>
 
-return `
-<div class="product">
+          <div>
+            <h3>${escapeHTML(p.name)}</h3>
 
-<div>
-${safeImage
-? `<img src="${safeImage}" alt="Product image"
-    onclick="openImage(this.src)">`
-: `<div class="muted">No image</div>`}
-</div>
+            <p>Price: R${Number(p.price || 0).toFixed(2)}</p>
+            <p>Category: ${escapeHTML(p.category)}</p>
+            <p>Seller: ${escapeHTML(p.seller_name)}</p>
+            <p>Seller ID: <small>${escapeHTML(p.seller_id)}</small></p>
+            <p class="muted">${escapeHTML(p.description)}</p>
 
-<div>
-<h3>${escapeHTML(p.name)}</h3>
+            <p>Status:
+              <span class="status">${escapeHTML(p.status)}</span>
+            </p>
 
-<p>Price: R${Number(p.price || 0).toFixed(2)}</p>
-<p>Category: ${escapeHTML(p.category)}</p>
+            ${p.rejection_reason
+              ? `<p style="color:#c43d4d">
+                  <strong>Rejection reason:</strong>
+                  ${escapeHTML(p.rejection_reason)}
+                </p>`
+              : ""}
 
-<p>Seller: ${escapeHTML(p.seller_name)}</p>
+            <div class="actions">
 
-<p>Seller ID: <small>${escapeHTML(p.seller_id)}</small></p>
+              ${p.status !== "approved"
+                ? `<button class="approve"
+                    onclick="changeStatus(${Number(p.id)},'approved')">
+                    Approve
+                  </button>`
+                : ""}
 
-<p class="muted">${escapeHTML(p.description)}</p>
+              ${p.status !== "rejected"
+                ? `<button class="reject"
+                    onclick="changeStatus(${Number(p.id)},'rejected')">
+                    Reject
+                  </button>`
+                : ""}
 
-<p>Status: <span class="status">${escapeHTML(p.status)}</span></p>
+              ${p.status !== "hidden"
+                ? `<button class="hide"
+                    onclick="changeStatus(${Number(p.id)},'hidden')">
+                    Hide
+                  </button>`
+                : ""}
 
-${p.rejection_reason
-? `<p style="color:#ff8b94">
-<strong>Rejection reason:</strong>
-${escapeHTML(p.rejection_reason)}
-</p>`
-: ""}
+              ${p.status !== "pending"
+                ? `<button class="restore"
+                    onclick="changeStatus(${Number(p.id)},'pending')">
+                    Return to Pending
+                  </button>`
+                : ""}
 
-<div class="actions">
-
-${p.status !== "approved"
-? `<button class="approve" onclick="changeStatus(${Number(p.id)},'approved')">Approve</button>`
-: ""}
-
-${p.status !== "rejected"
-? `<button class="reject" onclick="changeStatus(${Number(p.id)},'rejected')">Reject</button>`
-: ""}
-
-${p.status !== "hidden"
-? `<button class="hide" onclick="changeStatus(${Number(p.id)},'hidden')">Hide</button>`
-: ""}
-
-${p.status !== "pending"
-? `<button class="restore" onclick="changeStatus(${Number(p.id)},'pending')">Return to Pending</button>`
-: ""}
-
-</div>
-</div>
-</div>
-`;
-}).join("");
-
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
 }
-function openImage(url){
+
+function openImage(url) {
   document.getElementById("previewImage").src = url;
   document.getElementById("imageModal").classList.add("open");
 }
 
-function closeImage(){
+function closeImage() {
   document.getElementById("imageModal").classList.remove("open");
   document.getElementById("previewImage").src = "";
 }
 
-  async function changeStatus(id,newStatus){
+async function changeStatus(id, newStatus) {
+  if (!currentAdmin) return;
 
-if(!currentAdmin)return;
-
-if(!["pending","approved","rejected","hidden"].includes(newStatus))return;
-
-const product=allProducts.find(p=>Number(p.id)===Number(id));
-
-if(!product)return;
-
-let rejectionReason = null;
-
-if(newStatus === "rejected"){
-  rejectionReason = prompt(
-    "Enter the reason for rejecting this product:"
-  );
-
-  if(rejectionReason === null)return;
-
-  rejectionReason = rejectionReason.trim();
-
-  if(!rejectionReason){
-    message("A rejection reason is required.");
+  if (!["pending", "approved", "rejected", "hidden"].includes(newStatus)) {
     return;
   }
+
+  const product = allProducts.find(p => Number(p.id) === Number(id));
+
+  if (!product) return;
+
+  let rejectionReason = null;
+
+  if (newStatus === "rejected") {
+    rejectionReason = prompt(
+      "Enter the reason for rejecting this product:"
+    );
+
+    if (rejectionReason === null) return;
+
+    rejectionReason = rejectionReason.trim();
+
+    if (!rejectionReason) {
+      message("A rejection reason is required.");
+      return;
+    }
+  }
+
+  if (!confirm(
+    "Change " + product.name + " status to " + newStatus.toUpperCase() + "?"
+  )) return;
+
+  message("Updating product...");
+
+  const { error } = await sb
+    .from("Products")
+    .update({
+      status: newStatus,
+      rejection_reason: newStatus === "rejected"
+        ? rejectionReason
+        : null
+    })
+    .eq("id", id);
+
+  if (error) {
+    message("Update failed: " + error.message);
+    return;
+  }
+
+  message("Product status updated successfully.");
+
+  await loadProducts();
 }
 
-if(!confirm(
-  "Change "+product.name+" status to "+newStatus.toUpperCase()+"?"
-))return;
+document.getElementById("loginBtn").onclick = login;
+document.getElementById("logoutBtn").onclick = logout;
+document.getElementById("filter").onchange = renderProducts;
+document.getElementById("search").oninput = renderProducts;
+document.getElementById("paymentFilter").onchange = renderPaymentRecords;
 
-message("Updating product...");
+sb.auth.getSession().then(({ data, error }) => {
+  if (error) {
+    document.getElementById("loginMessage").textContent = error.message;
+    return;
+  }
 
-const {error}=await sb
-.from("Products")
-.update({
-  status: newStatus,
-  rejection_reason: newStatus === "rejected"
-    ? rejectionReason
-    : null
-})
-.eq("id",id);
-
-if(error){
-message("Update failed: "+error.message);
-return;
-}
-
-message("Product status updated successfully.");
-
-await loadProducts();
-await loadPaymentData();
-}
-
-document.getElementById("loginBtn").onclick=login;
-document.getElementById("logoutBtn").onclick=logout;
-document.getElementById("filter").onchange=renderProducts;
-document.getElementById("search").oninput=renderProducts;
-document.getElementById("paymentFilter").onchange=renderPaymentRecords;
-
-sb.auth.getSession().then(({data,error})=>{
-if(error){
-document.getElementById("loginMessage").textContent=error.message;
-return;
-}
-checkAdmin(data.session?.user || null);
+  checkAdmin(data.session?.user || null);
 });
 
-sb.auth.onAuthStateChange((event,session)=>{
-if(event==="SIGNED_OUT"){
-currentAdmin=null;
-document.getElementById("dashboard").classList.add("hidden");
-document.getElementById("loginPanel").classList.remove("hidden");
-}else if(event==="SIGNED_IN"){
-checkAdmin(session?.user || null);
-}
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === "SIGNED_OUT") {
+    currentAdmin = null;
+    document.getElementById("dashboard").classList.add("hidden");
+    document.getElementById("loginPanel").classList.remove("hidden");
+  } else if (event === "SIGNED_IN") {
+    checkAdmin(session?.user || null);
+  }
 });
 </script>
 
