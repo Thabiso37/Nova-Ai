@@ -88,13 +88,7 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;backg
 </main>
 
 <!-- BOTTOM NAVIGATION BAR WITH DIRECT MARKETS & SELL -->
-<nav class="bottom-nav">
-  <a href="#" onclick="switchMarket('retail'); return false;" class="nav-item active" id="navRetail">🛍️<br>Retail</a>
-  <a href="#" onclick="switchMarket('motors'); return false;" class="nav-item" id="navMotors">🚗<br>Motors</a>
-  <a href="#" onclick="switchMarket('property'); return false;" class="nav-item" id="navProperty">🏠<br>Property</a>
-  <a href="seller.html" class="nav-item">🏷️<br>Retail Sell</a>
-  <a href="seller-motors-property.html" class="nav-item" style="color:var(--p);">🚗🔑<br>Asset Sell</a>
-</nav>
+<nav class="nova-bottom-nav bottom-nav" aria-label="Main navigation"><a class="nova-nav-item nav-item " href="./index.html" ><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Home</span></a><a class="nova-nav-item nav-item active" href="./retail.html#shop" id="navRetail"><svg viewBox="0 0 24 24"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><span>Retail</span></a><a class="nova-nav-item nav-item " href="#" onclick="switchMarket('motors');return false;" id="navMotors"><svg viewBox="0 0 24 24"><path d="m5 11 1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><path d="M3 11h18v7H3z"/><path d="M6 18v2m12-2v2M6 14h2m8 0h2"/></svg><span>Motors</span></a><a class="nova-nav-item nav-item " href="#" onclick="switchMarket('property');return false;" id="navProperty"><svg viewBox="0 0 24 24"><path d="M4 21V4h16v17M2 21h20M8 8h2m4 0h2M8 12h2m4 0h2M10 21v-5h4v5"/></svg><span>Property</span></a><a class="nova-nav-item nav-item " href="./retail.html?view=wishlist" ><svg viewBox="0 0 24 24"><path d="M20.8 8.8c0 5.2-8.8 11-8.8 11s-8.8-5.8-8.8-11A4.8 4.8 0 0 1 12 6.1a4.8 4.8 0 0 1 8.8 2.7Z"/></svg><span>Wishlist</span></a><a class="nova-nav-item nav-item " href="./retail.html?view=cart" ><svg viewBox="0 0 24 24"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg><span>Cart</span></a></nav>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
