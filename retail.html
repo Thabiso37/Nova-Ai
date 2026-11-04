@@ -1724,8 +1724,8 @@ function closeCart() {
    const observer=new MutationObserver(sync);
    if(count)observer.observe(count,{childList:true,characterData:true,subtree:true});
  }
- if(q.get('view')==='wishlist'){go('wishlist');}
- if(q.get('view')==='cart'){openCart();}
+ if(q.get('view')==='wishlist'){document.querySelectorAll('.nova-nav-item').forEach(a=>a.classList.remove('active'));document.querySelector('.nova-nav-item[href="./retail.html?view=wishlist"]')?.classList.add('active');go('wishlist');}
+ if(q.get('view')==='cart'){document.querySelectorAll('.nova-nav-item').forEach(a=>a.classList.remove('active'));document.querySelector('.nova-nav-item[href="./retail.html?view=cart"]')?.classList.add('active');openCart();}
 })();
 </script>
 </body>
