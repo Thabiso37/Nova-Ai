@@ -242,11 +242,11 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
         const imgs=Array.isArray(p.images)&&p.images.length?p.images:(p.image_url?[p.image_url]:[]);
         const img=safeImage(imgs[0]);
         return '<article class="home-product-card">'+
-          '<a class="home-product-photo" href="./retail.html#shop" aria-label="Browse '+escapeHTML(p.name)+' in Retail">'+(img?'<img src="'+escapeHTML(img)+'" alt="'+escapeHTML(p.name)+'" loading="lazy">':'<span class="home-no-photo">📦<small>Photo not available</small></span>')+'</a>'+
+          '<a class="home-product-photo" href="./retail.html?product='+encodeURIComponent(p.id)+'" aria-label="View '+escapeHTML(p.name)+' details">'+(img?'<img src="'+escapeHTML(img)+'" alt="'+escapeHTML(p.name)+'" loading="lazy">':'<span class="home-no-photo">📦<small>Photo not available</small></span>')+'</a>'+
           '<div class="home-product-info"><div class="home-product-category">'+escapeHTML(p.category||'Marketplace product')+'</div>'+
           '<h3>'+escapeHTML(p.name)+'</h3><div class="home-product-price">'+money(p.price)+'</div>'+
           '<div class="home-product-seller">Sold by '+escapeHTML(p.seller_name||'Independent seller')+'</div>'+
-          '<a class="home-product-open" href="./retail.html#shop">View product <span aria-hidden="true">→</span></a></div></article>';
+          '<a class="home-product-open" href="./retail.html?product='+encodeURIComponent(p.id)+'">View product <span aria-hidden="true">→</span></a></div></article>';
       }).join('');
     }catch(error){
       console.error('Homepage product loading:',error);
