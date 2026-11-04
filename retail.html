@@ -488,6 +488,31 @@ body { background: #f5f7fb; color: #10284b; }
 .add-to-cart-btn:hover, #modalAddToCart:hover { background: #e6aa00 !important; }
 </style>
 
+<style>
+:root{--nova-navy:#10284B;--nova-blue:#174EA6;--nova-yellow:#F5B900;--nova-bg:#F5F7FB}
+body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;background:var(--nova-bg)}
+.nova-bottom-nav{position:fixed;z-index:9999;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;background:rgba(255,255,255,.97);border-top:1px solid #e3e8f0;padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));box-shadow:0 -5px 22px rgba(16,40,75,.08);backdrop-filter:blur(12px)}
+.nova-nav-item{position:relative;display:flex;min-width:0;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#778195;font-size:10px;font-weight:700;line-height:1.15;text-decoration:none;transition:color .18s,transform .18s}
+.nova-nav-item svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nova-nav-item.active{color:var(--nova-blue);transform:translateY(-1px)}
+.nova-nav-count{position:absolute;top:-3px;left:calc(50% + 7px);min-width:16px;height:16px;padding:0 4px;border-radius:10px;background:var(--nova-yellow);color:var(--nova-navy);font-size:9px;line-height:16px;text-align:center}
+@media(min-width:760px){.nova-bottom-nav{left:50%;right:auto;transform:translateX(-50%);width:min(100%,720px);border:1px solid #e3e8f0;border-bottom:0;border-radius:16px 16px 0 0}.nova-nav-item{font-size:11px}}
+/* Premium retail catalogue */
+#products.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#products .product{min-width:0;overflow:hidden;border:1px solid #e8edf4;border-radius:16px;background:#fff;box-shadow:0 4px 14px rgba(16,40,75,.055)}
+#products .prodimg{height:clamp(145px,45vw,235px);background:#f1f4f8;overflow:hidden}
+#products .prodimg img{width:100%;height:100%;object-fit:cover;display:block}
+#products .prodbody{padding:11px}
+#products .prodbody h3{font-size:13px;line-height:1.35;min-height:35px;margin:6px 0;color:#172033}
+#products .price{font-size:17px;font-weight:900;color:var(--nova-navy);margin:8px 0}
+#products .actions{display:flex;gap:6px}
+#products .actions .btn{flex:1;min-width:0;padding:9px 6px;font-size:11px}
+#products .wishlist-btn{width:34px!important;height:34px!important;font-size:0!important}
+#products .wishlist-btn:after{content:"♡";font-size:21px;color:var(--nova-navy)}
+#products .wishlist-btn[style*="color: rgb(225, 29, 72)"]:after{content:"♥";color:#e11d48}
+#products .shein-discount-badge{border-radius:0 0 9px 0}
+@media(min-width:760px){#products.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}}
+</style>
 </head>
 <body>
 
@@ -1679,5 +1704,29 @@ function closeCart() {
 }
 </script>
 
+<nav class="nova-bottom-nav" aria-label="Main navigation">
+<a class="nova-nav-item " href="./index.html">[object Object]<span>Home</span></a>
+<a class="nova-nav-item active" href="./retail.html#shop">[object Object]<span>Retail</span></a>
+<a class="nova-nav-item " href="./seller-motors-houses.html?market=motors">[object Object]<span>Motors</span></a>
+<a class="nova-nav-item " href="./seller-motors-houses.html?market=property">[object Object]<span>Property</span></a>
+<a class="nova-nav-item " href="./retail.html?view=wishlist">[object Object]<span>Wishlist</span></a>
+<a class="nova-nav-item " href="./retail.html?view=cart">[object Object]<span>Cart<b class="nova-nav-count" id="novaNavCartCount">0</b></span></a>
+</nav>
+<script>
+(function(){
+ const q=new URLSearchParams(location.search);
+ const nav=document.querySelector('.nova-bottom-nav');
+ if(nav){
+   const count=document.getElementById('count');
+   const badge=document.getElementById('novaNavCartCount');
+   const sync=()=>{if(badge&&count)badge.textContent=count.textContent||'0';};
+   sync();
+   const observer=new MutationObserver(sync);
+   if(count)observer.observe(count,{childList:true,characterData:true,subtree:true});
+ }
+ if(q.get('view')==='wishlist'){go('wishlist');}
+ if(q.get('view')==='cart'){openCart();}
+})();
+</script>
 </body>
 </html>
