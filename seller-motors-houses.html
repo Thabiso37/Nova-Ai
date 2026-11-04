@@ -40,6 +40,7 @@ header{background:white;position:sticky;top:0;z-index:5;border-bottom:1px solid 
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:15px;margin-top:15px}
 .panel{background:white;border:1px solid var(--line);border-radius:14px;padding:15px}
 .msg{font-size:13px;text-align:center;padding:20px;color:var(--muted)}
+.property-hub{margin:8px 0 18px}.property-welcome{min-height:210px;border-radius:24px;padding:24px;display:flex;flex-direction:column;justify-content:flex-end;color:white;background:linear-gradient(90deg,rgba(8,27,61,.88),rgba(8,27,61,.15)),url(https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=85) center/cover;box-shadow:0 12px 30px #10284b22}.property-welcome span{font-size:10px;letter-spacing:2px;font-weight:900;color:#ffd36b}.property-welcome h2{font-size:clamp(26px,7vw,38px);margin:9px 0}.property-welcome p{font-size:13px}.property-tools{background:white;border:1px solid #e8edf5;border-radius:20px;padding:16px;margin-top:14px}.property-chips{display:flex;gap:8px;margin:12px 0}.property-chip{border:1px solid #e1e7f0;background:white;border-radius:30px;padding:9px 15px;font-size:12px;font-weight:750}.property-chip.active{background:#174ea6;color:white}.property-filter-row{display:flex;justify-content:space-between;font-size:12px}.property-tools input{width:100%;accent-color:#174ea6}.property-section-heading{margin:20px 2px 8px;color:#142544}.property-section-heading h3{margin:0;font-size:21px}body.property-mode{background:#f3f6fc}body.property-mode #marketTitle{display:none}body.property-mode #productGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.property-card{padding:0!important;border-radius:20px!important;overflow:hidden;box-shadow:0 7px 22px #122b5312}.property-card img{width:100%;height:clamp(135px,42vw,225px);object-fit:cover;display:block;margin:0!important;border-radius:0!important}.property-card-body{padding:12px}.property-type{font-size:9px;text-transform:uppercase;color:#174ea6;font-weight:850}.property-card h4{font-size:14px;margin:7px 0}.property-price{font-size:17px;font-weight:900;color:#10284b}.property-description{font-size:11px;color:#758095;line-height:1.45;max-height:34px;overflow:hidden}.property-seller{font-size:10px;color:#7a8495;border-top:1px solid #edf0f5;padding-top:9px;margin-top:9px}.property-view{width:100%;margin-top:10px}@media(min-width:760px){body.property-mode #productGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 <style>
 body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;background:#F5F7FB}
@@ -81,6 +82,10 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;backg
     <div class="stat-card"><h3>R0</h3><p>Listing Fee</p></div>
   </div>
 
+<section id="propertyHub" class="property-hub" hidden>
+<div class="property-welcome"><span>NOVAAI PROPERTY</span><h2>Find Your Comfortable Place</h2><p>Explore homes and spaces across South Africa.</p></div>
+<div class="property-tools"><strong>Discover a place to call home</strong><div class="property-chips"><button class="property-chip active" onclick="filterPropertyKind('all',this)">All</button><button class="property-chip" onclick="filterPropertyKind('sale',this)">For Sale</button><button class="property-chip" onclick="filterPropertyKind('rent',this)">For Rent</button></div><div class="property-filter-row"><label for="propertyMaxPrice">Maximum price</label><strong id="propertyMaxLabel">Any price</strong></div><input id="propertyMaxPrice" type="range" min="0" max="10000000" step="50000" value="10000000" oninput="applyPropertyFilters()"></div>
+<div class="property-section-heading"><h3>Featured properties</h3><span id="propertyResultCount"></span></div></section>
   <h3 id="marketTitle" style="margin-top:24px;">🛍️ Retail Products & Brands</h3>
   <div id="productGrid" class="grid">
     <div class="msg">Loading marketplace listings...</div>
@@ -132,6 +137,7 @@ async function loadListings(marketType, searchQuery = '') {
   }
 
   document.getElementById('statCount').textContent = filtered.length;
+  if(marketType==='property'){propertyListings=filtered;applyPropertyFilters();return;}
 
   if (filtered.length === 0) {
     grid.innerHTML = "<div class='msg'>No listings found in this market category.</div>";
@@ -153,8 +159,14 @@ async function loadListings(marketType, searchQuery = '') {
   `).join("");
 }
 
+let propertyListings=[];let propertyKind='all';
+function filterPropertyKind(kind,button){propertyKind=kind;document.querySelectorAll('.property-chip').forEach(x=>x.classList.toggle('active',x===button));applyPropertyFilters()}
+function applyPropertyFilters(){const max=Number(document.getElementById('propertyMaxPrice').value);document.getElementById('propertyMaxLabel').textContent=max>=10000000?'Any price':cash(max)+' max';const rows=propertyListings.filter(x=>{const c=String(x.category||'').toLowerCase();return Number(x.price||0)<=max&&(propertyKind==='all'||(propertyKind==='sale'&&c.includes('sale'))||(propertyKind==='rent'&&c.includes('rent')))});renderPropertyCards(rows)}
+function renderPropertyCards(rows){const grid=document.getElementById('productGrid');document.getElementById('propertyResultCount').textContent=rows.length+' homes';if(!rows.length){grid.innerHTML='<div class="msg">No properties match these filters.</div>';return}grid.innerHTML=rows.map((x,i)=>'<article class="panel property-card">'+(x.image_url?'<img src="'+esc(x.image_url)+'" alt="Property" loading="lazy">':'')+'<div class="property-card-body"><span class="property-type">'+esc(x.category||'Property')+'</span><h4>'+esc(x.name||'Property listing')+'</h4><div class="property-price">'+cash(x.price)+'</div><p class="property-description">'+esc(x.description||'Contact the seller for details.')+'</p><div class="property-seller">Listed by '+esc(x.seller_name||'Seller')+'</div></div></article>').join('')}
 function switchMarket(market) {
   currentMarket = market;
+  document.body.classList.toggle('property-mode',market==='property');
+  document.getElementById('propertyHub').hidden=market!=='property';
   document.querySelectorAll('.bottom-nav .nav-item').forEach(t => t.classList.remove('active'));
   
   const title = document.getElementById('marketTitle');
