@@ -152,7 +152,7 @@
     const managedSlots=["home_hero","shop_tv","cart_banner","wishlist_banner","motors_banner","property_banner","shop_footer","motors_footer","property_footer"];
     managedSlots.forEach(id=>{
       if(managedTimers[id]){clearInterval(managedTimers[id]);delete managedTimers[id];}
-      const slot=document.querySelector('[data-nova-ad-slot="'+id+'"]');
+      const slot=document.querySelector('[data-nova-ad-slot="'+id+'"]')||document.getElementById(({home_hero:"novaHeroCarousel",shop_tv:"shopTvAds",cart_banner:"cartAdBoard",wishlist_banner:"wishlistAdSlot",motors_banner:"motorsWelcomeAd",property_banner:"propertyAdSlot",shop_footer:"shopFooterAd",motors_footer:"motorsFooterAd",property_footer:"propertyFooterAd"})[id]);
       if(!slot)return;
       const campaigns=(Array.isArray(rows)?rows:[])
         .filter(c=>c&&c.slot_id===id&&campaignIsActive(c)&&safeHttpsUrl(c.creative_url)&&safeHttpsUrl(c.destination_url))
