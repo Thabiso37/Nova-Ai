@@ -561,7 +561,7 @@ button {
 .ad-campaign-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .ad-campaign-grid>div{min-width:0}
 .ad-campaign-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}
-.ad-campaign-record{display:flex;gap:14px;align-items:center;padding:13px 0;border-top:1px solid #e5eaf2}
+.ad-board-group{margin:18px 0 24px;padding:14px;border:1px solid #e2e8f0;border-radius:12px;background:#fbfcfe}.ad-board-group h3{margin:0;color:#174ea6;font-size:15px}.ad-board-group>.muted{margin:4px 0 8px}.ad-campaign-record{display:flex;gap:14px;align-items:center;padding:13px 0;border-top:1px solid #e5eaf2}
 .ad-campaign-record img{width:94px;height:70px;object-fit:cover;border-radius:9px;background:#eaf1ff}
 .ad-campaign-record-main{flex:1;min-width:0}
 .ad-campaign-record-main strong{display:block;overflow-wrap:anywhere}
@@ -761,7 +761,7 @@ button {
 
     <section class="panel" id="advertisementManagement">
       <h2>Advertisement Management</h2>
-      <p class="muted">Manage promotional campaigns for the three bottom advertisement boards. Only active campaigns within their schedule are shown publicly.</p>
+      <p class="muted">Manage all nine NOVAAI advertising boards separately. Each board has its own campaigns, schedule and activation controls.</p>
       <div class="notice">Campaign management is separate from orders, payments, seller balances and product records. Images and destination links must use HTTPS.</div>
       <form id="adCampaignForm" class="ad-campaign-form">
         <input type="hidden" id="adCampaignId">
@@ -769,9 +769,15 @@ button {
         <input id="adCampaignCode" maxlength="40" placeholder="e.g. SHOP-NOV-01">
         <label for="adCampaignSlot">Advertisement board</label>
         <select id="adCampaignSlot" required>
-          <option value="shop_footer">Shop bottom advert</option>
-          <option value="motors_footer">Motors bottom advert</option>
-          <option value="property_footer">Property bottom advert</option>
+          <option value="home_hero">Home – Main advertising board</option>
+          <option value="shop_tv">Shop – Main carousel</option>
+          <option value="cart_banner">Cart advertising board</option>
+          <option value="wishlist_banner">Wishlist (heart) advertising board</option>
+          <option value="motors_banner">Motors – Main advertising board</option>
+          <option value="property_banner">Property – Main advertising board</option>
+          <option value="shop_footer">Shop – Bottom advertising board</option>
+          <option value="motors_footer">Motors – Bottom advertising board</option>
+          <option value="property_footer">Property – Bottom advertising board</option>
         </select>
         <label for="adCampaignTitle">Advertisement title</label>
         <input id="adCampaignTitle" maxlength="100" required placeholder="Campaign headline">
@@ -1018,21 +1024,30 @@ async function loadAdCampaigns(){
     if(error)throw error;
     adCampaignRows=Array.isArray(data)?data:[];
     adCampaignMessage(adCampaignRows.length+" campaign(s) saved. Changes publish to the live boards when active and within schedule.");
-    box.innerHTML=adCampaignRows.length?adCampaignRows.map(c=>`
-      <article class="ad-campaign-record">
-        <img src="${escapeHTML(c.creative_url)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
-        <div class="ad-campaign-record-main">
-          <strong>${escapeHTML(c.title)}</strong>
-          <small>${escapeHTML(c.slot_id.replace("_footer","").toUpperCase())} · ${escapeHTML(c.campaign_code||"Campaign")} · Priority ${Number(c.priority)||0}</small>
-          <small>${escapeHTML(c.description||"No description")}</small>
-          <span class="ad-status">${escapeHTML(c.status)}</span>
-        </div>
-        <div class="ad-campaign-record-actions">
-          <button type="button" onclick="editAdCampaign('${escapeHTML(c.id)}')">Edit</button>
-          <button type="button" onclick="toggleAdCampaign('${escapeHTML(c.id)}')">${c.status==="active"?"Pause":"Activate"}</button>
-          <button type="button" onclick="deleteAdCampaign('${escapeHTML(c.id)}')">Delete</button>
-        </div>
-      </article>`).join(""):"<p class='muted'>No campaigns yet. Create your first campaign above.</p>";
+    const boardLabels={"home_hero":"Home – Main advertising board","shop_tv":"Shop – Main carousel","cart_banner":"Cart advertising board","wishlist_banner":"Wishlist (heart) advertising board","motors_banner":"Motors – Main advertising board","property_banner":"Property – Main advertising board","shop_footer":"Shop – Bottom advertising board","motors_footer":"Motors – Bottom advertising board","property_footer":"Property – Bottom advertising board"};
+    const boardOrder=["home_hero","shop_tv","cart_banner","wishlist_banner","motors_banner","property_banner","shop_footer","motors_footer","property_footer"];
+    box.innerHTML=boardOrder.map((slot,index)=>{
+      const rows=adCampaignRows.filter(c=>c.slot_id===slot);
+      return `<section class="ad-board-group">
+        <h3>Advertisement Board ${index+1}</h3>
+        <p class="muted">${boardLabels[slot]}</p>
+        ${rows.length?rows.map(c=>`
+          <article class="ad-campaign-record">
+            <img src="${escapeHTML(c.creative_url)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+            <div class="ad-campaign-record-main">
+              <strong>${escapeHTML(c.title)}</strong>
+              <small>${escapeHTML(c.campaign_code||"Campaign")} · Priority ${Number(c.priority)||0}</small>
+              <small>${escapeHTML(c.description||"No description")}</small>
+              <span class="ad-status">${escapeHTML(c.status)}</span>
+            </div>
+            <div class="ad-campaign-record-actions">
+              <button type="button" onclick="editAdCampaign('${escapeHTML(c.id)}')">Edit</button>
+              <button type="button" onclick="toggleAdCampaign('${escapeHTML(c.id)}')">${c.status==="active"?"Pause":"Activate"}</button>
+              <button type="button" onclick="deleteAdCampaign('${escapeHTML(c.id)}')">Delete</button>
+            </div>
+          </article>`).join(""):"<p class='muted'>No campaigns assigned to this board yet.</p>"}
+      </section>`;
+    }).join("");
   }catch(error){
     adCampaignMessage("Could not load campaigns: "+(error?.message||"Unknown error"));
   }
