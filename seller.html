@@ -582,7 +582,8 @@ document.getElementById("sellerForm").onsubmit = async e => {
         image_url: imgs[0],
         images: imgs,
         seller_name: document.getElementById("sellerName").value.trim(),
-        seller_id: user.id
+        seller_id: user.id,
+        status: "pending"
       });
 
       if (error) throw error;
