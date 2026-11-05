@@ -305,12 +305,19 @@ body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb}
     <a class="logo" href="./index.html" aria-label="NOVAAI Market home">NOVA<span>AI</span> MARKET</a>
     <div class="head-actions">
       <div class="tag">YOUR MARKETPLACE.<br>YOUR OPPORTUNITY.</div>
+      <button class="home-header-search" type="button" id="homeHeaderSearch" aria-label="Go to product search">⌕</button>
       <a class="home-signin-link" href="./retail.html?auth=signin" aria-label="Sign in to NOVAAI">👤 Sign in</a>
       <a class="cart-link" href="./retail.html?view=cart" aria-label="Open shopping cart">🛒 <span>Cart</span> <b id="homeCartCount" aria-label="Items in cart">0</b></a>
     </div>
   </div>
   
 </header>
+<section class="nova-hero-carousel" id="novaHeroCarousel" aria-label="NOVAAI marketplace highlights">
+  <div class="nova-hero-slide active"><div class="nova-hero-copy"><span class="nova-hero-kicker">NOVAAI MARKET</span><h1>Discover something worth buying.</h1><p>Shop products from approved independent South African sellers.</p><a href="./retail.html#shop">Explore the marketplace <span aria-hidden="true">→</span></a></div><div class="nova-hero-art" aria-hidden="true"><span class="hero-art-circle"></span><span class="hero-art-card">NOVA<span>AI</span><small>SHOP SMART</small></span></div></div>
+  <div class="nova-hero-slide"><div class="nova-hero-copy"><span class="nova-hero-kicker">SUPPORT LOCAL SELLERS</span><h1>Great finds. Local businesses.</h1><p>Find fashion, electronics, home essentials and more in one marketplace.</p><a href="./retail.html#shop">Browse retail <span aria-hidden="true">→</span></a></div><div class="nova-hero-art local" aria-hidden="true"><span class="hero-art-circle"></span><span class="hero-art-card">MADE FOR<br>SA<small>SHOP LOCAL</small></span></div></div>
+  <div class="nova-hero-slide"><div class="nova-hero-copy"><span class="nova-hero-kicker">SELL ON NOVAAI</span><h1>Your products deserve a marketplace.</h1><p>Build your store and reach customers across South Africa.</p><a href="./seller.html">Open seller portal <span aria-hidden="true">→</span></a></div><div class="nova-hero-art sellers" aria-hidden="true"><span class="hero-art-circle"></span><span class="hero-art-card">SELLER<br>SPACE<small>GROW WITH US</small></span></div></div>
+  <div class="nova-hero-controls"><button type="button" id="novaHeroPrev" aria-label="Previous banner">‹</button><div class="nova-hero-dots"><button type="button" class="active" data-hero-slide="0" aria-label="Banner 1"></button><button type="button" data-hero-slide="1" aria-label="Banner 2"></button><button type="button" data-hero-slide="2" aria-label="Banner 3"></button></div><button type="button" id="novaHeroNext" aria-label="Next banner">›</button></div>
+</section>
 <main>
   <div class="home-search-wrap">
     <form class="home-search" id="homeSearchForm" role="search">
@@ -361,22 +368,16 @@ body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb}
   const locationButton=document.getElementById('homeUseLocation');
   const status=document.getElementById('homeLocationStatus');
   if(form&&input){
-    form.addEventListener('submit',function(e){
-      e.preventDefault();
+    const filterProducts=function(scrollToResults){
       const q=input.value.trim().toLowerCase();
       const cards=Array.from(document.querySelectorAll('#homeProductGrid .home-product-card'));
-      if(!q){cards.forEach(card=>card.hidden=false);if(status)status.textContent='Showing all available homepage products.';return;}
       let shown=0;
-      cards.forEach(card=>{const match=card.innerText.toLowerCase().includes(q);card.hidden=!match;if(match)shown++;});
-      if(status)status.textContent=shown?('Showing '+shown+' matching homepage product'+(shown===1?'':'s')+'.'):'No homepage products match that search. Try another product name, category or seller.';
-      document.getElementById('homeFeatured')?.scrollIntoView({behavior:'smooth',block:'start'});
-    });
-    input.addEventListener('input',function(){
-      if(!input.value.trim()){
-        document.querySelectorAll('#homeProductGrid .home-product-card').forEach(card=>card.hidden=false);
-        if(status)status.textContent='Search products above, or choose Near me to share your location.';
-      }
-    });
+      cards.forEach(card=>{const match=!q||card.innerText.toLowerCase().includes(q);card.hidden=!match;if(match)shown++;});
+      if(status)status.textContent=!q?'Showing all available homepage products.':shown?('Showing '+shown+' matching product'+(shown===1?'':'s')+'.'):'No products match. Try another product name, category or seller.';
+      if(scrollToResults)document.getElementById('homeFeatured')?.scrollIntoView({behavior:'smooth',block:'start'});
+    };
+    form.addEventListener('submit',function(e){e.preventDefault();filterProducts(true);});
+    input.addEventListener('input',function(){filterProducts(false);});
   }
   if(locationButton){
     locationButton.addEventListener('click',function(){
@@ -454,11 +455,12 @@ body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb}
       const client=window.supabase.createClient('https://nxplffvklkopwfjaqexo.supabase.co','sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ');
       const {data:rows,error}=await client.from('Products')
         .select('id,name,description,price,category,image_url,images,seller_name,seller_id,status')
-        .eq('status','approved').order('created_at',{ascending:false}).limit(8);
+        .eq('status','approved').order('created_at',{ascending:false});
       if(error)throw error;
       const {data:stores,error:storeError}=await client.from('seller_stores').select('user_id,store_name,store_slug,phone,description,status').eq('status','approved');
       if(storeError)throw storeError;
       const approved=new Set((stores||[]).map(s=>s.user_id));
+      const storesBySeller=new Map((stores||[]).map(store=>[String(store.user_id),store]));
       const requestedId=new URLSearchParams(window.location.search).get('product');
       if(requestedId){
         const {data:detail,error:detailError}=await client.from('Products').select('id,name,description,price,category,image_url,images,seller_name,seller_id,status').eq('id',requestedId).eq('status','approved').maybeSingle();
@@ -485,6 +487,7 @@ body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb}
           '<div class="home-product-info">'+
           '<div class="home-product-category">'+escapeHTML(p.category||'Marketplace product')+'</div>'+
           '<h3>'+escapeHTML(p.name)+'</h3>'+
+          '<div class="home-card-seller"><span class="verified-check" aria-hidden="true">✓</span>'+escapeHTML((storesBySeller.get(String(p.seller_id))||{}).store_name||p.seller_name||'Approved NOVAAI seller')+' <span class="verified-label">Verified seller</span></div>'+
           '<div class="home-product-buy-row"><div class="home-product-price">'+money(p.price)+'</div>'+
           '<button type="button" class="home-add-cart" data-add-product="'+escapeHTML(p.id)+'" aria-label="Add '+escapeHTML(p.name)+' to cart" title="Add to cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg></button></div></div></article>';
       }).join('');
