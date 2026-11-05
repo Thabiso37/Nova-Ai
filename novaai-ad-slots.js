@@ -8,7 +8,10 @@
     {slot_id:'home_hero',page:'home',element_id:'novaHeroCarousel',format:'carousel',max_creatives:10,rotation_seconds:5.2},
     {slot_id:'wishlist_banner',page:'wishlist',element_id:'wishlistAdSlot',format:'banner',max_creatives:5,rotation_seconds:5.2},
     {slot_id:'property_banner',page:'property',element_id:'propertyAdSlot',format:'banner',max_creatives:5,rotation_seconds:5.2},
-    {slot_id:'motors_banner',page:'motors',element_id:'motorsWelcomeAd',format:'carousel',max_creatives:5,rotation_seconds:5.2}
+    {slot_id:'motors_banner',page:'motors',element_id:'motorsWelcomeAd',format:'carousel',max_creatives:5,rotation_seconds:5.2},
+    {slot_id:'shop_footer',page:'shop',element_id:'shopFooterAd',format:'carousel',max_creatives:5,rotation_seconds:5},
+    {slot_id:'motors_footer',page:'motors',element_id:'motorsFooterAd',format:'carousel',max_creatives:5,rotation_seconds:5},
+    {slot_id:'property_footer',page:'property',element_id:'propertyFooterAd',format:'carousel',max_creatives:5,rotation_seconds:5}
   ].map(item=>Object.freeze({...item,status:'ready_for_admin_management'}));
   const requiredCampaignFields=['campaign_id','slot_id','title','description','creative_type','creative_url','destination_url','status','starts_at','ends_at','priority'];
   const api={
@@ -25,6 +28,21 @@
   };
 
   const liveMessages={
+    shop_footer:[
+      ['Find something you will love.','Fresh discoveries from South African sellers.','Your next great find is waiting.'],
+      ['Browse fashion, tech and home essentials.','Shop local and discover more in one place.','Explore products across the marketplace.'],
+      ['Explore Shop →','Discover local finds →','Start browsing →']
+    ],
+    motors_footer:[
+      ['Find the vehicle that moves you.','Cars, bakkies and SUVs from local sellers.','Your next journey starts here.'],
+      ['Explore vehicles and useful parts.','Compare listings and discover your next drive.','Browse local Motors listings.'],
+      ['Explore Motors →','Browse vehicles →','Find your next drive →']
+    ],
+    property_footer:[
+      ['Make room for your next chapter.','Explore homes and spaces across South Africa.','Your next address could be waiting.'],
+      ['Discover a place to call home.','Browse houses, apartments and more.','Find a space that fits your plans.'],
+      ['Explore Property →','Browse homes →','Find your space →']
+    ],
     wishlist_banner:[
       ['Discover more from South African sellers.','Fresh finds and local offers are waiting for you.','Your next favourite could be one tap away.'],
       ['Promotional space ready for campaigns managed by NOVAAI.','Explore more products from independent local stores.','Save the products you love and discover something new.'],
@@ -42,6 +60,21 @@
     ]
   };
   const liveImages={
+    shop_footer:[
+      'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=85',
+      'https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=1200&q=85',
+      'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=85'
+    ],
+    motors_footer:[
+      'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=85',
+      'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=1200&q=85',
+      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=85'
+    ],
+    property_footer:[
+      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=85',
+      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85',
+      'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=85'
+    ],
     home_hero:[
       "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85",
       "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=900&q=85",
@@ -61,7 +94,7 @@
       ? ['.property-promo-copy h2','.property-promo-copy p','.property-promo-link']
       : id==='motors_banner'
       ? ['.motors-hero-copy h1','.motors-hero-copy p','.motors-explore']
-      : ['strong','small','a'];
+      : ['.nova-footer-ad-copy strong','.nova-footer-ad-copy small','.nova-footer-ad-copy a'];
     const nodes=selectors.map(sel=>slot.querySelector(sel));
     if(nodes.some(n=>!n))return;
     const original=nodes.map(n=>n.textContent);
@@ -83,6 +116,10 @@
           slot.style.backgroundImage='url("'+liveImages.motors_banner[active]+'")';
           slot.style.backgroundPosition='center 52%';
           slot.style.backgroundSize='cover';
+        }
+        if(liveImages[id]&&liveImages[id][active]){
+          const image=slot.querySelector('.nova-footer-ad-image');
+          if(image)image.style.backgroundImage='url("'+liveImages[id][active]+'")';
         }
         dots.forEach((dot,k)=>dot.setAttribute('aria-current',String(k===active)));
         slot.classList.remove('nova-live-changing');
@@ -117,7 +154,7 @@
   }
   function bootLiveAds(){
     initHomeCarousel();
-    ['wishlist_banner','property_banner','motors_banner'].forEach(id=>initLiveSlot(document.querySelector('[data-nova-ad-slot="'+id+'"]')));
+    ['wishlist_banner','property_banner','motors_banner','shop_footer','motors_footer','property_footer'].forEach(id=>initLiveSlot(document.querySelector('[data-nova-ad-slot="'+id+'"]')));
     if(!window.__novaAdObserver&&document.body){window.__novaAdObserver=new MutationObserver(()=>{const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');if(wishlist)initLiveSlot(wishlist);});window.__novaAdObserver.observe(document.body,{childList:true,subtree:true});}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootLiveAds,{once:true});else bootLiveAds();
