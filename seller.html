@@ -81,7 +81,7 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
 <button class="btn" type="button" id="sellerLocSave">Save public location</button>
 <div id="sellerLocStatus" class="msg" aria-live="polite"></div></div>
 <div class="panel" id="marketplaceAccessStatus">
-  <h3>Marketplace access</h3>
+  <h3>Primary marketplace application</h3>
   <p class="muted">Your account is assigned to one marketplace only. The administrator reviews that application.</p>
   <div id="marketplaceAccessRecords">Sign in to view marketplace permissions.</div>
 </div>
@@ -128,7 +128,7 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
   <div class="panel">
     <!-- One primary marketplace per seller account -->
     <h3 id="sellerInventoryHeading">Manage your seller inventory</h3>
-    <div class="tabs" role="tablist" aria-label="Choose marketplace">
+    <div class="tabs" role="tablist" aria-label="Assigned marketplace inventory">
       <button class="tab active" type="button" id="marketRetailTab" onclick="setListingMarket('retail')">My Shop Listings</button>
       <button class="tab" type="button" id="marketMotorsTab" onclick="setListingMarket('motors')">My Motor Listings</button>
       <button class="tab" type="button" id="marketPropertyTab" onclick="setListingMarket('property')">My Property Listings</button>
@@ -295,6 +295,7 @@ function returnToMarketplaceSelection() {
 }
 function setListingMarket(market) {
   if (!["retail","motors","property"].includes(market)) return;
+  if (user && storeData && market !== storeData.primary_marketplace) { msg("sellerMsg","This seller account is locked to "+(marketplaceLabels[storeData.primary_marketplace]||"its primary marketplace")+".",true); return; }
   listingMarket = market;
   document.getElementById("marketRetailTab").classList.toggle("active", market === "retail");
   document.getElementById("marketMotorsTab").classList.toggle("active", market === "motors");
@@ -351,15 +352,13 @@ function marketDetailsFromForm() {
 function getBaseDescription(value) {
   return String(value || "").split("\n\nNOVAAI DETAILS\n")[0];
 }
-setListingMarket("retail");
-
-function switchPortal() { return; }
-
 let faceBlob = null, user = null, storeData = null;
 let editingProductId = null;
 let editingProductCategory = null;
 let editingProductMarket = null;
 let authVersion = 0;
+setListingMarket("retail");
+function switchPortal() { return; }
 const video = document.getElementById("webcam"), canvas = document.getElementById("snapshotCanvas"), preview = document.getElementById("facePreview");
 
 document.getElementById("startCam").onclick = async () => {
