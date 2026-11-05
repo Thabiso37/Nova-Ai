@@ -373,6 +373,26 @@ body.property-mode #productGrid>.property-ad-card .property-ad-info{
   min-width:0!important;
   overflow:hidden!important;
 }
+
+/* Property-only tidy-up: compact the top promotional advert.
+   Listing-card 80/20 layout below is intentionally untouched. */
+body.property-mode .property-welcome{
+  height:clamp(90px,20vw,120px)!important;
+  min-height:0!important;
+  margin-bottom:12px!important;
+}
+body.property-mode .property-promo-photo img{min-height:0!important}
+body.property-mode .property-promo-copy{padding:7px 9px!important}
+body.property-mode .property-promo-copy h2{
+  font-size:clamp(13px,3.2vw,18px)!important;
+  margin:4px 0 2px!important;
+}
+body.property-mode .property-promo-copy p{
+  font-size:8px!important;
+  line-height:1.25!important;
+  margin:2px 0 4px!important;
+}
+body.property-mode .property-promo-link{padding:5px 7px!important;font-size:8px!important}
 </style>
 </head>
 <body>
@@ -448,8 +468,6 @@ body.property-mode #productGrid>.property-ad-card .property-ad-info{
     <button type="button" class="property-chip" onclick="setPropertyCategory('commercial',this)">Commercial</button>
   </div>
   <div class="property-tools-bottom"><button type="button" class="property-filter-open" onclick="openPropertyFilters()">☷ Filters</button><span id="propertyResultCount" aria-live="polite"></span></div>
-<div class="property-section-heading"><h3>Featured properties</h3></div>
-<div class="property-section-heading property-recent-heading"><h3>Recently added</h3></div>
 </section>
   <h3 id="marketTitle" style="margin-top:24px;">🛍️ Retail Products & Brands</h3>
   <div id="productGrid" class="grid">
