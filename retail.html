@@ -1036,10 +1036,16 @@ function openCartSeller(sellerId){
 }
 function qty(id,n){let i=cart.find(x=>x.id===id);if(!i)return;i.qty+=n;if(i.qty<1)cart=cart.filter(x=>x.id!==id);saveCart();renderCart()}
 function clearCart(){cart=[];saveCart();renderCart();}
-function checkout(){
+async function checkout(){
   const form = document.getElementById("checkoutForm");
   if (!cart.length) { message("checkoutMsg", "Your cart is empty.", true); return; }
-  form.classList.print ? form.classList.print() : form.classList.remove("hidden");
+  const { data: authData, error: authError } = await sb.auth.getUser();
+  if (authError || !authData.user) {
+    message("checkoutMsg", "Please sign in to continue. Your cart will be saved.", true);
+    openCustomerAuth();
+    return;
+  }
+  form.classList.remove("hidden");
   form.scrollIntoView({ behavior: "smooth" });
 }
 
@@ -1237,11 +1243,13 @@ document.getElementById("customerAuthForm").addEventListener("submit", async e =
       } else {
         msg.textContent = "Account created successfully.";
         closeCustomerAuth();
+        if (cart.length) checkout();
       }
     } else {
       const { error } = await sb.auth.signInWithPassword({ email, password });
       if (error) throw error;
       closeCustomerAuth();
+      if (cart.length) checkout();
     }
   } catch (error) {
     msg.textContent = error.message || "Authentication failed.";
