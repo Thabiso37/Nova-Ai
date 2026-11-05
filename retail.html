@@ -1133,7 +1133,7 @@ body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb;col
 
   <div class="cart-page-header">
     <button type="button" onclick="closeCart()">←</button>
-    <div class="cart-header-ad">Special Offers <span>Discover great deals at NOVAAI</span></div>
+    <a id="cartAdBoard" class="cart-header-ad" data-nova-ad-slot="cart_banner" href="#products" aria-label="Cart special offers"><strong>Special Offers</strong><span>Discover great deals at NOVAAI</span></a>
     <button type="button" onclick="openWishlistPage()">♡</button>
   </div>
 
@@ -1205,6 +1205,7 @@ style="width:min(92vw,700px);max-height:85vh;overflow:auto;border:0;border-radiu
 </dialog>
 
 <section id="wishlist" class="panel" style="margin:24px 0" data-nova-ad-area="wishlist">
+  <div id="wishlistAdSlot" class="nova-footer-ad" data-nova-ad-slot="wishlist_banner" role="region" aria-label="NOVAAI Wishlist featured advertisement"><div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker">NOVAAI WISHLIST • FEATURED</span><strong>Discover more from South African sellers.</strong><small>Fresh finds and local offers are waiting for you.</small><a href="#products">Explore marketplace →</a></div></div>
   <h2>❤️ My Wishlist</h2>
   <p>Your saved products will appear here.</p>
 </section>
