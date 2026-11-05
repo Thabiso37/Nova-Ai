@@ -133,6 +133,67 @@
     document.addEventListener('visibilitychange',start);
     show(0);start();
   }
+  // Admin campaign feed: management can publish approved campaign rows through NOVAAI_ADS.announceCampaigns(rows).
+  const managedTimers=Object.create(null);
+  function safeHttpsUrl(value){
+    try{const u=new URL(String(value||''),location.href);return u.protocol==='https:'?u.href:null;}catch(e){return null;}
+  }
+  function campaignIsActive(c){
+    if(!c||c.status!=='active')return false;
+    const now=Date.now();
+    const start=c.starts_at?Date.parse(c.starts_at):0;
+    const end=c.ends_at?Date.parse(c.ends_at):Infinity;
+    return (!start||Number.isFinite(start)&&now>=start)&&(!end||Number.isFinite(end)&&now<=end);
+  }
+  function applyManagedCampaigns(rows){
+    const footerSlots=['shop_footer','motors_footer','property_footer'];
+    footerSlots.forEach(id=>{
+      if(managedTimers[id]){clearInterval(managedTimers[id]);delete managedTimers[id];}
+      const slot=document.querySelector('[data-nova-ad-slot="'+id+'"]');
+      if(!slot)return;
+      const campaigns=(Array.isArray(rows)?rows:[])
+        .filter(c=>c&&c.slot_id===id&&campaignIsActive(c)&&safeHttpsUrl(c.creative_url)&&safeHttpsUrl(c.destination_url))
+        .sort((a,b)=>(Number(b.priority)||0)-(Number(a.priority)||0))
+        .slice(0,5);
+      if(!campaigns.length){
+        slot.removeAttribute('data-nova-managed-campaign');
+        slot.setAttribute('data-nova-ad-status','awaiting_management_campaign');
+        return;
+      }
+      const title=slot.querySelector('.nova-footer-ad-copy strong');
+      const description=slot.querySelector('.nova-footer-ad-copy small');
+      const link=slot.querySelector('.nova-footer-ad-copy a');
+      const image=slot.querySelector('.nova-footer-ad-image');
+      if(!title||!description||!link||!image)return;
+      let index=0;
+      const show=()=>{
+        const c=campaigns[index];
+        title.textContent=String(c.title||'Featured offer').slice(0,100);
+        description.textContent=String(c.description||'Discover this featured offer.').slice(0,180);
+        link.textContent=String(c.cta_text||'Explore offer →').slice(0,36);
+        link.href=safeHttpsUrl(c.destination_url);
+        link.target='_blank';
+        link.rel='noopener noreferrer sponsored';
+        image.style.backgroundImage='url("'+safeHttpsUrl(c.creative_url).replace(/["\\]/g,'')+'")';
+        image.style.opacity='1';
+        slot.dataset.novaManagedCampaign=String(c.campaign_id||'managed-campaign');
+        slot.setAttribute('data-nova-ad-status','management_campaign_active');
+        slot.setAttribute('aria-label','Featured advertisement: '+String(c.title||'Featured offer').slice(0,100));
+        index=(index+1)%campaigns.length;
+      };
+      show();
+      if(campaigns.length>1&&!document.hidden&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+        managedTimers[id]=setInterval(show,5000);
+      }
+    });
+  }
+  window.addEventListener('novaai:ads:campaigns-ready',event=>{
+    const detail=event&&event.detail;
+    if(detail&&detail.version===1)applyManagedCampaigns(detail.campaigns);
+  });
+  window.NOVAAI_ADS.setCampaigns=rows=>api.announceCampaigns(rows);
+  window.NOVAAI_ADS.clearManagedCampaigns=()=>api.announceCampaigns([]);
+
   function initHomeCarousel(){
     const banner=document.getElementById('novaHeroCarousel');
     if(!banner||banner.dataset.novaLiveReady==='1')return;
