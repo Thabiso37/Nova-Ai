@@ -1093,20 +1093,22 @@ function openCartSeller(sellerId){
   if(!modal){modal=document.createElement("div");document.body.appendChild(modal);}
   modal.id="cartSellerModal";modal.className="cart-seller-modal";
   const storeProducts=products.filter(p=>String(p.sellerId||"")===String(sellerId));
-  const phone=String(store.phone||"").trim();
+  
   modal.innerHTML=`<section class="cart-seller-card" role="dialog" aria-modal="true" aria-label="Seller store information">
     <div class="cart-seller-head"><div><small class="home-product-category">APPROVED SELLER STORE</small><h2>${esc(store.store_name||"Seller store")}</h2></div><button type="button" class="cart-seller-close" onclick="closeCartSeller()" aria-label="Close">×</button></div>
     <div class="cart-seller-meta">
       <p><strong>Store:</strong> ${esc(store.store_name||"Seller store")}</p>
       ${store.store_slug?`<p><strong>Store ID:</strong> ${esc(store.store_slug)}</p>`:""}
       <p><strong>About:</strong> ${esc(store.description||"The seller has not added a store description yet.")}</p>
-      ${phone?`<p><strong>Phone:</strong> <a href="tel:${esc(phone)}">${esc(phone)}</a></p>`:'<p>Phone number not provided.</p>'}
+      ${storeProducts.length?'<p><strong>Contact:</strong> <button type="button" class="btn primary" id="retailSellerCall">Call seller</button> <button type="button" class="btn outline" id="retailSellerWhatsApp">WhatsApp seller</button></p>':'<p>Seller contact is available from an active listing.</p>'}
       <p><strong>Customer rating:</strong> Not rated yet</p>
       <p class="muted">Customer reviews are not available yet. No rating has been assumed.</p>
     </div>
     <h3>Products from this store</h3>
     <div class="cart-seller-products">${storeProducts.length?storeProducts.map(p=>{const img=safeImg((p.images||[])[0]||"");return `<div class="cart-seller-product">${img?`<img src="${esc(img)}" alt="${esc(p.name)}">`:'<div style="height:105px;display:grid;place-items:center">📦</div>'}<strong>${esc(p.name)}</strong><p class="muted">${cash(p.price)}</p></div>`}).join(""):'<p class="muted">No other approved products are currently listed for this store.</p>'}</div>
   </section>`;
+  const contactListingId=storeProducts.length?String(storeProducts[0].dbId||""):"";
+  [["retailSellerCall","call"],["retailSellerWhatsApp","whatsapp"]].forEach(([id,action])=>{const button=modal.querySelector("#"+id);if(button&&contactListingId)button.addEventListener("click",()=>{const u=new URL("https://nxplffvklkopwfjaqexo.supabase.co/functions/v1/property-contact-action");u.searchParams.set("listing_id",contactListingId);u.searchParams.set("action",action);window.location.assign(u.toString());});});
   modal.onclick=e=>{if(e.target===modal)closeCartSeller();};
   if(!modal.dataset.escapeBound){document.addEventListener("keydown",e=>{if(e.key==="Escape")closeCartSeller();});modal.dataset.escapeBound="1";}
   modal.classList.add("open");
@@ -1538,7 +1540,7 @@ try {
         .eq("status", "approved")
         .order("created_at", { ascending: false }),
       sb.from("seller_stores")
-        .select("user_id,store_name,store_slug,phone,description,status")
+        .select("user_id,store_name,store_slug,description,status")
         .eq("status", "approved")
     ]);
 
