@@ -219,6 +219,9 @@ const motorCategories = ["Auto","Motors & Vehicles"];
 const propertyCategories = ["Property For Sale","Property To Rent"];
 let listingMarket = "retail";
 let selectedMarket = null;
+let marketplacePermissions = [];
+function hasMarketplaceAccess(market){ return String(storeData?.status||"").toLowerCase()==="approved" && marketplacePermissions.some(p=>p.marketplace===market && p.status==="approved"); }
+function requireMarketplaceAccess(market){ if(!hasMarketplaceAccess(market)){ msg("sellerMsg","Access denied: your store and this marketplace must both be approved.",true); return false; } return true; }
 const marketplaceLabels = {retail:"Retail Seller",motors:"Motor Seller",property:"Property Seller"};
 function chooseMarketplace(market) {
   if (!Object.prototype.hasOwnProperty.call(marketplaceLabels, market)) return;
@@ -473,7 +476,7 @@ document.getElementById("sellerForm").onsubmit = async e => {
 
   try {
     // Editing an existing rejected product
-    if (editingProductId !== null) {
+    if (editingProductId !== null) {\n      if(!requireMarketplaceAccess(editingProductMarket||listingMarket)) throw new Error("You are not authorised to edit listings in this marketplace.");
       const { data: existing, error: fetchError } = await sb
         .from("Products")
         .select("id,status,image_url,images")
@@ -744,7 +747,7 @@ async function deleteProduct(id) {
     alert("Your approved seller account is required to manage listings.");
     return;
   }
-  if (!confirm("Delete this listing permanently? This will not delete any orders already placed.")) return;
+  const {data: target} = await sb.from("Products").select("category").eq("id",id).eq("seller_id",user.id).maybeSingle();\n  const targetMarket=target && (motorCategories.includes(target.category)?"motors":propertyCategories.includes(target.category)?"property":"retail");\n  if(!targetMarket || !requireMarketplaceAccess(targetMarket)) return;\n  if (!confirm("Delete this listing permanently? This will not delete any orders already placed.")) return;
   const { error } = await sb.from("Products").delete().eq("id", id).eq("seller_id", user.id);
   if (error) {
     document.getElementById("myProductsMsg").textContent = "Delete failed: " + error.message;
