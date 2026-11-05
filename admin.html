@@ -554,6 +554,22 @@ button {
   .panel { padding:15px; }
   .financial-grid { grid-template-columns:1fr 1fr; }
 }
+
+.ad-campaign-form{display:grid;gap:8px;max-width:760px;margin:18px 0 24px}
+.ad-campaign-form label{font-size:12px;font-weight:700;color:#526078;margin-top:5px}
+.ad-campaign-form input,.ad-campaign-form select,.ad-campaign-form textarea{width:100%;min-width:0;padding:11px 12px;border:1px solid #dce3ee;border-radius:9px;background:#fff;color:#17243b}
+.ad-campaign-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ad-campaign-grid>div{min-width:0}
+.ad-campaign-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}
+.ad-campaign-record{display:flex;gap:14px;align-items:center;padding:13px 0;border-top:1px solid #e5eaf2}
+.ad-campaign-record img{width:94px;height:70px;object-fit:cover;border-radius:9px;background:#eaf1ff}
+.ad-campaign-record-main{flex:1;min-width:0}
+.ad-campaign-record-main strong{display:block;overflow-wrap:anywhere}
+.ad-campaign-record-main small{display:block;color:#718096;margin-top:4px;overflow-wrap:anywhere}
+.ad-campaign-record-actions{display:flex;gap:6px;flex-wrap:wrap}
+.ad-campaign-record-actions button{padding:7px 9px;border:1px solid #dce3ee;border-radius:8px;background:#fff;color:#174ea6;font-size:11px;font-weight:700}
+.ad-status{display:inline-block;margin-top:5px;padding:4px 7px;border-radius:20px;background:#eaf1ff;color:#174ea6;font-size:10px;font-weight:700}
+@media(max-width:600px){.ad-campaign-grid{grid-template-columns:1fr}.ad-campaign-record{align-items:flex-start;flex-wrap:wrap}.ad-campaign-record-actions{width:100%}}
 </style>
 </head>
 
@@ -605,6 +621,7 @@ button {
       <a href="#productsSection"><span class="nav-icon">▦</span>Product Moderation</a>
       <a href="#paymentCentre"><span class="nav-icon">▤</span>Payment Centre</a>
       <a href="#sellerFinancialRecords"><span class="nav-icon">◈</span>Seller Finances</a>
+      <a href="#advertisementManagement"><span class="nav-icon">▣</span>Advertisement Management</a>
     </nav>
 
     <button class="logout" id="logoutBtn">Sign Out</button>
@@ -688,6 +705,12 @@ button {
           <p>Review seller financial accounting records.</p>
         </a>
 
+        <a class="module" href="#advertisementManagement">
+          <div class="module-icon">▣</div>
+          <h3>Advertisement Management</h3>
+          <p>Create, schedule, pause and publish adverts for Shop, Motors and Property.</p>
+        </a>
+
         <div class="module disabled">
           <div class="module-icon">▥</div>
           <h3>Reports & Analytics</h3>
@@ -734,6 +757,42 @@ button {
 
       <p id="message" class="muted" aria-live="polite">Loading products...</p>
       <div id="products"></div>
+    </section>
+
+    <section class="panel" id="advertisementManagement">
+      <h2>Advertisement Management</h2>
+      <p class="muted">Manage promotional campaigns for the three bottom advertisement boards. Only active campaigns within their schedule are shown publicly.</p>
+      <div class="notice">Campaign management is separate from orders, payments, seller balances and product records. Images and destination links must use HTTPS.</div>
+      <form id="adCampaignForm" class="ad-campaign-form">
+        <input type="hidden" id="adCampaignId">
+        <label for="adCampaignCode">Campaign reference (optional)</label>
+        <input id="adCampaignCode" maxlength="40" placeholder="e.g. SHOP-NOV-01">
+        <label for="adCampaignSlot">Advertisement board</label>
+        <select id="adCampaignSlot" required>
+          <option value="shop_footer">Shop bottom advert</option>
+          <option value="motors_footer">Motors bottom advert</option>
+          <option value="property_footer">Property bottom advert</option>
+        </select>
+        <label for="adCampaignTitle">Advertisement title</label>
+        <input id="adCampaignTitle" maxlength="100" required placeholder="Campaign headline">
+        <label for="adCampaignDescription">Short description</label>
+        <textarea id="adCampaignDescription" maxlength="180" rows="2" placeholder="Short promotional message"></textarea>
+        <label for="adCampaignImage">Advertisement image URL (HTTPS)</label>
+        <input id="adCampaignImage" type="url" required placeholder="https://...">
+        <label for="adCampaignDestination">Destination link (HTTPS)</label>
+        <input id="adCampaignDestination" type="url" required placeholder="https://...">
+        <label for="adCampaignCta">Button text</label>
+        <input id="adCampaignCta" maxlength="36" value="Explore offer →">
+        <div class="ad-campaign-grid">
+          <div><label for="adCampaignStart">Start date and time</label><input id="adCampaignStart" type="datetime-local"></div>
+          <div><label for="adCampaignEnd">End date and time</label><input id="adCampaignEnd" type="datetime-local"></div>
+          <div><label for="adCampaignPriority">Priority</label><input id="adCampaignPriority" type="number" min="0" max="1000" value="0"></div>
+          <div><label for="adCampaignStatus">Campaign status</label><select id="adCampaignStatus"><option value="draft">Draft</option><option value="active">Active</option><option value="paused">Paused</option><option value="ended">Ended</option></select></div>
+        </div>
+        <div class="ad-campaign-actions"><button class="primary" id="saveAdCampaignBtn" type="submit">Save campaign</button><button type="button" id="resetAdCampaignBtn">Clear form</button><button type="button" id="refreshAdCampaignsBtn">Refresh campaigns</button></div>
+      </form>
+      <p id="adCampaignMessage" class="muted" role="status" aria-live="polite">Loading advertisement campaigns…</p>
+      <div id="adCampaignRecords"></div>
     </section>
 
     <section class="panel" id="paymentCentre">
@@ -909,6 +968,7 @@ async function checkAdmin(user) {
         loadMarketplacePermissions(),
         loadSellerLocationReviews()
       ]);
+      loadAdCampaigns().catch(error=>adCampaignMessage("Campaign manager error: "+(error?.message||"Unknown error")));
       if (authVersionAtStart !== adminAuthVersion) {
         currentAdmin = null;
         document.getElementById("dashboard").classList.add("hidden");
@@ -931,6 +991,111 @@ async function checkAdmin(user) {
   } finally {
     if (adminCheckPromise === checkPromise) adminCheckPromise = null;
   }
+}
+
+
+let adCampaignRows = [];
+function adCampaignMessage(text){const el=document.getElementById("adCampaignMessage");if(el)el.textContent=text;}
+function resetAdCampaignForm(){
+  const form=document.getElementById("adCampaignForm");if(!form)return;
+  form.reset();document.getElementById("adCampaignId").value="";
+  document.getElementById("adCampaignCta").value="Explore offer →";
+  document.getElementById("adCampaignPriority").value="0";
+  document.getElementById("saveAdCampaignBtn").textContent="Save campaign";
+}
+function formatAdDate(value){
+  if(!value)return "";
+  const d=new Date(value);if(Number.isNaN(d.getTime()))return "";
+  const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);
+  return local.toISOString().slice(0,16);
+}
+async function loadAdCampaigns(){
+  if(!currentAdmin)return;
+  adCampaignMessage("Loading campaigns…");
+  const box=document.getElementById("adCampaignRecords");
+  try{
+    const {data,error}=await sb.rpc("admin_list_novaai_ad_campaigns");
+    if(error)throw error;
+    adCampaignRows=Array.isArray(data)?data:[];
+    adCampaignMessage(adCampaignRows.length+" campaign(s) saved. Changes publish to the live boards when active and within schedule.");
+    box.innerHTML=adCampaignRows.length?adCampaignRows.map(c=>`
+      <article class="ad-campaign-record">
+        <img src="${escapeHTML(c.creative_url)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+        <div class="ad-campaign-record-main">
+          <strong>${escapeHTML(c.title)}</strong>
+          <small>${escapeHTML(c.slot_id.replace("_footer","").toUpperCase())} · ${escapeHTML(c.campaign_code||"Campaign")} · Priority ${Number(c.priority)||0}</small>
+          <small>${escapeHTML(c.description||"No description")}</small>
+          <span class="ad-status">${escapeHTML(c.status)}</span>
+        </div>
+        <div class="ad-campaign-record-actions">
+          <button type="button" onclick="editAdCampaign('${escapeHTML(c.id)}')">Edit</button>
+          <button type="button" onclick="toggleAdCampaign('${escapeHTML(c.id)}')">${c.status==="active"?"Pause":"Activate"}</button>
+          <button type="button" onclick="deleteAdCampaign('${escapeHTML(c.id)}')">Delete</button>
+        </div>
+      </article>`).join(""):"<p class='muted'>No campaigns yet. Create your first campaign above.</p>";
+  }catch(error){
+    adCampaignMessage("Could not load campaigns: "+(error?.message||"Unknown error"));
+  }
+}
+function editAdCampaign(id){
+  const c=adCampaignRows.find(x=>x.id===id);if(!c)return;
+  document.getElementById("adCampaignId").value=c.id;
+  document.getElementById("adCampaignCode").value=c.campaign_code||"";
+  document.getElementById("adCampaignSlot").value=c.slot_id;
+  document.getElementById("adCampaignTitle").value=c.title||"";
+  document.getElementById("adCampaignDescription").value=c.description||"";
+  document.getElementById("adCampaignImage").value=c.creative_url||"";
+  document.getElementById("adCampaignDestination").value=c.destination_url||"";
+  document.getElementById("adCampaignCta").value=c.cta_text||"Explore offer →";
+  document.getElementById("adCampaignStart").value=formatAdDate(c.starts_at);
+  document.getElementById("adCampaignEnd").value=formatAdDate(c.ends_at);
+  document.getElementById("adCampaignPriority").value=Number(c.priority)||0;
+  document.getElementById("adCampaignStatus").value=c.status||"draft";
+  document.getElementById("saveAdCampaignBtn").textContent="Update campaign";
+  document.getElementById("advertisementManagement").scrollIntoView({behavior:"smooth"});
+}
+async function saveAdCampaign(event){
+  event.preventDefault();if(!currentAdmin)return;
+  const value=id=>document.getElementById(id).value.trim();
+  const toIso=id=>{const v=value(id);return v?new Date(v).toISOString():null;};
+  const payload={
+    id:value("adCampaignId")||null,
+    campaign_code:value("adCampaignCode")||null,
+    slot_id:value("adCampaignSlot"),
+    title:value("adCampaignTitle"),
+    description:value("adCampaignDescription"),
+    creative_url:value("adCampaignImage"),
+    destination_url:value("adCampaignDestination"),
+    cta_text:value("adCampaignCta")||"Explore offer →",
+    starts_at:toIso("adCampaignStart"),
+    ends_at:toIso("adCampaignEnd"),
+    priority:Number(value("adCampaignPriority"))||0,
+    status:value("adCampaignStatus")
+  };
+  if(payload.starts_at&&payload.ends_at&&new Date(payload.ends_at)<=new Date(payload.starts_at)){
+    adCampaignMessage("End date must be after the start date.");return;
+  }
+  const btn=document.getElementById("saveAdCampaignBtn");btn.disabled=true;adCampaignMessage("Saving campaign…");
+  try{
+    const {error}=await sb.rpc("admin_save_novaai_ad_campaign",{p_campaign:payload});
+    if(error)throw error;
+    adCampaignMessage("Campaign saved. Active campaigns will appear on the selected live board.");
+    resetAdCampaignForm();await loadAdCampaigns();
+  }catch(error){adCampaignMessage("Save failed: "+(error?.message||"Unknown error"));}
+  finally{btn.disabled=false;}
+}
+async function toggleAdCampaign(id){
+  const c=adCampaignRows.find(x=>x.id===id);if(!c)return;
+  const payload={...c,status:c.status==="active"?"paused":"active"};
+  const {error}=await sb.rpc("admin_save_novaai_ad_campaign",{p_campaign:payload});
+  if(error){adCampaignMessage("Status update failed: "+error.message);return;}
+  await loadAdCampaigns();
+}
+async function deleteAdCampaign(id){
+  const c=adCampaignRows.find(x=>x.id===id);if(!c||!confirm("Delete campaign '"+c.title+"'?"))return;
+  const {error}=await sb.rpc("admin_delete_novaai_ad_campaign",{p_id:id});
+  if(error){adCampaignMessage("Delete failed: "+error.message);return;}
+  adCampaignMessage("Campaign deleted.");await loadAdCampaigns();
 }
 
 async function login() {
@@ -1603,6 +1768,9 @@ document.getElementById("paymentFilter").onchange = renderPaymentRecords;
 document.getElementById("refreshFinancialBtn").onclick = loadPaymentData;
 document.getElementById("refreshMarketplacePermissions").onclick = loadMarketplacePermissions;
 document.getElementById("refreshSellerLocationReviews").onclick = loadSellerLocationReviews;
+document.getElementById("adCampaignForm").addEventListener("submit",saveAdCampaign);
+document.getElementById("resetAdCampaignBtn").onclick=resetAdCampaignForm;
+document.getElementById("refreshAdCampaignsBtn").onclick=loadAdCampaigns;
 
 sb.auth.getSession().then(({ data, error }) => {
   if (error) {
