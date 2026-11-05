@@ -1296,7 +1296,8 @@ document.getElementById("logoutBtn").onclick = logout;
 document.getElementById("filter").onchange = renderProducts;
 document.getElementById("search").oninput = renderProducts;
 document.getElementById("paymentFilter").onchange = renderPaymentRecords;
-document.getElementById("refreshFinancialBtn").onclick = loadPaymentData;\ndocument.getElementById("refreshMarketplacePermissions").onclick = loadMarketplacePermissions;
+document.getElementById("refreshFinancialBtn").onclick = loadPaymentData;
+document.getElementById("refreshMarketplacePermissions").onclick = loadMarketplacePermissions;
 
 sb.auth.getSession().then(({ data, error }) => {
   if (error) {
