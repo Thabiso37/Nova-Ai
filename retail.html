@@ -558,6 +558,16 @@ header { background: #ffffff; position: sticky; top: 0; z-index: 50; border-bott
   text-align:center!important;
   font-weight:800!important;
 }
+#cartModal .cart-item-card .cart-live-rating{
+  display:inline-flex!important;
+  align-items:center!important;
+  white-space:nowrap!important;
+  color:#f5b900!important;
+  font-size:17px!important;
+  letter-spacing:1px!important;
+  line-height:1!important;
+  margin-left:2px!important;
+}
 #cartModal .cart-item-card .cart-remove{
   color:#ffd1d1!important;
   font-size:11px!important;
@@ -1175,6 +1185,7 @@ function renderCart(){
           <span>${Number(i.qty)}</span>
           <button type="button" onclick="qty('${esc(i.id)}',1)" aria-label="Increase quantity">+</button>
         </div>
+        <span class="cart-live-rating" title="Live product ratings will be connected later" aria-label="Live product ratings coming soon">☆☆☆☆☆</span>
         <button type="button" class="cart-remove" onclick="removeCartItem('${esc(i.id)}')">Remove</button>
       </div>
     </article>`;
