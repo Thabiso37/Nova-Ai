@@ -414,6 +414,13 @@ document.getElementById("signedIn").classList.toggle("hidden", !u);
 document.getElementById("userEmail").textContent = u?.email || "";
 
 if (!u) {
+document.getElementById("sellerLocProvince").value = "";
+document.getElementById("sellerLocCity").value = "";
+document.getElementById("sellerLocSuburb").value = "";
+document.getElementById("sellerLocLatitude").value = "";
+document.getElementById("sellerLocLongitude").value = "";
+document.getElementById("sellerLocPublic").checked = false;
+document.getElementById("sellerLocStatus").textContent = "Sign in to manage your public seller location.";
 renderMarketplaceChoices();
 renderMarketplacePermissionStatus();
 publish.disabled = true;
