@@ -662,7 +662,7 @@ body { background: #f5f7fb; color: #10284b; }
 <style>
 :root{--nova-navy:#10284B;--nova-blue:#174EA6;--nova-yellow:#F5B900;--nova-bg:#F5F7FB}
 body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;background:var(--nova-bg)}
-.nova-bottom-nav{position:fixed;z-index:9999;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0;background:rgba(255,255,255,.97);border-top:1px solid #e3e8f0;padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));box-shadow:0 -5px 22px rgba(16,40,75,.08);backdrop-filter:blur(12px)}
+.nova-bottom-nav{position:fixed;z-index:9999;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;background:rgba(255,255,255,.97);border-top:1px solid #e3e8f0;padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));box-shadow:0 -5px 22px rgba(16,40,75,.08);backdrop-filter:blur(12px)}
 .nova-nav-item{position:relative;display:flex;min-width:0;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#778195;font-size:10px;font-weight:700;line-height:1.15;text-decoration:none;transition:color .18s,transform .18s}
 .nova-nav-item svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .nova-nav-item.active{color:var(--nova-blue);transform:translateY(-1px)}
@@ -950,6 +950,61 @@ body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb;col
 #wishlist .wishlist-remove{background:transparent;border:0;color:#ef4444;font-size:13px;font-weight:700;padding:8px}
 @media(max-width:520px){#wishlist .wishlist-card{padding:12px}#wishlist .wishlist-photo{width:80px;height:80px;flex-basis:80px}#wishlist .wishlist-product-open{gap:12px}}
 </style>
+
+<style>
+/* NOVAAI SHOP TV-style advertising carousel */
+#shopTvAds{
+  position:relative;
+  isolation:isolate;
+  width:min(1200px,calc(100% - 28px));
+  height:clamp(118px,31vw,190px);
+  margin:12px auto 17px;
+  overflow:hidden;
+  border:1px solid #dce5f2;
+  border-radius:16px;
+  background:#10284b;
+  box-shadow:0 8px 22px rgba(16,40,75,.13);
+  color:#fff;
+}
+#shopTvAds .shop-tv-slide{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:15px clamp(15px,4vw,34px);
+  opacity:0;
+  visibility:hidden;
+  transform:scale(1.025);
+  transition:opacity .65s ease,transform 1.2s ease,visibility .65s;
+  overflow:hidden;
+}
+#shopTvAds .shop-tv-slide.is-active{opacity:1;visibility:visible;transform:scale(1)}
+#shopTvAds .shop-tv-copy{position:relative;z-index:2;max-width:72%;min-width:0}
+#shopTvAds .shop-tv-kicker{display:inline-flex;align-items:center;gap:6px;color:#ffd34f;font-size:8px;font-weight:900;letter-spacing:1.4px}
+#shopTvAds .shop-tv-kicker:before{content:"";width:6px;height:6px;border-radius:50%;background:#ffcf38;box-shadow:0 0 0 4px #ffcf3828;animation:shopTvPulse 1.5s infinite}
+#shopTvAds h2{margin:7px 0 4px;color:#fff;font-size:clamp(17px,4.8vw,31px);line-height:1.04;letter-spacing:-.6px}
+#shopTvAds p{margin:0;color:#e5edff;font-size:clamp(9px,2vw,13px);line-height:1.35}
+#shopTvAds .shop-tv-cta{display:inline-flex;margin-top:9px;padding:6px 10px;border-radius:7px;background:#f5b900;color:#10284b;font-size:9px;font-weight:900;text-decoration:none}
+#shopTvAds .shop-tv-art{position:absolute;z-index:1;right:7%;top:50%;width:clamp(86px,23vw,190px);aspect-ratio:1;transform:translateY(-50%);border:1px solid #ffffff35;border-radius:28% 72% 62% 38%/40% 35% 65% 60%;background:linear-gradient(145deg,#ffffff35,#ffffff08);box-shadow:inset 0 0 30px #ffffff18,0 0 35px #70aaff22;animation:shopTvFloat 5s ease-in-out infinite}
+#shopTvAds .shop-tv-art:before,#shopTvAds .shop-tv-art:after{content:"";position:absolute;border:1px solid #ffffff45;border-radius:50%;inset:16%;transform:rotate(35deg)}
+#shopTvAds .shop-tv-art:after{inset:31%;background:#f5b90035;border-color:#ffd34f80}
+#shopTvAds .shop-tv-slide[data-theme="blue"]{background:radial-gradient(circle at 80% 50%,#2e6fc4 0,#174ea6 32%,#10284b 76%)}
+#shopTvAds .shop-tv-slide[data-theme="gold"]{background:radial-gradient(circle at 83% 48%,#b87919 0,#694616 28%,#10284b 78%)}
+#shopTvAds .shop-tv-slide[data-theme="purple"]{background:radial-gradient(circle at 83% 48%,#694fbd 0,#34306e 34%,#10284b 78%)}
+#shopTvAds .shop-tv-controls{position:absolute;z-index:4;left:14px;right:14px;bottom:9px;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+#shopTvAds .shop-tv-dots{display:flex;gap:5px;pointer-events:auto}
+#shopTvAds .shop-tv-dot{width:6px;height:6px;padding:0;border:0;border-radius:9px;background:#ffffff70;transition:width .25s,background .25s}
+#shopTvAds .shop-tv-dot[aria-current="true"]{width:20px;background:#f5b900}
+#shopTvAds .shop-tv-onair{color:#ffffffc9;font-size:7px;font-weight:900;letter-spacing:1px}
+#shopTvAds .shop-tv-onair:before{content:"";display:inline-block;width:5px;height:5px;margin-right:5px;border-radius:50%;background:#f5b900;box-shadow:0 0 8px #f5b900}
+@keyframes shopTvPulse{50%{box-shadow:0 0 0 7px #ffcf3810;opacity:.7}}
+@keyframes shopTvFloat{50%{border-radius:65% 35% 40% 60%/35% 60% 40% 65%;transform:translateY(-53%) rotate(7deg)}}
+@media(min-width:760px){#shopTvAds{margin-top:16px;margin-bottom:22px}#shopTvAds .shop-tv-slide{padding-left:38px}#shopTvAds .shop-tv-kicker{font-size:10px}#shopTvAds .shop-tv-cta{font-size:11px;padding:8px 13px}}
+@media(prefers-reduced-motion:reduce){#shopTvAds .shop-tv-slide,#shopTvAds .shop-tv-art,#shopTvAds .shop-tv-kicker:before{transition:none;animation:none}}
+</style>
+
 </head>
 <body>
 
@@ -1002,6 +1057,20 @@ body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb;col
   </div>
   
 </header>
+
+<div id="shopTvAds" class="shop-tv-ads" role="region" aria-label="NOVAAI featured advertisements" aria-roledescription="carousel">
+  <article class="shop-tv-slide is-active" data-theme="blue" aria-hidden="false">
+    <div class="shop-tv-copy"><span class="shop-tv-kicker">NOVAAI SPOTLIGHT</span><h2>Discover something<br>worth bringing home.</h2><p>Explore finds from South African marketplace sellers.</p><a class="shop-tv-cta" href="#products">Explore the shop&nbsp; →</a></div><span class="shop-tv-art" aria-hidden="true"></span>
+  </article>
+  <article class="shop-tv-slide" data-theme="gold" aria-hidden="true">
+    <div class="shop-tv-copy"><span class="shop-tv-kicker">SHOP LOCAL · SHOP SMART</span><h2>Great finds.<br>Independent sellers.</h2><p>Browse the marketplace and discover your next favourite.</p><a class="shop-tv-cta" href="#products">See what's available&nbsp; →</a></div><span class="shop-tv-art" aria-hidden="true"></span>
+  </article>
+  <article class="shop-tv-slide" data-theme="purple" aria-hidden="true">
+    <div class="shop-tv-copy"><span class="shop-tv-kicker">THE NOVAAI MARKETPLACE</span><h2>Your next find<br>is waiting.</h2><p>Shop products across categories in one place.</p><a class="shop-tv-cta" href="#products">Start exploring&nbsp; →</a></div><span class="shop-tv-art" aria-hidden="true"></span>
+  </article>
+  <div class="shop-tv-controls"><span class="shop-tv-onair">NOW SHOWING</span><div class="shop-tv-dots" aria-label="Choose advertisement"><button class="shop-tv-dot" type="button" aria-label="Advertisement 1" aria-current="true" data-shop-tv-go="0"></button><button class="shop-tv-dot" type="button" aria-label="Advertisement 2" aria-current="false" data-shop-tv-go="1"></button><button class="shop-tv-dot" type="button" aria-label="Advertisement 3" aria-current="false" data-shop-tv-go="2"></button></div></div>
+</div>
+
 <div id="customerAuthModal" class="hidden">
   <div class="customer-auth-card">
     <button type="button" id="customerAuthClose" class="auth-close">✕</button>
@@ -2022,8 +2091,35 @@ function closeCart() {
 }
 </script>
 
+
+<script>
+(function(){
+  const banner=document.getElementById("shopTvAds");
+  if(!banner)return;
+  const slides=Array.from(banner.querySelectorAll(".shop-tv-slide"));
+  const dots=Array.from(banner.querySelectorAll("[data-shop-tv-go]"));
+  if(slides.length<2)return;
+  let active=0;
+  let timer=null;
+  const show=(index)=>{
+    active=(index+slides.length)%slides.length;
+    slides.forEach((slide,i)=>{const on=i===active;slide.classList.toggle("is-active",on);slide.setAttribute("aria-hidden",String(!on));});
+    dots.forEach((dot,i)=>dot.setAttribute("aria-current",String(i===active)));
+  };
+  const stop=()=>{if(timer){clearInterval(timer);timer=null;}};
+  const start=()=>{stop();if(!document.hidden&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches)timer=setInterval(()=>show(active+1),5200);};
+  dots.forEach(dot=>dot.addEventListener("click",()=>{show(Number(dot.dataset.shopTvGo));start();}));
+  banner.addEventListener("mouseenter",stop);
+  banner.addEventListener("mouseleave",start);
+  banner.addEventListener("focusin",stop);
+  banner.addEventListener("focusout",start);
+  document.addEventListener("visibilitychange",start);
+  show(0);start();
+})();
+</script>
+
 <nav class="nova-bottom-nav" aria-label="Main navigation"><a class="nova-nav-item " href="./index.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Home</span></a><a class="nova-nav-item active" href="#shop" onclick="go(&quot;shop&quot;);return false;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><span>Shop</span></a><a class="nova-nav-item " href="./seller-motors-houses.html?market=motors"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 11 1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><path d="M3 11h18v7H3z"/><path d="M6 18v2m12-2v2M6 14h2m8 0h2"/></svg><span>Motors</span></a><a class="nova-nav-item " href="./seller-motors-houses.html?market=property"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4h16v17M2 21h20M8 8h2m4 0h2M8 12h2m4 0h2M10 21v-5h4v5"/></svg><span>Property</span></a><a class="nova-nav-item " href="./retail.html?view=cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg><span>Cart<b class="nova-nav-count" id="novaNavCartCount">0</b></span></a><a class="nova-nav-item nova-ratings-placeholder" href="#ratings" aria-disabled="true" title="Live ratings coming soon" onclick="return false;"><span class="nova-rating-nav-icon" aria-hidden="true">🌟</span><span>Ratings</span></a>
-<a class="nova-nav-item" href="./seller.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h18l-2 11H5L3 10Z"/><path d="M7 10V7a5 5 0 0 1 10 0v3M9 14v3m6-3v3"/></svg><span>Sell</span></a></nav>
+</nav>
 <script>
 (function(){
  const q=new URLSearchParams(location.search);
