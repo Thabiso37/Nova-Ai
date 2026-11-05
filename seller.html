@@ -623,7 +623,14 @@ document.getElementById("signup").onclick = async () => {
   let full_name = document.getElementById("sellerRealName").value.trim(), phone = document.getElementById("sellerPhone").value.trim(), store_name=document.getElementById("sellerApplicationStoreName").value.trim(), primary_marketplace=document.getElementById("applicationMarketplace").value;
   if(!email || password.length<6 || !full_name || !store_name || !phone || !["retail","motors","property"].includes(primary_marketplace) || !faceBlob) return msg("authMsg", "Complete all application fields, choose one primary marketplace and capture your seller application photo.", true);
   
-  let {data, error} = await sb.auth.signUp({email, password, options:{data:{full_name, phone, seller_store_name:store_name, seller_primary_marketplace:primary_marketplace}}});
+  // Always return confirmed sellers to this GitHub Pages project path, not the account root.
+  // Preserve the selected marketplace so Property applicants return to the Property portal.
+  const emailRedirectTo = new URL("seller.html", "https://thabiso37.github.io/Nova-Ai/");
+  emailRedirectTo.searchParams.set("market", primary_marketplace);
+  let {data, error} = await sb.auth.signUp({email, password, options:{
+    emailRedirectTo: emailRedirectTo.toString(),
+    data:{full_name, phone, seller_store_name:store_name, seller_primary_marketplace:primary_marketplace}
+  }});
   if(error) return msg("authMsg", error.message, true);
   const u = data.user || data.session?.user;
   if(u && data.session){
