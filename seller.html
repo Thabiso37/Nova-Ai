@@ -386,7 +386,36 @@ function msg(id, txt, err=false) {
   const el = document.getElementById(id); el.textContent = txt; el.className = "msg " + (err?"error":"success");
 }
 
-async function updateUser(u) {
+let updateUserPromise = null;
+let updateUserPromiseKey = undefined;
+let initializedSellerAuthKey = undefined;
+
+function updateUser(u) {
+  const key = u?.id || null;
+  if (updateUserPromise && updateUserPromiseKey === key) return updateUserPromise;
+  if (initializedSellerAuthKey === key && (user?.id || null) === key) return Promise.resolve(true);
+  if ((user?.id || null) !== key) initializedSellerAuthKey = undefined;
+
+  const task = updateUserOnce(u);
+  let trackedPromise;
+  trackedPromise = task.then(result => {
+    if (result === true && (user?.id || null) === key) initializedSellerAuthKey = key;
+    return result;
+  }).catch(error => {
+    console.error("NOVAAI seller session initialisation failed:", error);
+    return false;
+  }).finally(() => {
+    if (updateUserPromise === trackedPromise) {
+      updateUserPromise = null;
+      updateUserPromiseKey = undefined;
+    }
+  });
+  updateUserPromise = trackedPromise;
+  updateUserPromiseKey = key;
+  return trackedPromise;
+}
+
+async function updateUserOnce(u) {
 const version = ++authVersion;
 
 user = u;
@@ -432,7 +461,7 @@ document.getElementById("myProductsList").innerHTML = "";
 document.getElementById("myProductsMsg").textContent = "Sign in to view items.";
 document.getElementById("sellerOrdersList").innerHTML = "";
 document.getElementById("sellerOrdersMsg").textContent = "Sign in to view orders.";
-return;
+return true;
 }
 
 document.getElementById("userMsg").textContent = "Checking store approval...";
@@ -450,16 +479,16 @@ publish.disabled = true;
 publish.textContent = "Approval Check Failed";
 document.getElementById("userMsg").textContent =
 "Store verification failed: " + error.message;
-return;
+return false;
 }
 
 storeData = data;
 
 if (!storeData && u.user_metadata?.seller_store_name && u.user_metadata?.seller_primary_marketplace && u.user_metadata?.phone) {
   const {error:applicationError}=await sb.rpc("submit_seller_application",{p_store_name:u.user_metadata.seller_store_name,p_phone:u.user_metadata.phone,p_marketplace:u.user_metadata.seller_primary_marketplace});
-  if(applicationError){document.getElementById("userMsg").textContent="Seller application could not be submitted: "+applicationError.message;publish.disabled=true;return;}
+  if(applicationError){document.getElementById("userMsg").textContent="Seller application could not be submitted: "+applicationError.message;publish.disabled=true;return false;}
   const refreshed=await sb.from("seller_stores").select("id,store_name,store_slug,status,primary_marketplace").eq("user_id",u.id).maybeSingle();
-  if(refreshed.error){document.getElementById("userMsg").textContent="Application saved, but seller status could not be loaded: "+refreshed.error.message;return;}
+  if(refreshed.error){document.getElementById("userMsg").textContent="Application saved, but seller status could not be loaded: "+refreshed.error.message;return false;}
   storeData=refreshed.data;
 }
 
@@ -475,7 +504,7 @@ document.getElementById("approvalBox").textContent =
 "No seller store registered.";
 document.getElementById("userMsg").textContent =
 "No seller store found for this account.";
-return;
+return true;
 }
 
 selectedMarket = storeData.primary_marketplace;
@@ -495,7 +524,7 @@ if (permissionError) {
   publish.disabled = true;
   publish.textContent = "Permission Check Failed";
   document.getElementById("userMsg").textContent = "Marketplace permission check failed: " + permissionError.message;
-  return;
+  return false;
 }
 await loadSellerPublicLocation();
 marketplacePermissions = permissionRows || [];
@@ -511,7 +540,7 @@ if (!hasMarketplaceAccess(selectedMarket)) {
       ? "Your "+marketplaceLabels[selectedMarket]+" application was rejected. Contact NOVAAI administration if you need a review."
       : "Your "+marketplaceLabels[selectedMarket]+" application is awaiting administrator approval.";
     await loadMyProducts();
-    return;
+    return true;
 }
 
 const approved =
@@ -537,6 +566,7 @@ if (version !== authVersion) return;
 
 await loadSellerOrders();
 document.getElementById("listingFormTitle").scrollIntoView({behavior:"smooth",block:"start"});
+return true;
 }
 
 document.getElementById("authForm").onsubmit = async e => {
