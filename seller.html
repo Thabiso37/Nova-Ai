@@ -114,8 +114,16 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
         </div>
         <button class="btn" type="submit" style="width:100%;margin-top:10px;">Sign In to NOVAAI</button>
         <button class="btn outline" type="button" id="signup" style="width:100%;margin-top:6px;">Apply as a New Seller</button>
+        <button class="btn outline" type="button" id="forgotPassword" style="width:100%;margin-top:6px;">Forgot password?</button>
         <div id="authMsg" class="msg"></div>
       </form>
+    </div>
+    <div id="passwordRecoveryPanel" class="hidden panel" style="margin-top:12px;">
+      <h3>Set a new password</h3>
+      <p class="muted">Enter a new password for this existing NOVAAI account.</p>
+      <div class="field"><label>New password (minimum 6 characters)</label><input id="recoveryPassword" type="password" minlength="6" autocomplete="new-password" required></div>
+      <button class="btn" type="button" id="saveRecoveredPassword" style="width:100%;">Save new password</button>
+      <div id="recoveryMsg" class="msg"></div>
     </div>
     <div id="signedIn" class="hidden">
       <p>Signed in as <strong id="userEmail"></strong></p>
@@ -571,9 +579,34 @@ return true;
 
 document.getElementById("authForm").onsubmit = async e => {
   e.preventDefault();
-  let {data, error} = await sb.auth.signInWithPassword({email:document.getElementById("email").value, password:document.getElementById("password").value});
+  const email = document.getElementById("email").value.trim().toLowerCase();
+  const password = document.getElementById("password").value;
+  if (!email) return msg("authMsg", "Enter the email address used to register.", true);
+  const {data, error} = await sb.auth.signInWithPassword({email, password});
   if(error) return msg("authMsg", error.message, true);
-  updateUser(data.user);
+  await updateUser(data.user);
+};
+
+document.getElementById("forgotPassword").onclick = async () => {
+  const email = document.getElementById("email").value.trim().toLowerCase();
+  if (!email) return msg("authMsg", "Enter your registered email address first.", true);
+  const recoveryUrl = new URL(window.location.href);
+  recoveryUrl.searchParams.set("market", selectedMarket || new URLSearchParams(window.location.search).get("market") || "property");
+  recoveryUrl.searchParams.set("password_recovery", "1");
+  const {error} = await sb.auth.resetPasswordForEmail(email, {redirectTo: recoveryUrl.toString()});
+  if (error) return msg("authMsg", "Password reset email could not be sent: " + error.message, true);
+  msg("authMsg", "If this account can receive password recovery emails, a reset link has been sent. Open it on this device to set a new password.");
+};
+
+document.getElementById("saveRecoveredPassword").onclick = async () => {
+  const password = document.getElementById("recoveryPassword").value;
+  if (password.length < 6) return msg("recoveryMsg", "Use a password with at least 6 characters.", true);
+  const {data, error} = await sb.auth.updateUser({password});
+  if (error) return msg("recoveryMsg", "Password could not be updated: " + error.message, true);
+  document.getElementById("passwordRecoveryPanel").classList.add("hidden");
+  document.getElementById("recoveryPassword").value = "";
+  await updateUser(data.user);
+  msg("authMsg", "Your existing account password has been updated. You are signed in.");
 };
 
 let sellerApplicationMode = false;
@@ -586,7 +619,7 @@ document.getElementById("signup").onclick = async () => {
     document.getElementById("newSellerFields").scrollIntoView({behavior:"smooth",block:"center"});
     return;
   }
-  let email = document.getElementById("email").value, password = document.getElementById("password").value;
+  let email = document.getElementById("email").value.trim().toLowerCase(), password = document.getElementById("password").value;
   let full_name = document.getElementById("sellerRealName").value.trim(), phone = document.getElementById("sellerPhone").value.trim(), store_name=document.getElementById("sellerApplicationStoreName").value.trim(), primary_marketplace=document.getElementById("applicationMarketplace").value;
   if(!email || password.length<6 || !full_name || !store_name || !phone || !["retail","motors","property"].includes(primary_marketplace) || !faceBlob) return msg("authMsg", "Complete all application fields, choose one primary marketplace and capture your seller application photo.", true);
   
@@ -944,7 +977,14 @@ window.editProduct = editProduct;
   await loadMyProducts();
 } // Retail listings now use the authenticated seller account and Products table.
 sb.auth.getSession().then(({data}) => updateUser(data?.session?.user || null));
-sb.auth.onAuthStateChange((_,s) => updateUser(s?.user || null));
+sb.auth.onAuthStateChange((event,s) => {
+  if (event === "PASSWORD_RECOVERY") {
+    document.getElementById("signedOut").classList.add("hidden");
+    document.getElementById("passwordRecoveryPanel").classList.remove("hidden");
+    return;
+  }
+  updateUser(s?.user || null);
+});
 
 
 async function loadSellerOrders() {
