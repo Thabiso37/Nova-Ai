@@ -870,6 +870,14 @@ function initCategories(){
 document.getElementById("cats").innerHTML=[["All","🌐"],...C].map(([n,ic])=>`<button class="cat ${active===n?"active":""}" data-cat="${esc(n)}"><span class="emoji">${ic}</span><span>${esc(n==="All"?"All products":n)}</span></button>`).join("");
 document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{
   active=b.dataset.cat;
+  if (active === "Motors & Vehicles") {
+    window.location.href = "./seller-motors-houses.html?market=motors";
+    return;
+  }
+  if (active === "Property For Sale" || active === "Property To Rent") {
+    window.location.href = "./seller-motors-houses.html?market=property";
+    return;
+  }
   document.getElementById("search").value="";
   initCategories();
   render();
@@ -902,7 +910,8 @@ function renderRetailMarketGrid(list) {
 
 function render(){
   const q=document.getElementById("search").value.toLowerCase();
-  const list=products.filter(p=>{
+  const retailProducts = products.filter(p => !["Motors & Vehicles","Property For Sale","Property To Rent"].includes(p.category));
+  const list=retailProducts.filter(p=>{
     const categoryMatch = (active==="All" || p.category===active);
     return categoryMatch && [p.name,p.category,p.description,p.seller].join(" ").toLowerCase().includes(q);
   });
