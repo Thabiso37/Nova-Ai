@@ -16,7 +16,12 @@ self.addEventListener("fetch", event => {
       return response;
     }).catch(async () => {
       const cache = await caches.open(CACHE_NAME);
-      return (await cache.match(request, {ignoreSearch:true})) || (await cache.match("./property-details.html")) || Response.error();
+      const cached = await cache.match(request, {ignoreSearch:true});
+      if (cached) return cached;
+      if (url.pathname.endsWith("/property-details.html")) return (await cache.match("./property-details.html")) || Response.error();
+      if (url.pathname.endsWith("/seller-motors-houses.html")) return (await cache.match("./seller-motors-houses.html?market=property")) || Response.error();
+      if (url.pathname.endsWith("/index.html") || url.pathname.endsWith("/")) return (await cache.match("./index.html")) || Response.error();
+      return Response.error();
     }));
     return;
   }
