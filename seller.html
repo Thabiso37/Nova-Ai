@@ -432,9 +432,15 @@ storeData = null;
 if (!u) marketplacePermissions = [];
 
 if (u) {
-  // Do not render a marketplace portal until Supabase confirms the seller's primary assignment.
+  // Keep the portal visible while the existing session and seller assignment are checked.
+  // A failed or slow Supabase request must never leave both main page sections hidden.
+  const visibleMarket = selectedMarket || "retail";
+  selectedMarket = visibleMarket;
+  setListingMarket(visibleMarket);
+  document.getElementById("selectedMarketLabel").textContent = marketplaceLabels[visibleMarket];
   document.getElementById("marketplacePicker").classList.add("hidden");
-  document.getElementById("sellerWorkspace").classList.add("hidden");
+  document.getElementById("sellerWorkspace").classList.remove("hidden");
+  document.getElementById("userMsg").textContent = "Checking your seller account…";
 } else if (selectedMarket) {
   setListingMarket(selectedMarket);
   document.getElementById("selectedMarketLabel").textContent = marketplaceLabels[selectedMarket];
@@ -984,7 +990,18 @@ window.editProduct = editProduct;
 
   await loadMyProducts();
 } // Retail listings now use the authenticated seller account and Products table.
-sb.auth.getSession().then(({data}) => updateUser(data?.session?.user || null));
+sb.auth.getSession().then(({data,error}) => {
+  if (error) {
+    updateUser(null);
+    msg("authMsg", "Could not restore your sign-in session. Please sign in again.", true);
+    return;
+  }
+  updateUser(data?.session?.user || null);
+}).catch(error => {
+  console.error("NOVAAI seller session check failed:", error);
+  updateUser(null);
+  msg("authMsg", "Could not check your saved sign-in session. Please sign in again.", true);
+});
 sb.auth.onAuthStateChange((event,s) => {
   if (event === "PASSWORD_RECOVERY") {
     document.getElementById("signedOut").classList.add("hidden");
