@@ -393,7 +393,11 @@ user = u;
 storeData = null;
 if (!u) marketplacePermissions = [];
 
-if (selectedMarket) {
+if (u) {
+  // Do not render a marketplace portal until Supabase confirms the seller's primary assignment.
+  document.getElementById("marketplacePicker").classList.add("hidden");
+  document.getElementById("sellerWorkspace").classList.add("hidden");
+} else if (selectedMarket) {
   setListingMarket(selectedMarket);
   document.getElementById("selectedMarketLabel").textContent = marketplaceLabels[selectedMarket];
   document.getElementById("marketplacePicker").classList.add("hidden");
@@ -460,6 +464,8 @@ if (!storeData && u.user_metadata?.seller_store_name && u.user_metadata?.seller_
 }
 
 if (!storeData) {
+  document.getElementById("sellerWorkspace").classList.remove("hidden");
+  document.getElementById("portalStd").classList.remove("is-authenticated");
   marketplacePermissions = [];
   renderMarketplaceChoices();
   renderMarketplacePermissionStatus();
