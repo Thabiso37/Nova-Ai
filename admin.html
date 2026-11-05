@@ -658,11 +658,11 @@ button {
           <p>Review, approve, reject and hide listings.</p>
         </a>
 
-        <div class="module disabled">
+        <a class="module" href="#marketplacePermissions">
           <div class="module-icon">♙</div>
           <h3>Seller Management</h3>
-          <p>Seller management tools are not connected in this admin file.</p>
-        </div>
+          <p>Review seller applications, marketplace access and store approval.</p>
+        </a>
 
         <div class="module disabled">
           <div class="module-icon">♧</div>
@@ -1011,25 +1011,88 @@ async function logout() {
 }
 
 
+const reviewingSellerApplications = new Set();
+
 async function loadMarketplacePermissions(){
  if(!currentAdmin)return;
- const msgEl=document.getElementById("marketplacePermissionMessage"),box=document.getElementById("marketplacePermissionRecords");
+ const msgEl=document.getElementById("marketplacePermissionMessage");
+ const box=document.getElementById("marketplacePermissionRecords");
+ const refresh=document.getElementById("refreshMarketplacePermissions");
  msgEl.textContent="Loading marketplace applications…";
- const {data:rows,error}=await sb.from("seller_marketplace_permissions").select("id,user_id,marketplace,status,requested_at,reviewed_at,reviewed_by").order("requested_at",{ascending:false});
- if(error){msgEl.textContent="Could not load applications: "+error.message;box.innerHTML="";return;}
- const userIds=[...new Set((rows||[]).map(r=>r.user_id))];let stores=[];
- if(userIds.length){const result=await sb.from("seller_stores").select("user_id,store_name,status,primary_marketplace").in("user_id",userIds);if(result.error){msgEl.textContent="Could not load seller stores: "+result.error.message;return;}stores=result.data||[];}
- const storeByUser=new Map(stores.map(s=>[s.user_id,s]));
- msgEl.textContent=(rows||[]).length+" permission application/record(s).";
- box.innerHTML=(rows||[]).map(r=>{const st=storeByUser.get(r.user_id)||{};return '<div class="record"><strong>'+escapeHTML(st.store_name||"Seller")+" · "+escapeHTML(r.marketplace.toUpperCase())+'</strong><p>Seller ID: '+escapeHTML(r.user_id)+'</p><p>Selected primary marketplace: <strong>'+escapeHTML(String(st.primary_marketplace||r.marketplace).toUpperCase())+'</strong></p><p>Application date: '+escapeHTML(r.requested_at||"Not recorded")+'</p><p>Store approval: '+escapeHTML(st.status||"Not found")+'</p><p>Marketplace application status: <strong>'+escapeHTML(r.status)+'</strong></p><p>Reviewed at: '+escapeHTML(r.reviewed_at||"Not reviewed")+'</p><p>Reviewed by admin ID: '+escapeHTML(r.reviewed_by||"Not reviewed")+'</p>'+(r.status==="pending"?'<div class="actions"><button class="approve" onclick="reviewMarketplacePermission(\''+r.id+'\',\'approved\')">Approve '+escapeHTML(r.marketplace)+'</button><button class="reject" onclick="reviewMarketplacePermission(\''+r.id+'\',\'rejected\')">Reject '+escapeHTML(r.marketplace)+'</button></div>':"")+'</div>';}).join("")||"<p class='muted'>No marketplace permission records found.</p>";
+ refresh.disabled=true;
+ try {
+  const {data:rows,error}=await sb.from("seller_marketplace_permissions")
+   .select("id,user_id,marketplace,status,requested_at,reviewed_at,reviewed_by")
+   .order("requested_at",{ascending:false});
+  if(error) throw error;
+  const userIds=[...new Set((rows||[]).map(r=>r.user_id))];
+  let stores=[];
+  if(userIds.length){
+   const result=await sb.from("seller_stores")
+    .select("id,user_id,store_name,status,primary_marketplace")
+    .in("user_id",userIds);
+   if(result.error) throw result.error;
+   stores=result.data||[];
+  }
+  const storeByUser=new Map(stores.map(s=>[s.user_id,s]));
+  msgEl.textContent=(rows||[]).length+" marketplace application(s) · "+stores.length+" linked seller store(s).";
+  box.innerHTML=(rows||[]).map(r=>{
+   const st=storeByUser.get(r.user_id);
+   const storeMatches=!!st && st.primary_marketplace===r.marketplace;
+   const canReview=r.status==="pending" && storeMatches && st.status==="pending";
+   const storeLabel=st ? (st.status+" · "+String(st.primary_marketplace).toUpperCase()) : "No linked seller store";
+   const auditWarning=r.status!=="pending" && (!r.reviewed_at || !r.reviewed_by)
+    ? '<p class="notice">Review audit is incomplete: '+(!r.reviewed_at?'timestamp not recorded':'')+(!r.reviewed_at&&!r.reviewed_by?' · ':'')+(!r.reviewed_by?'reviewing administrator not recorded':'')+'. Historical reviewer details cannot be inferred.</p>'
+    : "";
+   let actionMarkup="";
+   if(r.status==="pending" && canReview){
+    actionMarkup='<div class="actions"><button class="approve" onclick="reviewMarketplacePermission(\''+escapeHTML(r.id)+'\',\'approved\')">Approve '+escapeHTML(r.marketplace)+'</button><button class="reject" onclick="reviewMarketplacePermission(\''+escapeHTML(r.id)+'\',\'rejected\')">Reject '+escapeHTML(r.marketplace)+'</button></div>';
+   } else if(r.status==="pending"){
+    const reason=!st ? "Cannot review: no seller store is linked to this application. The seller must complete the normal application flow with store name and phone details." :
+     !storeMatches ? "Cannot review: the store's primary marketplace does not match this application." :
+     "Cannot review: the linked seller store is not pending.";
+    actionMarkup='<p class="notice">'+escapeHTML(reason)+'</p>';
+   }
+   return '<div class="record"><strong>'+escapeHTML(st?.store_name||"Seller")+' · '+escapeHTML(String(r.marketplace).toUpperCase())+'</strong>'+
+    '<p>Seller ID: '+escapeHTML(r.user_id)+'</p>'+
+    '<p>Seller store: '+escapeHTML(storeLabel)+'</p>'+
+    '<p>Seller store ID: '+escapeHTML(st?.id||"Not linked")+'</p>'+
+    '<p>Application date: '+escapeHTML(r.requested_at||"Not recorded")+'</p>'+
+    '<p>Marketplace application status: <strong>'+escapeHTML(r.status)+'</strong></p>'+
+    '<p>Reviewed at: '+escapeHTML(r.reviewed_at||"Not reviewed")+'</p>'+
+    '<p>Reviewed by admin ID: '+escapeHTML(r.reviewed_by||"Not recorded")+'</p>'+
+    auditWarning+actionMarkup+'</div>';
+  }).join("")||"<p class='muted'>No marketplace permission records found.</p>";
+ } catch(error) {
+  console.error("NOVAAI marketplace application load error:",error);
+  msgEl.textContent="Could not load marketplace applications: "+(error?.message||"Unexpected error.");
+  box.replaceChildren();
+ } finally {
+  refresh.disabled=false;
+ }
 }
 async function reviewMarketplacePermission(id,status){
- if(!currentAdmin||!["approved","rejected"].includes(status))return;
+ if(!currentAdmin || verifiedAdminId!==currentAdmin.id || !["approved","rejected"].includes(status) || reviewingSellerApplications.has(id))return;
  if(!confirm("Set this marketplace application to "+status.toUpperCase()+"?"))return;
- const {error}=await sb.rpc("review_seller_application",{p_permission_id:id,p_status:status});
- if(error){document.getElementById("marketplacePermissionMessage").textContent="Review failed: "+error.message;return;}
- document.getElementById("marketplacePermissionMessage").textContent="Review saved by Supabase.";
- await loadMarketplacePermissions();
+ const msg=document.getElementById("marketplacePermissionMessage");
+ const buttons=[...document.querySelectorAll("#marketplacePermissionRecords button")];
+ reviewingSellerApplications.add(id);
+ buttons.forEach(button=>button.disabled=true);
+ msg.textContent="Saving administrator review…";
+ try {
+  const {data,error}=await sb.rpc("review_seller_application",{p_permission_id:id,p_status:status});
+  if(error) throw error;
+  const reviewedAt=data?.reviewed_at||null;
+  const reviewer=data?.reviewed_by||currentAdmin.id;
+  msg.textContent="Application "+status+". Reviewer: "+reviewer+(reviewedAt?" · reviewed at "+reviewedAt:"")+". Refreshing records…";
+  await loadMarketplacePermissions();
+ } catch(error) {
+  console.error("NOVAAI seller application review error:",error);
+  msg.textContent="Review failed: "+(error?.message||"Unexpected error. No success was reported.");
+ } finally {
+  reviewingSellerApplications.delete(id);
+  buttons.forEach(button=>button.disabled=false);
+ }
 }
 window.reviewMarketplacePermission=reviewMarketplacePermission;
 
@@ -1089,7 +1152,7 @@ async function loadSellerLocationReviews() {
         card.appendChild(p);
       };
 
-      addLine("Seller account: ", st.status || "Not found");
+      addLine("Seller account: ", st.status || "No linked seller store");
       addLine("Public business area: ", area || "Area not completed");
       addLine("Public-sharing consent: ", r.public_location_enabled ? "Enabled" : "Not enabled", true);
       addLine("Approximate public coordinates: ",
