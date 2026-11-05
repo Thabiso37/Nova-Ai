@@ -207,6 +207,23 @@ body.motors-mode #productGrid .motors-part-card{min-width:0;padding:0!important;
 </style>
 
 <style>
+
+/* Motors vehicle marketplace cards */
+body.motors-mode #productGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+body.motors-mode #productGrid .vehicle-card{min-width:0;padding:0!important;overflow:hidden;border:1px solid #e5eaf2;border-radius:14px;background:#fff;box-shadow:0 4px 16px rgba(16,40,75,.07)}
+.vehicle-photo{display:block;width:100%;height:clamp(135px,42vw,220px);object-fit:cover;background:#f3f6fa}
+.vehicle-photo-empty{height:clamp(135px,42vw,220px);display:grid;place-items:center;background:#eef2f7;color:#718096;font-size:12px;font-weight:700}
+.vehicle-card-body{padding:12px}
+.vehicle-spec-line{font-size:10px;line-height:1.5;color:#6b7280;font-weight:700;text-transform:uppercase}
+.vehicle-title{font-size:15px;line-height:1.35;color:#111827;margin:6px 0}
+.vehicle-price{font-size:18px;font-weight:900;color:#2563eb;margin-bottom:6px}
+.vehicle-meta{font-size:11px;line-height:1.5;color:#4b5563;margin-bottom:10px}
+.vehicle-details{font-size:12px;color:#334155;border-top:1px solid #edf0f5;padding-top:9px}
+.vehicle-details summary{color:#174ea6;font-weight:800;cursor:pointer}
+.vehicle-details p{white-space:pre-line;line-height:1.5}
+.vehicle-seller{font-size:10px;color:#7a8495;border-top:1px solid #edf0f5;padding-top:8px;margin-top:9px}
+@media(min-width:760px){body.motors-mode #productGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}}
+
 /* Motors landing: go straight to vehicle listings without the generic hero, stats or market heading */
 body.motors-mode main>.hero,
 body.motors-mode main>.stats,
@@ -230,7 +247,8 @@ body.motors-mode header .head{display:flex;align-items:center;gap:12px}
  body.motors-mode #activeMarketBadge{display:none}
 }
 </style>
-\n</head>
+
+</head>
 <body>
 
 <div class="top">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
@@ -238,7 +256,7 @@ body.motors-mode header .head{display:flex;align-items:center;gap:12px}
   <div class="head">
     <a class="logo" href="index.html">NOVA<span>AI</span></a>
     <div class="motors-header-search" id="motorsHeaderSearch">
-      <input type="search" id="motorsSearchInput" placeholder="Search car parts, accessories or brands..." aria-label="Search Motors listings">
+      <input type="search" id="motorsSearchInput" placeholder="Search cars, bakkies, SUVs or motorcycles..." aria-label="Search Motors listings">
       <button type="button" id="motorsSearchBtn" aria-label="Search Motors">🔍</button>
       <button type="button" id="motorsNearMe" aria-label="Use my location">📍 Near me</button>
     </div>
@@ -264,26 +282,26 @@ body.motors-mode header .head{display:flex;align-items:center;gap:12px}
     <div class="stat-card"><h3>R0</h3><p>Listing Fee</p></div>
   </div>
 
-<section id="motorsHub" class="motors-hub" aria-label="NOVAAI Motors parts and accessories">
+<section id="motorsHub" class="motors-hub" aria-label="NOVAAI Motors vehicles for sale">
   <div class="motors-welcome">
     <div class="motors-welcome-top"><span>NOVAAI MOTORS</span><span class="motors-avatar">N</span></div>
     <div class="motors-hero-copy">
-      <span class="motors-eyebrow">PARTS • ACCESSORIES • EVERYDAY ESSENTIALS</span>
-      <h1>Drive with confidence.</h1>
-      <p>Explore car parts, accessories and useful upgrades from South African sellers.</p>
-      <button type="button" class="motors-explore" onclick="document.getElementById('motorsPartsHeading').scrollIntoView({behavior:'smooth',block:'start'})">Explore parts <span aria-hidden="true">→</span></button>
+      <span class="motors-eyebrow">CARS • BAKKIES • SUVs • MOTORCYCLES</span>
+      <h1>Find your next vehicle.</h1>
+      <p>Browse vehicles listed by South African sellers, with the details they provide.</p>
+      <button type="button" class="motors-explore" onclick="document.getElementById('motorsVehiclesHeading').scrollIntoView({behavior:'smooth',block:'start'})">Explore vehicles <span aria-hidden="true">→</span></button>
     </div>
   </div>
   <div class="motors-tools">
-    <div class="motors-filter-chips" role="group" aria-label="Car parts categories">
-      <button type="button" class="motors-chip active" onclick="setMotorsPartCategory('all',this)">All Parts</button>
-      <button type="button" class="motors-chip" onclick="setMotorsPartCategory('engine',this)">Engine</button>
-      <button type="button" class="motors-chip" onclick="setMotorsPartCategory('lighting',this)">Lighting</button>
-      <button type="button" class="motors-chip" onclick="setMotorsPartCategory('accessories',this)">Accessories</button>
+    <div class="motors-filter-chips" role="group" aria-label="Vehicle categories">
+      <button type="button" class="motors-chip active" onclick="setMotorsPartCategory('all',this)">All Vehicles</button>
+      <button type="button" class="motors-chip" onclick="setMotorsPartCategory('cars',this)">Cars</button>
+      <button type="button" class="motors-chip" onclick="setMotorsPartCategory('bakkies',this)">Bakkies</button>
+      <button type="button" class="motors-chip" onclick="setMotorsPartCategory('suvs',this)">SUVs</button>
     </div>
-    <div class="motors-results-line"><span id="motorsPartCount">0 parts</span></div>
+    <div class="motors-results-line"><span id="motorsPartCount">0 vehicles</span></div>
   </div>
-  <div class="motors-section-heading" id="motorsPartsHeading"><h2>Explore car parts</h2><p>Find useful components and accessories for your vehicle.</p></div>
+  <div class="motors-section-heading" id="motorsVehiclesHeading"><h2>Vehicles for sale</h2><p>Cars, bakkies and SUVs listed by marketplace sellers.</p></div>
 </section>
 
 <section id="propertyHub" class="property-hub" hidden>
@@ -404,29 +422,47 @@ function setMotorsPartCategory(category,button){
   document.querySelectorAll('.motors-chip').forEach(chip=>chip.classList.toggle('active',chip===button));
   renderMotorsParts(motorsPartRows);
 }
+function vehicleSpec(description,label){
+  const text=String(description||'');
+  const pattern=new RegExp('(?:^|[\\n;,|])\\s*'+label+'\\s*[:=-]\\s*([^\\n;,|]+)','i');
+  const match=text.match(pattern);
+  return match?match[1].trim():'Not provided by seller';
+}
 function renderMotorsParts(rows){
   motorsPartRows=rows||[];
   const grid=document.getElementById('productGrid');
   const count=document.getElementById('motorsPartCount');
-  const words={
-    engine:/engine|battery|spark plug|air filter|oil filter|alternator|radiator|clutch/i,
-    lighting:/light|headlight|tail light|bulb/i,
-    accessories:/accessor|dashboard|phone mount|wiper|mirror|radio|stereo|seat cover|floor mat|roof rack/i
-  };
-  const visible=motorsPartCategory==='all'?motorsPartRows:motorsPartRows.filter(item=>words[motorsPartCategory].test(String(item.name||'')+' '+String(item.description||'')));
-  if(count)count.textContent=visible.length+' '+(visible.length===1?'part':'parts');
+  const partWords=/phone mount|seat cover|floor mat|wiper|headlight|tail light|brake pad|spark plug|air filter|oil filter|accessor(y|ies)|spare part|replacement part|engine part|car part|tyre|tire|battery|mirror|radio|stereo|roof rack|bumper|exhaust|alternator|radiator|clutch/i;
+  const vehicleWords=/\b(sedan|hatchback|bakkie|pickup|suv|4x4|double cab|single cab|motorcycle|motorbike|coupe|convertible|wagon|minibus|van)\b/i;
+  const makeModel=/\b(toyota|ford|volkswagen|vw|nissan|isuzu|hyundai|kia|mazda|honda|bmw|mercedes|audi|suzuki|renault|chevrolet|mitsubishi|mahindra|tata)\b/i;
+  let visible=motorsPartRows.filter(item=>{
+    const name=String(item.name||'').trim();
+    const description=String(item.description||'').trim();
+    const combined=name+' '+description;
+    return Number(item.price||0)>0 && name.length>2 && !/^(test|see|auto|\d+)$/i.test(name) &&
+      !partWords.test(combined) && (vehicleWords.test(combined) || (makeModel.test(name) && name.split(/\s+/).length>=2));
+  });
+  if(motorsPartCategory==='cars') visible=visible.filter(item=>/\b(sedan|hatchback|coupe|convertible|wagon)\b/i.test(item.name+' '+item.description));
+  if(motorsPartCategory==='bakkies') visible=visible.filter(item=>/\b(bakkie|pickup|double cab|single cab)\b/i.test(item.name+' '+item.description));
+  if(motorsPartCategory==='suvs') visible=visible.filter(item=>/\b(suv|4x4)\b/i.test(item.name+' '+item.description));
+  if(count)count.textContent=visible.length+' '+(visible.length===1?'vehicle':'vehicles');
   if(!visible.length){
-    grid.innerHTML='<div class="motors-empty">No '+(motorsPartCategory==='all'?'car parts or accessories':motorsPartCategory+' parts')+' are listed here yet. New seller listings will appear here when they are added.</div>';
+    grid.innerHTML='<div class="motors-empty">There are no complete vehicle listings available in this category yet. Parts and accessories are not shown here. Sellers can add cars, bakkies and SUVs with the vehicle details and photos to display them here.</div>';
     return;
   }
   grid.innerHTML=visible.map(item=>{
-    const title=String(item.name||'Car part');
-    const photo=item.image_url&&String(item.image_url).startsWith('http')?'<img class="motors-part-photo" src="'+esc(item.image_url)+'" alt="'+esc(title)+'" loading="lazy">':'<div class="motors-part-photo-empty">Photo not supplied</div>';
-    const desc=String(item.description||'Ask the seller for more product information.');
-    return '<article class="panel motors-part-card">'+photo+'<div class="motors-part-body"><span class="motors-part-type">Automotive accessory</span><h3 class="motors-part-title">'+esc(title)+'</h3><div class="motors-part-price">'+cash(item.price)+'</div><p class="motors-part-description">'+esc(desc)+'</p><div class="motors-part-seller">Sold by '+esc(item.seller_name||'NOVAAI seller')+'</div></div></article>';
+    const title=String(item.name||'Vehicle');
+    const photo=item.image_url&&String(item.image_url).startsWith('http')?'<img class="vehicle-photo" src="'+esc(item.image_url)+'" alt="'+esc(title)+'" loading="lazy">':'<div class="vehicle-photo-empty">Vehicle photo not supplied</div>';
+    const desc=String(item.description||'');
+    const year=vehicleSpec(desc,'year');
+    const mileage=vehicleSpec(desc,'mileage');
+    const transmission=vehicleSpec(desc,'transmission');
+    const fuel=vehicleSpec(desc,'fuel(?: type)?');
+    const location=vehicleSpec(desc,'location');
+    const specs=[year,transmission,fuel].map(esc).join(' · ');
+    return '<article class="panel vehicle-card">'+photo+'<div class="vehicle-card-body"><div class="vehicle-spec-line">'+specs+'</div><h3 class="vehicle-title">'+esc(title)+'</h3><div class="vehicle-price">'+cash(item.price)+'</div><div class="vehicle-meta">'+esc(mileage)+' · '+esc(location)+'</div><details class="vehicle-details"><summary>View Vehicle Details</summary><p>'+esc(desc||'The seller has not supplied additional vehicle details.')+'</p><div><strong>Seller:</strong> '+esc(item.seller_name||'NOVAAI seller')+'</div></details><div class="vehicle-seller">Listed by '+esc(item.seller_name||'NOVAAI seller')+'</div></div></article>';
   }).join('');
 }
-
 let propertyListings=[];let propertyVisibleRows=[];let propertyKind='all';let propertySearchText='';let propertyMin=0;let propertyMax=10000000;
 function searchProperty(v){propertySearchText=String(v||'').toLowerCase().trim();applyPropertyFilters()}
 function setPropertyCategory(k,btn){propertyKind=k;document.querySelectorAll('.property-chip').forEach(x=>x.classList.toggle('active',x===btn));applyPropertyFilters()}
