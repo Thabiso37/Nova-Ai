@@ -45,7 +45,7 @@ header{background:white;position:sticky;top:0;z-index:5;border-bottom:1px solid 
 /* PHASE 1 — PROPERTY MARKET LANDING SCREEN */
 body.property-mode{background:#f4f7fc;padding-bottom:82px}
 body.property-mode main{max-width:1180px;padding-top:10px}
-body.property-mode>.top,body.property-mode main>.search-bar,body.property-mode main>.hero,body.property-mode main>.stats{display:none!important}
+body.property-mode main>.search-bar,body.property-mode main>.hero,body.property-mode main>.stats{display:none!important}
 body.property-mode #propertyHub{display:block;margin:0 0 20px}
 body.property-mode #productGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch}
 .property-welcome{position:relative;isolation:isolate;min-height:340px;border-radius:24px;overflow:hidden;padding:24px;background:#10284b url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=88') center 54%/cover no-repeat;box-shadow:0 16px 38px rgba(15,39,75,.18)}
@@ -248,6 +248,8 @@ body.motors-mode header .head{display:flex;align-items:center;gap:12px}
 }
 </style>
 
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#10284b">
 </head>
 <body>
 
@@ -505,7 +507,7 @@ function applyPropertyFilters(){const mi=Number(document.getElementById('filterM
 function renderPropertyCards(rows){propertyVisibleRows=rows;const g=document.getElementById('productGrid');const n=document.getElementById('propertyResultCount');if(n)n.textContent=rows.length+' '+(rows.length===1?'property':'properties');if(!rows.length){g.innerHTML='<div class="property-empty"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="m5 22 19-16 19 16M10 19v22h28V19M19 41V28h10v13M17 19h.1M31 19h.1"/></svg><h3>No properties found</h3><p>There are no property listings matching your search right now. Try another category or clear your filters.</p><button type="button" onclick="resetPropertyFilters()">Clear search & filters</button></div>';return}g.innerHTML=rows.map((x,i)=>'<article class="panel property-card">'+(x.image_url?'<img src="'+esc(x.image_url)+'" alt="'+esc(x.name||'Property photograph')+'" loading="lazy">':'<div class="property-image-placeholder" aria-label="No property photo available"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="m5 22 19-16 19 16M10 19v22h28V19M19 41V28h10v13"/></svg></div>')+'<div class="property-card-body"><span class="property-type">'+esc(x.category||'Property')+'</span><h4>'+esc(x.name||'Property listing')+'</h4><div class="property-price">'+cash(x.price)+'</div><p class="property-description">'+esc(x.description||'More information available from the seller.')+'</p><div class="property-seller">Listed by '+esc(x.seller_name||'Seller')+'</div><button class="btn primary property-view" onclick="openPropertyDetail('+i+')">View details</button></div></article>').join('')}
 let activePropertyDetail=null;let activePropertyPhoto=0;let activePropertyTab='overview';
 function propertyPhotos(x){let a=Array.isArray(x.images)?x.images.map(v=>typeof v==='string'?v:(v&&v.url)||'').filter(Boolean):[];if(x.image_url&&!a.includes(x.image_url))a.unshift(x.image_url);return a.filter(u=>{try{return ['http:','https:'].includes(new URL(u).protocol)}catch(e){return false}})}
-function openPropertyDetail(i){const x=propertyVisibleRows[i];if(!x)return;activePropertyDetail=x;activePropertyPhoto=0;activePropertyTab='overview';renderPropertyDetail();document.getElementById('propertyDetailBackdrop').classList.add('open');document.body.style.overflow='hidden'}
+function openPropertyDetail(i){const x=propertyVisibleRows[i];if(!x||!x.id)return;location.href='./property-details.html?id='+encodeURIComponent(String(x.id));}
 function renderPropertyDetail(){const x=activePropertyDetail;if(!x)return;const photos=propertyPhotos(x);const safeTitle=esc(x.name||'Property listing');const image=photos.length?'<img class="detail-main-photo" src="'+esc(photos[activePropertyPhoto]||photos[0])+'" alt="'+safeTitle+' photograph">':'<div class="detail-photo-empty"><span aria-hidden="true">⌂</span><p>No property photos supplied</p></div>';const thumbs=photos.length>1?'<div class="detail-thumbnails" role="group" aria-label="Choose property photo">'+photos.map((u,j)=>'<button type="button" class="detail-thumb '+(j===activePropertyPhoto?'active':'')+'" aria-label="Show photo '+(j+1)+'" aria-pressed="'+(j===activePropertyPhoto)+'" onclick="selectPropertyPhoto('+j+')"><img src="'+esc(u)+'" alt=""></button>').join('')+'</div>':'';const tabs=[['overview','Overview'],['description','Description'],['seller','Seller']];let body='';if(activePropertyTab==='overview')body='<div class="detail-facts"><span>'+esc(x.category||'Property listing')+'</span><strong>'+cash(x.price)+'</strong></div><h1>'+safeTitle+'</h1><p class="detail-lead">'+esc(x.description||'The seller has not provided a description.')+'</p>';if(activePropertyTab==='description')body='<h2>Property description</h2><p class="detail-copy">'+esc(x.description||'No additional description has been supplied by the seller.')+'</p>';if(activePropertyTab==='seller')body='<h2>Seller information</h2><div class="detail-seller-card"><span class="detail-seller-avatar" aria-hidden="true">♙</span><div><strong>'+esc(x.seller_name||'Seller not specified')+'</strong><p>Seller name as supplied with this listing.</p></div></div><p class="detail-note">Contact details are not available in this listing. No call, message or viewing can be arranged from this page.</p>';document.getElementById('propertyDetailContent').innerHTML='<div class="detail-topline"><span>NOVAAI PROPERTY</span><button type="button" class="detail-close" onclick="closePropertyDetail()" aria-label="Close property details">×</button></div><div class="detail-gallery">'+image+thumbs+'</div><div class="detail-inner"><div class="detail-tabs" role="tablist" aria-label="Property information">'+tabs.map(t=>'<button type="button" role="tab" aria-selected="'+(activePropertyTab===t[0])+'" class="'+(activePropertyTab===t[0]?'active':'')+'" onclick="setPropertyDetailTab(\''+t[0]+'\')">'+t[1]+'</button>').join('')+'</div><section class="detail-tab-panel">'+body+'</section></div><div class="detail-action-bar"><button type="button" class="btn outline" onclick="closePropertyDetail()">Close</button><button type="button" class="btn primary" onclick="sharePropertyDetail()">Share listing</button></div>'}
 function selectPropertyPhoto(i){const photos=propertyPhotos(activePropertyDetail||{});if(i<0||i>=photos.length)return;activePropertyPhoto=i;renderPropertyDetail()}
 function setPropertyDetailTab(tab){if(!['overview','description','seller'].includes(tab))return;activePropertyTab=tab;renderPropertyDetail()}
@@ -571,5 +573,14 @@ switchMarket(initialMarket);
 </script>
 
 <script src="./nearby-search.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("./service-worker.js").catch(function (error) {
+      console.warn("[NOVAAI] Property PWA registration failed", error);
+    });
+  });
+}
+</script>
 </body>
 </html>
