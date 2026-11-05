@@ -349,7 +349,7 @@ body.property-mode main>.hero,
 body.property-mode main>.stats{display:none!important}
 
 /* FINAL MOBILE + DESKTOP PROPERTY GRID OVERRIDE:
-   Keep each property advert on its own row at every screen width. */
+   Keep each property advert on its own row and give 80% to the photo, 20% to the information panel. */
 body.property-mode #productGrid{
   display:grid!important;
   grid-template-columns:minmax(0,1fr)!important;
@@ -359,9 +359,19 @@ body.property-mode #productGrid{
 }
 body.property-mode #productGrid>.property-ad-card{
   grid-column:1 / -1!important;
+  display:grid!important;
+  grid-template-columns:80% 20%!important;
   width:100%!important;
   max-width:100%!important;
   min-width:0!important;
+}
+body.property-mode #productGrid>.property-ad-card .property-ad-image{
+  grid-column:1!important;
+}
+body.property-mode #productGrid>.property-ad-card .property-ad-info{
+  grid-column:2!important;
+  min-width:0!important;
+  overflow:hidden!important;
 }
 </style>
 </head>
