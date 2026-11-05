@@ -186,7 +186,7 @@
         }
         if(titleNode)titleNode.textContent=title;
         if(descNode)descNode.textContent=description;
-        if(linkNode){linkNode.textContent=String(c.cta_text||'Explore offer →').slice(0,36);linkNode.href=href;linkNode.target='_blank';linkNode.rel='noopener noreferrer sponsored';}
+        if(linkNode){if(id!=='cart_banner')linkNode.textContent=String(c.cta_text||'Explore offer →').slice(0,36);linkNode.href=href;linkNode.target='_blank';linkNode.rel='noopener noreferrer sponsored';}
         if(imageNode){
           if(id==='property_banner'&&imageNode.tagName==='IMG')imageNode.src=imageUrl;
           else if(id==='motors_banner'||id==='home_hero'||id==='shop_tv')imageNode.style.backgroundImage='url("'+imageUrl.replace(/["\\]/g,'')+'")';
