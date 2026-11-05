@@ -424,6 +424,24 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
     padding: 16px 12px 35px;
   }
 }
+
+/* Takealot-inspired wishlist cards; existing NOVAAI header and navigation stay untouched */
+#wishlist{padding:16px!important;max-width:900px!important;margin:20px auto!important;background:#fff;border:1px solid #e8edf5;border-radius:14px}
+#wishlist .wishlist-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px}
+#wishlist .wishlist-heading h2{font-size:20px;font-weight:800;color:#10284b;margin:0}
+#wishlist .wishlist-clear{border:0;background:transparent;color:#174ea6;font-weight:700;padding:8px;cursor:pointer}
+#wishlist .wishlist-card{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e8edf5;border-radius:12px;padding:13px;margin:0 0 12px;box-shadow:0 2px 5px rgba(16,40,75,.05)}
+#wishlist .wishlist-photo{width:88px;height:88px;flex:0 0 88px;object-fit:contain;background:#fff;border-radius:9px}
+#wishlist .wishlist-info{flex:1;min-width:0}
+#wishlist .wishlist-seller{font-size:11px;color:#6b7280;text-transform:uppercase;font-weight:700}
+#wishlist .wishlist-name{font-size:15px;line-height:1.35;color:#1f2937;font-weight:700;margin:4px 0}
+#wishlist .wishlist-price{font-size:17px;font-weight:900;color:#10284b;margin:6px 0}
+#wishlist .wishlist-stock{font-size:12px;color:#667085;font-weight:600}
+#wishlist .wishlist-actions{display:flex;flex-direction:column;gap:7px;align-items:flex-end}
+#wishlist .wishlist-add{background:#174ea6;color:#fff;border:0;border-radius:7px;padding:9px 13px;font-size:12px;font-weight:800;white-space:nowrap}
+#wishlist .wishlist-remove{background:transparent;border:0;color:#dc2626;font-size:12px;font-weight:700;padding:5px}
+#wishlist .wishlist-empty{padding:26px 12px;text-align:center;color:#667085;background:#f8faff;border-radius:10px}
+@media(max-width:520px){#wishlist{margin:12px 10px!important;padding:12px!important}#wishlist .wishlist-card{gap:10px;padding:10px}#wishlist .wishlist-photo{width:72px;height:72px;flex-basis:72px}#wishlist .wishlist-name{font-size:13px}#wishlist .wishlist-price{font-size:15px}#wishlist .wishlist-add{padding:8px 9px;font-size:11px}}
 </style>
 
 <style>
@@ -943,20 +961,35 @@ function bindProductEvents() {
     };
   });
 }
+function removeWishlistItem(id){
+  const saved=JSON.parse(localStorage.getItem("novaWishlist")||"[]");
+  localStorage.setItem("novaWishlist",JSON.stringify(saved.filter(x=>String(x)!==String(id))));
+  renderWishlist();
+  document.querySelectorAll("[data-wishlist]").forEach(b=>{if(String(b.dataset.wishlist)===String(id)){b.textContent="♡";b.style.color="#17345b";}});
+}
+function clearWishlist(){
+  if(!confirm("Clear all saved wishlist items?"))return;
+  localStorage.setItem("novaWishlist","[]");
+  document.querySelectorAll("[data-wishlist]").forEach(b=>{b.textContent="♡";b.style.color="#17345b";});
+  renderWishlist();
+}
 function renderWishlist(){
-  const section = document.getElementById("wishlist");
-  if(!section) return;
-  const saved = JSON.parse(localStorage.getItem("novaWishlist") || "[]");
-  const favourites = saved.map(id => products.find(p => String(p.id) === String(id))).filter(Boolean);
-  section.innerHTML = `
-    <h2>❤️ My Wishlist</h2>
-    ${favourites.length ? favourites.map(p => `
-      <div class="panel" style="margin:10px 0">
-        <h3>${esc(p.name)}</h3>
-        <p>${cash(p.price)}</p>
-        <button class="btn primary" onclick="add('${esc(p.id)}')">Add to cart</button>
-      </div>
-    `).join("") : `<p>Your wishlist is empty. Tap a heart on a product to save it.</p>`}
+  const section=document.getElementById("wishlist");
+  if(!section)return;
+  let saved=[];
+  try{saved=JSON.parse(localStorage.getItem("novaWishlist")||"[]");if(!Array.isArray(saved))saved=[];}catch(e){saved=[];}
+  const favourites=saved.map(id=>products.find(p=>String(p.id)===String(id))).filter(Boolean);
+  section.innerHTML=`
+    <div class="wishlist-heading"><h2>My Wishlist (${favourites.length})</h2><button type="button" class="wishlist-clear" onclick="clearWishlist()">Clear Wishlist</button></div>
+    ${favourites.length?favourites.map(p=>{
+      const photos=Array.isArray(p.images)&&p.images.length?p.images:(p.image_url?[p.image_url]:[]);
+      const photo=safeImg(photos[0]||"");
+      return `<article class="wishlist-card">
+        ${photo?`<img class="wishlist-photo" src="${esc(photo)}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:`<div class="wishlist-photo" aria-hidden="true"></div>`}
+        <div class="wishlist-info"><div class="wishlist-seller">${esc(p.seller||"NOVAAI Seller")}</div><h3 class="wishlist-name">${esc(p.name)}</h3><div class="wishlist-price">${cash(p.price)}</div><div class="wishlist-stock">Stock status not provided by seller</div></div>
+        <div class="wishlist-actions"><button type="button" class="wishlist-add" onclick="add('${esc(p.id)}')">Add to Cart</button><button type="button" class="wishlist-remove" onclick="removeWishlistItem('${esc(p.id)}')">Remove</button></div>
+      </article>`;
+    }).join(""):`<div class="wishlist-empty">Your wishlist is empty. Tap a heart on a product to save it.</div>`}
   `;
 }
 function resetFilters(){document.getElementById("search").value="";document.getElementById("filter").value="All";document.getElementById("sort").value="featured";active="All";initCategories();render()}
