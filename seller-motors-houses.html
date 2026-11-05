@@ -620,6 +620,12 @@ body.motors-mode #productGrid>.vehicle-card .vehicle-seller{
   <div id="productGrid" class="grid">
     <div class="msg">Loading marketplace listings...</div>
   </div>
+  <section id="motorsFooterAd" class="nova-footer-ad market-footer-ad" data-nova-ad-slot="motors_footer" role="region" aria-label="NOVAAI Motors featured advertisement" hidden>
+    <div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker">NOVAAI MOTORS • FEATURED</span><strong>Find the vehicle that moves you.</strong><small>Explore cars, bakkies, SUVs and parts from local sellers.</small><a href="#motorsVehiclesHeading">Explore Motors →</a></div>
+  </section>
+  <section id="propertyFooterAd" class="nova-footer-ad market-footer-ad" data-nova-ad-slot="property_footer" role="region" aria-label="NOVAAI Property featured advertisement" hidden>
+    <div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker">NOVAAI PROPERTY • FEATURED</span><strong>Make room for your next chapter.</strong><small>Discover homes and spaces across South Africa.</small><a href="#propertyHub">Explore Property →</a></div>
+  </section>
 </main>
 
 <div id="propertyFilterSheet" class="property-filter-sheet" onclick="if(event.target===this)closePropertyFilters()"><section class="property-filter-panel"><h3>Filter properties</h3><label for="filterMinPrice">Minimum price (ZAR)</label><input id="filterMinPrice" type="number" min="0" placeholder="No minimum"><label for="filterMaxPrice">Maximum price (ZAR)</label><input id="filterMaxPrice" type="number" min="0" placeholder="No maximum"><label for="filterLocation">Location or listing keywords</label><input id="filterLocation" placeholder="Search title or description"><div class="property-filter-actions"><button class="btn outline" onclick="resetPropertyFilters()">Reset</button><button class="btn primary" onclick="applyPropertyFilters();closePropertyFilters()">Apply filters</button></div></section></div><div id="propertyDetailBackdrop" class="property-detail-backdrop" onclick="if(event.target===this)closePropertyDetail()"><section class="property-detail" id="propertyDetailContent"></section></div><!-- BOTTOM NAVIGATION BAR WITH DIRECT MARKETS & SELL -->
@@ -817,6 +823,8 @@ function switchMarket(market) {
   document.body.classList.toggle('motors-mode',market==='motors');
   document.body.classList.toggle('market-fullscreen-view',market==='motors'||market==='property');
   document.getElementById('propertyHub').hidden=market!=='property';
+  document.getElementById('motorsFooterAd').hidden=market!=='motors';
+  document.getElementById('propertyFooterAd').hidden=market!=='property';
   document.querySelectorAll('.bottom-nav .nav-item').forEach(t => t.classList.remove('active'));
   
   const title = document.getElementById('marketTitle');
@@ -900,6 +908,22 @@ body:not(.property-mode):not(.motors-mode) .retail-product-photo img{object-fit:
 .retail-product-footer .btn{flex:0 0 auto;padding:7px 10px!important;border:0!important;border-radius:8px!important;background:#f5b900!important;color:#10284b!important;font-size:10px!important;font-weight:900!important}
 @media(max-width:360px){body:not(.property-mode):not(.motors-mode) #productGrid{gap:7px!important}.retail-product-info{padding:8px}.retail-product-info h4{font-size:12px}.retail-product-price{font-size:15px}}
 @media(min-width:760px){body:not(.property-mode):not(.motors-mode) #productGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important}}
+</style>
+
+<style>
+/* Bottom promotional boards: Shop, Motors and Property only. */
+.nova-footer-ad{position:relative;display:flex;align-items:stretch;min-height:142px;margin:18px 0 12px;overflow:hidden;border:1px solid #234f88;border-radius:16px;background:linear-gradient(115deg,#10284b 0%,#174ea6 58%,#2869b8 100%);color:#fff;isolation:isolate;box-shadow:0 8px 22px rgba(16,40,75,.16)}
+.nova-footer-ad[hidden]{display:none!important}
+.nova-footer-ad-image{position:absolute;inset:0;z-index:-1;background-position:center;background-size:cover;opacity:.38;transition:opacity .3s ease}
+.nova-footer-ad:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(9,27,53,.97) 0%,rgba(16,40,75,.88) 54%,rgba(16,40,75,.2) 100%)}
+.nova-footer-ad-copy{display:flex;align-items:flex-start;flex-direction:column;gap:6px;width:100%;padding:17px 18px 19px}
+.nova-footer-ad-kicker{font-size:8px;font-weight:900;letter-spacing:1.5px;color:#ffd34f}
+.nova-footer-ad-copy strong{max-width:85%;font-size:clamp(17px,4.5vw,23px);line-height:1.15;color:#fff}
+.nova-footer-ad-copy small{max-width:82%;font-size:10px;line-height:1.45;color:#e5efff}
+.nova-footer-ad-copy a{display:inline-flex;margin-top:3px;padding:8px 12px;border-radius:8px;background:#f5b900;color:#10284b;text-decoration:none;font-size:10px;font-weight:900}
+.nova-footer-ad .nova-live-controls{right:12px;bottom:10px}
+@media(min-width:700px){.nova-footer-ad{min-height:170px}.nova-footer-ad-copy{padding:22px 26px}.nova-footer-ad-copy strong{font-size:25px}}
+@media(prefers-reduced-motion:reduce){.nova-footer-ad-image{transition:none}}
 </style>
 </body>
 </html>
