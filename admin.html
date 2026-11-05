@@ -697,7 +697,14 @@ button {
       </div>
     </section>
 
-    <section class="panel" id="productsSection">
+    <section class="panel" id="marketplacePermissions">
+<h2>Marketplace Permissions</h2><p class="muted">Review Retail, Motors and Property applications independently. Seller-store approval remains separate.</p>
+<button class="primary" id="refreshMarketplacePermissions">Refresh Applications</button>
+<p id="marketplacePermissionMessage" class="muted" aria-live="polite">Marketplace permission applications will appear here.</p>
+<div id="marketplacePermissionRecords"></div>
+</section>
+
+<section class="panel" id="productsSection">
       <h2>Product Moderation</h2>
       <p class="muted">Review and manage seller product listings.</p>
 
@@ -906,6 +913,29 @@ async function logout() {
   document.getElementById("loginPanel").classList.remove("hidden");
   document.getElementById("loginMessage").textContent = "Signed out.";
 }
+
+
+async function loadMarketplacePermissions(){
+ if(!currentAdmin)return;
+ const msgEl=document.getElementById("marketplacePermissionMessage"),box=document.getElementById("marketplacePermissionRecords");
+ msgEl.textContent="Loading marketplace applications…";
+ const {data:rows,error}=await sb.from("seller_marketplace_permissions").select("id,user_id,marketplace,status,requested_at,reviewed_at,reviewed_by").order("requested_at",{ascending:false});
+ if(error){msgEl.textContent="Could not load applications: "+error.message;box.innerHTML="";return;}
+ const userIds=[...new Set((rows||[]).map(r=>r.user_id))];let stores=[];
+ if(userIds.length){const result=await sb.from("seller_stores").select("user_id,store_name,status").in("user_id",userIds);if(result.error){msgEl.textContent="Could not load seller stores: "+result.error.message;return;}stores=result.data||[];}
+ const storeByUser=new Map(stores.map(s=>[s.user_id,s]));
+ msgEl.textContent=(rows||[]).length+" permission application/record(s).";
+ box.innerHTML=(rows||[]).map(r=>{const st=storeByUser.get(r.user_id)||{};return '<div class="record"><strong>'+escapeHTML(st.store_name||"Seller")+" · "+escapeHTML(r.marketplace.toUpperCase())+'</strong><p>Seller ID: '+escapeHTML(r.user_id)+'</p><p>Application date: '+escapeHTML(r.requested_at||"Not recorded")+'</p><p>Store approval: '+escapeHTML(st.status||"Not found")+'</p><p>Marketplace status: <strong>'+escapeHTML(r.status)+'</strong></p>'+(r.status==="pending"?'<div class="actions"><button class="approve" onclick="reviewMarketplacePermission(\''+r.id+'\',\'approved\')">Approve '+escapeHTML(r.marketplace)+'</button><button class="reject" onclick="reviewMarketplacePermission(\''+r.id+'\',\'rejected\')">Reject '+escapeHTML(r.marketplace)+'</button></div>':"")+'</div>';}).join("")||"<p class='muted'>No marketplace permission records found.</p>";
+}
+async function reviewMarketplacePermission(id,status){
+ if(!currentAdmin||!["approved","rejected"].includes(status))return;
+ if(!confirm("Set this marketplace application to "+status.toUpperCase()+"?"))return;
+ const {error}=await sb.from("seller_marketplace_permissions").update({status,reviewed_at:new Date().toISOString(),reviewed_by:currentAdmin.id}).eq("id",id);
+ if(error){document.getElementById("marketplacePermissionMessage").textContent="Review failed: "+error.message;return;}
+ document.getElementById("marketplacePermissionMessage").textContent="Review saved by Supabase.";
+ await loadMarketplacePermissions();
+}
+window.reviewMarketplacePermission=reviewMarketplacePermission;
 
 async function loadProducts() {
   if (!currentAdmin) return;
@@ -1266,7 +1296,7 @@ document.getElementById("logoutBtn").onclick = logout;
 document.getElementById("filter").onchange = renderProducts;
 document.getElementById("search").oninput = renderProducts;
 document.getElementById("paymentFilter").onchange = renderPaymentRecords;
-document.getElementById("refreshFinancialBtn").onclick = loadPaymentData;
+document.getElementById("refreshFinancialBtn").onclick = loadPaymentData;\ndocument.getElementById("refreshMarketplacePermissions").onclick = loadMarketplacePermissions;
 
 sb.auth.getSession().then(({ data, error }) => {
   if (error) {
