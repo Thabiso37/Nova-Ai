@@ -1200,7 +1200,7 @@ style="width:min(92vw,700px);max-height:85vh;overflow:auto;border:0;border-radiu
 
 </dialog>
 
-<section id="wishlist" class="panel" style="margin:24px 0">
+<section id="wishlist" class="panel" style="margin:24px 0" data-nova-ad-area="wishlist">
   <h2>❤️ My Wishlist</h2>
   <p>Your saved products will appear here.</p>
 </section>
@@ -2139,6 +2139,15 @@ function closeCart() {
 
 
 <script src="./nearby-search.js"></script>
+<script src="./novaai-ad-slots.js"></script>
+<style>
+/* Wishlist advertisement slot only — reserved for future admin-managed campaigns. */
+#wishlist .wishlist-ad-slot{display:flex;flex-direction:column;align-items:flex-start;gap:5px;margin:0 0 16px;padding:15px 16px;min-height:108px;border:1px solid #dce6f4;border-radius:14px;background:radial-gradient(circle at 90% 20%,#2c65b5 0,#174ea6 30%,#10284b 78%);color:#fff;overflow:hidden}
+#wishlist .wishlist-ad-slot .wishlist-ad-kicker{font-size:8px;font-weight:900;letter-spacing:1.5px;color:#ffd34f}
+#wishlist .wishlist-ad-slot strong{font-size:clamp(15px,4vw,20px);line-height:1.2;color:#fff}
+#wishlist .wishlist-ad-slot small{font-size:10px;line-height:1.4;color:#e4edfb}
+#wishlist .wishlist-ad-slot a{display:inline-flex;margin-top:3px;padding:7px 10px;border-radius:7px;background:#f5b900;color:#10284b;text-decoration:none;font-size:10px;font-weight:900}
+</style>
 </body>
 </html>
 
