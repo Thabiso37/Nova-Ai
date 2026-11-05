@@ -1,0 +1,35 @@
+async function loadSellerPublicLocation(){
+ const box=document.getElementById("sellerLocStatus");if(!window.user)return;
+ const {data,error}=await sb.from("seller_public_locations").select("province,city,suburb,latitude,longitude,public_location_enabled").eq("user_id",user.id).maybeSingle();
+ if(error){if(box)box.textContent="Location settings could not be loaded: "+error.message;return;}
+ const v=data||{};
+ document.getElementById("sellerLocProvince").value=v.province||"";
+ document.getElementById("sellerLocCity").value=v.city||"";
+ document.getElementById("sellerLocSuburb").value=v.suburb||"";
+ document.getElementById("sellerLocLatitude").value=v.latitude??"";
+ document.getElementById("sellerLocLongitude").value=v.longitude??"";
+ document.getElementById("sellerLocPublic").checked=!!v.public_location_enabled;
+ if(box)box.textContent=data?"Your saved public location is loaded.":"Add your public business/listing area. It remains hidden until you approve public display.";
+}
+document.getElementById("sellerLocUseGps").addEventListener("click",function(){
+ const box=document.getElementById("sellerLocStatus");
+ if(!navigator.geolocation){box.textContent="Device location is not supported. Enter coordinates manually.";return;}
+ box.textContent="Waiting for permission. Only save this pin if it represents a public business/listing area, not your home.";
+ navigator.geolocation.getCurrentPosition(function(p){
+  document.getElementById("sellerLocLatitude").value=p.coords.latitude.toFixed(5);
+  document.getElementById("sellerLocLongitude").value=p.coords.longitude.toFixed(5);
+  box.textContent="Coordinates filled in. Review the public-location consent before saving.";
+ },function(e){box.textContent=e.code===1?"Permission declined. Enter public coordinates manually.":"Could not detect location. Enter coordinates manually."},{enableHighAccuracy:false,timeout:12000,maximumAge:300000});
+});
+document.getElementById("sellerLocSave").addEventListener("click",async function(){
+ const box=document.getElementById("sellerLocStatus");if(!user){box.textContent="Sign in before saving your location.";return;}
+ const lat=document.getElementById("sellerLocLatitude").value.trim(),lon=document.getElementById("sellerLocLongitude").value.trim();
+ const payload={user_id:user.id,province:document.getElementById("sellerLocProvince").value||null,city:document.getElementById("sellerLocCity").value.trim()||null,suburb:document.getElementById("sellerLocSuburb").value.trim()||null,latitude:lat===""?null:Number(lat),longitude:lon===""?null:Number(lon),public_location_enabled:document.getElementById("sellerLocPublic").checked,updated_at:new Date().toISOString()};
+ if((lat==="")!==(lon==="")){box.textContent="Enter both latitude and longitude, or leave both blank.";return;}
+ if(lat!==""&&(!Number.isFinite(payload.latitude)||payload.latitude < -90||payload.latitude > 90||!Number.isFinite(payload.longitude)||payload.longitude < -180||payload.longitude > 180)){box.textContent="Enter valid GPS coordinates.";return;}
+ if(payload.public_location_enabled&&(!payload.province||!payload.city)){box.textContent="Select a province and enter a city/town before making the area public.";return;}
+ if(payload.public_location_enabled&&!confirm("Confirm this is a public business/listing area and not your private residential address."))return;
+ box.textContent="Saving…";const {error}=await sb.from("seller_public_locations").upsert(payload,{onConflict:"user_id"});
+ if(error){box.textContent="Could not save location: "+error.message;return;}
+ box.textContent=payload.public_location_enabled?"Public seller location saved. Approved shoppers can now see this area.":"Location saved privately. It is not visible to shoppers.";
+});
