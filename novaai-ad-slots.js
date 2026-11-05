@@ -41,6 +41,13 @@
       ['Explore properties →','Discover property →','Find your space →']
     ]
   };
+  const liveImages={
+    motors_banner:[
+      "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=1600&q=88",
+      "https://cdn3.carrogreen.com/modules/angarslider/views/img/images/87ffe42992e630a55a52d1ea15d261711d6ed605_piece%20auto%201.jpg",
+      "https://aaclinic.shop/assets/engine-parts-BlXfXwfD.jpg"
+    ]
+  };
   function initLiveSlot(slot){
     if(!slot||slot.dataset.novaLiveReady==='1')return;
     const id=slot.getAttribute('data-nova-ad-slot');
@@ -67,12 +74,17 @@
       slot.classList.add('nova-live-changing');
       window.setTimeout(()=>{
         nodes.forEach((node,j)=>{node.textContent=active===0?original[j]:variants[j][active-1];});
+        if(id==='motors_banner'&&liveImages.motors_banner[active]){
+          slot.style.backgroundImage='url("'+liveImages.motors_banner[active]+'")';
+          slot.style.backgroundPosition='center 52%';
+          slot.style.backgroundSize='cover';
+        }
         dots.forEach((dot,k)=>dot.setAttribute('aria-current',String(k===active)));
         slot.classList.remove('nova-live-changing');
       },220);
     }
     function stop(){if(timer){clearInterval(timer);timer=null;}}
-    function start(){stop();if(!document.hidden&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches)timer=setInterval(()=>show(active+1),5200);}
+    function start(){stop();const delay=id==='motors_banner'?5000:5200;if(!document.hidden&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches)timer=setInterval(()=>show(active+1),delay);}
     dots.forEach((dot,i)=>dot.addEventListener('click',()=>{show(i);start();}));
     slot.addEventListener('mouseenter',stop);slot.addEventListener('mouseleave',start);
     slot.addEventListener('focusin',stop);slot.addEventListener('focusout',start);
