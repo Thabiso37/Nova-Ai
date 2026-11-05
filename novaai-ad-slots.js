@@ -111,6 +111,7 @@
       active=(i+3)%3;
       slot.classList.add('nova-live-changing');
       window.setTimeout(()=>{
+        if(slot.dataset.novaManagedCampaign){slot.classList.remove('nova-live-changing');return;}
         nodes.forEach((node,j)=>{node.textContent=active===0?original[j]:variants[j][active-1];});
         if(id==='motors_banner'&&liveImages.motors_banner[active]){
           slot.style.backgroundImage='url("'+liveImages.motors_banner[active]+'")';
@@ -213,9 +214,21 @@
     banner.addEventListener('focusin',stop);banner.addEventListener('focusout',start);
     document.addEventListener('visibilitychange',start);show(0);start();
   }
+  async function loadManagedCampaigns(){
+    const apiUrl='https://nxplffvklkopwfjaqexo.supabase.co/rest/v1/rpc/get_live_novaai_ad_campaigns';
+    const publishableKey='sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ';
+    try{
+      const response=await fetch(apiUrl,{method:'POST',headers:{'apikey':publishableKey,'Authorization':'Bearer '+publishableKey,'Content-Type':'application/json'},body:'{}'});
+      if(!response.ok)throw new Error('Campaign feed returned HTTP '+response.status);
+      const campaigns=await response.json();
+      api.announceCampaigns(Array.isArray(campaigns)?campaigns:[]);
+    }catch(error){console.warn('NOVAAI managed advertisement feed unavailable; showing built-in fallback adverts.',error);}
+  }
   function bootLiveAds(){
     initHomeCarousel();
     ['wishlist_banner','property_banner','motors_banner','shop_footer','motors_footer','property_footer'].forEach(id=>initLiveSlot(document.querySelector('[data-nova-ad-slot="'+id+'"]')));
+    loadManagedCampaigns();
+    if(!window.__novaAdRefreshTimer)window.__novaAdRefreshTimer=window.setInterval(loadManagedCampaigns,60000);
     if(!window.__novaAdObserver&&document.body){window.__novaAdObserver=new MutationObserver(()=>{const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');if(wishlist)initLiveSlot(wishlist);});window.__novaAdObserver.observe(document.body,{childList:true,subtree:true});}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootLiveAds,{once:true});else bootLiveAds();
