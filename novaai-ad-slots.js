@@ -205,7 +205,7 @@
         index=(index+1)%campaigns.length;
       };
       show();
-      if(campaigns.length>1&&!document.hidden&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches)managedTimers[id]=setInterval(show,5000);
+      if(campaigns.length>1&&!document.hidden&&(!window.matchMedia('(prefers-reduced-motion: reduce)').matches||id==='shop_tv'))managedTimers[id]=setInterval(show,5000);
     });
   }
   window.addEventListener('novaai:ads:campaigns-ready',event=>{
