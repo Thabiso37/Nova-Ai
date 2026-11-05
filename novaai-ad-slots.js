@@ -8,7 +8,7 @@
     {slot_id:'home_hero',page:'home',element_id:'novaHeroCarousel',format:'carousel',max_creatives:10,rotation_seconds:5.2},
     {slot_id:'wishlist_banner',page:'wishlist',element_id:'wishlistAdSlot',format:'banner',max_creatives:5,rotation_seconds:5.2},
     {slot_id:'property_banner',page:'property',element_id:'propertyAdSlot',format:'banner',max_creatives:5,rotation_seconds:5.2},
-    {slot_id:'motors_banner',page:'motors',element_id:'motorsAdSlot',format:'banner',max_creatives:5,rotation_seconds:5.2}
+    {slot_id:'motors_banner',page:'motors',element_id:'motorsWelcomeAd',format:'carousel',max_creatives:5,rotation_seconds:5.2}
   ].map(item=>Object.freeze({...item,status:'ready_for_admin_management'}));
   const requiredCampaignFields=['campaign_id','slot_id','title','description','creative_type','creative_url','destination_url','status','starts_at','ends_at','priority'];
   const api={
@@ -31,9 +31,9 @@
       ['Explore marketplace →','Discover local finds →','Shop South African sellers →']
     ],
     motors_banner:[
-      ['Find your next great drive.','Your next journey starts with the right vehicle.','Explore cars, bakkies and SUVs in one place.'],
-      ['Discover vehicles and offers from South African sellers.','Browse vehicle listings from local marketplace sellers.','Explore the latest vehicles listed on NOVAAI.'],
-      ['Explore vehicles →','Browse Motors →','Find your next vehicle →']
+      ['Find your next vehicle.','Your next journey starts here.','Discover a vehicle that moves you.'],
+      ['Browse vehicles listed by South African sellers, with the details they provide.','Explore cars, bakkies, SUVs and motorcycles from local sellers.','Compare listings and discover your next great drive.'],
+      ['Explore vehicles →','Browse Motors →','Find your next drive →']
     ],
     property_banner:[
       ['Find a place to belong.','Your next address could be waiting here.','Explore spaces that feel like home.'],
@@ -48,7 +48,7 @@
     const selectors=id==='property_banner'
       ? ['.property-promo-copy h2','.property-promo-copy p','.property-promo-link']
       : id==='motors_banner'
-      ? ['strong','small','a']
+      ? ['.motors-hero-copy h1','.motors-hero-copy p','.motors-explore']
       : ['strong','small','a'];
     const nodes=selectors.map(sel=>slot.querySelector(sel));
     if(nodes.some(n=>!n))return;
