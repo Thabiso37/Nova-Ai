@@ -178,7 +178,11 @@ body.motors-mode main>#marketTitle{display:none!important}
 body.motors-mode main>.search-bar{display:none!important}
 .motors-header-search{display:none;flex:1;min-width:0;max-width:760px;gap:0;margin:0}
 .motors-header-search input{flex:1;min-width:0;width:100%;padding:11px 12px;border:1px solid #dfe2ed;border-right:0;border-radius:9px 0 0 9px;background:#f8faff;font-size:14px;outline:none}
-.motors-header-search button{flex:0 0 auto;padding:0 16px;border:0;border-radius:0 9px 9px 0;background:#174ea6;color:#fff;font-weight:800}
+.motors-header-search button{flex:0 0 auto;padding:0 13px;border:0;background:#174ea6;color:#fff;font-weight:800}
+.motors-header-search #motorsNearMe{border-radius:0 9px 9px 0;background:#f5b900;color:#10284b;font-weight:800;white-space:nowrap}
+.motors-header-search #motorsSearchBtn{border-radius:0}
+#motorsNearMeStatus{display:none;position:absolute;top:100%;left:0;right:0;margin:0;padding:7px 12px;background:#fff;color:#667085;font-size:11px;line-height:1.4;border-bottom:1px solid #e8edf5;z-index:6}
+#motorsNearMeStatus:not(:empty){display:block}
 body.motors-mode .motors-header-search{display:flex}
 body.motors-mode header .head{display:flex;align-items:center;gap:12px}
 @media(max-width:560px){
@@ -200,7 +204,9 @@ body.motors-mode header .head{display:flex;align-items:center;gap:12px}
     <div class="motors-header-search" id="motorsHeaderSearch">
       <input type="search" id="motorsSearchInput" placeholder="Search cars, brands or models..." aria-label="Search Motors listings">
       <button type="button" id="motorsSearchBtn" aria-label="Search Motors">🔍</button>
+      <button type="button" id="motorsNearMe" aria-label="Use my location">📍 Near me</button>
     </div>
+    <p id="motorsNearMeStatus" aria-live="polite"></p>
     <div style="font-size:12px;font-weight:bold;color:var(--muted);" id="activeMarketBadge">🛍️ Retail Market</div>
   </div>
 </header>
@@ -407,6 +413,30 @@ function switchMarket(market) {
 
   loadListings(market);
 }
+
+(function(){
+  const button=document.getElementById('motorsNearMe');
+  const status=document.getElementById('motorsNearMeStatus');
+  if(!button||!status)return;
+  button.addEventListener('click',function(){
+    if(!navigator.geolocation){
+      status.textContent="Location is not supported by this browser.";
+      return;
+    }
+    button.disabled=true;
+    button.textContent="Finding…";
+    status.textContent="Requesting your location permission…";
+    navigator.geolocation.getCurrentPosition(function(){
+      button.disabled=false;
+      button.textContent="📍 Near me";
+      status.textContent="Your location was detected. Nearby vehicle filtering is not available yet because current vehicle listings do not contain seller suburb, town or GPS details.";
+    },function(error){
+      button.disabled=false;
+      button.textContent="📍 Near me";
+      status.textContent=error.code===1?"Location permission was not granted. Allow it in Chrome site settings to use Near me.":"Could not detect your location. Please try again.";
+    },{enableHighAccuracy:false,timeout:10000,maximumAge:300000});
+  });
+})();
 
 document.getElementById('motorsSearchBtn').onclick = () => {
   const q = document.getElementById('motorsSearchInput').value.trim();
