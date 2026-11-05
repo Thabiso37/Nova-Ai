@@ -792,7 +792,6 @@ style="width:min(92vw,700px);max-height:85vh;overflow:auto;border:0;border-radiu
 "use strict";
 const sb=window.supabase.createClient("https://nxplffvklkopwfjaqexo.supabase.co","sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ");
 const C=[
-["Auto","🚗"],
 ["Luggage & Travel","🧳"],
 ["Baby & Toddler","👶"],
 ["Movies & Series","🎬"],
@@ -870,7 +869,7 @@ function initCategories(){
 document.getElementById("cats").innerHTML=[["All","🌐"],...C].map(([n,ic])=>`<button class="cat ${active===n?"active":""}" data-cat="${esc(n)}"><span class="emoji">${ic}</span><span>${esc(n==="All"?"All products":n)}</span></button>`).join("");
 document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{
   active=b.dataset.cat;
-  if (active === "Motors & Vehicles") {
+  if (active === "Auto" || active === "Motors & Vehicles") {
     window.location.href = "./seller-motors-houses.html?market=motors";
     return;
   }
@@ -910,7 +909,7 @@ function renderRetailMarketGrid(list) {
 
 function render(){
   const q=document.getElementById("search").value.toLowerCase();
-  const retailProducts = products.filter(p => !["Motors & Vehicles","Property For Sale","Property To Rent"].includes(p.category));
+  const retailProducts = products.filter(p => !["Auto","Motors & Vehicles","Property For Sale","Property To Rent"].includes(p.category));
   const list=retailProducts.filter(p=>{
     const categoryMatch = (active==="All" || p.category===active);
     return categoryMatch && [p.name,p.category,p.description,p.seller].join(" ").toLowerCase().includes(q);
