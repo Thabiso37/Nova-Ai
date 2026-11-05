@@ -78,6 +78,13 @@ main{max-width:1120px;padding:15px 14px 32px}.back-link{margin:3px 0 13px;color:
       <h2>Seller / Agent</h2><div class="seller-profile"><div class="seller-avatar" aria-hidden="true">N</div><div><div id="sellerName" class="seller-name">Approved NOVAAI seller</div><p class="seller-note">Approved public business information only. Private seller contact details are never displayed here.</p></div></div>
       <div id="sellerLocation" class="location"><strong>Business location</strong><p class="location-note">Checking approved public location…</p></div>
       <button id="showEnquiry" class="agent-enquiry" type="button">Contact Agent</button>
+      <form id="enquiryForm" class="enquiry-panel">
+        <label class="field"><span>Your name</span><input id="buyerName" type="text" maxlength="80" autocomplete="name" required></label>
+        <label class="field"><span>Your phone number</span><input id="buyerPhone" type="tel" maxlength="30" autocomplete="tel" required></label>
+        <label class="field"><span>Your enquiry</span><textarea id="buyerMessage" maxlength="1000" required placeholder="I would like to know more about this property…"></textarea></label>
+        <p class="privacy">Your enquiry opens WhatsApp. It is sent only after you confirm it in WhatsApp.</p>
+        <button class="action whatsapp" type="submit">Continue to WhatsApp enquiry</button>
+      </form>
     </section>
   </div>
 </section>
