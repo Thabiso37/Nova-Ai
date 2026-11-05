@@ -345,38 +345,56 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 function cash(n){return new Intl.NumberFormat("en-ZA",{style:"currency",currency:"ZAR"}).format(Number(n)||0)}
 
 let currentMarket = 'retail';
+let listingLoadRun = 0;
+const listingCache = Object.create(null);
+const listingCacheAt = Object.create(null);
+const listingPending = Object.create(null);
+let approvedStoreIdsCache = null;
+let approvedStoreIdsCacheAt = 0;
+let approvedStoreIdsPending = null;
+const MARKET_DATA_TTL = 30000;
 
 async function loadListings(marketType, searchQuery = '') {
+  const runId = ++listingLoadRun;
   const grid = document.getElementById('productGrid');
-  grid.innerHTML = "<div class='msg'>Loading listings...</div>";
+  grid.innerHTML = "<div class='msg' role='status'>Loading listings...</div>";
 
-  let query = sb.from("Products").select("*").eq("status", "approved").order("created_at", { ascending: false });
+  try {
+    let data = listingCache[marketType];
+    if (!data || Date.now() - (listingCacheAt[marketType] || 0) >= MARKET_DATA_TTL) {
+      if (!listingPending[marketType]) {
+        let query = sb.from("Products")
+          .select("id,name,description,price,category,image_url,images,seller_name,seller_id,created_at")
+          .eq("status", "approved")
+          .order("created_at", { ascending: false });
+        if (marketType === 'retail') query = query.eq("category", "General");
+        else if (marketType === 'motors') query = query.in("category", ["Auto", "Motors & Vehicles"]);
+        else if (marketType === 'property') query = query.in("category", ["Property For Sale", "Property To Rent"]);
+        listingPending[marketType] = query.then(({data, error}) => {
+          if (error) throw error;
+          listingCache[marketType] = data || [];
+          listingCacheAt[marketType] = Date.now();
+          return listingCache[marketType];
+        }).finally(() => { listingPending[marketType] = null; });
+      }
+      data = await listingPending[marketType];
+    }
 
-  if (marketType === 'retail') {
-    query = query.eq("category", "General");
-  } else if (marketType === 'motors') {
-    query = query.in("category", ["Auto", "Motors & Vehicles"]);
-  } else if (marketType === 'property') {
-    query = query.in("category", ["Property For Sale", "Property To Rent"]);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    grid.innerHTML = "<div class='msg' style='color:#b52828'>Failed to load: " + esc(error.message) + "</div>";
-    return;
-  }
-
-  const { data: approvedStores, error: storeError } = await sb
-    .from("seller_stores")
-    .select("user_id")
-    .eq("status", "approved");
-  if (storeError) {
-    grid.innerHTML = "<div class='msg' style='color:#b52828'>Seller verification could not be checked. Please refresh.</div>";
-    return;
-  }
-  const approvedSellerIds = new Set((approvedStores || []).map(store => String(store.user_id)));
-  let filtered = (data || []).filter(item => item.seller_id && approvedSellerIds.has(String(item.seller_id)));
+    let approvedSellerIds = approvedStoreIdsCache;
+    if (!approvedSellerIds || Date.now() - approvedStoreIdsCacheAt >= MARKET_DATA_TTL) {
+      if (!approvedStoreIdsPending) {
+        approvedStoreIdsPending = sb.from("seller_stores").select("user_id").eq("status", "approved")
+          .then(({data, error}) => {
+            if (error) throw error;
+            approvedStoreIdsCache = new Set((data || []).map(store => String(store.user_id)));
+            approvedStoreIdsCacheAt = Date.now();
+            return approvedStoreIdsCache;
+          }).finally(() => { approvedStoreIdsPending = null; });
+      }
+      approvedSellerIds = await approvedStoreIdsPending;
+    }
+    if (runId !== listingLoadRun) return;
+    let filtered = (data || []).filter(item => item.seller_id && approvedSellerIds.has(String(item.seller_id)));
   if (marketType === 'motors') {
     const automotiveWords = /car|vehicle|dashboard|phone mount|battery|wiper|tyre|tire|engine|headlight|head light|tail light|brake|mirror|accessor|radio|stereo|seat cover|floor mat|roof rack|spark plug|air filter|oil filter|alternator|radiator|clutch|wheel|rim|bumper|exhaust|motorcycle/i;
     filtered = filtered.filter(item => {
@@ -422,6 +440,11 @@ async function loadListings(marketType, searchQuery = '') {
       </div>
     </div>
   `).join("");
+  } catch (error) {
+    if (runId !== listingLoadRun) return;
+    grid.innerHTML = "<div class='msg' role='alert'>Listings could not be loaded. Please try again.</div>";
+    console.error("[NOVAAI] Marketplace listings load failed", error);
+  }
 }
 
 let motorsPartCategory='all';
