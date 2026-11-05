@@ -1647,12 +1647,13 @@ function closeCart() {
 .retail-near-status{display:none;width:100%;margin:6px 0 0 0;font-size:11px;line-height:1.4;color:#667085}
 .retail-near-status:not(:empty){display:block}
 @media(max-width:560px){
- .new-header .head{flex-wrap:wrap!important}
- .new-header .logo{flex:0 0 auto}
- .new-header .search{flex:1 1 100%!important;order:2!important;width:100%!important}
- .new-header .search input{flex:1 1 0;width:1%;min-width:0}
- .new-header .near-me-btn{padding:9px 8px;font-size:11px}
- .new-header .retail-near-status{order:3}
+ .new-header .head{flex-wrap:nowrap!important;gap:7px!important;position:relative}
+ .new-header .logo{flex:0 0 auto;font-size:18px!important;letter-spacing:-.7px}
+ .new-header .search{flex:1 1 0!important;order:0!important;width:auto!important;min-width:0}
+ .new-header .search input{flex:1 1 0;width:1%;min-width:0;padding:9px 6px;font-size:11px}
+ .new-header .search .btn.primary{padding:8px 7px;font-size:11px}
+ .new-header .near-me-btn{padding:8px 6px;font-size:10px}
+ .new-header .retail-near-status{position:absolute;top:100%;left:0;right:0;z-index:60;background:#fff;padding:7px 10px;box-shadow:0 4px 8px #0001}
 }
 </style>
 
