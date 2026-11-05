@@ -500,6 +500,46 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;backg
 .nova-detail-description{margin:14px 0;color:#475467;font-size:14px;line-height:1.7;white-space:pre-wrap}
 .nova-view-store{width:100%;margin:6px 0 12px}
 </style>
+
+<style>
+/* NOVAAI MARKET premium retail polish */
+body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033}
+.new-header .head{gap:14px;flex-wrap:nowrap;padding-top:13px;padding-bottom:13px}
+.new-header .logo{font-size:24px;letter-spacing:-.8px}
+.new-header .search input{background:#fff;border-color:#dce3ed}
+.new-header .search input:focus{outline:2px solid #d7e6fb;outline-offset:1px}
+.new-header .search .btn{border-radius:0 10px 10px 0}
+#shop{margin-top:22px}
+#shop .section-head{margin-bottom:17px;padding:0 2px}
+#shop .section-head h2{margin:0 0 8px}
+#products.grid{gap:14px}
+#products .product{border:1px solid #e7ebf1;border-radius:16px;box-shadow:0 4px 12px rgba(16,40,75,.045)}
+#products .prodimg{height:auto;aspect-ratio:1/1;background:#f7f8fa}
+#products .prodimg img{object-fit:contain;padding:9px}
+#products .prodbody{padding:13px;gap:4px}
+#products .prodbody h3{font-size:14px;line-height:1.4;min-height:38px;font-weight:750}
+#products .price{font-size:19px;color:#10284b;margin:5px 0 9px}
+#products .actions{margin-top:auto}
+#products .actions .btn{border-radius:9px;padding:10px 8px;font-size:12px;font-weight:800}
+#products .actions .btn.primary{background:#174ea6;color:#fff}
+#products .shein-rating-row{display:none!important}
+.nova-nav-item.active{color:#174ea6;font-weight:850}
+.nova-nav-item.active svg{background:#edf4ff;border-radius:9px;box-sizing:content-box;padding:5px}
+@media(max-width:560px){
+ .new-header .head{gap:8px;padding:11px 12px}
+ .new-header .logo{font-size:19px;letter-spacing:-.7px}
+ .new-header .search{flex:1 1 auto;min-width:0}
+ .new-header .search input{font-size:12px;padding:10px 8px}
+ .new-header .search .btn{padding:9px 10px;font-size:12px}
+ #products.grid{gap:9px}
+ #products .prodimg{aspect-ratio:1/1}
+ #products .prodimg img{padding:6px}
+ #products .prodbody{padding:9px}
+ #products .prodbody h3{font-size:12px;min-height:34px}
+ #products .price{font-size:17px}
+ #products .actions .btn{font-size:11px;padding:9px 5px}
+}
+</style>
 </head>
 <body>
 
@@ -740,7 +780,7 @@ let sellerStoresById=Object.create(null);
 function readCart(){try{return JSON.parse(localStorage.getItem("novaMarketplaceCartV1")||"[]")}catch(e){return []}}
 function saveCart(){try{localStorage.setItem("novaMarketplaceCartV1",JSON.stringify(cart))}catch(e){}}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function cash(n){return new Intl.NumberFormat("en-ZA",{style:"currency",currency:"ZAR"}).format(Number(n)||0)}
+function cash(n){return "R "+new Intl.NumberFormat("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0)}
 function safeImg(s){try{let u=new URL(s);return ["http:","https:"].includes(u.protocol)?u.href:""}catch(e){return ""}}
 function go(id) {
   const section = document.getElementById(id);
@@ -790,7 +830,7 @@ document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{
 
 function renderRetailMarketGrid(list) {
   document.getElementById("retailProductsGrid").innerHTML = list.length ? list.map(p => {
-    const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
+    const imgList = Array.isArray(p.images) && p.images.length ? p.images : (p.image_url ? [p.image_url] : []);
     const firstImg = safeImg(imgList[0]);
     return `<article class="product product-open-card" data-open-product="${esc(p.id)}" tabindex="0" aria-label="Open ${esc(p.name)} details">
 <div class="prodimg" style="position:relative">
@@ -800,7 +840,7 @@ function renderRetailMarketGrid(list) {
 <div class="prodbody">
   <small style="color:#08774f;font-weight:800">${esc(p.seller)}</small>
   <h3>${esc(p.name)}</h3>
-  <div class="shein-rating-row"><span class="rating-count">Customer rating: Not rated yet</span></div>
+  
   <div class="price">${cash(p.price)}</div>
   <div class="actions">
     <button class="btn primary" data-add="${esc(p.id)}">Add to cart</button>
@@ -819,7 +859,7 @@ function render(){
   });
 
   document.getElementById("products").innerHTML=list.length?list.map(p=>{
-    const imgList = Array.isArray(p.images) && p.images.length ? p.images : [p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"];
+    const imgList = Array.isArray(p.images) && p.images.length ? p.images : (p.image_url ? [p.image_url] : []);
     const firstImg = safeImg(imgList[0]);
     return `<article class="product product-open-card" data-open-product="${esc(p.id)}" tabindex="0" aria-label="Open ${esc(p.name)} details">
 <div class="prodimg" style="position:relative">
@@ -829,7 +869,7 @@ function render(){
 <div class="prodbody">
   <small style="color:#6654f5;font-weight:800">${esc(p.category)}</small>
   <h3>${esc(p.name)}</h3>
-  <div class="shein-rating-row"><span class="rating-count">Customer rating: Not rated yet</span></div>
+  
   <div class="price">${cash(p.price)}</div>
   <div class="actions">
     <button class="btn primary" data-add="${esc(p.id)}">Add to cart</button>
