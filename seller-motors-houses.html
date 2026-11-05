@@ -175,7 +175,20 @@ body:not(.property-mode) #productGrid .motor-card{padding:0!important;overflow:h
 body.motors-mode main>.hero,
 body.motors-mode main>.stats,
 body.motors-mode main>#marketTitle{display:none!important}
-body.motors-mode main>.search-bar{margin-top:8px}
+body.motors-mode main>.search-bar{display:none!important}
+.motors-header-search{display:none;flex:1;min-width:0;max-width:760px;gap:0;margin:0}
+.motors-header-search input{flex:1;min-width:0;width:100%;padding:11px 12px;border:1px solid #dfe2ed;border-right:0;border-radius:9px 0 0 9px;background:#f8faff;font-size:14px;outline:none}
+.motors-header-search button{flex:0 0 auto;padding:0 16px;border:0;border-radius:0 9px 9px 0;background:#174ea6;color:#fff;font-weight:800}
+body.motors-mode .motors-header-search{display:flex}
+body.motors-mode header .head{display:flex;align-items:center;gap:12px}
+@media(max-width:560px){
+ body.motors-mode header .head{gap:9px;flex-wrap:nowrap;padding:10px 12px}
+ body.motors-mode .logo{font-size:21px;white-space:nowrap}
+ body.motors-mode .motors-header-search{flex:1 1 auto;min-width:0}
+ body.motors-mode .motors-header-search input{padding:10px 8px;font-size:12px}
+ body.motors-mode .motors-header-search button{padding:0 12px}
+ body.motors-mode #activeMarketBadge{display:none}
+}
 </style>
 \n</head>
 <body>
@@ -184,6 +197,10 @@ body.motors-mode main>.search-bar{margin-top:8px}
 <header>
   <div class="head">
     <a class="logo" href="index.html">NOVA<span>AI</span></a>
+    <div class="motors-header-search" id="motorsHeaderSearch">
+      <input type="search" id="motorsSearchInput" placeholder="Search cars, brands or models..." aria-label="Search Motors listings">
+      <button type="button" id="motorsSearchBtn" aria-label="Search Motors">🔍</button>
+    </div>
     <div style="font-size:12px;font-weight:bold;color:var(--muted);" id="activeMarketBadge">🛍️ Retail Market</div>
   </div>
 </header>
@@ -390,6 +407,17 @@ function switchMarket(market) {
 
   loadListings(market);
 }
+
+document.getElementById('motorsSearchBtn').onclick = () => {
+  const q = document.getElementById('motorsSearchInput').value.trim();
+  loadListings('motors', q);
+};
+document.getElementById('motorsSearchInput').onkeypress = (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    loadListings('motors', document.getElementById('motorsSearchInput').value.trim());
+  }
+};
 
 document.getElementById('searchBtn').onclick = () => {
   const q = document.getElementById('searchInput').value.trim();
