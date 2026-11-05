@@ -66,6 +66,20 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
 </section>
 <div id="sellerWorkspace" class="hidden">
   <div class="selected-market-bar"><div><small>Selected seller marketplace</small><strong id="selectedMarketLabel">Retail Seller</strong></div><button class="btn outline" type="button" onclick="returnToMarketplaceSelection()">← Change marketplace</button></div>
+<div class="panel" id="sellerPublicLocationPanel" style="margin:14px 0">
+<h3>Public seller location</h3>
+<p class="muted">Set the province, city and suburb customers may see. Do not enter a street address or private home address. Only this public area is shown to shoppers.</p>
+<div class="grid">
+<div class="field"><label for="sellerLocProvince">Province</label><select id="sellerLocProvince"><option value="">Select province</option><option>Eastern Cape</option><option>Free State</option><option>Gauteng</option><option>KwaZulu-Natal</option><option>Limpopo</option><option>Mpumalanga</option><option>Northern Cape</option><option>North West</option><option>Western Cape</option></select></div>
+<div class="field"><label for="sellerLocCity">City / Town</label><input id="sellerLocCity" maxlength="80" placeholder="e.g. Pretoria"></div>
+<div class="field"><label for="sellerLocSuburb">Suburb / Area</label><input id="sellerLocSuburb" maxlength="80" placeholder="e.g. Centurion"></div>
+<div class="field"><label for="sellerLocLatitude">Public location latitude (optional)</label><input id="sellerLocLatitude" type="number" step="0.00001" min="-90" max="90"></div>
+<div class="field"><label for="sellerLocLongitude">Public location longitude (optional)</label><input id="sellerLocLongitude" type="number" step="0.00001" min="-180" max="180"></div>
+</div>
+<button class="btn outline" type="button" id="sellerLocUseGps">Use device location for public pin</button>
+<div class="field"><label style="display:flex;align-items:flex-start;gap:8px"><input id="sellerLocPublic" type="checkbox" style="width:auto;margin-top:2px"><span>I approve showing this business/listing area publicly. I confirm the pin is not my private residential address.</span></label></div>
+<button class="btn" type="button" id="sellerLocSave">Save public location</button>
+<div id="sellerLocStatus" class="msg" aria-live="polite"></div></div>
 <div class="panel" id="marketplaceAccessStatus">
   <h3>Marketplace access</h3>
   <p class="muted">Each marketplace requires separate administrator approval.</p>
@@ -455,6 +469,7 @@ if (permissionError) {
   document.getElementById("userMsg").textContent = "Marketplace permission check failed: " + permissionError.message;
   return;
 }
+await loadSellerPublicLocation();
 marketplacePermissions = permissionRows || [];
 renderMarketplaceChoices();
 renderMarketplacePermissionStatus();
@@ -1240,6 +1255,7 @@ async function updateFulfillmentStatus(orderId) {
 }
 
 </script>
+<script src="seller-location.js"></script>
 </body>
 </html>
 
