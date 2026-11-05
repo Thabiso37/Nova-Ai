@@ -1426,6 +1426,7 @@ function renderWishlist(){
   try{saved=JSON.parse(localStorage.getItem("novaWishlist")||"[]");if(!Array.isArray(saved))saved=[];}catch(e){saved=[];}
   const favourites=saved.map(id=>products.find(p=>String(p.id)===String(id))).filter(Boolean);
   section.innerHTML=`
+    <div id="wishlistAdSlot" class="wishlist-ad-slot" data-nova-ad-slot="wishlist_banner" data-nova-ad-format="banner" data-nova-ad-version="1" role="region" aria-label="Wishlist advertisement"><span class="wishlist-ad-kicker">NOVAAI SPOTLIGHT</span><strong>Discover more from South African sellers.</strong><small>Promotional space ready for campaigns managed by NOVAAI.</small><a href="./retail.html" aria-label="Explore NOVAAI marketplace">Explore marketplace →</a></div>
     <div class="wishlist-heading"><h2>My Wishlist (${favourites.length})</h2><button type="button" class="wishlist-clear" onclick="clearWishlist()">Clear Wishlist</button></div>
     ${favourites.length?favourites.map(p=>{
       const photos=Array.isArray(p.images)&&p.images.length?p.images:(p.image_url?[p.image_url]:[]);
