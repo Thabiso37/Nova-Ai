@@ -36,7 +36,7 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
 .market-choice h2{font-size:18px;margin:15px 0 4px;color:var(--dark)}
 .market-choice p{font-size:12px;color:#64748b;margin:0 0 12px}
 .market-choice ul{padding-left:18px;margin:0 0 18px;color:#334155;font-size:13px;line-height:1.9;flex:1}
-.market-choice .btn{width:100%;padding:12px}
+.market-choice .btn{width:100%;padding:12px}.market-choice.selected{border:2px solid var(--p);box-shadow:0 0 0 3px #dce9ff}.market-choice.selected:after{content:"SELECTED PRIMARY MARKETPLACE";display:block;margin-top:10px;font-size:10px;font-weight:900;color:var(--p);letter-spacing:.5px}
 #sellerWorkspace{max-width:1100px;margin:0 auto;padding:0 20px 28px}
 .selected-market-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#edf3ff;border:1px solid #d8e5fb;color:var(--dark);padding:13px 15px;border-radius:12px;margin:15px 0}
 .selected-market-bar strong{display:block;font-size:15px}
@@ -268,6 +268,7 @@ function chooseMarketplace(market) {
   if (!Object.prototype.hasOwnProperty.call(marketplaceLabels, market)) return;
   if (user && storeData && storeData.primary_marketplace!==market) { msg("sellerMsg","Access denied: this seller account is assigned to "+(marketplaceLabels[storeData.primary_marketplace]||"another marketplace")+".",true); return; }
   selectedMarket = market;
+  renderMarketplaceChoices();
   setListingMarket(market);
   document.getElementById("selectedMarketLabel").textContent = marketplaceLabels[market];
   document.getElementById("authPanelTitle").textContent = "Sign in or register · " + marketplaceLabels[market];
