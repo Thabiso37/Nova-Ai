@@ -48,6 +48,14 @@ body.property-mode #productGrid .property-card{display:flex;flex-direction:colum
    The existing NOVAAI promotional hero/banner is intentionally retained. */
 body.property-mode .property-hub{margin:8px 0 20px}
 body.property-mode .property-welcome{min-height:clamp(190px,48vw,270px);border-radius:18px;padding:20px 18px;background-position:center 55%;box-shadow:0 10px 26px #10284b20}
+body.property-mode .property-welcome{display:grid;grid-template-columns:40% minmax(0,1fr);align-items:stretch;gap:0;height:clamp(112px,30vw,150px);min-height:0;padding:0;overflow:hidden;background:none;border-radius:14px;box-shadow:0 6px 18px #10284b1a}
+body.property-mode .property-promo-photo{height:100%;margin:0;border-radius:0}
+body.property-mode .property-promo-photo img{height:100%;min-height:0}
+body.property-mode .property-promo-copy{padding:9px 11px}
+body.property-mode .property-promo-copy h2{font-size:clamp(14px,3.5vw,21px);margin:5px 0 3px}
+body.property-mode .property-promo-copy p{font-size:9px;margin:2px 0 5px}
+body.property-mode .property-promo-link{padding:6px 8px;font-size:9px}
+body.property-mode .property-tools{margin-top:10px}
 body.property-mode .property-welcome h2{max-width:340px;font-size:clamp(27px,7vw,39px);line-height:1.05;letter-spacing:-.7px}
 body.property-mode .property-welcome p{max-width:300px;font-size:12px;line-height:1.5;margin:5px 0 0}
 body.property-mode .property-tools{border-radius:15px;padding:13px;margin-top:12px;box-shadow:0 5px 18px #10284b0b}
@@ -395,6 +403,11 @@ body.property-mode main>.stats{display:none!important}
 </section>
 
 <section id="propertyHub" class="property-hub" hidden>
+<!-- NOVAAI Property promotional banner retained as requested -->
+<div class="property-welcome" role="region" aria-label="NOVAAI Property advertisement">
+  <div class="property-promo-photo"><img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=85" alt="Modern home"></div>
+  <div class="property-promo-copy"><span class="property-promo-kicker">A BETTER PLACE TO CALL HOME</span><h2>Find a place to belong.</h2><p>Explore homes and spaces across South Africa.</p><a href="#productGrid" class="property-promo-link">Explore properties <span aria-hidden="true">→</span></a></div>
+</div>
 <div class="property-tools">
   <div class="property-search"><input id="propertySearch" placeholder="Search suburb, city or property" oninput="searchProperty(this.value)" aria-label="Search suburb, city or property"></div>
   <div class="property-chips" aria-label="Property categories">
@@ -407,12 +420,6 @@ body.property-mode main>.stats{display:none!important}
     <button type="button" class="property-chip" onclick="setPropertyCategory('commercial',this)">Commercial</button>
   </div>
   <div class="property-tools-bottom"><button type="button" class="property-filter-open" onclick="openPropertyFilters()">☷ Filters</button><span id="propertyResultCount" aria-live="polite"></span></div>
-</div>
-<!-- NOVAAI Property promotional banner retained as requested -->
-<div class="property-welcome" role="region" aria-label="NOVAAI Property advertisement">
-  <div class="property-promo-photo"><img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=85" alt="Modern home"></div>
-  <div class="property-promo-copy"><span class="property-promo-kicker">A BETTER PLACE TO CALL HOME</span><h2>Find a place to belong.</h2><p>Explore homes and spaces across South Africa.</p><a href="#productGrid" class="property-promo-link">Explore properties <span aria-hidden="true">→</span></a></div>
-</div>
 <div class="property-section-heading"><h3>Featured properties</h3></div>
 <div class="property-section-heading property-recent-heading"><h3>Recently added</h3></div>
 </section>
