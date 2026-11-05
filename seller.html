@@ -79,15 +79,15 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
         <div class="field"><label>Full Legal Name *</label><input id="sellerRealName" required></div>
         <div class="field"><label>Mobile Number *</label><input id="sellerPhone" type="tel" required></div>
         <div class="field" style="text-align:center;border:1px dashed var(--p);padding:10px;border-radius:8px;">
-          <label>📸 Biometric Face Scan *</label>
+          <label>📸 Seller Application Photo *</label>
           <video id="webcam" autoplay playsinline width="100%" style="max-height:140px;display:none;background:#000;border-radius:6px;"></video>
           <canvas id="snapshotCanvas" style="display:none;"></canvas>
           <img id="facePreview" style="max-height:120px;display:none;margin:auto;border-radius:6px;" alt="">
           <div style="margin-top:6px;">
             <button type="button" class="btn outline" id="startCam" style="font-size:11px;padding:6px 10px;">Turn on Camera</button>
-            <button type="button" class="btn" id="captureCam" style="font-size:11px;padding:6px 10px;display:none;">Capture Scan</button>
+            <button type="button" class="btn" id="captureCam" style="font-size:11px;padding:6px 10px;display:none;">Capture Photo</button>
           </div>
-          <div id="faceStatus" class="error" style="font-size:11px;margin-top:4px;">Face scan snapshot required.</div>
+          <div id="faceStatus" class="error" style="font-size:11px;margin-top:4px;">Seller application photo required.</div>
         </div>
         <button class="btn" type="submit" style="width:100%;margin-top:10px;">Sign In to NOVAAI</button>
         <button class="btn outline" type="button" id="signup" style="width:100%;margin-top:6px;">Apply as a New Seller</button>
@@ -223,6 +223,7 @@ function chooseMarketplace(market) {
   selectedMarket = market;
   setListingMarket(market);
   document.getElementById("selectedMarketLabel").textContent = marketplaceLabels[market];
+  document.getElementById("authPanelTitle").textContent = "Sign in or register · " + marketplaceLabels[market];
   document.getElementById("marketplacePicker").classList.add("hidden");
   document.getElementById("sellerWorkspace").classList.remove("hidden");
   document.getElementById("portalStd").classList.toggle("is-authenticated", !!user);
@@ -311,7 +312,7 @@ document.getElementById("startCam").onclick = async () => {
     video.srcObject = await navigator.mediaDevices.getUserMedia({video:true});
     video.style.display="block"; document.getElementById("startCam").style.display="none";
     document.getElementById("captureCam").style.display="inline-block";
-    document.getElementById("faceStatus").textContent = "Position face and capture.";
+    document.getElementById("faceStatus").textContent = "Position yourself and capture a photo.";
   } catch(e) { document.getElementById("faceStatus").textContent = "Camera denied."; }
 };
 
@@ -416,6 +417,7 @@ await loadMyProducts();
 if (version !== authVersion) return;
 
 await loadSellerOrders();
+document.getElementById("listingFormTitle").scrollIntoView({behavior:"smooth",block:"start"});
 }
 
 document.getElementById("authForm").onsubmit = async e => {
@@ -428,7 +430,7 @@ document.getElementById("authForm").onsubmit = async e => {
 document.getElementById("signup").onclick = async () => {
   let email = document.getElementById("email").value, password = document.getElementById("password").value;
   let full_name = document.getElementById("sellerRealName").value, phone = document.getElementById("sellerPhone").value;
-  if(!email || password.length<6 || !full_name || !phone || !faceBlob) return msg("authMsg", "Fill all fields & capture face scan.", true);
+  if(!email || password.length<6 || !full_name || !phone || !faceBlob) return msg("authMsg", "Complete the fields and capture your seller application photo.", true);
   
   let {data, error} = await sb.auth.signUp({email, password, options:{data:{full_name, phone, approved:false}}});
   if(error) return msg("authMsg", error.message, true);
