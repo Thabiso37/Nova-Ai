@@ -101,6 +101,7 @@
   function bootLiveAds(){
     initHomeCarousel();
     ['wishlist_banner','property_banner','motors_banner'].forEach(id=>initLiveSlot(document.querySelector('[data-nova-ad-slot="'+id+'"]')));
+    if(!window.__novaAdObserver&&document.body){window.__novaAdObserver=new MutationObserver(()=>{const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');if(wishlist)initLiveSlot(wishlist);});window.__novaAdObserver.observe(document.body,{childList:true,subtree:true});}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootLiveAds,{once:true});else bootLiveAds();
 
