@@ -169,6 +169,14 @@ body:not(.property-mode) #productGrid .motor-card{padding:0!important;overflow:h
 .motor-view{width:100%;margin-top:12px}
 @media(min-width:760px){body:not(.property-mode) #productGrid .motor-card .motor-main-photo{height:245px}.motor-card-body{padding:15px}}
 </style>
+\n
+<style>
+/* Motors landing: go straight to vehicle listings without the generic hero, stats or market heading */
+body.motors-mode main>.hero,
+body.motors-mode main>.stats,
+body.motors-mode main>#marketTitle{display:none!important}
+body.motors-mode main>.search-bar{margin-top:8px}
+</style>
 \n</head>
 <body>
 
@@ -359,6 +367,7 @@ function closePropertyDetail(){document.getElementById('propertyDetailBackdrop')
 function switchMarket(market) {
   currentMarket = market;
   document.body.classList.toggle('property-mode',market==='property');
+  document.body.classList.toggle('motors-mode',market==='motors');
   document.getElementById('propertyHub').hidden=market!=='property';
   document.querySelectorAll('.bottom-nav .nav-item').forEach(t => t.classList.remove('active'));
   
