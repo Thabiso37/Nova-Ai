@@ -577,14 +577,18 @@ button {
   <h2>Administrator Login</h2>
   <p class="muted">Sign in using your authorised administrator account.</p>
 
-  <label for="email">Email address</label>
-  <input id="email" type="email" placeholder="Administrator email">
+  <form id="adminLoginForm" novalidate>
+    <label for="email">Email address</label>
+    <input id="email" name="email" type="email" autocomplete="username"
+           placeholder="Administrator email" required>
 
-  <label for="password">Password</label>
-  <input id="password" type="password" placeholder="Password">
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password"
+           autocomplete="current-password" placeholder="Password" required>
 
-  <button class="primary" id="loginBtn" style="width:100%">Sign In</button>
-  <p id="loginMessage" aria-live="polite"></p>
+    <button class="primary" id="loginBtn" type="submit" style="width:100%">Sign In</button>
+  </form>
+  <p id="loginMessage" role="status" aria-live="polite"></p>
 </section>
 
 <section id="dashboard" class="hidden">
@@ -825,6 +829,7 @@ const sb = window.supabase.createClient(
 );
 
 let currentAdmin = null;
+let loginInProgress = false;
 let allProducts = [];
 let allPaymentOrders = [];
 let allSellerFinancials = [];
@@ -887,29 +892,27 @@ async function checkAdmin(user) {
 }
 
 async function login() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
+  if (loginInProgress) return;
+
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
   const loginBtn = document.getElementById("loginBtn");
   const loginMessage = document.getElementById("loginMessage");
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
 
   if (!email || !password) {
     loginMessage.textContent = "Enter your email and password.";
     return;
   }
 
+  loginInProgress = true;
   loginBtn.disabled = true;
   loginBtn.textContent = "Signing in…";
   loginMessage.textContent = "Connecting securely to NOVAAI…";
 
   try {
-    const signInRequest = sb.auth.signInWithPassword({ email, password });
-    const timeout = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(
-        "Sign-in timed out. Check your internet connection, then refresh the page and try again."
-      )), 15000)
-    );
-
-    const { data, error } = await Promise.race([signInRequest, timeout]);
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
     if (error) {
       loginMessage.textContent = "Sign-in failed: " + error.message;
@@ -917,23 +920,23 @@ async function login() {
     }
 
     if (!data?.user) {
-      loginMessage.textContent =
-        "Sign-in did not return a user. Please refresh and try again.";
+      loginMessage.textContent = "Sign-in did not return a user. Please try again.";
       return;
     }
 
-    loginMessage.textContent = "Signed in. Verifying administrator access…";
-    await checkAdmin(data.user);
+    // The SIGNED_IN auth-state listener performs the existing database
+    // administrator check. Credentials remain in the fields until success.
+    loginMessage.textContent = "Sign-in successful. Verifying administrator access…";
   } catch (error) {
     console.error("NOVAAI administrator sign-in error:", error);
     loginMessage.textContent =
-      error?.message || "Unexpected sign-in error. Refresh the page and try again.";
+      "Sign-in error: " + (error?.message || "Unexpected error. Please try again.");
   } finally {
+    loginInProgress = false;
     loginBtn.disabled = false;
     loginBtn.textContent = "Sign In";
   }
 }
-
 async function logout() {
   await sb.auth.signOut();
 
@@ -1405,7 +1408,10 @@ async function changeStatus(id, newStatus) {
   await loadProducts();
 }
 
-document.getElementById("loginBtn").onclick = login;
+document.getElementById("adminLoginForm").addEventListener("submit", (event) => {
+  event.preventDefault();
+  login();
+});
 document.getElementById("logoutBtn").onclick = logout;
 document.getElementById("filter").onchange = renderProducts;
 document.getElementById("search").oninput = renderProducts;
@@ -1416,11 +1422,16 @@ document.getElementById("refreshSellerLocationReviews").onclick = loadSellerLoca
 
 sb.auth.getSession().then(({ data, error }) => {
   if (error) {
-    document.getElementById("loginMessage").textContent = error.message;
+    document.getElementById("loginMessage").textContent =
+      "Could not restore your session: " + error.message;
     return;
   }
 
   checkAdmin(data.session?.user || null);
+}).catch((error) => {
+  console.error("NOVAAI session restore error:", error);
+  document.getElementById("loginMessage").textContent =
+    "Session restore failed: " + (error?.message || "Please refresh and try again.");
 });
 
 sb.auth.onAuthStateChange((event, session) => {
