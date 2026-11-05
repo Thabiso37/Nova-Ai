@@ -332,6 +332,11 @@ body.property-mode #productGrid .property-ad-info .property-view{width:100%!impo
 body.property-mode #productGrid .property-photo-control{z-index:2}
 @media(max-width:380px){body.property-mode #productGrid{gap:7px!important}body.property-mode #productGrid .property-ad-card{grid-template-columns:36% minmax(0,1fr)!important;min-height:240px!important}body.property-mode #productGrid .property-ad-image{min-height:240px!important}body.property-mode #productGrid .property-ad-info{padding:8px 6px!important}}
 @media(min-width:760px){body.property-mode #productGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}body.property-mode #productGrid .property-ad-card{min-height:300px!important}body.property-mode #productGrid .property-ad-image{min-height:300px!important}body.property-mode #productGrid .property-ad-info{padding:20px!important}body.property-mode #productGrid .property-ad-info h4{font-size:20px!important}body.property-mode #productGrid .property-ad-info .property-price{font-size:18px!important}body.property-mode #productGrid .property-ad-info .property-description,body.property-mode #productGrid .property-ad-info .property-seller{font-size:12px!important}body.property-mode #productGrid .property-ad-info .property-view{min-height:42px!important;font-size:12px!important}}
+
+/* Property marketplace cleanup: remove generic marketplace header blocks only in Property view. */
+body.property-mode main>.search-bar,
+body.property-mode main>.hero,
+body.property-mode main>.stats{display:none!important}
 </style>
 </head>
 <body>
