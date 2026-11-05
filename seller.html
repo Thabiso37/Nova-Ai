@@ -76,8 +76,9 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
       <form id="authForm">
         <div class="field"><label>Email *</label><input id="email" type="email" required></div>
         <div class="field"><label>Password (min 6 chars) *</label><input id="password" type="password" minlength="6" required></div>
-        <div class="field"><label>Full Legal Name *</label><input id="sellerRealName" required></div>
-        <div class="field"><label>Mobile Number *</label><input id="sellerPhone" type="tel" required></div>
+        <div id="newSellerFields" class="hidden">
+        <div class="field"><label>Full Legal Name *</label><input id="sellerRealName"></div>
+        <div class="field"><label>Mobile Number *</label><input id="sellerPhone" type="tel"></div>
         <div class="field" style="text-align:center;border:1px dashed var(--p);padding:10px;border-radius:8px;">
           <label>📸 Seller Application Photo *</label>
           <video id="webcam" autoplay playsinline width="100%" style="max-height:140px;display:none;background:#000;border-radius:6px;"></video>
@@ -88,6 +89,7 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
             <button type="button" class="btn" id="captureCam" style="font-size:11px;padding:6px 10px;display:none;">Capture Photo</button>
           </div>
           <div id="faceStatus" class="error" style="font-size:11px;margin-top:4px;">Seller application photo required.</div>
+        </div>
         </div>
         <button class="btn" type="submit" style="width:100%;margin-top:10px;">Sign In to NOVAAI</button>
         <button class="btn outline" type="button" id="signup" style="width:100%;margin-top:6px;">Apply as a New Seller</button>
@@ -427,7 +429,15 @@ document.getElementById("authForm").onsubmit = async e => {
   updateUser(data.user);
 };
 
+let sellerApplicationMode = false;
 document.getElementById("signup").onclick = async () => {
+  if (!sellerApplicationMode) {
+    sellerApplicationMode = true;
+    document.getElementById("newSellerFields").classList.remove("hidden");
+    document.getElementById("signup").textContent = "Submit Seller Application";
+    document.getElementById("newSellerFields").scrollIntoView({behavior:"smooth",block:"center"});
+    return;
+  }
   let email = document.getElementById("email").value, password = document.getElementById("password").value;
   let full_name = document.getElementById("sellerRealName").value, phone = document.getElementById("sellerPhone").value;
   if(!email || password.length<6 || !full_name || !phone || !faceBlob) return msg("authMsg", "Complete the fields and capture your seller application photo.", true);
