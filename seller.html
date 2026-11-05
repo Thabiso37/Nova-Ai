@@ -180,7 +180,9 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const sb = window.supabase.createClient("https://nxplffvklkopwfjaqexo.supabase.co","sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ");
-const retailCats = ["Auto","Accessories","Clothing Shoes & Accessories","Cellphones","Computers & Laptops","Electronics","Fashion","Groceries","Home & Living","Office & Stationery","Sports","TV Audio & Video","Toys & Games"];
+const retailCats = ["Accessories","Clothing Shoes & Accessories","Cellphones","Computers & Laptops","Electronics","Fashion","Groceries","Home & Living","Office & Stationery","Sports","TV Audio & Video","Toys & Games"];
+const motorCategories = ["Auto","Motors & Vehicles"];
+const propertyCategories = ["Property For Sale","Property To Rent"];
 let listingMarket = "retail";
 function setListingMarket(market) {
   if (!["retail","motors","property"].includes(market)) return;
@@ -199,7 +201,7 @@ function setListingMarket(market) {
   } else if (market === "motors") {
     title.textContent = "My Motor Listings · Add a vehicle";
     label.textContent = "Marketplace *";
-    category.innerHTML = '<option value="Motors & Vehicles">Motors & Vehicles</option>';
+    category.innerHTML = '<option value="Auto">Auto (Motors)</option><option value="Motors & Vehicles">Motors & Vehicles (legacy)</option>';
     document.getElementById("marketSpecificFields").innerHTML = `
       <div class="field"><label>Year *</label><input id="vehicleYear" type="number" min="1900" max="2100" required placeholder="2021"></div>
       <div class="field"><label>Mileage (km) *</label><input id="vehicleMileage" required placeholder="97,550 km"></div>
@@ -241,6 +243,8 @@ function switchPortal() { return; }
 
 let faceBlob = null, user = null, storeData = null;
 let editingProductId = null;
+let editingProductCategory = null;
+let editingProductMarket = null;
 let authVersion = 0;
 const video = document.getElementById("webcam"), canvas = document.getElementById("snapshotCanvas"), preview = document.getElementById("facePreview");
 
@@ -435,13 +439,19 @@ document.getElementById("sellerForm").onsubmit = async e => {
         throw new Error("Please select at least one product photo.");
       }
 
+      if (editingProductId && editingProductMarket && listingMarket !== editingProductMarket) {
+        throw new Error("To protect this listing, save it in its original marketplace tab.");
+      }
+      const categoryToSave = editingProductId && editingProductMarket === "retail"
+        ? editingProductCategory
+        : document.getElementById("category").value;
       const { error } = await sb
         .from("Products")
         .update({
           name: document.getElementById("productName").value.trim(),
           description: (document.getElementById("description").value.trim() + marketDetailsFromForm()).trim(),
           price: Number(document.getElementById("price").value),
-          category: document.getElementById("category").value,
+          category: categoryToSave,
           image_url: imgs[0],
           images: imgs,
           seller_name: document.getElementById("sellerName").value.trim(),
@@ -454,6 +464,8 @@ document.getElementById("sellerForm").onsubmit = async e => {
       if (error) throw error;
 
       editingProductId = null;
+      editingProductCategory = null;
+      editingProductMarket = null;
       msgEl.textContent =
         "Changes saved. Your product has been resubmitted for approval.";
     }
@@ -551,8 +563,8 @@ async function loadMyProducts() {
   msgEl.textContent =
     products.length + " product(s) in your inventory.";
 
-  const retailListings = products.filter(p => !["Motors & Vehicles","Property For Sale","Property To Rent"].includes(p.category));
-  const motorListings = products.filter(p => p.category === "Motors & Vehicles");
+  const retailListings = products.filter(p => !motorCategories.includes(p.category) && !propertyCategories.includes(p.category));
+  const motorListings = products.filter(p => motorCategories.includes(p.category));
   const propertyListings = products.filter(p => ["Property For Sale","Property To Rent"].includes(p.category));
   const renderGroup = (heading, rows) => `
     <section style="margin:16px 0;padding:12px;border:1px solid var(--line);border-radius:10px;">
@@ -607,10 +619,12 @@ async function editProduct(id) {
     return;
   }
 
-  const market = product.category === "Motors & Vehicles" ? "motors" :
-    (product.category === "Property For Sale" || product.category === "Property To Rent" ? "property" : "retail");
+  const market = motorCategories.includes(product.category) ? "motors" :
+    (propertyCategories.includes(product.category) ? "property" : "retail");
   setListingMarket(market);
   editingProductId = product.id;
+  editingProductCategory = product.category || "";
+  editingProductMarket = market;
 
   document.getElementById("productName").value = product.name || "";
   document.getElementById("description").value = getBaseDescription(product.description || "");
@@ -622,7 +636,11 @@ async function editProduct(id) {
     fillDetail("propertyType","Property type"); fillDetail("propertyBedrooms","Bedrooms"); fillDetail("propertyBathrooms","Bathrooms"); fillDetail("propertyParking","Parking"); fillDetail("propertyFloorArea","Floor area m2"); fillDetail("propertyErfSize","Erf size m2"); fillDetail("propertyLocation","Location");
   }
   document.getElementById("price").value = product.price || "";
-  document.getElementById("category").value = product.category || "";
+  const categorySelect = document.getElementById("category");
+  if (product.category && !Array.from(categorySelect.options).some(option => option.value === product.category)) {
+    categorySelect.add(new Option(product.category, product.category));
+  }
+  categorySelect.value = product.category || "";
   document.getElementById("sellerName").value = product.seller_name || "";
 
   document.getElementById("publish").textContent =
