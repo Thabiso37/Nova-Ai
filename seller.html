@@ -250,15 +250,25 @@ let listingMarket = "retail";
 const requestedMarket = new URLSearchParams(window.location.search).get("market");
 let selectedMarket = ["retail","motors","property"].includes(requestedMarket) ? requestedMarket : null;
 let marketplacePermissions = [];
-function hasMarketplaceAccess(market){ return !!storeData && storeData.primary_marketplace===market && String(storeData.status||"").toLowerCase()==="approved" && marketplacePermissions.some(p=>p.marketplace===market && p.status==="approved"); }
+function normaliseApprovalStatus(value){ return String(value||"").trim().toLowerCase(); }
+function hasMarketplaceAccess(market){
+  return !!user && !!storeData && storeData.primary_marketplace===market &&
+    normaliseApprovalStatus(storeData.status)==="approved" &&
+    marketplacePermissions.some(p=>String(p.marketplace||"").trim().toLowerCase()===market && normaliseApprovalStatus(p.status)==="approved");
+}
 function requireMarketplaceAccess(market){ if(!hasMarketplaceAccess(market)){ msg("sellerMsg","Access denied: your store and this marketplace must both be approved.",true); return false; } return true; }
 function renderMarketplacePermissionStatus(){
   const box=document.getElementById("marketplaceAccessRecords");
   if(!box)return;
   if(!user){box.textContent="Sign in to view your seller application.";return;}
   const market=storeData?.primary_marketplace || selectedMarket;
-  const record=marketplacePermissions.find(p=>p.marketplace===market);
-  box.innerHTML='<div class="record"><strong>'+escapeHTML(marketplaceLabels[market]||"Primary marketplace")+'</strong><p>Application status: '+escapeHTML(String(record?.status||storeData?.status||"pending").toUpperCase())+'</p><p>This seller account cannot request or manage another marketplace.</p></div>';
+  const record=marketplacePermissions.find(p=>String(p.marketplace||"").trim().toLowerCase()===market);
+  const storeStatus=normaliseApprovalStatus(storeData?.status);
+  const permissionStatus=normaliseApprovalStatus(record?.status);
+  const combinedStatus=storeStatus==="approved" && permissionStatus==="approved" ? "APPROVED" :
+    (storeStatus==="rejected" || permissionStatus==="rejected" ? "REJECTED" :
+    (!storeData || !record ? "CHECKING" : "PENDING"));
+  box.innerHTML='<div class="record"><strong>'+escapeHTML(marketplaceLabels[market]||"Primary marketplace")+'</strong><p>Application status: '+escapeHTML(combinedStatus)+'</p><p>This seller account cannot request or manage another marketplace.</p></div>';
 }
 async function requestMarketplaceAccess(){
   const box=document.getElementById("marketplaceAccessRecords");
@@ -397,20 +407,15 @@ function msg(id, txt, err=false) {
 
 let updateUserPromise = null;
 let updateUserPromiseKey = undefined;
-let initializedSellerAuthKey = undefined;
 
 function updateUser(u) {
   const key = u?.id || null;
+  // Collapse overlapping auth callbacks, but allow later refreshes for this same
+  // user so a newly approved application cannot remain stuck in stale UI state.
   if (updateUserPromise && updateUserPromiseKey === key) return updateUserPromise;
-  if (initializedSellerAuthKey === key && (user?.id || null) === key) return Promise.resolve(true);
-  if ((user?.id || null) !== key) initializedSellerAuthKey = undefined;
-
   const task = updateUserOnce(u);
   let trackedPromise;
-  trackedPromise = task.then(result => {
-    if (result === true && (user?.id || null) === key) initializedSellerAuthKey = key;
-    return result;
-  }).catch(error => {
+  trackedPromise = task.catch(error => {
     console.error("NOVAAI seller session initialisation failed:", error);
     return false;
   }).finally(() => {
@@ -532,8 +537,9 @@ document.getElementById("changeMarketplaceButton")?.classList.add("hidden");
 const params = new URLSearchParams(window.location.search);params.set("market",selectedMarket);history.replaceState(null,"",window.location.pathname+"?"+params.toString());
 const {data: permissionRows, error: permissionError} = await sb
   .from("seller_marketplace_permissions")
-  .select("marketplace,status")
-  .eq("user_id", u.id);
+   .select("marketplace,status")
+   .eq("user_id", u.id)
+   .eq("marketplace", selectedMarket);
 if (version !== authVersion) return;
 if (permissionError) {
   publish.disabled = true;
@@ -558,8 +564,7 @@ if (!hasMarketplaceAccess(selectedMarket)) {
     return true;
 }
 
-const approved =
-String(storeData.status || "").toLowerCase() === "approved";
+const approved = hasMarketplaceAccess(selectedMarket);
 
 document.getElementById("approvalBox").textContent =
 approved ? "✔ Store Approved" :
@@ -662,8 +667,8 @@ document.getElementById("sellerForm").onsubmit = async e => {
   const msgEl = document.getElementById("sellerMsg");
   const submitButton = form.querySelector('button[type="submit"]');
 
-  if (!user || String(storeData?.status || "").toLowerCase() !== "approved") {
-    msg("sellerMsg", "Account not approved yet.", true);
+  if (!user || !hasMarketplaceAccess(selectedMarket)) {
+    msg("sellerMsg", "Your store and " + (marketplaceLabels[selectedMarket] || "marketplace") + " permission must both be approved before publishing.", true);
     return;
   }
 
@@ -940,8 +945,8 @@ async function editProduct(id) {
 }
 
 async function deleteProduct(id) {
-  if (!user || String(storeData?.status || "").toLowerCase() !== "approved") {
-    alert("Your approved seller account is required to manage listings.");
+  if (!user || !hasMarketplaceAccess(selectedMarket)) {
+    alert("Your approved seller account and marketplace permission are required to manage listings.");
     return;
   }
   const {data: target} = await sb.from("Products").select("category").eq("id",id).eq("seller_id",user.id).maybeSingle();
@@ -1025,8 +1030,8 @@ async function loadSellerOrders() {
     return;
   }
 
-  if (String(storeData?.status || "").toLowerCase() !== "approved") {
-    msgEl.textContent = "Your store must be approved to view orders.";
+  if (!hasMarketplaceAccess(selectedMarket)) {
+    msgEl.textContent = "Your store and marketplace permission must both be approved to view orders.";
     list.innerHTML = "";
     return;
   }
