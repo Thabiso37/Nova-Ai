@@ -1072,7 +1072,7 @@ async function loadMarketplacePermissions(){
  }
 }
 async function reviewMarketplacePermission(id,status){
- if(!currentAdmin || verifiedAdminId!==currentAdmin.id || !["approved","rejected"].includes(status) || reviewingSellerApplications.has(id))return;
+ if(!currentAdmin || !["approved","rejected"].includes(status) || reviewingSellerApplications.has(id))return;
  if(!confirm("Set this marketplace application to "+status.toUpperCase()+"?"))return;
  const msg=document.getElementById("marketplacePermissionMessage");
  const buttons=[...document.querySelectorAll("#marketplacePermissionRecords button")];
