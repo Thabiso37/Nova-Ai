@@ -928,46 +928,56 @@ async function loadSellerOrders() {
   msgEl.textContent = "Loading orders...";
   list.innerHTML = "";
 
-  const { data: items, error: itemsError } = await sb
-    .from("order_items")
-    .select("id, order_id, product_name, quantity, unit_price, created_at")
-    .eq("seller_id", targetUser.id)
-    .order("created_at", { ascending: false });
+  const { data: sellerOrderRows, error: itemsError } = await sb
+    .rpc("get_my_seller_orders");
 
   if (currentVersion !== authVersion || user !== targetUser) return;
 
   if (itemsError) {
-    msgEl.textContent = "Unable to load orders: " + itemsError.message;
+    msgEl.textContent = "Unable to load primary-marketplace orders: " + itemsError.message;
     return;
   }
 
-  const { data: fulfillments, error: fulfillmentError } = await sb
-    .from("seller_fulfillments")
-    .select(`
-      id,
-      order_id,
-      fulfillment_status,
-      item_subtotal,
-      tracking_number,
-      courier_name,
-      delivery_date
-    `)
-    .eq("seller_id", targetUser.id);
+  const items = (sellerOrderRows || []).map(row => ({
+    id: row.order_item_id,
+    order_id: row.order_id,
+    product_name: row.product_name,
+    quantity: row.quantity,
+    unit_price: row.unit_price,
+    created_at: row.order_created_at
+  }));
+
+  const orderIds = [...new Set(items.map(item => String(item.order_id)))];
+  let fulfillments = [];
+  let fulfillmentError = null;
+  if (orderIds.length) {
+    const result = await sb
+      .from("seller_fulfillments")
+      .select(`
+        id,
+        order_id,
+        fulfillment_status,
+        item_subtotal,
+        tracking_number,
+        courier_name,
+        delivery_date
+      `)
+      .eq("seller_id", targetUser.id)
+      .in("order_id", orderIds);
+    fulfillments = result.data || [];
+    fulfillmentError = result.error;
+  }
 
   if (currentVersion !== authVersion || user !== targetUser) return;
 
   if (fulfillmentError) {
-    msgEl.textContent =
-      "Unable to load fulfillment records: " + fulfillmentError.message;
+    msgEl.textContent = "Unable to load primary-marketplace fulfillment records: " + fulfillmentError.message;
     return;
   }
 
   const fulfillmentMap = new Map(
-    (fulfillments || []).map(f => [String(f.order_id), f])
+    fulfillments.map(f => [String(f.order_id), f])
   );
-const orderIds = [
-  ...new Set((items || []).map(item => String(item.order_id)))
-];
 
 const { data: orders, error: ordersError } = await sb
   .from("orders")
