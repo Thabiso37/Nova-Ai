@@ -465,7 +465,6 @@ body.product-view-active .nova-hero-carousel{display:none!important}
 (function(){
   const form=document.getElementById('homeSearchForm');
   const input=document.getElementById('homeSearchInput');
-  const locationButton=document.getElementById('homeUseLocation');
   const status=document.getElementById('homeLocationStatus');
   if(form&&input){
     const filterProducts=function(scrollToResults){
@@ -478,24 +477,6 @@ body.product-view-active .nova-hero-carousel{display:none!important}
     };
     form.addEventListener('submit',function(e){e.preventDefault();filterProducts(true);});
     input.addEventListener('input',function(){filterProducts(false);});
-  }
-  if(locationButton){
-    locationButton.addEventListener('click',function(){
-      if(!navigator.geolocation){if(status)status.textContent='Location is not supported by this browser.';return;}
-      locationButton.disabled=true;locationButton.textContent='Finding you…';
-      if(status)status.textContent='Requesting your location permission…';
-      navigator.geolocation.getCurrentPosition(
-        function(){
-          locationButton.disabled=false;locationButton.textContent='📍 Near me';
-          if(status)status.textContent='Your location was detected. Nearby product matching is not available yet because current seller listings do not include a suburb, town or GPS location. You can still search products by name, category or seller.';
-        },
-        function(error){
-          locationButton.disabled=false;locationButton.textContent='📍 Near me';
-          if(status)status.textContent=error.code===1?'Location permission was not granted. You can allow it in Chrome site settings.':'Could not get your location. Please try again or search by product name.';
-        },
-        {enableHighAccuracy:false,timeout:10000,maximumAge:300000}
-      );
-    });
   }
 })();
 </script>
