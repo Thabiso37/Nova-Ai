@@ -243,6 +243,67 @@ body.motors-mode header .head{display:flex;align-items:center;gap:12px}
 
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#10284b">
+<style>
+
+/* NOVAAI PROPERTY — approved two-column square listing layout */
+body.property-mode .property-hub{display:block;margin:8px 0 22px}
+body.property-mode .property-tools{margin:0 0 14px;padding:13px 14px 12px;border:1px solid #e7ecf4;border-radius:19px;background:#fff;box-shadow:0 8px 24px rgba(16,40,75,.055)}
+body.property-mode .property-search input{height:48px;padding:0 44px 0 15px;border:1px solid #e1e7ef;border-radius:13px;background:#f6f8fb;color:#172943;font-size:14px}
+body.property-mode .property-search input::placeholder{color:#7a8494;opacity:1}
+body.property-mode .property-search:after{content:"⌕";right:14px;top:7px;font-size:25px}
+body.property-mode .property-chips{display:flex;gap:8px;margin:12px 0 11px;overflow-x:auto;overscroll-behavior-x:contain;padding-bottom:2px;scrollbar-width:none}
+body.property-mode .property-chips::-webkit-scrollbar{display:none}
+body.property-mode .property-chip{flex:0 0 auto;padding:9px 14px;border:1px solid #e0e6ef;border-radius:24px;background:#fff;color:#526078;font-size:11px;font-weight:800}
+body.property-mode .property-chip.active{border-color:#174ea6;background:#174ea6;color:#fff}
+body.property-mode .property-tools-bottom{display:flex;align-items:center;justify-content:space-between;min-height:39px}
+body.property-mode .property-filter-open{padding:9px 14px;border:1px solid #dfe6f0;border-radius:11px;background:#fff;color:#174ea6;font-size:12px;font-weight:800}
+body.property-mode .property-tools #propertyResultCount{float:none;margin:0;color:#788397;font-size:12px}
+body.property-mode .property-welcome{display:grid;grid-template-columns:1fr 1fr;min-height:0;height:clamp(120px,24vw,180px);margin:0 0 20px;padding:0;overflow:hidden;border-radius:15px;background:#10284b;box-shadow:0 8px 22px rgba(16,40,75,.13)}
+body.property-mode .property-promo-photo{min-width:0;min-height:0;overflow:hidden}
+body.property-mode .property-promo-photo img{display:block;width:100%;height:100%;min-height:120px;object-fit:cover}
+body.property-mode .property-promo-copy{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-width:0;padding:12px 13px;background:linear-gradient(135deg,#10284b,#174ea6);color:#fff}
+body.property-mode .property-promo-kicker{color:#f5c542;font-size:8px;font-weight:900;letter-spacing:1px;line-height:1.35}
+body.property-mode .property-promo-copy h2{margin:7px 0 4px;color:#fff;font-size:clamp(15px,3.8vw,24px);line-height:1.08;letter-spacing:-.4px}
+body.property-mode .property-promo-copy p{margin:3px 0 8px;color:#e7eefb;font-size:9px;line-height:1.35}
+body.property-mode .property-promo-link{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:#f5b900;color:#10284b;font-size:9px;font-weight:900}
+body.property-mode .property-section-heading{margin:18px 2px 9px}
+body.property-mode .property-section-heading h3{font-size:21px;font-weight:850;letter-spacing:-.45px;color:#142544}
+body.property-mode .property-recent-heading{margin-top:18px}
+body.property-mode #productGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:11px;margin-top:10px}
+body.property-mode #productGrid .property-card{display:flex;min-width:0;flex-direction:column;padding:0!important;overflow:hidden;border:1px solid #e4eaf2!important;border-radius:17px!important;background:#fff;box-shadow:0 5px 17px rgba(16,40,75,.09)}
+body.property-mode .property-card-gallery{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;background:#e9eef5}
+body.property-mode .property-card-photo{display:block;width:100%;height:100%;aspect-ratio:1/1;object-fit:cover}
+body.property-mode .property-card-placeholder{width:100%;height:100%;min-height:0;aspect-ratio:1/1;display:grid;place-items:center}
+body.property-mode .property-photo-count{right:8px;bottom:8px;padding:5px 7px;border-radius:7px;background:rgba(16,40,75,.88);font-size:10px}
+body.property-mode .property-photo-control{top:calc(50% - 17px);width:30px;height:34px;border-radius:9px;background:rgba(16,40,75,.78);font-size:22px}
+body.property-mode .property-card-body{display:flex;flex:1;flex-direction:column;min-width:0;padding:11px 10px 10px}
+body.property-mode .property-type{display:block;font-size:9px;line-height:1.35;letter-spacing:.35px;color:#174ea6;font-weight:900}
+body.property-mode .property-card h4{margin:6px 0 7px;color:#172943;font-size:14px;line-height:1.28;font-weight:800;overflow-wrap:anywhere}
+body.property-mode .property-price{color:#10284b;font-size:clamp(15px,4.1vw,20px);line-height:1.18;font-weight:900;overflow-wrap:anywhere}
+body.property-mode .property-location{margin:7px 0 8px;color:#59677e;font-size:10px;line-height:1.35;overflow-wrap:anywhere}
+body.property-mode .property-specs{display:flex;flex-wrap:wrap;gap:7px 9px;margin-top:2px;padding:8px 0;border-top:1px solid #e9edf3;border-bottom:1px solid #e9edf3}
+body.property-mode .property-specs span{color:#46566e;font-size:9px;line-height:1.3;white-space:normal}
+body.property-mode .property-description{margin:7px 0 0;color:#68758a;font-size:10px;line-height:1.4;max-height:29px}
+body.property-mode .property-seller{margin-top:auto;padding-top:8px;border-top:0;color:#788397;font-size:9px;line-height:1.3}
+body.property-mode .property-view{min-height:39px;margin-top:8px;padding:9px 7px;border-radius:10px;background:#174ea6;color:#fff;font-size:11px;font-weight:850}
+body.property-mode .property-empty{grid-column:1/-1}
+@media(min-width:760px){
+ body.property-mode #productGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+ body.property-mode .property-card-gallery,body.property-mode .property-card-photo,body.property-mode .property-card-placeholder{aspect-ratio:1/1}
+ body.property-mode .property-card-body{padding:13px}
+ body.property-mode .property-card h4{font-size:16px}
+}
+@media(max-width:360px){
+ body.property-mode #productGrid{gap:8px}
+ body.property-mode .property-card-body{padding:8px}
+ body.property-mode .property-card h4{font-size:12px}
+ body.property-mode .property-specs{gap:6px}
+ body.property-mode .property-specs span{font-size:8px}
+ body.property-mode .property-promo-copy{padding:9px}
+ body.property-mode .property-promo-copy h2{font-size:14px}
+}
+
+</style>
 </head>
 <body>
 
@@ -300,9 +361,27 @@ body.motors-mode header .head{display:flex;align-items:center;gap:12px}
 </section>
 
 <section id="propertyHub" class="property-hub" hidden>
-<div class="property-welcome"><div class="property-welcome-top"><span>NOVAAI PROPERTY</span><span class="property-avatar">N</span></div><h2>Find Your Comfortable Place</h2><p>Discover a place that feels like home.</p></div>
-<div class="property-tools"><div class="property-search"><input id="propertySearch" placeholder="Search suburb, city or property" oninput="searchProperty(this.value)"></div><div class="property-chips"><button class="property-chip active" onclick="setPropertyCategory('all',this)">All</button><button class="property-chip" onclick="setPropertyCategory('sale',this)">For Sale</button><button class="property-chip" onclick="setPropertyCategory('rent',this)">To Rent</button><button class="property-chip" onclick="setPropertyCategory('house',this)">Houses</button><button class="property-chip" onclick="setPropertyCategory('apartment',this)">Apartments</button><button class="property-chip" onclick="setPropertyCategory('townhouse',this)">Townhouses</button><button class="property-chip" onclick="setPropertyCategory('commercial',this)">Commercial</button></div><button class="property-filter-open" onclick="openPropertyFilters()">☷ Filters</button><span id="propertyResultCount"></span></div>
-<div class="property-section-heading"><h3>Featured properties</h3></div><div class="property-section-heading"><h3>Recently added</h3></div></section>
+<div class="property-tools">
+  <div class="property-search"><input id="propertySearch" placeholder="Search suburb, city or property" oninput="searchProperty(this.value)" aria-label="Search suburb, city or property"></div>
+  <div class="property-chips" aria-label="Property categories">
+    <button type="button" class="property-chip active" onclick="setPropertyCategory('all',this)">All</button>
+    <button type="button" class="property-chip" onclick="setPropertyCategory('sale',this)">For Sale</button>
+    <button type="button" class="property-chip" onclick="setPropertyCategory('rent',this)">To Rent</button>
+    <button type="button" class="property-chip" onclick="setPropertyCategory('house',this)">Houses</button>
+    <button type="button" class="property-chip" onclick="setPropertyCategory('apartment',this)">Apartments</button>
+    <button type="button" class="property-chip" onclick="setPropertyCategory('townhouse',this)">Townhouses</button>
+    <button type="button" class="property-chip" onclick="setPropertyCategory('commercial',this)">Commercial</button>
+  </div>
+  <div class="property-tools-bottom"><button type="button" class="property-filter-open" onclick="openPropertyFilters()">☷ Filters</button><span id="propertyResultCount" aria-live="polite"></span></div>
+</div>
+<!-- NOVAAI Property promotional banner retained as requested -->
+<div class="property-welcome" role="region" aria-label="NOVAAI Property advertisement">
+  <div class="property-promo-photo"><img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=85" alt="Modern home"></div>
+  <div class="property-promo-copy"><span class="property-promo-kicker">A BETTER PLACE TO CALL HOME</span><h2>Find a place to belong.</h2><p>Explore homes and spaces across South Africa.</p><a href="#productGrid" class="property-promo-link">Explore properties <span aria-hidden="true">→</span></a></div>
+</div>
+<div class="property-section-heading"><h3>Featured properties</h3></div>
+<div class="property-section-heading property-recent-heading"><h3>Recently added</h3></div>
+</section>
   <h3 id="marketTitle" style="margin-top:24px;">🛍️ Retail Products & Brands</h3>
   <div id="productGrid" class="grid">
     <div class="msg">Loading marketplace listings...</div>
