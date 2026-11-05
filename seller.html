@@ -24,6 +24,27 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
 .notice{padding:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:11px;color:#991b1b;line-height:1.5}
 .msg{font-size:12px;margin-top:8px}.error{color:#b52828}.success{color:#16885e}.hidden{display:none!important}
 @media(max-width:768px){.grid{grid-template-columns:1fr}}
+/* Marketplace-specific seller entry */
+.picker-wrap{max-width:1050px;margin:18px auto 28px;padding:0 20px}
+.picker-intro{text-align:center;padding:22px 10px 18px}
+.picker-kicker{color:var(--p);font-size:11px;font-weight:900;letter-spacing:1.8px;text-transform:uppercase}
+.picker-intro h1{font-size:clamp(25px,5vw,36px);line-height:1.12;margin:9px 0;color:var(--dark)}
+.picker-intro p{max-width:620px;margin:0 auto;color:#64748b;font-size:14px;line-height:1.6}
+.market-choice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.market-choice{background:#fff;border:1px solid #dfe6f0;border-radius:16px;padding:20px;box-shadow:0 8px 24px rgba(16,40,75,.06);display:flex;flex-direction:column;min-width:0}
+.market-choice .choice-icon{width:48px;height:48px;border-radius:13px;background:#edf3ff;color:var(--p);display:grid;place-items:center;font-size:23px;font-weight:900}
+.market-choice h2{font-size:18px;margin:15px 0 4px;color:var(--dark)}
+.market-choice p{font-size:12px;color:#64748b;margin:0 0 12px}
+.market-choice ul{padding-left:18px;margin:0 0 18px;color:#334155;font-size:13px;line-height:1.9;flex:1}
+.market-choice .btn{width:100%;padding:12px}
+#sellerWorkspace{max-width:1100px;margin:0 auto;padding:0 20px 28px}
+.selected-market-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#edf3ff;border:1px solid #d8e5fb;color:var(--dark);padding:13px 15px;border-radius:12px;margin:15px 0}
+.selected-market-bar strong{display:block;font-size:15px}
+.selected-market-bar small{display:block;color:#526783;margin-top:2px}
+#portalStd:not(.is-authenticated)> .panel:nth-child(2){display:none}
+#portalStd.is-authenticated>.panel:nth-child(2){display:block}
+#portalStd:not(.is-authenticated){grid-template-columns:minmax(0,520px);justify-content:center}
+@media(max-width:760px){.market-choice-grid{grid-template-columns:1fr}.market-choice{padding:17px}.selected-market-bar{align-items:flex-start}.picker-wrap{padding:0 14px}#sellerWorkspace{padding:0 14px 25px}}
 </style>
 </head>
 <body>
@@ -31,16 +52,26 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
 <header><div class="head"><a class="logo" href="index.html">NOVA<span>AI</span></a><a class="btn outline" href="index.html">← Marketplace</a></div></header>
 
 <main>
-<h2>Protected Seller Portals</h2>
-<div class="tabs" aria-label="Seller dashboard">
-  <div class="tab active" id="tabStd">Seller Dashboard</div>
-</div>
+<section id="marketplacePicker" class="picker-wrap">
+  <div class="picker-intro">
+    <div class="picker-kicker">NOVAAI seller centre</div>
+    <h1>Choose where you want to sell</h1>
+    <p>Select a marketplace to continue to the matching seller sign-in or registration experience. One NOVAAI account works across all three marketplaces.</p>
+  </div>
+  <div class="market-choice-grid">
+    <article class="market-choice"><div class="choice-icon">R</div><h2>Retail Seller</h2><p>Open your online shop and manage products.</p><ul><li>Products</li><li>Electronics</li><li>Fashion</li><li>Groceries</li><li>Home and Living</li></ul><button class="btn" type="button" onclick="chooseMarketplace('retail')">Continue to Retail</button></article>
+    <article class="market-choice"><div class="choice-icon">M</div><h2>Motor Seller</h2><p>List vehicles for buyers across South Africa.</p><ul><li>Cars</li><li>Motorcycles</li><li>Commercial vehicles</li><li>Other vehicles</li></ul><button class="btn" type="button" onclick="chooseMarketplace('motors')">Continue to Motors</button></article>
+    <article class="market-choice"><div class="choice-icon">P</div><h2>Property Seller</h2><p>Advertise property for sale or rent.</p><ul><li>Property for sale</li><li>Property to rent</li><li>Houses</li><li>Apartments</li><li>Land</li></ul><button class="btn" type="button" onclick="chooseMarketplace('property')">Continue to Property</button></article>
+  </div>
+</section>
+<div id="sellerWorkspace" class="hidden">
+  <div class="selected-market-bar"><div><small>Selected seller marketplace</small><strong id="selectedMarketLabel">Retail Seller</strong></div><button class="btn outline" type="button" onclick="returnToMarketplaceSelection()">← Change marketplace</button></div>
 
 <!-- STANDARD SELLER PORTAL -->
 <div id="portalStd" class="grid">
   <div class="panel">
-    <h3>🔐 Merchant Sign-In & Verification</h3>
-    <div class="notice">Face scan and mobile verification required before admin approval.</div>
+    <h3 id="authPanelTitle">🔐 Seller Sign-In & Registration</h3>
+    <div class="notice">Use one NOVAAI account across Retail, Motors and Property. New seller applications remain subject to administrator approval.</div>
     <div id="signedOut">
       <form id="authForm">
         <div class="field"><label>Email *</label><input id="email" type="email" required></div>
@@ -58,8 +89,8 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
           </div>
           <div id="faceStatus" class="error" style="font-size:11px;margin-top:4px;">Face scan snapshot required.</div>
         </div>
-        <button class="btn" type="submit" style="width:100%;margin-top:10px;">Sign In Securely</button>
-        <button class="btn outline" type="button" id="signup" style="width:100%;margin-top:6px;">Submit for Admin Verification</button>
+        <button class="btn" type="submit" style="width:100%;margin-top:10px;">Sign In to NOVAAI</button>
+        <button class="btn outline" type="button" id="signup" style="width:100%;margin-top:6px;">Apply as a New Seller</button>
         <div id="authMsg" class="msg"></div>
       </form>
     </div>
@@ -175,6 +206,7 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
     </form>
   </div>
 </div>
+</div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -184,6 +216,32 @@ const retailCats = ["Accessories","Clothing Shoes & Accessories","Cellphones","C
 const motorCategories = ["Auto","Motors & Vehicles"];
 const propertyCategories = ["Property For Sale","Property To Rent"];
 let listingMarket = "retail";
+let selectedMarket = null;
+const marketplaceLabels = {retail:"Retail Seller",motors:"Motor Seller",property:"Property Seller"};
+function chooseMarketplace(market) {
+  if (!Object.prototype.hasOwnProperty.call(marketplaceLabels, market)) return;
+  selectedMarket = market;
+  setListingMarket(market);
+  document.getElementById("selectedMarketLabel").textContent = marketplaceLabels[market];
+  document.getElementById("marketplacePicker").classList.add("hidden");
+  document.getElementById("sellerWorkspace").classList.remove("hidden");
+  document.getElementById("portalStd").classList.toggle("is-authenticated", !!user);
+  const params = new URLSearchParams(window.location.search);
+  params.set("market", market);
+  history.replaceState(null, "", window.location.pathname + "?" + params.toString());
+  if (user) document.getElementById("portalStd").scrollIntoView({behavior:"smooth",block:"start"});
+  else document.getElementById("signedOut").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function returnToMarketplaceSelection() {
+  document.getElementById("sellerWorkspace").classList.add("hidden");
+  document.getElementById("marketplacePicker").classList.remove("hidden");
+  selectedMarket = null;
+  const params = new URLSearchParams(window.location.search);
+  params.delete("market");
+  const query = params.toString();
+  history.replaceState(null, "", window.location.pathname + (query ? "?" + query : ""));
+  window.scrollTo({top:0,behavior:"smooth"});
+}
 function setListingMarket(market) {
   if (!["retail","motors","property"].includes(market)) return;
   listingMarket = market;
@@ -278,6 +336,17 @@ const version = ++authVersion;
 
 user = u;
 storeData = null;
+if (u && !selectedMarket) selectedMarket = "retail";
+if (selectedMarket) {
+  setListingMarket(selectedMarket);
+  document.getElementById("selectedMarketLabel").textContent = marketplaceLabels[selectedMarket];
+  document.getElementById("marketplacePicker").classList.add("hidden");
+  document.getElementById("sellerWorkspace").classList.remove("hidden");
+} else {
+  document.getElementById("marketplacePicker").classList.remove("hidden");
+  document.getElementById("sellerWorkspace").classList.add("hidden");
+}
+document.getElementById("portalStd").classList.toggle("is-authenticated", !!u);
 
 const publish = document.getElementById("publish");
 
@@ -369,6 +438,8 @@ document.getElementById("signup").onclick = async () => {
 };
 
 document.getElementById("signout").onclick = () => sb.auth.signOut().then(()=>updateUser(null));
+const initialMarket = new URLSearchParams(window.location.search).get("market");
+if (["retail","motors","property"].includes(initialMarket)) chooseMarketplace(initialMarket);
 
 document.getElementById("sellerForm").onsubmit = async e => {
   e.preventDefault();
