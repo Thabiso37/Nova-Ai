@@ -1382,7 +1382,7 @@ function renderProducts() {
 
           <div>
             ${safeImage
-              ? `<img src="${safeImage}" alt="Product image"
+              ? `<img loading="lazy" decoding="async" src="${safeImage}" alt="Product image"
                   onclick="openImage(this.src)">`
               : `<div class="muted">No image</div>`}
           </div>
