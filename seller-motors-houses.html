@@ -347,6 +347,22 @@ body.property-mode #productGrid{grid-template-columns:minmax(0,1fr)!important}bo
 body.property-mode main>.search-bar,
 body.property-mode main>.hero,
 body.property-mode main>.stats{display:none!important}
+
+/* FINAL MOBILE + DESKTOP PROPERTY GRID OVERRIDE:
+   Keep each property advert on its own row at every screen width. */
+body.property-mode #productGrid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-auto-flow:row!important;
+  gap:14px!important;
+  width:100%!important;
+}
+body.property-mode #productGrid>.property-ad-card{
+  grid-column:1 / -1!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+}
 </style>
 </head>
 <body>
