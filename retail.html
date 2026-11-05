@@ -935,6 +935,21 @@ body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb;col
   #wishlist .wishlist-add,#wishlist .wishlist-remove{font-size:9px!important}
 }
 </style>
+<style>
+/* Wishlist cards styled to match cart cards */
+#wishlist .wishlist-card{display:flex;flex-direction:column;align-items:stretch;gap:0;background:#fff;border:1px solid #edf0f5;border-radius:12px;padding:14px;margin:0 0 12px;box-shadow:0 2px 5px rgba(16,40,75,.05)}
+#wishlist .wishlist-product-open{display:flex;align-items:flex-start;gap:14px;width:100%;min-width:0;padding:0;border:0;background:transparent;text-align:left;cursor:pointer;color:inherit}
+#wishlist .wishlist-photo{width:80px;height:80px;flex:0 0 80px;box-sizing:border-box;padding:4px;object-fit:contain;background:#fffde7;border:0;border-radius:8px}
+#wishlist .wishlist-info{display:flex;flex:1;min-width:0;flex-direction:column;align-items:flex-start;gap:4px}
+#wishlist .wishlist-seller{order:3;display:block;font-size:13px;color:#667085;text-transform:none;font-weight:500;margin:0}
+#wishlist .wishlist-name{order:1;display:block;font-size:15px;line-height:1.4;color:#172033;font-weight:800;margin:0}
+#wishlist .wishlist-price{order:2;display:block;font-size:14px;font-weight:900;color:#1d4ed8;margin:0}
+#wishlist .wishlist-stock{order:4;display:block;font-size:11px;color:#667085;font-weight:500}
+#wishlist .wishlist-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #f3f4f6;padding-top:11px;margin-top:12px}
+#wishlist .wishlist-add{background:#174ea6;color:#fff;border:0;border-radius:7px;padding:9px 13px;font-size:12px;font-weight:800}
+#wishlist .wishlist-remove{background:transparent;border:0;color:#ef4444;font-size:13px;font-weight:700;padding:8px}
+@media(max-width:520px){#wishlist .wishlist-card{padding:12px}#wishlist .wishlist-photo{width:80px;height:80px;flex-basis:80px}#wishlist .wishlist-product-open{gap:12px}}
+</style>
 </head>
 <body>
 
@@ -2025,21 +2040,7 @@ function closeCart() {
  if(q.get('view')==='cart'){document.querySelectorAll('.nova-nav-item').forEach(a=>a.classList.remove('active'));document.querySelector('.nova-nav-item[href="./retail.html?view=cart"]')?.classList.add('active');openCart();}
 })();
 </script>
-<style>
-/* Wishlist cards styled to match cart cards */
-#wishlist .wishlist-card{display:flex;flex-direction:column;align-items:stretch;gap:0;background:#fff;border:1px solid #edf0f5;border-radius:12px;padding:14px;margin:0 0 12px;box-shadow:0 2px 5px rgba(16,40,75,.05)}
-#wishlist .wishlist-product-open{display:flex;align-items:flex-start;gap:14px;width:100%;min-width:0;padding:0;border:0;background:transparent;text-align:left;cursor:pointer;color:inherit}
-#wishlist .wishlist-photo{width:80px;height:80px;flex:0 0 80px;box-sizing:border-box;padding:4px;object-fit:contain;background:#fffde7;border:0;border-radius:8px}
-#wishlist .wishlist-info{display:flex;flex:1;min-width:0;flex-direction:column;align-items:flex-start;gap:4px}
-#wishlist .wishlist-seller{order:3;display:block;font-size:13px;color:#667085;text-transform:none;font-weight:500;margin:0}
-#wishlist .wishlist-name{order:1;display:block;font-size:15px;line-height:1.4;color:#172033;font-weight:800;margin:0}
-#wishlist .wishlist-price{order:2;display:block;font-size:14px;font-weight:900;color:#1d4ed8;margin:0}
-#wishlist .wishlist-stock{order:4;display:block;font-size:11px;color:#667085;font-weight:500}
-#wishlist .wishlist-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #f3f4f6;padding-top:11px;margin-top:12px}
-#wishlist .wishlist-add{background:#174ea6;color:#fff;border:0;border-radius:7px;padding:9px 13px;font-size:12px;font-weight:800}
-#wishlist .wishlist-remove{background:transparent;border:0;color:#ef4444;font-size:13px;font-weight:700;padding:8px}
-@media(max-width:520px){#wishlist .wishlist-card{padding:12px}#wishlist .wishlist-photo{width:80px;height:80px;flex-basis:80px}#wishlist .wishlist-product-open{gap:12px}}
-</style>
+
 
 <script src="./nearby-search.js"></script>
 </body>
