@@ -1768,28 +1768,4 @@ function closeCart() {
 }
 </style>
 
-<script>
-(function(){
-  const button=document.getElementById("retailNearMe");
-  const status=document.getElementById("retailNearMeStatus");
-  if(!button||!status)return;
-  button.addEventListener("click",function(){
-    if(!navigator.geolocation){
-      status.textContent="Location is not supported by this browser.";
-      return;
-    }
-    button.disabled=true;
-    button.textContent="Finding…";
-    status.textContent="Requesting your location permission…";
-    navigator.geolocation.getCurrentPosition(function(){
-      button.disabled=false;
-      button.textContent="📍 Near me";
-      status.textContent="Your location was detected. Nearby product filtering is not available yet because current product listings do not contain seller suburb, town or GPS details.";
-    },function(error){
-      button.disabled=false;
-      button.textContent="📍 Near me";
-      status.textContent=error.code===1?"Location permission was not granted. Allow it in Chrome site settings to use Near me.":"Could not detect your location. Please try again.";
-    },{enableHighAccuracy:false,timeout:10000,maximumAge:300000});
-  });
-})();
-</script>
+
