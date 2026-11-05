@@ -456,6 +456,113 @@ header { background: #ffffff; position: sticky; top: 0; z-index: 50; border-bott
   }
 }
 
+/* CART PAGE ONLY: side-by-side product photo and details, retaining quantity controls */
+#cartModal .cart-item-card{
+  background:#10284b!important;
+  border:1px solid #25466f!important;
+  border-radius:12px!important;
+  padding:12px!important;
+  box-shadow:0 3px 10px rgba(16,40,75,.10)!important;
+}
+#cartModal .cart-item-main{
+  display:grid!important;
+  grid-template-columns:minmax(0,7fr) minmax(0,3fr)!important;
+  align-items:stretch!important;
+  gap:10px!important;
+  width:100%!important;
+}
+#cartModal .cart-item-photo-wrap{
+  width:100%!important;
+  height:auto!important;
+  min-width:0!important;
+  aspect-ratio:1/1!important;
+  flex:initial!important;
+  padding:0!important;
+  overflow:hidden!important;
+  background:#fff!important;
+  border:0!important;
+  border-radius:8px!important;
+}
+#cartModal .cart-item-photo{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  background:#fff!important;
+  border:0!important;
+  border-radius:0!important;
+}
+#cartModal .cart-item-copy{
+  min-width:0!important;
+  width:100%!important;
+  overflow-wrap:anywhere!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  gap:5px!important;
+}
+#cartModal .cart-item-copy b{
+  color:#ffd34f!important;
+  font-size:13px!important;
+  line-height:1.3!important;
+  overflow-wrap:anywhere!important;
+}
+#cartModal .cart-item-copy .muted,
+#cartModal .cart-item-unit{
+  color:#e5edff!important;
+  font-size:10px!important;
+  line-height:1.35!important;
+  margin:2px 0!important;
+}
+#cartModal .cart-item-subtotal{
+  color:#f5b900!important;
+  font-size:13px!important;
+  line-height:1.3!important;
+  overflow-wrap:anywhere!important;
+}
+#cartModal .cart-store-button{
+  max-width:100%!important;
+  padding:5px 0!important;
+  color:#ffd34f!important;
+  font-size:10px!important;
+  text-align:left!important;
+}
+#cartModal .cart-item-card .cart-item-controls{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  flex-wrap:nowrap!important;
+  gap:8px!important;
+  margin-top:10px!important;
+  padding-top:10px!important;
+  border-top:1px solid #ffffff35!important;
+}
+#cartModal .cart-item-card .cart-qty{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  color:#fff!important;
+}
+#cartModal .cart-item-card .cart-qty button{
+  min-width:32px!important;
+  min-height:32px!important;
+  border:1px solid #f5b900!important;
+  border-radius:7px!important;
+  background:#f5b900!important;
+  color:#10284b!important;
+  font-weight:900!important;
+}
+#cartModal .cart-item-card .cart-qty span{
+  min-width:18px!important;
+  color:#fff!important;
+  text-align:center!important;
+  font-weight:800!important;
+}
+#cartModal .cart-item-card .cart-remove{
+  color:#ffd1d1!important;
+  font-size:11px!important;
+}
+
 /* Takealot-inspired wishlist cards; existing NOVAAI header and navigation stay untouched */
 #wishlist{padding:16px!important;max-width:900px!important;margin:20px auto!important;background:#fff;border:1px solid #e8edf5;border-radius:14px}
 #wishlist .wishlist-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px}
