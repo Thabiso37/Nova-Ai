@@ -394,7 +394,7 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
           '<div class="home-product-photo">'+(img?'<img src="'+escapeHTML(img)+'" alt="'+escapeHTML(p.name)+'" loading="lazy">':'<span class="home-no-photo">📦<small>Photo not available</small></span>')+'</div>'+
           '<div class="home-product-info">'+
           '<h3>'+escapeHTML(p.name)+'</h3><div class="home-product-price">'+money(p.price)+'</div>'+
-          '<button type="button" class="home-add-cart" data-add-product="'+escapeHTML(p.id)+'">Add to Cart</button></div></article>';
+          '<button type="button" class="home-add-cart" data-add-product="'+escapeHTML(p.id)+'"><span aria-hidden="true">🛒</span><span>Add to Cart</span></button></div></article>';
       }).join('');
       grid.querySelectorAll('[data-open-home-product]').forEach(card=>{const open=()=>{window.location.href='./index.html?product='+encodeURIComponent(card.dataset.openHomeProduct);};card.addEventListener('click',e=>{if(e.target.closest('button'))return;open();});card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});});
       grid.querySelectorAll('[data-add-product]').forEach(button=>button.addEventListener('click',e=>{e.stopPropagation();const p=items.find(item=>String(item.id)===button.dataset.addProduct);if(p)addToCart(p);}));
