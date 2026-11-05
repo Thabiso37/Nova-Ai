@@ -224,25 +224,20 @@ function setListingMarket(market) {
 function marketDetailsFromForm() {
   if (listingMarket === "motors") {
     const fields = [["Vehicle type","vehicleType"],["Year","vehicleYear"],["Mileage","vehicleMileage"],["Transmission","vehicleTransmission"],["Fuel","vehicleFuel"],["Location","vehicleLocation"]];
-    return "\\n\\nNOVAAI DETAILS\\n" + fields.map(([label,id]) => label + ": " + (document.getElementById(id)?.value || "")).join("\\n");
+    return "\n\nNOVAAI DETAILS\n" + fields.map(([label,id]) => label + ": " + (document.getElementById(id)?.value || "")).join("\n");
   }
   if (listingMarket === "property") {
     const fields = [["Property type","propertyType"],["Bedrooms","propertyBedrooms"],["Bathrooms","propertyBathrooms"],["Parking","propertyParking"],["Floor area m2","propertyFloorArea"],["Erf size m2","propertyErfSize"],["Location","propertyLocation"]];
-    return "\\n\\nNOVAAI DETAILS\\n" + fields.filter(([label,id]) => document.getElementById(id)?.value).map(([label,id]) => label + ": " + document.getElementById(id).value).join("\\n");
+    return "\n\nNOVAAI DETAILS\n" + fields.filter(([label,id]) => document.getElementById(id)?.value).map(([label,id]) => label + ": " + document.getElementById(id).value).join("\n");
   }
   return "";
 }
 function getBaseDescription(value) {
-  return String(value || "").split("\\n\\nNOVAAI DETAILS\\n")[0];
+  return String(value || "").split("\n\nNOVAAI DETAILS\n")[0];
 }
 setListingMarket("retail");
 
-function switchPortal(t) {
-  document.getElementById("tabStd").classList.toggle("active", t==='std');
-  document.getElementById("tabRetail").classList.toggle("active", t==='retail');
-  document.getElementById("portalStd").classList.toggle("hidden", t!=='std');
-  document.getElementById("portalRetail").classList.toggle("hidden", t!=='retail');
-}
+function switchPortal() { return; }
 
 let faceBlob = null, user = null, storeData = null;
 let editingProductId = null;
@@ -620,7 +615,7 @@ async function editProduct(id) {
   document.getElementById("productName").value = product.name || "";
   document.getElementById("description").value = getBaseDescription(product.description || "");
   const details = String(product.description || "");
-  const fillDetail = (id,label) => { const el=document.getElementById(id); if(!el)return; const m=details.match(new RegExp("(?:^|\\\\n)"+label+"\\\\s*:\\\\s*([^\\\\n]+)","i")); if(m)el.value=m[1].trim(); };
+  const fillDetail = (id,label) => { const el=document.getElementById(id); if(!el)return; const line=details.split(/\\r?\\n/).find(row=>row.toLowerCase().startsWith(label.toLowerCase()+":")); if(line)el.value=line.slice(label.length+1).trim(); };
   if (market === "motors") {
     fillDetail("vehicleYear","Year"); fillDetail("vehicleMileage","Mileage"); fillDetail("vehicleTransmission","Transmission"); fillDetail("vehicleFuel","Fuel"); fillDetail("vehicleType","Vehicle type"); fillDetail("vehicleLocation","Location");
   } else if (market === "property") {
@@ -634,7 +629,7 @@ async function editProduct(id) {
     "Save Changes & Resubmit";
 
   document.getElementById("sellerMsg").textContent =
-    "Editing rejected product. Existing photos will be kept unless you select replacements.";
+    "Editing this listing. Existing photos will be kept unless you select replacements.";
 
   document.getElementById("sellerForm").scrollIntoView({
     behavior: "smooth",
