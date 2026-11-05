@@ -395,6 +395,145 @@ body.property-mode .property-promo-copy p{
 }
 body.property-mode .property-promo-link{padding:7px 10px!important;font-size:10px!important}
 </style>
+
+<style>
+/* NOVAAI MOTORS — Property-style 80/20 vehicle listings.
+   Motors-only rules: the Property page and its styles remain unchanged. */
+body.motors-mode #productGrid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-auto-flow:row!important;
+  gap:14px!important;
+  width:100%!important;
+}
+body.motors-mode #productGrid>.vehicle-card{
+  display:grid!important;
+  grid-template-columns:80% 20%!important;
+  grid-template-rows:minmax(220px,auto)!important;
+  grid-column:1/-1!important;
+  align-items:stretch!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:220px!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border:0!important;
+  border-radius:16px!important;
+  background:#123b79!important;
+  box-shadow:0 8px 22px #10284b25!important;
+}
+body.motors-mode #productGrid>.vehicle-card>.vehicle-photo,
+body.motors-mode #productGrid>.vehicle-card>.vehicle-photo-empty{
+  grid-column:1!important;
+  grid-row:1!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:220px!important;
+  object-fit:cover!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+}
+body.motors-mode #productGrid>.vehicle-card>.vehicle-photo-empty{
+  display:grid!important;
+  place-items:center!important;
+  background:linear-gradient(135deg,#dce5f1,#eef2f7)!important;
+  color:#66758c!important;
+  font-size:10px!important;
+  text-align:center!important;
+}
+body.motors-mode #productGrid>.vehicle-card>.vehicle-card-body{
+  grid-column:2!important;
+  grid-row:1!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:flex-start!important;
+  min-width:0!important;
+  min-height:220px!important;
+  overflow:hidden!important;
+  padding:9px 7px!important;
+  color:#fff!important;
+  background:linear-gradient(145deg,#10284b,#174ea6)!important;
+}
+body.motors-mode #productGrid>.vehicle-card .vehicle-spec-line{
+  color:#ffd34f!important;
+  font-size:7px!important;
+  line-height:1.3!important;
+  overflow-wrap:anywhere!important;
+}
+body.motors-mode #productGrid>.vehicle-card .vehicle-title{
+  margin:5px 0!important;
+  color:#fff!important;
+  font-size:clamp(9px,2.8vw,13px)!important;
+  line-height:1.2!important;
+  overflow-wrap:anywhere!important;
+}
+body.motors-mode #productGrid>.vehicle-card .vehicle-price{
+  margin:0 0 5px!important;
+  color:#fff!important;
+  font-size:clamp(10px,3vw,15px)!important;
+  line-height:1.2!important;
+  overflow-wrap:anywhere!important;
+}
+body.motors-mode #productGrid>.vehicle-card .vehicle-meta,
+body.motors-mode #productGrid>.vehicle-card .vehicle-seller{
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  color:#e5edff!important;
+  font-size:8px!important;
+  line-height:1.35!important;
+  overflow-wrap:anywhere!important;
+}
+body.motors-mode #productGrid>.vehicle-card .vehicle-details{
+  width:100%!important;
+  margin-top:6px!important;
+  padding-top:5px!important;
+  border-top:1px solid #ffffff45!important;
+  color:#e5edff!important;
+  font-size:8px!important;
+  overflow-wrap:anywhere!important;
+}
+body.motors-mode #productGrid>.vehicle-card .vehicle-details summary{
+  color:#ffd34f!important;
+  font-size:8px!important;
+  line-height:1.3!important;
+}
+body.motors-mode #productGrid>.vehicle-card .vehicle-details p{
+  color:#e5edff!important;
+  font-size:8px!important;
+  line-height:1.35!important;
+  overflow-wrap:anywhere!important;
+}
+body.motors-mode #productGrid>.vehicle-card .vehicle-seller{
+  margin-top:auto!important;
+  padding-top:5px!important;
+  border-top:1px solid #ffffff45!important;
+}
+@media(max-width:380px){
+  body.motors-mode #productGrid{gap:9px!important}
+  body.motors-mode #productGrid>.vehicle-card{grid-template-columns:78% 22%!important;min-height:205px!important;grid-template-rows:minmax(205px,auto)!important}
+  body.motors-mode #productGrid>.vehicle-card>.vehicle-photo,
+  body.motors-mode #productGrid>.vehicle-card>.vehicle-photo-empty,
+  body.motors-mode #productGrid>.vehicle-card>.vehicle-card-body{min-height:205px!important}
+  body.motors-mode #productGrid>.vehicle-card>.vehicle-card-body{padding:7px 5px!important}
+}
+@media(min-width:760px){
+  body.motors-mode #productGrid>.vehicle-card{grid-template-columns:80% 20%!important;min-height:300px!important;grid-template-rows:minmax(300px,auto)!important}
+  body.motors-mode #productGrid>.vehicle-card>.vehicle-photo,
+  body.motors-mode #productGrid>.vehicle-card>.vehicle-photo-empty,
+  body.motors-mode #productGrid>.vehicle-card>.vehicle-card-body{min-height:300px!important}
+  body.motors-mode #productGrid>.vehicle-card>.vehicle-card-body{padding:18px 14px!important}
+  body.motors-mode #productGrid>.vehicle-card .vehicle-title{font-size:18px!important}
+  body.motors-mode #productGrid>.vehicle-card .vehicle-price{font-size:20px!important}
+  body.motors-mode #productGrid>.vehicle-card .vehicle-meta,
+  body.motors-mode #productGrid>.vehicle-card .vehicle-seller{font-size:11px!important}
+}
+</style>
+
 </head>
 <body>
 
