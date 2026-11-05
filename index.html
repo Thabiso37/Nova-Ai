@@ -393,8 +393,8 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
         return '<article class="home-product-card" data-open-home-product="'+escapeHTML(p.id)+'" tabindex="0" role="link" aria-label="Open '+escapeHTML(p.name)+' details">'+
           '<div class="home-product-photo">'+(img?'<img src="'+escapeHTML(img)+'" alt="'+escapeHTML(p.name)+'" loading="lazy">':'<span class="home-no-photo">📦<small>Photo not available</small></span>')+'</div>'+
           '<div class="home-product-info">'+
-          '<h3>'+escapeHTML(p.name)+'</h3><div class="home-product-price">'+money(p.price)+'</div>'+
-          '<button type="button" class="home-add-cart" data-add-product="'+escapeHTML(p.id)+'" aria-label="Add '+escapeHTML(p.name)+' to cart" title="Add to cart"><span aria-hidden="true">🛒</span></button></div></article>';
+          '<h3>'+escapeHTML(p.name)+'</h3><div class="home-product-buy-row"><div class="home-product-price">'+money(p.price)+'</div>'+
+          '<button type="button" class="home-add-cart" data-add-product="'+escapeHTML(p.id)+'" aria-label="Add '+escapeHTML(p.name)+' to cart" title="Add to cart"><span aria-hidden="true">🛒</span></button></div></div></article>';
       }).join('');
       grid.querySelectorAll('[data-open-home-product]').forEach(card=>{const open=()=>{window.location.href='./index.html?product='+encodeURIComponent(card.dataset.openHomeProduct);};card.addEventListener('click',e=>{if(e.target.closest('button'))return;open();});card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});});
       grid.querySelectorAll('[data-add-product]').forEach(button=>button.addEventListener('click',e=>{e.stopPropagation();const p=items.find(item=>String(item.id)===button.dataset.addProduct);if(p)addToCart(p);}));
@@ -417,4 +417,12 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
 .home-product-info .home-add-cart{width:42px;height:42px;min-height:42px;margin:0 0 0 auto;padding:0;border:1px solid #dce5f2;border-radius:50%;background:#f2f6fc;color:#174ea6;font-size:20px;line-height:1;display:grid;place-items:center;box-shadow:0 2px 7px rgba(16,40,75,.08)}
 .home-product-info .home-add-cart:hover{background:#174ea6;color:#fff;border-color:#174ea6}
 .home-product-info .home-add-cart:active{transform:scale(.96)}
+</style>
+
+<style>
+/* Keep the product price beside the compact add-to-cart icon */
+.home-product-info .home-product-buy-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:2px}
+.home-product-info .home-product-buy-row .home-product-price{margin:0;font-size:20px;line-height:1.2}
+.home-product-info .home-product-buy-row .home-add-cart{flex:0 0 40px;width:40px;height:40px;min-height:40px;margin:0 0 0 auto}
+@media(max-width:760px){.home-product-info .home-product-buy-row .home-product-price{font-size:18px}.home-product-info .home-product-buy-row .home-add-cart{flex-basis:38px;width:38px;height:38px;min-height:38px}}
 </style>
