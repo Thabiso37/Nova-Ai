@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NOVAAI | Secure Seller & Retail Portal</title>
+<title>NOVAAI | Seller Portals</title>
 <style>
 :root{--bg:#f5f7fb;--ink:#171c2d;--p:#174ea6;--dark:#10284b;--line:#e1e6ee}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,sans-serif}
@@ -60,7 +60,7 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
   </div>
   <div class="market-choice-grid">
     <article class="market-choice" data-marketplace="retail"><div class="choice-icon">R</div><h2>Retail Seller</h2><p>Open your online shop and manage products.</p><ul><li>Products</li><li>Electronics</li><li>Fashion</li><li>Groceries</li><li>Home and Living</li></ul><button class="btn" type="button" onclick="chooseMarketplace('retail')">Continue to Retail</button></article>
-    <article class="market-choice" data-marketplace="motors"><div class="choice-icon">M</div><h2>Motor Seller</h2><p>List vehicles for buyers across South Africa.</p><ul><li>Cars</li><li>Motorcycles</li><li>Commercial vehicles</li><li>Other vehicles</li></ul><button class="btn" type="button" onclick="chooseMarketplace('motors')">Continue to Motors</button></article>
+    <article class="market-choice" data-marketplace="motors"><div class="choice-icon">M</div><h2>Motors Seller</h2><p>List vehicles for buyers across South Africa.</p><ul><li>Cars</li><li>Motorcycles</li><li>Commercial vehicles</li><li>Other vehicles</li></ul><button class="btn" type="button" onclick="chooseMarketplace('motors')">Continue to Motors</button></article>
     <article class="market-choice" data-marketplace="property"><div class="choice-icon">P</div><h2>Property Seller</h2><p>Advertise property for sale or rent.</p><ul><li>Property for sale</li><li>Property to rent</li><li>Houses</li><li>Apartments</li><li>Land</li></ul><button class="btn" type="button" onclick="chooseMarketplace('property')">Continue to Property</button></article>
   </div>
 </section>
@@ -263,7 +263,7 @@ function renderMarketplaceChoices(){
     card.classList.toggle("selected",!user && selectedMarket===market);
   });
 }
-const marketplaceLabels = {retail:"Retail Seller",motors:"Motor Seller",property:"Property Seller"};
+const marketplaceLabels = {retail:"Retail Seller",motors:"Motors Seller",property:"Property Seller"};
 function chooseMarketplace(market) {
   if (!Object.prototype.hasOwnProperty.call(marketplaceLabels, market)) return;
   if (user && storeData && storeData.primary_marketplace!==market) { msg("sellerMsg","Access denied: this seller account is assigned to "+(marketplaceLabels[storeData.primary_marketplace]||"another marketplace")+".",true); return; }
