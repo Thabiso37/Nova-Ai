@@ -668,11 +668,6 @@ body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb;col
 </div>
 
 <main>
-<section id="categories" class="section">
-<div class="section-head"><h2>Shop by category</h2><span class="muted">Find what you need, all in one place.</span></div>
-<div id="cats" class="cats"></div>
-</section>
-
 <section id="shop" class="section">
 <div class="section-head">
 <p class="muted" id="catalogueMessage">Browse available products from approved marketplace sellers.</p>
@@ -845,10 +840,6 @@ function go(id) {
     renderWishlist();
   }
 
-  if (id === "categories") {
-    document.body.classList.add("categories-view");
-  }
-
   section.scrollIntoView({ behavior: "smooth" });
 }
 
@@ -865,24 +856,7 @@ function closeRetailMarketPage() {
 }
 
 function message(id,s,bad=false){let e=document.getElementById(id);e.textContent=s;e.className="msg "+(bad?"error":"success")}
-function initCategories(){
-document.getElementById("cats").innerHTML=[["All","🌐"],...C].map(([n,ic])=>`<button class="cat ${active===n?"active":""}" data-cat="${esc(n)}"><span class="emoji">${ic}</span><span>${esc(n==="All"?"All products":n)}</span></button>`).join("");
-document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{
-  active=b.dataset.cat;
-  if (active === "Auto" || active === "Motors & Vehicles") {
-    window.location.href = "./seller-motors-houses.html?market=motors";
-    return;
-  }
-  if (active === "Property For Sale" || active === "Property To Rent") {
-    window.location.href = "./seller-motors-houses.html?market=property";
-    return;
-  }
-  document.getElementById("search").value="";
-  initCategories();
-  render();
-  go("shop");
-});
-}
+function initCategories(){ /* Category landing page removed; catalogue filters remain available. */ }
 
 function renderRetailMarketGrid(list) {
   document.getElementById("retailProductsGrid").innerHTML = list.length ? list.map(p => {
@@ -1655,13 +1629,10 @@ renderWishlist();
   body { padding-bottom: 75px; }
 }
 #categories { display: none; }
-body.categories-view main > *:not(#categories) { display: none !important; }
-body.categories-view #categories { display: block !important; min-height: 70vh; margin: 24px auto !important; max-width: 900px; }
 </style>
 
 <nav class="mobile-bottom-nav">
   <button onclick="go('shop')">🏠<span>Home</span></button>
-  <button onclick="go('categories')">☰<span>Categories</span></button>
   <a href="seller-motors-houses.html" style="color:#d97706;">🚗🔑<span>Motors/Prop</span></a>
   <button onclick="go('wishlist')">❤️<span>Wishlist</span></button>
   <button onclick="window.location.href='seller-retail.html'">🏷️<span>Retail Sell</span></button>
