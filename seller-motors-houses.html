@@ -97,6 +97,12 @@ body.property-mode .property-ad-slot small{display:block;margin-top:3px;color:#7
 </style>
 <style>
 body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;background:#F5F7FB}
+/* Motors and Property only: full-screen market view matching Shop. */
+body.market-fullscreen-view{padding-bottom:0!important}
+body.market-fullscreen-view .nova-bottom-nav{display:none!important}
+.market-page-back{display:none;flex:0 0 38px;width:38px;height:38px;align-items:center;justify-content:center;border:1px solid #e2e8f0;border-radius:11px;background:#fff;color:#10284b;font-size:25px;line-height:1;text-decoration:none}
+body.market-fullscreen-view .market-page-back{display:inline-flex}
+body.market-fullscreen-view .head{gap:10px}
 .nova-bottom-nav{position:fixed;z-index:9999;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));background:rgba(255,255,255,.97);border-top:1px solid #e3e8f0;padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));box-shadow:0 -5px 22px rgba(16,40,75,.08);backdrop-filter:blur(12px)}
 .nova-nav-item{display:flex;min-width:0;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#778195;font-size:10px;font-weight:700;line-height:1.15}
 .nova-nav-item svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -540,6 +546,7 @@ body.motors-mode #productGrid>.vehicle-card .vehicle-seller{
 <div class="top">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
 <header>
   <div class="head">
+    <a class="market-page-back" href="./index.html" aria-label="Back to Home" title="Back to Home">←</a>
     <a class="logo" href="index.html">NOVA<span>AI</span></a>
     <div class="motors-header-search" id="motorsHeaderSearch">
       <input type="search" id="motorsSearchInput" placeholder="Search cars, bakkies, SUVs or motorcycles..." aria-label="Search Motors listings">
@@ -808,6 +815,7 @@ function switchMarket(market) {
   document.getElementById("sellerPortalLink").href = market==="motors" ? "./seller-motors.html" : market==="property" ? "./seller-property.html" : "./seller-retail.html";
   document.body.classList.toggle('property-mode',market==='property');
   document.body.classList.toggle('motors-mode',market==='motors');
+  document.body.classList.toggle('market-fullscreen-view',market==='motors'||market==='property');
   document.getElementById('propertyHub').hidden=market!=='property';
   document.querySelectorAll('.bottom-nav .nav-item').forEach(t => t.classList.remove('active'));
   
