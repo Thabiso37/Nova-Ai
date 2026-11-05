@@ -583,10 +583,12 @@ body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb;col
   <div class="head">
     <a class="logo" href="#">NOVA<span>AI</span></a>
     <form class="search" id="searchForm">
-      <input id="search" placeholder="Search products, brands or categories…">
-      <button class="btn primary" type="submit">🔍</button>
+      <input id="search" type="search" placeholder="Search products, brands or categories…" aria-label="Search products">
+      <button class="btn primary" type="submit" aria-label="Search">🔍</button>
+      <button class="btn near-me-btn" type="button" id="retailNearMe" aria-label="Search near me">📍 Near me</button>
     </form>
 
+    <p id="retailNearMeStatus" class="retail-near-status" aria-live="polite"></p>
   </div>
   
 </header>
@@ -1638,6 +1640,44 @@ function closeCart() {
 </style>
 
 <style>
-/* Remove the search field beside the NOVAAI logo in the retail header */
-.new-header .head>.search{display:none!important}
+/* Keep the search beside NOVAAI and provide a compact Near me action */
+.new-header .head>.search{display:flex!important;align-items:stretch;gap:0}
+.new-header .near-me-btn{white-space:nowrap;border-radius:0 9px 9px 0;background:#f5b900;color:#10284b;font-weight:800;padding:9px 11px}
+.new-header .search .btn.primary{border-radius:0}
+.retail-near-status{display:none;width:100%;margin:6px 0 0 0;font-size:11px;line-height:1.4;color:#667085}
+.retail-near-status:not(:empty){display:block}
+@media(max-width:560px){
+ .new-header .head{flex-wrap:wrap!important}
+ .new-header .logo{flex:0 0 auto}
+ .new-header .search{flex:1 1 100%!important;order:2!important;width:100%!important}
+ .new-header .search input{flex:1 1 0;width:1%;min-width:0}
+ .new-header .near-me-btn{padding:9px 8px;font-size:11px}
+ .new-header .retail-near-status{order:3}
+}
 </style>
+
+<script>
+(function(){
+  const button=document.getElementById("retailNearMe");
+  const status=document.getElementById("retailNearMeStatus");
+  if(!button||!status)return;
+  button.addEventListener("click",function(){
+    if(!navigator.geolocation){
+      status.textContent="Location is not supported by this browser.";
+      return;
+    }
+    button.disabled=true;
+    button.textContent="Finding…";
+    status.textContent="Requesting your location permission…";
+    navigator.geolocation.getCurrentPosition(function(){
+      button.disabled=false;
+      button.textContent="📍 Near me";
+      status.textContent="Your location was detected. Nearby product filtering is not available yet because current product listings do not contain seller suburb, town or GPS details.";
+    },function(error){
+      button.disabled=false;
+      button.textContent="📍 Near me";
+      status.textContent=error.code===1?"Location permission was not granted. Allow it in Chrome site settings to use Near me.":"Could not detect your location. Please try again.";
+    },{enableHighAccuracy:false,timeout:10000,maximumAge:300000});
+  });
+})();
+</script>
