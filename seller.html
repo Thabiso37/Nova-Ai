@@ -903,13 +903,12 @@ async function editProduct(id) {
     return;
   }
 
-  if (String(storeData?.status || "").toLowerCase() !== "approved") {
-    document.getElementById("myProductsMsg").textContent = "Your seller account must be approved to edit listings.";
-    return;
-  }
-
   const market = motorCategories.includes(product.category) ? "motors" :
     (propertyCategories.includes(product.category) ? "property" : "retail");
+  if (!hasMarketplaceAccess(market)) {
+    document.getElementById("myProductsMsg").textContent = "Your store and marketplace permission must both be approved to edit listings.";
+    return;
+  }
   setListingMarket(market);
   editingProductId = product.id;
   editingProductCategory = product.category || "";
@@ -1277,8 +1276,8 @@ async function saveShippingDetails(orderId) {
     return;
   }
 
-  if (String(storeData?.status || "").toLowerCase() !== "approved") {
-    alert("Your store must be approved.");
+  if (!hasMarketplaceAccess(selectedMarket)) {
+    alert("Your store and marketplace permission must both be approved.");
     return;
   }
 
@@ -1341,8 +1340,8 @@ async function updateFulfillmentStatus(orderId) {
     return;
   }
 
-  if (String(storeData?.status || "").toLowerCase() !== "approved") {
-    alert("Your store must be approved.");
+  if (!hasMarketplaceAccess(selectedMarket)) {
+    alert("Your store and marketplace permission must both be approved.");
     return;
   }
 
