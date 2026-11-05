@@ -18,18 +18,18 @@ document.getElementById("sellerLocUseGps").addEventListener("click",function(){
  navigator.geolocation.getCurrentPosition(function(p){
   document.getElementById("sellerLocLatitude").value=p.coords.latitude.toFixed(5);
   document.getElementById("sellerLocLongitude").value=p.coords.longitude.toFixed(5);
-  box.textContent="Coordinates filled in. Review the public-location consent before saving.";
+  box.textContent="Coordinates filled in. They will be rounded to a public area marker for privacy. Review the consent before saving.";
  },function(e){box.textContent=e.code===1?"Permission declined. Enter public coordinates manually.":"Could not detect location. Enter coordinates manually."},{enableHighAccuracy:false,timeout:12000,maximumAge:300000});
 });
 document.getElementById("sellerLocSave").addEventListener("click",async function(){
  const box=document.getElementById("sellerLocStatus");if(!user){box.textContent="Sign in before saving your location.";return;}
  const lat=document.getElementById("sellerLocLatitude").value.trim(),lon=document.getElementById("sellerLocLongitude").value.trim();
- const payload={user_id:user.id,province:document.getElementById("sellerLocProvince").value||null,city:document.getElementById("sellerLocCity").value.trim()||null,suburb:document.getElementById("sellerLocSuburb").value.trim()||null,latitude:lat===""?null:Number(lat),longitude:lon===""?null:Number(lon),public_location_enabled:document.getElementById("sellerLocPublic").checked,updated_at:new Date().toISOString()};
+ const payload={user_id:user.id,province:document.getElementById("sellerLocProvince").value||null,city:document.getElementById("sellerLocCity").value.trim()||null,suburb:document.getElementById("sellerLocSuburb").value.trim()||null,latitude:lat===""?null:Number(Number(lat).toFixed(2)),longitude:lon===""?null:Number(Number(lon).toFixed(2)),public_location_enabled:document.getElementById("sellerLocPublic").checked,updated_at:new Date().toISOString()};
  if((lat==="")!==(lon==="")){box.textContent="Enter both latitude and longitude, or leave both blank.";return;}
  if(lat!==""&&(!Number.isFinite(payload.latitude)||payload.latitude < -90||payload.latitude > 90||!Number.isFinite(payload.longitude)||payload.longitude < -180||payload.longitude > 180)){box.textContent="Enter valid GPS coordinates.";return;}
  if(payload.public_location_enabled&&(!payload.province||!payload.city)){box.textContent="Select a province and enter a city/town before making the area public.";return;}
  if(payload.public_location_enabled&&!confirm("Confirm this is a public business/listing area and not your private residential address."))return;
  box.textContent="Saving…";const {error}=await sb.from("seller_public_locations").upsert(payload,{onConflict:"user_id"});
  if(error){box.textContent="Could not save location: "+error.message;return;}
- box.textContent=payload.public_location_enabled?"Public seller location saved. Approved shoppers can now see this area.":"Location saved privately. It is not visible to shoppers.";
+ box.textContent=payload.public_location_enabled?"Public seller location saved. Coordinates are rounded to an approximate 1 km area for privacy.":"Location saved privately. It is not visible to shoppers.";
 });
