@@ -516,29 +516,7 @@ function switchMarket(market) {
   loadListings(market);
 }
 
-(function(){
-  const button=document.getElementById('motorsNearMe');
-  const status=document.getElementById('motorsNearMeStatus');
-  if(!button||!status)return;
-  button.addEventListener('click',function(){
-    if(!navigator.geolocation){
-      status.textContent="Location is not supported by this browser.";
-      return;
-    }
-    button.disabled=true;
-    button.textContent="Finding…";
-    status.textContent="Requesting your location permission…";
-    navigator.geolocation.getCurrentPosition(function(){
-      button.disabled=false;
-      button.textContent="📍 Near me";
-      status.textContent="Your location was detected. Nearby vehicle filtering is not available yet because current vehicle listings do not contain seller suburb, town or GPS details.";
-    },function(error){
-      button.disabled=false;
-      button.textContent="📍 Near me";
-      status.textContent=error.code===1?"Location permission was not granted. Allow it in Chrome site settings to use Near me.":"Could not detect your location. Please try again.";
-    },{enableHighAccuracy:false,timeout:10000,maximumAge:300000});
-  });
-})();
+// Nearby location search is handled by nearby-search.js.
 
 document.getElementById('motorsSearchBtn').onclick = () => {
   const q = document.getElementById('motorsSearchInput').value.trim();
