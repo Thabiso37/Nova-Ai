@@ -490,7 +490,7 @@ async function sharePropertyDetail(){const x=activePropertyDetail;if(!x)return;c
 function closePropertyDetail(){document.getElementById('propertyDetailBackdrop').classList.remove('open');document.body.style.overflow='';activePropertyDetail=null}
 function switchMarket(market) {
   currentMarket = market;
-  document.getElementById("sellerPortalLink").href = "./seller.html?market=" + encodeURIComponent(market);
+  document.getElementById("sellerPortalLink").href = market==="motors" ? "./seller-motors.html" : market==="property" ? "./seller-property.html" : "./seller-retail.html";
   document.body.classList.toggle('property-mode',market==='property');
   document.body.classList.toggle('motors-mode',market==='motors');
   document.getElementById('propertyHub').hidden=market!=='property';
