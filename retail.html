@@ -2117,7 +2117,7 @@ function closeCart() {
     dots.forEach((dot,i)=>dot.setAttribute("aria-current",String(i===active)));
   };
   const stop=()=>{if(timer){clearInterval(timer);timer=null;}};
-  const start=()=>{stop();if(!banner.dataset.novaManagedCampaign&&!document.hidden&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches)timer=setInterval(()=>show(active+1),5200);};
+  const start=()=>{stop();if(!banner.dataset.novaManagedCampaign&&!document.hidden)timer=setInterval(()=>show(active+1),5200);};
   dots.forEach(dot=>dot.addEventListener("click",()=>{show(Number(dot.dataset.shopTvGo));start();}));
   banner.addEventListener("mouseenter",stop);
   banner.addEventListener("mouseleave",start);
