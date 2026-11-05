@@ -5,122 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#101526">
 <title>NOVAAI | South African Multi-Marketplace</title>
-
-
-<style>
-/* NOVAAI HOMEPAGE BRAND OVERRIDES */
-:root {
-  --bg: #f5f7fb;
-  --ink: #10284b;
-  --muted: #667085;
-  --p: #174ea6;
-  --dark: #10284b;
-  --line: #e1e6ee;
-}
-body { background: #f5f7fb; color: #10284b; }
-.top, footer { background: #10284b; }
-.logo { color: #174ea6; }
-.logo span, .new-header .logo span { color: #f5b900; }
-.primary, .search .btn { background: #174ea6; color: #fff; }
-.light { background: #fff2bd; color: #10284b; }
-.hero {
-  background: linear-gradient(120deg, #10284b 0%, #174ea6 72%, #3878cf 100%);
-  color: #fff;
-}
-.hero p { color: #e7efff; }
-.cat.active, #cats .cat.active {
-  border-color: #174ea6;
-  background: #edf4ff;
-}
-.price, .prodbody .price { color: #174ea6; }
-.notice {
-  background: #edf4ff;
-  border-color: #c9dcfa;
-  color: #10284b;
-}
-.add-to-cart-btn, #modalAddToCart {
-  background: #f5b900 !important;
-  color: #10284b !important;
-  border: 0 !important;
-}
-.add-to-cart-btn:hover, #modalAddToCart:hover { background: #e6aa00 !important; }
-</style>
-
-<style>
-:root{--nova-navy:#10284B;--nova-blue:#174EA6;--nova-yellow:#F5B900;--nova-bg:#F5F7FB}
-body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;background:var(--nova-bg)}
-.nova-bottom-nav{position:fixed;z-index:9999;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0;background:rgba(255,255,255,.97);border-top:1px solid #e3e8f0;padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));box-shadow:0 -5px 22px rgba(16,40,75,.08);backdrop-filter:blur(12px)}
-.nova-nav-item{position:relative;display:flex;min-width:0;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#778195;font-size:10px;font-weight:700;line-height:1.15;text-decoration:none;transition:color .18s,transform .18s}
-.nova-nav-item svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.nova-nav-item.active{color:var(--nova-blue);transform:translateY(-1px)}
-.nova-nav-count{position:absolute;top:-3px;left:calc(50% + 7px);min-width:16px;height:16px;padding:0 4px;border-radius:10px;background:var(--nova-yellow);color:var(--nova-navy);font-size:9px;line-height:16px;text-align:center}
-@media(min-width:760px){.nova-bottom-nav{left:50%;right:auto;transform:translateX(-50%);width:min(100%,720px);border:1px solid #e3e8f0;border-bottom:0;border-radius:16px 16px 0 0}.nova-nav-item{font-size:11px}}
-/* Premium retail catalogue */
-#products.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-#products .product{min-width:0;overflow:hidden;border:1px solid #e8edf4;border-radius:16px;background:#fff;box-shadow:0 4px 14px rgba(16,40,75,.055)}
-#products .prodimg{height:clamp(145px,45vw,235px);background:#f1f4f8;overflow:hidden}
-#products .prodimg img{width:100%;height:100%;object-fit:cover;display:block}
-#products .prodbody{padding:11px}
-#products .prodbody h3{font-size:13px;line-height:1.35;min-height:35px;margin:6px 0;color:#172033}
-#products .price{font-size:17px;font-weight:900;color:var(--nova-navy);margin:8px 0}
-#products .actions{display:flex;gap:6px}
-#products .actions .btn{flex:1;min-width:0;padding:9px 6px;font-size:11px}
-.product-open-card{cursor:pointer}.product-open-card .actions{cursor:default}.product-open-card .prodimg img{cursor:pointer}#products .wishlist-btn{width:34px!important;height:34px!important;font-size:0!important}
-#products .wishlist-btn:after{content:"♡";font-size:21px;color:var(--nova-navy)}
-#products .wishlist-btn[style*="color: rgb(225, 29, 72)"]:after{content:"♥";color:#e11d48}
-@media(min-width:760px){#products.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}}
-</style>
-<style>
-.product-open-card{cursor:pointer;transition:transform .18s,box-shadow .18s}
-.product-open-card:focus-visible{outline:3px solid #f5b900;outline-offset:3px}
-.product-open-card .prodimg img{cursor:zoom-in}
-.nova-detail-category{margin:12px 0 5px;color:#174ea6;font-size:12px;font-weight:850;text-transform:uppercase;letter-spacing:.5px}
-.nova-detail-seller{margin:8px 0 14px;color:#344054;font-size:13px}
-.nova-approved-label{display:inline-block;margin-left:6px;padding:4px 7px;border-radius:6px;background:#eaf7ef;color:#18794e;font-size:10px;font-weight:800}
-.nova-detail-reviews,.nova-detail-policy{margin:12px 0;padding:13px;border-radius:10px;font-size:12px;line-height:1.55}
-.nova-detail-description{margin:14px 0;color:#475467;font-size:14px;line-height:1.7;white-space:pre-wrap}
-.nova-view-store{width:100%;margin:6px 0 12px}
-</style>
-
-<style>
-/* NOVAAI MARKET premium retail polish */
-body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033}
-.new-header .head{gap:14px;flex-wrap:nowrap;padding-top:13px;padding-bottom:13px}
-.new-header .logo{font-size:24px;letter-spacing:-.8px}
-.new-header .search input{background:#fff;border-color:#dce3ed}
-.new-header .search input:focus{outline:2px solid #d7e6fb;outline-offset:1px}
-.new-header .search .btn{border-radius:0 10px 10px 0}
-#shop{margin-top:22px}
-#shop .section-head{margin-bottom:17px;padding:0 2px}
-#shop .section-head h2{margin:0 0 8px}
-#products.grid{gap:14px}
-#products .product{border:1px solid #e7ebf1;border-radius:16px;box-shadow:0 4px 12px rgba(16,40,75,.045)}
-#products .prodimg{height:auto;aspect-ratio:1/1;background:#f7f8fa}
-#products .prodimg img{object-fit:contain;padding:9px}
-#products .prodbody{padding:13px;gap:4px}
-#products .prodbody h3{font-size:14px;line-height:1.4;min-height:38px;font-weight:750}
-#products .price{font-size:19px;color:#10284b;margin:5px 0 9px}
-#products .actions{margin-top:auto}
-#products .actions .btn{border-radius:9px;padding:10px 8px;font-size:12px;font-weight:800}
-#products .actions .btn.primary{background:#174ea6;color:#fff}
-#products .shein-rating-row{display:none!important}
-.nova-nav-item.active{color:#174ea6;font-weight:850}
-.nova-nav-item.active svg{background:#edf4ff;border-radius:9px;box-sizing:content-box;padding:5px}
-@media(max-width:560px){
- .new-header .head{gap:8px;padding:11px 12px}
- .new-header .logo{font-size:19px;letter-spacing:-.7px}
- .new-header .search{flex:1 1 auto;min-width:0}
- .new-header .search input{font-size:12px;padding:10px 8px}
- .new-header .search .btn{padding:9px 10px;font-size:12px}
- #products.grid{gap:9px}
- #products .prodimg{aspect-ratio:1/1}
- #products .prodimg img{padding:6px}
- #products .prodbody{padding:9px}
- #products .prodbody h3{font-size:12px;min-height:34px}
- #products .price{font-size:17px}
- #products .actions .btn{font-size:11px;padding:9px 5px}
-}
-</style>
 <style>
 /* RESTORED RETAIL FOUNDATIONAL STYLES — recovered from the immediately preceding version. */
 
@@ -165,9 +49,7 @@ body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb;col
   font-weight: 600;
   overflow-wrap: anywhere;
 }
-#wishlist {
-  display: none;
-}
+body:not(.wishlist-view) #wishlist { display:none!important; }
 body.wishlist-view main > *:not(#wishlist) {
   display: none !important;
 }
@@ -735,6 +617,124 @@ header { background: #ffffff; position: sticky; top: 0; z-index: 50; border-bott
 @media(max-width:520px){#wishlist{margin:12px 10px!important;padding:12px!important}#wishlist .wishlist-card{gap:10px;padding:10px}#wishlist .wishlist-photo{width:72px;height:72px;flex-basis:72px}#wishlist .wishlist-name{font-size:13px}#wishlist .wishlist-price{font-size:15px}#wishlist .wishlist-add{padding:8px 9px;font-size:11px}}
 
 </style>
+
+
+
+<style>
+/* NOVAAI HOMEPAGE BRAND OVERRIDES */
+:root {
+  --bg: #f5f7fb;
+  --ink: #10284b;
+  --muted: #667085;
+  --p: #174ea6;
+  --dark: #10284b;
+  --line: #e1e6ee;
+}
+body { background: #f5f7fb; color: #10284b; }
+.top, footer { background: #10284b; }
+.logo { color: #174ea6; }
+.logo span, .new-header .logo span { color: #f5b900; }
+.primary, .search .btn { background: #174ea6; color: #fff; }
+.light { background: #fff2bd; color: #10284b; }
+.hero {
+  background: linear-gradient(120deg, #10284b 0%, #174ea6 72%, #3878cf 100%);
+  color: #fff;
+}
+.hero p { color: #e7efff; }
+.cat.active, #cats .cat.active {
+  border-color: #174ea6;
+  background: #edf4ff;
+}
+.price, .prodbody .price { color: #174ea6; }
+.notice {
+  background: #edf4ff;
+  border-color: #c9dcfa;
+  color: #10284b;
+}
+.add-to-cart-btn, #modalAddToCart {
+  background: #f5b900 !important;
+  color: #10284b !important;
+  border: 0 !important;
+}
+.add-to-cart-btn:hover, #modalAddToCart:hover { background: #e6aa00 !important; }
+</style>
+
+<style>
+:root{--nova-navy:#10284B;--nova-blue:#174EA6;--nova-yellow:#F5B900;--nova-bg:#F5F7FB}
+body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;background:var(--nova-bg)}
+.nova-bottom-nav{position:fixed;z-index:9999;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0;background:rgba(255,255,255,.97);border-top:1px solid #e3e8f0;padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));box-shadow:0 -5px 22px rgba(16,40,75,.08);backdrop-filter:blur(12px)}
+.nova-nav-item{position:relative;display:flex;min-width:0;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#778195;font-size:10px;font-weight:700;line-height:1.15;text-decoration:none;transition:color .18s,transform .18s}
+.nova-nav-item svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nova-nav-item.active{color:var(--nova-blue);transform:translateY(-1px)}
+.nova-nav-count{position:absolute;top:-3px;left:calc(50% + 7px);min-width:16px;height:16px;padding:0 4px;border-radius:10px;background:var(--nova-yellow);color:var(--nova-navy);font-size:9px;line-height:16px;text-align:center}
+@media(min-width:760px){.nova-bottom-nav{left:50%;right:auto;transform:translateX(-50%);width:min(100%,720px);border:1px solid #e3e8f0;border-bottom:0;border-radius:16px 16px 0 0}.nova-nav-item{font-size:11px}}
+/* Premium retail catalogue */
+#products.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#products .product{min-width:0;overflow:hidden;border:1px solid #e8edf4;border-radius:16px;background:#fff;box-shadow:0 4px 14px rgba(16,40,75,.055)}
+#products .prodimg{height:clamp(145px,45vw,235px);background:#f1f4f8;overflow:hidden}
+#products .prodimg img{width:100%;height:100%;object-fit:cover;display:block}
+#products .prodbody{padding:11px}
+#products .prodbody h3{font-size:13px;line-height:1.35;min-height:35px;margin:6px 0;color:#172033}
+#products .price{font-size:17px;font-weight:900;color:var(--nova-navy);margin:8px 0}
+#products .actions{display:flex;gap:6px}
+#products .actions .btn{flex:1;min-width:0;padding:9px 6px;font-size:11px}
+.product-open-card{cursor:pointer}.product-open-card .actions{cursor:default}.product-open-card .prodimg img{cursor:pointer}#products .wishlist-btn{width:34px!important;height:34px!important;font-size:0!important}
+#products .wishlist-btn:after{content:"♡";font-size:21px;color:var(--nova-navy)}
+#products .wishlist-btn[style*="color: rgb(225, 29, 72)"]:after{content:"♥";color:#e11d48}
+@media(min-width:760px){#products.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}}
+</style>
+<style>
+.product-open-card{cursor:pointer;transition:transform .18s,box-shadow .18s}
+.product-open-card:focus-visible{outline:3px solid #f5b900;outline-offset:3px}
+.product-open-card .prodimg img{cursor:zoom-in}
+.nova-detail-category{margin:12px 0 5px;color:#174ea6;font-size:12px;font-weight:850;text-transform:uppercase;letter-spacing:.5px}
+.nova-detail-seller{margin:8px 0 14px;color:#344054;font-size:13px}
+.nova-approved-label{display:inline-block;margin-left:6px;padding:4px 7px;border-radius:6px;background:#eaf7ef;color:#18794e;font-size:10px;font-weight:800}
+.nova-detail-reviews,.nova-detail-policy{margin:12px 0;padding:13px;border-radius:10px;font-size:12px;line-height:1.55}
+.nova-detail-description{margin:14px 0;color:#475467;font-size:14px;line-height:1.7;white-space:pre-wrap}
+.nova-view-store{width:100%;margin:6px 0 12px}
+</style>
+
+<style>
+/* NOVAAI MARKET premium retail polish */
+body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033}
+.new-header .head{gap:14px;flex-wrap:nowrap;padding-top:13px;padding-bottom:13px}
+.new-header .logo{font-size:24px;letter-spacing:-.8px}
+.new-header .search input{background:#fff;border-color:#dce3ed}
+.new-header .search input:focus{outline:2px solid #d7e6fb;outline-offset:1px}
+.new-header .search .btn{border-radius:0 10px 10px 0}
+#shop{margin-top:22px}
+#shop .section-head{margin-bottom:17px;padding:0 2px}
+#shop .section-head h2{margin:0 0 8px}
+#products.grid{gap:14px}
+#products .product{border:1px solid #e7ebf1;border-radius:16px;box-shadow:0 4px 12px rgba(16,40,75,.045)}
+#products .prodimg{height:auto;aspect-ratio:1/1;background:#f7f8fa}
+#products .prodimg img{object-fit:contain;padding:9px}
+#products .prodbody{padding:13px;gap:4px}
+#products .prodbody h3{font-size:14px;line-height:1.4;min-height:38px;font-weight:750}
+#products .price{font-size:19px;color:#10284b;margin:5px 0 9px}
+#products .actions{margin-top:auto}
+#products .actions .btn{border-radius:9px;padding:10px 8px;font-size:12px;font-weight:800}
+#products .actions .btn.primary{background:#174ea6;color:#fff}
+#products .shein-rating-row{display:none!important}
+.nova-nav-item.active{color:#174ea6;font-weight:850}
+.nova-nav-item.active svg{background:#edf4ff;border-radius:9px;box-sizing:content-box;padding:5px}
+@media(max-width:560px){
+ .new-header .head{gap:8px;padding:11px 12px}
+ .new-header .logo{font-size:19px;letter-spacing:-.7px}
+ .new-header .search{flex:1 1 auto;min-width:0}
+ .new-header .search input{font-size:12px;padding:10px 8px}
+ .new-header .search .btn{padding:9px 10px;font-size:12px}
+ #products.grid{gap:9px}
+ #products .prodimg{aspect-ratio:1/1}
+ #products .prodimg img{padding:6px}
+ #products .prodbody{padding:9px}
+ #products .prodbody h3{font-size:12px;min-height:34px}
+ #products .price{font-size:17px}
+ #products .actions .btn{font-size:11px;padding:9px 5px}
+}
+</style>
+
 <style>
 /* Keep retail product photo areas clean white */
 #products .prodimg,
