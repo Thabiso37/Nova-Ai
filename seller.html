@@ -59,9 +59,9 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
     <p>Select a marketplace to continue to the matching seller sign-in or registration experience. One NOVAAI account works across all three marketplaces.</p>
   </div>
   <div class="market-choice-grid">
-    <article class="market-choice"><div class="choice-icon">R</div><h2>Retail Seller</h2><p>Open your online shop and manage products.</p><ul><li>Products</li><li>Electronics</li><li>Fashion</li><li>Groceries</li><li>Home and Living</li></ul><button class="btn" type="button" onclick="chooseMarketplace('retail')">Continue to Retail</button></article>
-    <article class="market-choice"><div class="choice-icon">M</div><h2>Motor Seller</h2><p>List vehicles for buyers across South Africa.</p><ul><li>Cars</li><li>Motorcycles</li><li>Commercial vehicles</li><li>Other vehicles</li></ul><button class="btn" type="button" onclick="chooseMarketplace('motors')">Continue to Motors</button></article>
-    <article class="market-choice"><div class="choice-icon">P</div><h2>Property Seller</h2><p>Advertise property for sale or rent.</p><ul><li>Property for sale</li><li>Property to rent</li><li>Houses</li><li>Apartments</li><li>Land</li></ul><button class="btn" type="button" onclick="chooseMarketplace('property')">Continue to Property</button></article>
+    <article class="market-choice" data-marketplace="retail"><div class="choice-icon">R</div><h2>Retail Seller</h2><p>Open your online shop and manage products.</p><ul><li>Products</li><li>Electronics</li><li>Fashion</li><li>Groceries</li><li>Home and Living</li></ul><button class="btn" type="button" onclick="chooseMarketplace('retail')">Continue to Retail</button></article>
+    <article class="market-choice" data-marketplace="motors"><div class="choice-icon">M</div><h2>Motor Seller</h2><p>List vehicles for buyers across South Africa.</p><ul><li>Cars</li><li>Motorcycles</li><li>Commercial vehicles</li><li>Other vehicles</li></ul><button class="btn" type="button" onclick="chooseMarketplace('motors')">Continue to Motors</button></article>
+    <article class="market-choice" data-marketplace="property"><div class="choice-icon">P</div><h2>Property Seller</h2><p>Advertise property for sale or rent.</p><ul><li>Property for sale</li><li>Property to rent</li><li>Houses</li><li>Apartments</li><li>Land</li></ul><button class="btn" type="button" onclick="chooseMarketplace('property')">Continue to Property</button></article>
   </div>
 </section>
 <div id="sellerWorkspace" class="hidden">
@@ -222,9 +222,16 @@ let selectedMarket = null;
 let marketplacePermissions = [];
 function hasMarketplaceAccess(market){ return String(storeData?.status||"").toLowerCase()==="approved" && marketplacePermissions.some(p=>p.marketplace===market && p.status==="approved"); }
 function requireMarketplaceAccess(market){ if(!hasMarketplaceAccess(market)){ msg("sellerMsg","Access denied: your store and this marketplace must both be approved.",true); return false; } return true; }
+function renderMarketplaceChoices(){
+  document.querySelectorAll(".market-choice[data-marketplace]").forEach(card=>{
+    const market=card.dataset.marketplace;
+    card.classList.toggle("hidden",!!user && !hasMarketplaceAccess(market));
+  });
+}
 const marketplaceLabels = {retail:"Retail Seller",motors:"Motor Seller",property:"Property Seller"};
 function chooseMarketplace(market) {
   if (!Object.prototype.hasOwnProperty.call(marketplaceLabels, market)) return;
+  if (user && !hasMarketplaceAccess(market)) { msg("sellerMsg","Access denied: this marketplace is not approved for your seller account.",true); return; }
   selectedMarket = market;
   setListingMarket(market);
   document.getElementById("selectedMarketLabel").textContent = marketplaceLabels[market];
@@ -342,6 +349,7 @@ const version = ++authVersion;
 
 user = u;
 storeData = null;
+if (!u) marketplacePermissions = [];
 if (u && !selectedMarket) selectedMarket = "retail";
 if (selectedMarket) {
   setListingMarket(selectedMarket);
@@ -353,6 +361,7 @@ if (selectedMarket) {
   document.getElementById("sellerWorkspace").classList.add("hidden");
 }
 document.getElementById("portalStd").classList.toggle("is-authenticated", !!u);
+renderMarketplaceChoices();
 
 const publish = document.getElementById("publish");
 
@@ -361,6 +370,7 @@ document.getElementById("signedIn").classList.toggle("hidden", !u);
 document.getElementById("userEmail").textContent = u?.email || "";
 
 if (!u) {
+renderMarketplaceChoices();
 publish.disabled = true;
 publish.textContent = "Pending Approval";
 document.getElementById("myProductsList").innerHTML = "";
@@ -391,6 +401,8 @@ return;
 storeData = data;
 
 if (!storeData) {
+  marketplacePermissions = [];
+  renderMarketplaceChoices();
 publish.disabled = true;
 publish.textContent = "Store Registration Required";
 document.getElementById("approvalBox").textContent =
@@ -398,6 +410,34 @@ document.getElementById("approvalBox").textContent =
 document.getElementById("userMsg").textContent =
 "No seller store found for this account.";
 return;
+}
+
+const {data: permissionRows, error: permissionError} = await sb
+  .from("seller_marketplace_permissions")
+  .select("marketplace,status")
+  .eq("user_id", u.id);
+if (version !== authVersion) return;
+if (permissionError) {
+  publish.disabled = true;
+  publish.textContent = "Permission Check Failed";
+  document.getElementById("userMsg").textContent = "Marketplace permission check failed: " + permissionError.message;
+  return;
+}
+marketplacePermissions = permissionRows || [];
+renderMarketplaceChoices();
+if (!hasMarketplaceAccess(selectedMarket)) {
+  const firstAllowed = ["retail","motors","property"].find(hasMarketplaceAccess);
+  if (firstAllowed) {
+    selectedMarket = firstAllowed;
+    setListingMarket(firstAllowed);
+    document.getElementById("selectedMarketLabel").textContent = marketplaceLabels[firstAllowed];
+  } else {
+    publish.disabled = true;
+    publish.textContent = "Marketplace Approval Required";
+    document.getElementById("userMsg").textContent = "Your seller store is approved, but no marketplace permission has been approved yet.";
+    await loadMyProducts();
+    return;
+  }
 }
 
 const approved =
