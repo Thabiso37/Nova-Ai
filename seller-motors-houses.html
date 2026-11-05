@@ -238,7 +238,7 @@ body.motors-mode header .head{display:flex;align-items:center;gap:12px}
   <div class="head">
     <a class="logo" href="index.html">NOVA<span>AI</span></a>
     <div class="motors-header-search" id="motorsHeaderSearch">
-      <input type="search" id="motorsSearchInput" placeholder="Search cars, brands or models..." aria-label="Search Motors listings">
+      <input type="search" id="motorsSearchInput" placeholder="Search car parts, accessories or brands..." aria-label="Search Motors listings">
       <button type="button" id="motorsSearchBtn" aria-label="Search Motors">🔍</button>
       <button type="button" id="motorsNearMe" aria-label="Use my location">📍 Near me</button>
     </div>
@@ -356,7 +356,7 @@ async function loadListings(marketType, searchQuery = '') {
       const name = String(item.name || '').trim();
       const description = String(item.description || '').trim();
       return name.length > 3 && Number(item.price || 0) > 0 &&
-        !/^(test|see|\\d+)$/i.test(name) &&
+        !/^(test|see|\d+)$/i.test(name) &&
         automotiveWords.test(name + ' ' + description);
     });
   }
