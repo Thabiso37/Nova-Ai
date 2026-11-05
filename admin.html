@@ -872,7 +872,8 @@ async function checkAdmin(user) {
 
   await Promise.all([
     loadProducts(),
-    loadPaymentData()
+    loadPaymentData(),
+    loadMarketplacePermissions()
   ]);
 }
 
