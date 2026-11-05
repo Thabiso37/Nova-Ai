@@ -421,7 +421,7 @@ function renderMotorsParts(rows){
   }
   grid.innerHTML=visible.map(item=>{
     const title=String(item.name||'Car part');
-    const photo=item.image_url&&/^https?:\\/\\//i.test(item.image_url)?'<img class="motors-part-photo" src="'+esc(item.image_url)+'" alt="'+esc(title)+'" loading="lazy">':'<div class="motors-part-photo-empty">Photo not supplied</div>';
+    const photo=item.image_url&&String(item.image_url).startsWith('http')?'<img class="motors-part-photo" src="'+esc(item.image_url)+'" alt="'+esc(title)+'" loading="lazy">':'<div class="motors-part-photo-empty">Photo not supplied</div>';
     const desc=String(item.description||'Ask the seller for more product information.');
     return '<article class="panel motors-part-card">'+photo+'<div class="motors-part-body"><span class="motors-part-type">Automotive accessory</span><h3 class="motors-part-title">'+esc(title)+'</h3><div class="motors-part-price">'+cash(item.price)+'</div><p class="motors-part-description">'+esc(desc)+'</p><div class="motors-part-seller">Sold by '+esc(item.seller_name||'NOVAAI seller')+'</div></div></article>';
   }).join('');
