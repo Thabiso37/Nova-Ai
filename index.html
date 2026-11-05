@@ -611,7 +611,6 @@ body.product-view-active .nova-hero-carousel{display:none!important}
             <div class="home-product-category">${escapeHTML(p.category||'Marketplace product')}</div>
             <h3>${escapeHTML(p.name)}</h3>
             <div class="home-card-seller"><span class="verified-check" aria-hidden="true">✓</span>${escapeHTML(sellerName)} <span class="verified-label">Verified seller</span></div>
-            <div class="home-live-rating" aria-label="Live ratings coming soon"><span class="home-rating-stars" aria-hidden="true">☆☆☆☆☆</span><span class="home-rating-label">Live ratings coming soon</span></div>
             <div class="home-product-buy-row"><div class="home-product-price">${money(p.price)}</div>
               <button type="button" class="home-add-cart" data-add-product="${escapeHTML(p.id)}" aria-label="Add ${escapeHTML(p.name)} to cart" title="Add to cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg></button>
             </div>
