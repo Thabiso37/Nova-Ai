@@ -9,7 +9,7 @@ async function loadSellerPublicLocation(){
  document.getElementById("sellerLocLatitude").value=v.latitude??"";
  document.getElementById("sellerLocLongitude").value=v.longitude??"";
  document.getElementById("sellerLocPublic").checked=!!v.public_location_enabled;
- if(box)box.textContent=data?"Your saved public location is loaded.":"Add your public business/listing area. It remains hidden until you approve public display.";
+ if(box)box.textContent=!data?"Add your public business/listing area. It remains private until you consent and an administrator approves it.":(v.public_location_enabled?(v.approval_status==="approved"?"Your public business location is approved and visible in Nearby Search.":v.approval_status==="rejected"?"Your location was rejected. Update the details and save again to request a new review.":"Your location is submitted and waiting for administrator approval."):"Your location is saved privately and is not visible to shoppers.");
 }
 document.getElementById("sellerLocUseGps").addEventListener("click",function(){
  const box=document.getElementById("sellerLocStatus");
@@ -33,5 +33,5 @@ document.getElementById("sellerLocSave").addEventListener("click",async function
  if(error){box.textContent="Could not save location: "+error.message;return;}
  document.getElementById("sellerLocLatitude").value=payload.latitude??"";
  document.getElementById("sellerLocLongitude").value=payload.longitude??"";
- box.textContent=payload.public_location_enabled?"Public seller location saved. Coordinates are rounded to an approximate 1 km area for privacy.":"Location saved privately. It is not visible to shoppers.";
+ box.textContent=payload.public_location_enabled?"Location submitted for administrator approval. It will appear in Nearby Search only after approval. Coordinates are rounded to an approximate 1 km area for privacy.":"Location saved privately. It is not visible to shoppers."; await loadSellerPublicLocation();
 });
