@@ -954,7 +954,7 @@ async function loadSellerLocationReviews() {
   msg.textContent = "Loading seller location submissions…";
   const { data: rows, error } = await sb
     .from("seller_public_locations")
-    .select("user_id,province,city,suburb,public_location_enabled,approval_status,updated_at,review_note")
+    .select("user_id,province,city,suburb,public_location_enabled,approval_status,updated_at")
     .order("updated_at", { ascending: false });
   if (error) {
     msg.textContent = "Could not load location submissions: " + error.message;
@@ -991,7 +991,6 @@ async function loadSellerLocationReviews() {
       '<p>Seller consent: <strong>' + (r.public_location_enabled ? "Yes" : "No") + '</strong></p>' +
       '<p>Location review: <strong>' + escapeHTML(r.approval_status || "pending") + '</strong></p>' +
       '<p>Last submitted: ' + escapeHTML(r.updated_at || "Not recorded") + '</p>' +
-      (r.review_note ? '<p>Review note: ' + escapeHTML(r.review_note) + '</p>' : '') +
       (canReview
         ? '<div class="actions"><button class="approve" type="button" onclick="reviewSellerPublicLocation(\'' + escapeHTML(r.user_id) + '\',\'approved\')">Approve location</button>' +
           '<button class="reject" type="button" onclick="reviewSellerPublicLocation(\'' + escapeHTML(r.user_id) + '\',\'rejected\')">Reject location</button></div>'
