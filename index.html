@@ -531,32 +531,46 @@ body.product-view-active .nova-hero-carousel{display:none!important}
     document.getElementById('homeDetailAddCart')?.addEventListener('click',()=>addToCart(detail));
   }
   async function loadHomeProducts(){
+    const requestedId=new URLSearchParams(window.location.search).get('product');
     try{
       if(!window.supabase)throw new Error('Marketplace service is unavailable.');
-      const client=window.supabase.createClient('https://nxplffvklkopwfjaqexo.supabase.co','sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ');
-      const {data:rows,error}=await client.from('Products')
-        .select('id,name,description,price,category,image_url,images,seller_name,seller_id,status')
-        .eq('status','approved').order('created_at',{ascending:false});
-      if(error)throw error;
-      const {data:stores,error:storeError}=await client.from('seller_stores').select('user_id,store_name,store_slug,phone,description,status').eq('status','approved');
-      if(storeError)throw storeError;
-      const approved=new Set((stores||[]).map(s=>s.user_id));
-      const storesBySeller=new Map((stores||[]).map(store=>[String(store.user_id),store]));
-      const requestedId=new URLSearchParams(window.location.search).get('product');
-      if(requestedId)document.body.classList.add('product-view-active');
+      const client=window.supabase.createClient('https://nxplffvklkopwfjaqexo.supabase.co','sb_publishable_dsWU7vWNRN2Nzi5D8J8H3g_W9vNsafQ');
       if(requestedId){
-        const {data:detail,error:detailError}=await client.from('Products').select('id,name,description,price,category,image_url,images,seller_name,seller_id,status').eq('id',requestedId).eq('status','approved').maybeSingle();
+        document.body.classList.add('product-view-active');
+        const {data:detail,error:detailError}=await client.from('Products')
+          .select('id,name,description,price,category,image_url,images,seller_name,seller_id,status')
+          .eq('id',requestedId).eq('status','approved').maybeSingle();
         if(detailError)throw detailError;
-        if(!detail||!detail.seller_id||!approved.has(detail.seller_id)||!detail.name||Number(detail.price)<=0){
+        let store=null;
+        if(detail&&detail.seller_id){
+          const {data:storeRow,error:storeError}=await client.from('seller_stores')
+            .select('user_id,store_name,store_slug,phone,description,status')
+            .eq('user_id',detail.seller_id).eq('status','approved').maybeSingle();
+          if(storeError)throw storeError;
+          store=storeRow;
+        }
+        if(!detail||!store||!detail.name||Number(detail.price)<=0){
           document.querySelector('main').innerHTML='<section class="home-detail"><div class="home-products-message">This product is unavailable or is no longer listed by an approved seller. <a href="./index.html">Return to homepage</a>.</div></section>';
           return;
         }
-        detail.seller_store=(stores||[]).find(store=>String(store.user_id)===String(detail.seller_id))||null;
+        detail.seller_store=store;
         renderDetail(detail);
         updateCartCount();
         return;
       }
-      const items=(rows||[]).filter(p=>p.status==='approved'&&p.seller_id&&approved.has(p.seller_id)&&p.name&&Number(p.price)>0);
+
+      const [productResult,storeResult]=await Promise.all([
+        client.from('Products').select('id,name,description,price,category,image_url,images,seller_name,seller_id,status')
+          .eq('status','approved').order('created_at',{ascending:false}),
+        client.from('seller_stores').select('user_id,store_name,status').eq('status','approved')
+      ]);
+      if(productResult.error)throw productResult.error;
+      if(storeResult.error)throw storeResult.error;
+      const rows=productResult.data||[];
+      const stores=storeResult.data||[];
+      const approved=new Set(stores.map(s=>String(s.user_id)));
+      const storesBySeller=new Map(stores.map(store=>[String(store.user_id),store]));
+      const items=rows.filter(p=>p.status==='approved'&&p.seller_id&&approved.has(String(p.seller_id))&&p.name&&Number(p.price)>0);
       if(!items.length){
         grid.innerHTML='<div class="home-products-message">There are no approved seller products to display right now. Visit Retail to browse the full marketplace catalogue.</div>';
         return;
@@ -565,7 +579,7 @@ body.product-view-active .nova-hero-carousel{display:none!important}
         const imgs=productPhotos(p);
         const img=imgs[0]||'';
         return '<article class="home-product-card" data-open-home-product="'+escapeHTML(p.id)+'" tabindex="0" role="link" aria-label="Open '+escapeHTML(p.name)+' details">'+
-          '<div class="home-product-photo">'+(img?'<img src="'+escapeHTML(img)+'" alt="'+escapeHTML(p.name)+'" loading="lazy">':'<span class="home-no-photo"><small>Photo not supplied</small></span>')+'</div>'+
+          '<div class="home-product-photo">'+(img?'<img src="'+escapeHTML(img)+'" alt="'+escapeHTML(p.name)+'" loading="lazy" decoding="async">':'<span class="home-no-photo"><small>Photo not supplied</small></span>')+'</div>'+
           '<div class="home-product-info">'+
           '<div class="home-product-category">'+escapeHTML(p.category||'Marketplace product')+'</div>'+
           '<h3>'+escapeHTML(p.name)+'</h3>'+
@@ -573,8 +587,16 @@ body.product-view-active .nova-hero-carousel{display:none!important}
           '<div class="home-product-buy-row"><div class="home-product-price">'+money(p.price)+'</div>'+
           '<button type="button" class="home-add-cart" data-add-product="'+escapeHTML(p.id)+'" aria-label="Add '+escapeHTML(p.name)+' to cart" title="Add to cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg></button></div></div></article>';
       }).join('');
-      grid.querySelectorAll('[data-open-home-product]').forEach(card=>{const open=()=>{window.location.href='./index.html?product='+encodeURIComponent(card.dataset.openHomeProduct);};card.addEventListener('click',e=>{if(e.target.closest('button'))return;open();});card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});});
-      grid.querySelectorAll('[data-add-product]').forEach(button=>button.addEventListener('click',e=>{e.stopPropagation();const p=items.find(item=>String(item.id)===button.dataset.addProduct);if(p)addToCart(p);}));
+      grid.querySelectorAll('[data-open-home-product]').forEach(card=>{
+        const open=()=>{window.location.href='./index.html?product='+encodeURIComponent(card.dataset.openHomeProduct);};
+        card.addEventListener('click',e=>{if(e.target.closest('button'))return;open();});
+        card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
+      });
+      grid.querySelectorAll('[data-add-product]').forEach(button=>button.addEventListener('click',e=>{
+        e.stopPropagation();
+        const product=items.find(item=>String(item.id)===button.dataset.addProduct);
+        if(product)addToCart(product);
+      }));
       updateCartCount();
     }catch(error){
       console.error('Homepage product loading:',error);
