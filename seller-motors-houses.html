@@ -569,7 +569,7 @@ body.motors-mode #productGrid>.vehicle-card .vehicle-seller{
   </div>
 
 <section id="motorsHub" class="motors-hub" aria-label="NOVAAI Motors vehicles for sale">
-  <div class="motors-welcome">
+  <div class="motors-welcome" data-nova-ad-slot="motors_banner" data-nova-ad-format="carousel" data-nova-ad-version="1" role="region" aria-label="NOVAAI Motors featured advertisement">
     <div class="motors-welcome-top"><span>NOVAAI MOTORS</span><span class="motors-avatar">N</span></div>
     <div class="motors-hero-copy">
       <span class="motors-eyebrow">CARS • BAKKIES • SUVs • MOTORCYCLES</span>
@@ -578,7 +578,6 @@ body.motors-mode #productGrid>.vehicle-card .vehicle-seller{
       <button type="button" class="motors-explore" onclick="document.getElementById('motorsVehiclesHeading').scrollIntoView({behavior:'smooth',block:'start'})">Explore vehicles <span aria-hidden="true">→</span></button>
     </div>
   </div>
-  <div id="motorsAdSlot" class="nova-market-ad-slot motors-ad-slot" data-nova-ad-slot="motors_banner" data-nova-ad-format="banner" data-nova-ad-version="1" role="region" aria-label="NOVAAI Motors advertisement"><span class="nova-market-ad-kicker">NOVAAI MOTORS SPOTLIGHT</span><strong>Find your next great drive.</strong><small>Discover vehicles and offers from South African sellers.</small><a href="#productGrid">Explore vehicles →</a></div>
   <div class="motors-tools">
     <div class="motors-filter-chips" role="group" aria-label="Vehicle categories">
       <button type="button" class="motors-chip active" onclick="setMotorsPartCategory('all',this)">All Vehicles</button>
@@ -893,14 +892,6 @@ body:not(.property-mode):not(.motors-mode) .retail-product-photo img{object-fit:
 .retail-product-footer .btn{flex:0 0 auto;padding:7px 10px!important;border:0!important;border-radius:8px!important;background:#f5b900!important;color:#10284b!important;font-size:10px!important;font-weight:900!important}
 @media(max-width:360px){body:not(.property-mode):not(.motors-mode) #productGrid{gap:7px!important}.retail-product-info{padding:8px}.retail-product-info h4{font-size:12px}.retail-product-price{font-size:15px}}
 @media(min-width:760px){body:not(.property-mode):not(.motors-mode) #productGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important}}
-</style>
-<style>
-/* Motors advertisement slot only — no vehicle card or Property layout changes. */
-body.motors-mode .motors-ad-slot{display:flex;flex-direction:column;align-items:flex-start;gap:5px;margin:12px 0 14px;padding:15px 17px;min-height:112px;border:1px solid #dce6f4;border-radius:15px;background:radial-gradient(circle at 88% 18%,#2c65b5 0,#174ea6 31%,#10284b 78%);color:#fff;overflow:hidden}
-body.motors-mode .motors-ad-slot .nova-market-ad-kicker{font-size:8px;font-weight:900;letter-spacing:1.5px;color:#ffd34f}
-body.motors-mode .motors-ad-slot strong{font-size:clamp(16px,4vw,21px);line-height:1.2;color:#fff}
-body.motors-mode .motors-ad-slot small{font-size:10px;line-height:1.4;color:#e4edfb}
-body.motors-mode .motors-ad-slot a{display:inline-flex;margin-top:3px;padding:7px 10px;border-radius:7px;background:#f5b900;color:#10284b;text-decoration:none;font-size:10px;font-weight:900}
 </style>
 </body>
 </html>
