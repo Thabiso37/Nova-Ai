@@ -248,6 +248,55 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
 }
 </style>
 
+
+<style>
+/* NOVAAI MARKET premium polish */
+:root{--nova-blue:#174ea6;--nova-navy:#10284b;--nova-yellow:#f5b900}
+body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb}
+.head{gap:18px;min-width:0}
+.head-actions{gap:9px;flex-wrap:nowrap}
+.tag{line-height:1.5;letter-spacing:.7px}
+.home-signin-link,.cart-link{border-radius:999px;padding:10px 15px;transition:background .18s,border-color .18s,transform .18s}
+.home-signin-link:hover,.cart-link:hover{background:#edf4ff;border-color:#b9cbea;transform:translateY(-1px)}
+.home-featured{margin:30px 0 36px}
+.section-kicker{margin:0 0 10px;padding-top:8px}
+.section-kicker h2{font-size:clamp(20px,3vw,24px);letter-spacing:-.35px}
+.featured-subtitle{margin:7px 0 17px}
+.home-product-grid{gap:16px}
+.home-product-card{border:1px solid #e7ebf1;border-radius:16px;background:#fff;box-shadow:0 4px 12px rgba(16,40,75,.045)}
+.home-product-card:hover{box-shadow:0 10px 24px rgba(16,40,75,.09)}
+.home-product-photo{height:auto;aspect-ratio:1/1;background:#f7f8fa!important;border:0!important;padding:10px!important}
+.home-product-photo img{width:100%;height:100%;object-fit:contain!important;object-position:center;border-radius:8px!important}
+.home-no-photo{width:100%;height:100%;justify-content:center;background:#f7f8fa;color:#98a2b3;font-size:12px}
+.home-product-info{padding:13px;gap:8px}
+.home-product-info h3{min-height:38px;margin:0;font-size:14px;font-weight:750;line-height:1.4}
+.home-product-buy-row{width:100%;margin:3px 0 0!important}
+.home-product-info .home-product-price{background:transparent!important;color:var(--nova-navy)!important;padding:0!important;border-radius:0!important;font-size:20px!important;font-weight:850}
+.home-product-info .home-add-cart{width:100%!important;min-height:43px!important;height:auto!important;margin:0!important;padding:10px 12px!important;border:0!important;border-radius:9px!important;background:var(--nova-blue)!important;color:#fff!important;font-size:13px!important;font-weight:800!important;box-shadow:none!important;display:flex!important}
+.home-product-info .home-add-cart:hover{background:var(--nova-navy)!important;color:#fff!important}
+.home-product-rating{display:none!important}
+.nova-nav-item.active{color:var(--nova-blue);font-weight:850}
+.nova-nav-item.active svg{background:#edf4ff;border-radius:9px;box-sizing:content-box;padding:5px}
+@media(max-width:760px){
+  .head{padding:12px 13px;align-items:center;gap:8px}
+  .logo{font-size:21px;letter-spacing:-.8px;white-space:nowrap}
+  .tag{display:none}
+  .head-actions{gap:6px}
+  .home-signin-link,.cart-link{padding:8px 10px;font-size:11px;gap:4px}
+  .home-product-grid{gap:10px}
+  .home-product-photo{padding:7px!important}
+  .home-product-info{padding:10px;gap:7px}
+  .home-product-info h3{font-size:13px;min-height:36px}
+  .home-product-info .home-product-price{font-size:17px!important}
+  .home-product-info .home-add-cart{min-height:40px!important;font-size:12px!important}
+  .home-featured{margin-top:24px}
+}
+@media(max-width:370px){
+ .logo{font-size:18px}
+ .home-signin-link{padding:7px 8px}
+ .cart-link{padding:7px 8px}
+}
+</style>
 </head>
 <body>
 <div class="top">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
@@ -357,7 +406,7 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
   const grid=document.getElementById('homeProductGrid');
   if(!grid)return;
   const escapeHTML=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-  const money=value=>new Intl.NumberFormat('en-ZA',{style:'currency',currency:'ZAR'}).format(Number(value)||0);
+  const money=value=>'R '+new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(value)||0);
   const safeImage=value=>{try{const u=new URL(value);return ['https:','http:'].includes(u.protocol)?u.href:''}catch(e){return ''}};
   const cartKey='novaMarketplaceCartV1';
   function readCart(){try{const v=JSON.parse(localStorage.getItem(cartKey)||'[]');return Array.isArray(v)?v:[]}catch(e){return []}}
@@ -432,11 +481,10 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
         const imgs=productPhotos(p);
         const img=imgs[0]||'';
         return '<article class="home-product-card" data-open-home-product="'+escapeHTML(p.id)+'" tabindex="0" role="link" aria-label="Open '+escapeHTML(p.name)+' details">'+
-          '<div class="home-product-photo">'+(img?'<img src="'+escapeHTML(img)+'" alt="'+escapeHTML(p.name)+'" loading="lazy">':'<span class="home-no-photo">📦<small>Photo not available</small></span>')+'</div>'+
+          '<div class="home-product-photo">'+(img?'<img src="'+escapeHTML(img)+'" alt="'+escapeHTML(p.name)+'" loading="lazy">':'<span class="home-no-photo"><small>Photo not supplied</small></span>')+'</div>'+
           '<div class="home-product-info">'+
-          '<h3>'+escapeHTML(p.name)+'</h3><div class="home-product-buy-row"><div class="home-product-price">'+money(p.price)+'</div>'+
-          '<button type="button" class="home-add-cart" data-add-product="'+escapeHTML(p.id)+'" aria-label="Add '+escapeHTML(p.name)+' to cart" title="Add to cart"><span aria-hidden="true">🛒</span></button></div>'+
-          '<div class="home-product-rating" aria-label="No customer rating yet"><span aria-hidden="true">☆☆☆☆☆</span><small>Not rated yet</small></div></div></article>';
+          '<h3>'+escapeHTML(p.name)+'</h3><div class="home-product-buy-row"><div class="home-product-price">'+money(p.price)+'</div></div>'+
+          '<button type="button" class="home-add-cart" data-add-product="'+escapeHTML(p.id)+'" aria-label="Add '+escapeHTML(p.name)+' to cart">Add to Cart</button></div></article>';
       }).join('');
       grid.querySelectorAll('[data-open-home-product]').forEach(card=>{const open=()=>{window.location.href='./index.html?product='+encodeURIComponent(card.dataset.openHomeProduct);};card.addEventListener('click',e=>{if(e.target.closest('button'))return;open();});card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});});
       grid.querySelectorAll('[data-add-product]').forEach(button=>button.addEventListener('click',e=>{e.stopPropagation();const p=items.find(item=>String(item.id)===button.dataset.addProduct);if(p)addToCart(p);}));
