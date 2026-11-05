@@ -789,7 +789,7 @@ function renderSellerListing(p) {
     return `
       <div style="padding:12px;border-bottom:1px solid var(--line);">
         <div style="display:flex;gap:10px;align-items:center;">
-          ${image ? `<img src="${escapeHTML(image)}" alt="" style="width:65px;height:65px;object-fit:cover;border-radius:8px;">` : ""}
+          ${image ? `<img loading="lazy" decoding="async" src="${escapeHTML(image)}" alt="" style="width:65px;height:65px;object-fit:cover;border-radius:8px;">` : ""}
           <div><b>${escapeHTML(p.name)}</b><div>R${Number(p.price || 0).toFixed(2)}</div><small>${escapeHTML(p.category || "")}</small></div>
         </div>
         <p>Approval Status: <strong style="color:${statusColors[status] || "#aaa"}">${escapeHTML(status.toUpperCase())}</strong></p>
