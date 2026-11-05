@@ -704,6 +704,14 @@ button {
 <div id="marketplacePermissionRecords"></div>
 </section>
 
+<section class="panel" id="sellerLocationReviews">
+  <h2>Seller Public Location Reviews</h2>
+  <p class="muted">Only opted-in business/listing areas are eligible. Approval makes the approximate public pin available to Nearby Search. Exact street addresses are not requested or displayed.</p>
+  <button class="primary" id="refreshSellerLocationReviews" type="button">Refresh Location Queue</button>
+  <p id="sellerLocationReviewMessage" class="muted" aria-live="polite">Location submissions will appear here.</p>
+  <div id="sellerLocationReviewRecords"></div>
+</section>
+
 <section class="panel" id="productsSection">
       <h2>Product Moderation</h2>
       <p class="muted">Review and manage seller product listings.</p>
@@ -873,7 +881,8 @@ async function checkAdmin(user) {
   await Promise.all([
     loadProducts(),
     loadPaymentData(),
-    loadMarketplacePermissions()
+    loadMarketplacePermissions(),
+    loadSellerLocationReviews()
   ]);
 }
 
@@ -937,6 +946,85 @@ async function reviewMarketplacePermission(id,status){
  await loadMarketplacePermissions();
 }
 window.reviewMarketplacePermission=reviewMarketplacePermission;
+
+async function loadSellerLocationReviews() {
+  if (!currentAdmin) return;
+  const msg = document.getElementById("sellerLocationReviewMessage");
+  const box = document.getElementById("sellerLocationReviewRecords");
+  msg.textContent = "Loading seller location submissions…";
+  const { data: rows, error } = await sb
+    .from("seller_public_locations")
+    .select("user_id,province,city,suburb,public_location_enabled,approval_status,updated_at,review_note")
+    .order("updated_at", { ascending: false });
+  if (error) {
+    msg.textContent = "Could not load location submissions: " + error.message;
+    box.innerHTML = "";
+    return;
+  }
+  const ids = [...new Set((rows || []).map(r => r.user_id))];
+  let stores = [];
+  if (ids.length) {
+    const result = await sb.from("seller_stores")
+      .select("user_id,store_name,status,primary_marketplace")
+      .in("user_id", ids);
+    if (result.error) {
+      msg.textContent = "Could not load seller details: " + result.error.message;
+      return;
+    }
+    stores = result.data || [];
+  }
+  const byUser = new Map(stores.map(s => [s.user_id, s]));
+  const pending = (rows || []).filter(r => r.approval_status === "pending");
+  msg.textContent = pending.length + " location(s) awaiting review · " +
+    (rows || []).length + " total location record(s).";
+  box.innerHTML = (rows || []).map(r => {
+    const st = byUser.get(r.user_id) || {};
+    const area = [r.suburb, r.city, r.province].filter(Boolean).join(", ");
+    const canReview = r.approval_status === "pending" &&
+      r.public_location_enabled === true && !!r.province && !!r.city &&
+      st.status === "approved";
+    return '<div class="record">' +
+      '<strong>' + escapeHTML(st.store_name || "Seller") + ' · ' +
+      escapeHTML(String(st.primary_marketplace || "Marketplace").toUpperCase()) + '</strong>' +
+      '<p>Seller account: ' + escapeHTML(st.status || "Not found") + '</p>' +
+      '<p>Public business area: ' + escapeHTML(area || "Area not completed") + '</p>' +
+      '<p>Seller consent: <strong>' + (r.public_location_enabled ? "Yes" : "No") + '</strong></p>' +
+      '<p>Location review: <strong>' + escapeHTML(r.approval_status || "pending") + '</strong></p>' +
+      '<p>Last submitted: ' + escapeHTML(r.updated_at || "Not recorded") + '</p>' +
+      (r.review_note ? '<p>Review note: ' + escapeHTML(r.review_note) + '</p>' : '') +
+      (canReview
+        ? '<div class="actions"><button class="approve" type="button" onclick="reviewSellerPublicLocation(\'' + escapeHTML(r.user_id) + '\',\'approved\')">Approve location</button>' +
+          '<button class="reject" type="button" onclick="reviewSellerPublicLocation(\'' + escapeHTML(r.user_id) + '\',\'rejected\')">Reject location</button></div>'
+        : (r.approval_status === "pending"
+          ? '<p class="muted">Cannot approve yet: seller must be approved, consent must be enabled, and province and city are required.</p>'
+          : '')) +
+      '</div>';
+  }).join("") || "<p class='muted'>No seller location records have been submitted.</p>";
+}
+
+async function reviewSellerPublicLocation(userId, status) {
+  if (!currentAdmin || !["approved", "rejected"].includes(status)) return;
+  let note = null;
+  if (status === "rejected") {
+    note = prompt("Optional reason for rejecting this public location:");
+    if (note === null) return;
+  }
+  if (!confirm("Set this seller location to " + status.toUpperCase() + "?")) return;
+  const msg = document.getElementById("sellerLocationReviewMessage");
+  msg.textContent = "Saving administrator review…";
+  const { error } = await sb.rpc("review_seller_public_location", {
+    p_user_id: userId,
+    p_status: status,
+    p_review_note: note
+  });
+  if (error) {
+    msg.textContent = "Location review failed: " + error.message;
+    return;
+  }
+  msg.textContent = "Location review saved.";
+  await loadSellerLocationReviews();
+}
+window.reviewSellerPublicLocation = reviewSellerPublicLocation;
 
 async function loadProducts() {
   if (!currentAdmin) return;
@@ -1299,6 +1387,7 @@ document.getElementById("search").oninput = renderProducts;
 document.getElementById("paymentFilter").onchange = renderPaymentRecords;
 document.getElementById("refreshFinancialBtn").onclick = loadPaymentData;
 document.getElementById("refreshMarketplacePermissions").onclick = loadMarketplacePermissions;
+document.getElementById("refreshSellerLocationReviews").onclick = loadSellerLocationReviews;
 
 sb.auth.getSession().then(({ data, error }) => {
   if (error) {
