@@ -31,5 +31,7 @@ document.getElementById("sellerLocSave").addEventListener("click",async function
  if(payload.public_location_enabled&&!confirm("Confirm this is a public business/listing area and not your private residential address."))return;
  box.textContent="Saving…";const {error}=await sb.from("seller_public_locations").upsert(payload,{onConflict:"user_id"});
  if(error){box.textContent="Could not save location: "+error.message;return;}
+ document.getElementById("sellerLocLatitude").value=payload.latitude??"";
+ document.getElementById("sellerLocLongitude").value=payload.longitude??"";
  box.textContent=payload.public_location_enabled?"Public seller location saved. Coordinates are rounded to an approximate 1 km area for privacy.":"Location saved privately. It is not visible to shoppers.";
 });
