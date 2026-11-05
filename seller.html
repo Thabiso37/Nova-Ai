@@ -502,9 +502,14 @@ marketplacePermissions = permissionRows || [];
 renderMarketplaceChoices();
 renderMarketplacePermissionStatus();
 if (!hasMarketplaceAccess(selectedMarket)) {
+    const primaryApplication = marketplacePermissions.find(p=>p.marketplace===selectedMarket);
+    const applicationStatus = String(primaryApplication?.status || storeData.status || "pending").toLowerCase();
     publish.disabled = true;
-    publish.textContent = "Marketplace Approval Required";
-    document.getElementById("userMsg").textContent = "Your "+marketplaceLabels[selectedMarket]+" application is awaiting administrator approval.";
+    publish.textContent = applicationStatus === "rejected" ? "Application Rejected" : "Marketplace Approval Required";
+    document.getElementById("approvalBox").textContent = "Application status: " + applicationStatus.toUpperCase();
+    document.getElementById("userMsg").textContent = applicationStatus === "rejected"
+      ? "Your "+marketplaceLabels[selectedMarket]+" application was rejected. Contact NOVAAI administration if you need a review."
+      : "Your "+marketplaceLabels[selectedMarket]+" application is awaiting administrator approval.";
     await loadMyProducts();
     return;
 }
