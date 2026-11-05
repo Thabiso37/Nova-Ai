@@ -59,6 +59,11 @@ body.wishlist-view #wishlist {
   margin: 24px auto !important;
   max-width: 900px;
 }
+body.wishlist-view #categories,
+body.wishlist-view #cats,
+body.wishlist-view .cats {
+  display: none !important;
+}
 
 #retailMarketPage {
   display: none;
@@ -835,6 +840,10 @@ function go(id) {
 
   if (id === "wishlist") {
     document.body.classList.add("wishlist-view");
+    document.querySelectorAll("#categories, #cats, .cats").forEach(el => {
+      el.hidden = true;
+      el.style.display = "none";
+    });
     renderWishlist();
   }
 
