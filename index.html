@@ -297,6 +297,61 @@ body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb}
  .cart-link{padding:7px 8px}
 }
 </style>
+
+<style>
+/* Keep each homepage hero message inside its own clean carousel card */
+.nova-hero-carousel{
+  position:relative;
+  max-width:1160px;
+  margin:18px auto 22px;
+  padding:0 16px 42px;
+  box-sizing:border-box;
+}
+.nova-hero-slide{
+  display:none;
+  min-height:230px;
+  box-sizing:border-box;
+  align-items:center;
+  justify-content:space-between;
+  gap:22px;
+  background:#fff;
+  border:1px solid #e8edf5;
+  border-radius:16px;
+  padding:24px;
+  margin:0;
+  box-shadow:0 4px 12px rgba(16,40,75,.06);
+  overflow:hidden;
+}
+.nova-hero-slide.active{display:flex}
+.nova-hero-copy{position:relative;z-index:1;min-width:0;max-width:680px}
+.nova-hero-kicker{display:block;color:#174ea6;font-size:11px;font-weight:900;letter-spacing:1.4px;margin-bottom:9px}
+.nova-hero-copy h1{color:#10284b;font-size:clamp(25px,4.5vw,40px);line-height:1.12;margin:0 0 10px}
+.nova-hero-copy p{color:#667085;font-size:14px;line-height:1.55;margin:0 0 17px}
+.nova-hero-copy>a{display:inline-flex;align-items:center;gap:8px;background:#174ea6;color:#fff;text-decoration:none;border-radius:9px;padding:11px 15px;font-size:13px;font-weight:850}
+.nova-hero-art{position:relative;flex:0 0 190px;height:150px;display:grid;place-items:center;background:#fff2bd;border-radius:14px;overflow:hidden}
+.nova-hero-art.local{background:#eaf1ff}
+.nova-hero-art.sellers{background:#fff4d6}
+.hero-art-circle{position:absolute;width:130px;height:130px;border-radius:50%;background:#f5b900;opacity:.5;right:-25px;top:-35px}
+.hero-art-card{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:115px;height:85px;border-radius:12px;background:#174ea6;color:#fff;font-size:22px;font-weight:950;box-shadow:0 8px 18px rgba(16,40,75,.18)}
+.hero-art-card>span{display:inline;color:#f5b900}
+.hero-art-card small{font-size:8px;letter-spacing:1.2px;margin-top:5px}
+.nova-hero-controls{position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:13px}
+.nova-hero-controls>button{width:30px;height:30px;border:1px solid #dce3ed;border-radius:50%;background:#fff;color:#174ea6;font-size:19px;line-height:1}
+.nova-hero-dots{display:flex;align-items:center;gap:7px}
+.nova-hero-dots button{width:8px;height:8px;padding:0;border:0;border-radius:50%;background:#cbd5e1}
+.nova-hero-dots button.active{width:20px;border-radius:8px;background:#174ea6}
+@media(max-width:600px){
+ .nova-hero-carousel{margin:12px auto 18px;padding:0 12px 40px}
+ .nova-hero-slide{min-height:0;padding:20px;gap:12px}
+ .nova-hero-art{flex:0 0 92px;height:105px}
+ .hero-art-card{width:68px;height:62px;font-size:15px}
+ .hero-art-card small{font-size:6px}
+ .nova-hero-copy h1{font-size:23px}
+ .nova-hero-copy p{font-size:12px}
+ .nova-hero-copy>a{font-size:11px;padding:10px}
+}
+</style>
+
 </head>
 <body>
 <div class="top">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
