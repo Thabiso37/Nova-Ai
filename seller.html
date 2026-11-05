@@ -499,10 +499,9 @@ renderMarketplacePermissionStatus();
 if (!hasMarketplaceAccess(selectedMarket)) {
     publish.disabled = true;
     publish.textContent = "Marketplace Approval Required";
-    document.getElementById("userMsg").textContent = "Your seller store is approved, but no marketplace permission has been approved yet.";
+    document.getElementById("userMsg").textContent = "Your "+marketplaceLabels[selectedMarket]+" application is awaiting administrator approval.";
     await loadMyProducts();
     return;
-  }
 }
 
 const approved =
