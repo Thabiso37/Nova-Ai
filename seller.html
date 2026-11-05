@@ -32,9 +32,8 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
 
 <main>
 <h2>Protected Seller Portals</h2>
-<div class="tabs">
-  <div class="tab active" id="tabStd" onclick="switchPortal('std')">Standard Independent Seller</div>
-  <div class="tab" id="tabRetail" onclick="switchPortal('retail')">🛍️ Retail Market Partner</div>
+<div class="tabs" aria-label="Seller dashboard">
+  <div class="tab active" id="tabStd">Seller Dashboard</div>
 </div>
 
 <!-- STANDARD SELLER PORTAL -->
@@ -73,8 +72,14 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
   </div>
 
   <div class="panel">
-    <!-- PUBLISH PRODUCT -->
-    <h3>📦 Publish Product</h3>
+    <!-- ONE AUTHENTICATED SELLER ACCOUNT, THREE MARKETPLACES -->
+    <h3>Manage your NOVAAI marketplaces</h3>
+    <div class="tabs" role="tablist" aria-label="Choose marketplace">
+      <button class="tab active" type="button" id="marketRetailTab" onclick="setListingMarket('retail')">My Shop Listings</button>
+      <button class="tab" type="button" id="marketMotorsTab" onclick="setListingMarket('motors')">My Motor Listings</button>
+      <button class="tab" type="button" id="marketPropertyTab" onclick="setListingMarket('property')">My Property Listings</button>
+    </div>
+    <h3 id="listingFormTitle">My Shop Listings · Publish a retail product</h3>
 
     <form id="sellerForm">
       <div class="field">
@@ -88,9 +93,10 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
       </div>
 
       <div class="field">
-        <label>Category *</label>
+        <label id="categoryLabel">Retail category *</label>
         <select id="category" required></select>
       </div>
+      <div id="marketSpecificFields"></div>
 
       <div class="field">
         <label>Price (R) *</label>
@@ -114,8 +120,8 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
       <div id="sellerMsg" class="msg"></div>
     </form>
 
-    <!-- MY PRODUCTS -->
-    <h3 style="margin-top:20px;">📋 My Products</h3>
+    <!-- LISTINGS ARE GROUPED BY MARKETPLACE BELOW -->
+    <h3 style="margin-top:20px;">My Marketplace Listings</h3>
 
     <div id="myProductsMsg" class="msg">
       Sign in to view items.
@@ -174,8 +180,62 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const sb = window.supabase.createClient("https://nxplffvklkopwfjaqexo.supabase.co","sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ");
-const cats = ["Auto","Clothing Shoes & Accessories","Cellphones","Computers & Laptops","Groceries","Office & Stationery","Toys & Games"];
-document.getElementById("category").innerHTML = cats.map(c=>`<option>${c}</option>`).join("");
+const retailCats = ["Clothing Shoes & Accessories","Cellphones","Computers & Laptops","Electronics","Fashion","Groceries","Home & Living","Office & Stationery","Sports","TV Audio & Video","Toys & Games","Accessories"];
+let listingMarket = "retail";
+function setListingMarket(market) {
+  if (!["retail","motors","property"].includes(market)) return;
+  listingMarket = market;
+  document.getElementById("marketRetailTab").classList.toggle("active", market === "retail");
+  document.getElementById("marketMotorsTab").classList.toggle("active", market === "motors");
+  document.getElementById("marketPropertyTab").classList.toggle("active", market === "property");
+  const category = document.getElementById("category");
+  const label = document.getElementById("categoryLabel");
+  const title = document.getElementById("listingFormTitle");
+  if (market === "retail") {
+    title.textContent = "My Shop Listings · Publish a retail product";
+    label.textContent = "Retail category *";
+    category.innerHTML = retailCats.map(v => `<option value="${escapeHTML(v)}">${escapeHTML(v)}</option>`).join("");
+    document.getElementById("marketSpecificFields").innerHTML = "";
+  } else if (market === "motors") {
+    title.textContent = "My Motor Listings · Add a vehicle";
+    label.textContent = "Marketplace *";
+    category.innerHTML = '<option value="Motors & Vehicles">Motors & Vehicles</option>';
+    document.getElementById("marketSpecificFields").innerHTML = `
+      <div class="field"><label>Year *</label><input id="vehicleYear" type="number" min="1900" max="2100" required placeholder="2021"></div>
+      <div class="field"><label>Mileage (km) *</label><input id="vehicleMileage" required placeholder="97,550 km"></div>
+      <div class="field"><label>Transmission *</label><select id="vehicleTransmission" required><option value="">Choose</option><option>Manual</option><option>Automatic</option><option>CVT</option></select></div>
+      <div class="field"><label>Fuel *</label><select id="vehicleFuel" required><option value="">Choose</option><option>Petrol</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select></div>
+      <div class="field"><label>Vehicle type *</label><select id="vehicleType" required><option value="">Choose</option><option>Car</option><option>Bakkie</option><option>SUV</option><option>Motorcycle</option><option>Van</option><option>Minibus</option></select></div>
+      <div class="field"><label>Location *</label><input id="vehicleLocation" required placeholder="Pretoria"></div>`;
+  } else {
+    title.textContent = "My Property Listings · Add property";
+    label.textContent = "Listing type *";
+    category.innerHTML = '<option value="Property For Sale">For Sale</option><option value="Property To Rent">For Rent</option>';
+    document.getElementById("marketSpecificFields").innerHTML = `
+      <div class="field"><label>Property type *</label><select id="propertyType" required><option value="">Choose</option><option>House</option><option>Apartment</option><option>Townhouse</option><option>Vacant Land</option><option>Commercial</option></select></div>
+      <div class="field"><label>Bedrooms</label><input id="propertyBedrooms" type="number" min="0" placeholder="3"></div>
+      <div class="field"><label>Bathrooms</label><input id="propertyBathrooms" type="number" min="0" placeholder="2"></div>
+      <div class="field"><label>Parking spaces</label><input id="propertyParking" type="number" min="0" placeholder="2"></div>
+      <div class="field"><label>Floor area (m²)</label><input id="propertyFloorArea" type="number" min="0" placeholder="120"></div>
+      <div class="field"><label>Erf / land size (m²)</label><input id="propertyErfSize" type="number" min="0" placeholder="500"></div>
+      <div class="field"><label>Location *</label><input id="propertyLocation" required placeholder="Pretoria, Gauteng"></div>`;
+  }
+}
+function marketDetailsFromForm() {
+  if (listingMarket === "motors") {
+    const fields = [["Vehicle type","vehicleType"],["Year","vehicleYear"],["Mileage","vehicleMileage"],["Transmission","vehicleTransmission"],["Fuel","vehicleFuel"],["Location","vehicleLocation"]];
+    return "\\n\\nNOVAAI DETAILS\\n" + fields.map(([label,id]) => label + ": " + (document.getElementById(id)?.value || "")).join("\\n");
+  }
+  if (listingMarket === "property") {
+    const fields = [["Property type","propertyType"],["Bedrooms","propertyBedrooms"],["Bathrooms","propertyBathrooms"],["Parking","propertyParking"],["Floor area m2","propertyFloorArea"],["Erf size m2","propertyErfSize"],["Location","propertyLocation"]];
+    return "\\n\\nNOVAAI DETAILS\\n" + fields.filter(([label,id]) => document.getElementById(id)?.value).map(([label,id]) => label + ": " + document.getElementById(id).value).join("\\n");
+  }
+  return "";
+}
+function getBaseDescription(value) {
+  return String(value || "").split("\\n\\nNOVAAI DETAILS\\n")[0];
+}
+setListingMarket("retail");
 
 function switchPortal(t) {
   document.getElementById("tabStd").classList.toggle("active", t==='std');
@@ -343,8 +403,8 @@ document.getElementById("sellerForm").onsubmit = async e => {
         throw new Error("Could not find this product.");
       }
 
-      if (existing.status !== "rejected") {
-        throw new Error("This product is no longer rejected.");
+      if (!["pending","approved","rejected","hidden"].includes(existing.status)) {
+        throw new Error("This listing cannot be edited in its current state.");
       }
 
   
@@ -384,7 +444,7 @@ document.getElementById("sellerForm").onsubmit = async e => {
         .from("Products")
         .update({
           name: document.getElementById("productName").value.trim(),
-          description: document.getElementById("description").value.trim(),
+          description: (document.getElementById("description").value.trim() + marketDetailsFromForm()).trim(),
           price: Number(document.getElementById("price").value),
           category: document.getElementById("category").value,
           image_url: imgs[0],
@@ -426,7 +486,7 @@ document.getElementById("sellerForm").onsubmit = async e => {
 
       const { error } = await sb.from("Products").insert({
         name: document.getElementById("productName").value.trim(),
-        description: document.getElementById("description").value.trim(),
+        description: (document.getElementById("description").value.trim() + marketDetailsFromForm()).trim(),
         price: Number(document.getElementById("price").value),
         category: document.getElementById("category").value,
         image_url: imgs[0],
@@ -496,79 +556,41 @@ async function loadMyProducts() {
   msgEl.textContent =
     products.length + " product(s) in your inventory.";
 
-  list.innerHTML = products.map(p => {
-    const image = p.image_url ||
-      (Array.isArray(p.images) ? p.images[0] : "");
-
+  const retailListings = products.filter(p => !["Motors & Vehicles","Property For Sale","Property To Rent"].includes(p.category));
+  const motorListings = products.filter(p => p.category === "Motors & Vehicles");
+  const propertyListings = products.filter(p => ["Property For Sale","Property To Rent"].includes(p.category));
+  const renderGroup = (heading, rows) => `
+    <section style="margin:16px 0;padding:12px;border:1px solid var(--line);border-radius:10px;">
+      <h3>${heading} <small style="color:#64748b">(${rows.length})</small></h3>
+      ${rows.length ? rows.map(p => renderSellerListing(p)).join("") : '<p class="msg">No listings in this marketplace yet.</p>'}
+    </section>`;
+  list.innerHTML = renderGroup("My Shop Listings", retailListings) +
+    renderGroup("My Motor Listings", motorListings) +
+    renderGroup("My Property Listings", propertyListings);
+}
+function renderSellerListing(p) {
+    const image = p.image_url || (Array.isArray(p.images) ? p.images[0] : "");
     const status = p.status || "pending";
-
-    const statusColors = {
-      pending: "#d18a24",
-      approved: "#16a36a",
-      rejected: "#d64c59",
-      hidden: "#6579dc"
-    };
-
+    const statusColors = {pending:"#d18a24",approved:"#16a36a",rejected:"#d64c59",hidden:"#6579dc"};
     return `
       <div style="padding:12px;border-bottom:1px solid var(--line);">
-
         <div style="display:flex;gap:10px;align-items:center;">
-
-          ${image ? `
-            <img src="${escapeHTML(image)}"
-              alt=""
-              style="width:65px;height:65px;object-fit:cover;border-radius:8px;">
-          ` : ""}
-
-          <div>
-            <b>${escapeHTML(p.name)}</b>
-            <div>R${Number(p.price || 0).toFixed(2)}</div>
-            <small>${escapeHTML(p.category || "")}</small>
-          </div>
-
+          ${image ? `<img src="${escapeHTML(image)}" alt="" style="width:65px;height:65px;object-fit:cover;border-radius:8px;">` : ""}
+          <div><b>${escapeHTML(p.name)}</b><div>R${Number(p.price || 0).toFixed(2)}</div><small>${escapeHTML(p.category || "")}</small></div>
         </div>
-
-        <p>
-          Approval Status:
-          <strong style="color:${statusColors[status] || "#aaa"}">
-            ${escapeHTML(status.toUpperCase())}
-          </strong>
-        </p>
-
-        ${status === "rejected" && p.rejection_reason
-          ? `<p style="color:#d64c59">
-              Rejection reason:
-              ${escapeHTML(p.rejection_reason)}
-            </p>`
-          : ""}
-
-        ${status === "pending"
-          ? `<small>Your product is awaiting administrator review.</small>`
-          : ""}
-
-        ${status === "approved"
-          ? `<small>Your product is approved for the marketplace.</small>`
-          : ""}
-
-        ${status === "hidden"
-          ? `<small>Your product is currently hidden.</small>`
-          : ""}
-
-        ${status === "rejected"
-          ? `<button class="btn outline"
-              type="button"
-              onclick="editProduct(${Number(p.id)})">
-              Edit Product
-            </button>`
-          : ""}
-
-      </div>
-    `;
-  }).join("");
+        <p>Approval Status: <strong style="color:${statusColors[status] || "#aaa"}">${escapeHTML(status.toUpperCase())}</strong></p>
+        ${status === "rejected" && p.rejection_reason ? `<p style="color:#d64c59">Rejection reason: ${escapeHTML(p.rejection_reason)}</p>` : ""}
+        ${status === "pending" ? "<small>Awaiting administrator review.</small>" : ""}
+        ${status === "approved" ? "<small>Approved and eligible to appear in the public marketplace.</small>" : ""}
+        ${status === "hidden" ? "<small>Currently hidden by marketplace moderation.</small>" : ""}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+          <button class="btn outline" type="button" onclick="editProduct(${Number(p.id)})">Edit listing</button>
+          <button class="btn outline" type="button" style="color:#b52828" onclick="deleteProduct(${Number(p.id)})">Delete listing</button>
+        </div>
+      </div>`;
 }
+// Edit a seller-owned listing; changes are returned to pending moderation.
 
-
-// EDIT REJECTED PRODUCT
 async function editProduct(id) {
   if (!user) return;
 
@@ -585,16 +607,25 @@ async function editProduct(id) {
     return;
   }
 
-  if (product.status !== "rejected") {
-    document.getElementById("myProductsMsg").textContent =
-      "Only rejected products can be edited.";
+  if (String(storeData?.status || "").toLowerCase() !== "approved") {
+    document.getElementById("myProductsMsg").textContent = "Your seller account must be approved to edit listings.";
     return;
   }
 
+  const market = product.category === "Motors & Vehicles" ? "motors" :
+    (product.category === "Property For Sale" || product.category === "Property To Rent" ? "property" : "retail");
+  setListingMarket(market);
   editingProductId = product.id;
 
   document.getElementById("productName").value = product.name || "";
-  document.getElementById("description").value = product.description || "";
+  document.getElementById("description").value = getBaseDescription(product.description || "");
+  const details = String(product.description || "");
+  const fillDetail = (id,label) => { const el=document.getElementById(id); if(!el)return; const m=details.match(new RegExp("(?:^|\\\\n)"+label+"\\\\s*:\\\\s*([^\\\\n]+)","i")); if(m)el.value=m[1].trim(); };
+  if (market === "motors") {
+    fillDetail("vehicleYear","Year"); fillDetail("vehicleMileage","Mileage"); fillDetail("vehicleTransmission","Transmission"); fillDetail("vehicleFuel","Fuel"); fillDetail("vehicleType","Vehicle type"); fillDetail("vehicleLocation","Location");
+  } else if (market === "property") {
+    fillDetail("propertyType","Property type"); fillDetail("propertyBedrooms","Bedrooms"); fillDetail("propertyBathrooms","Bathrooms"); fillDetail("propertyParking","Parking"); fillDetail("propertyFloorArea","Floor area m2"); fillDetail("propertyErfSize","Erf size m2"); fillDetail("propertyLocation","Location");
+  }
   document.getElementById("price").value = product.price || "";
   document.getElementById("category").value = product.category || "";
   document.getElementById("sellerName").value = product.seller_name || "";
@@ -610,6 +641,22 @@ async function editProduct(id) {
     block: "start"
   });
 }
+
+async function deleteProduct(id) {
+  if (!user || String(storeData?.status || "").toLowerCase() !== "approved") {
+    alert("Your approved seller account is required to manage listings.");
+    return;
+  }
+  if (!confirm("Delete this listing permanently? This will not delete any orders already placed.")) return;
+  const { error } = await sb.from("Products").delete().eq("id", id).eq("seller_id", user.id);
+  if (error) {
+    document.getElementById("myProductsMsg").textContent = "Delete failed: " + error.message;
+    return;
+  }
+  document.getElementById("myProductsMsg").textContent = "Listing deleted.";
+  await loadMyProducts();
+}
+window.deleteProduct = deleteProduct;
 
 window.editProduct = editProduct;
  
@@ -642,39 +689,7 @@ window.editProduct = editProduct;
     "Product resubmitted successfully.";
 
   await loadMyProducts();
-} // Retail Portal Logic
-let retailUser = localStorage.getItem("novaRetailUser");
-function updateRetailAuth(e) {
-  retailUser = e;
-  document.getElementById("retailSignedOut").classList.toggle("hidden", !!e);
-  document.getElementById("retailSignedIn").classList.toggle("hidden", !e);
-  document.getElementById("retailUserEmail").textContent = e || "";
-  e ? localStorage.setItem("novaRetailUser", e) : localStorage.removeItem("novaRetailUser");
-}
-document.getElementById("retailAuthForm").onsubmit = e => {
-  e.preventDefault();
-  let email = document.getElementById("retailEmail").value;
-  updateRetailAuth(email);
-  msg("retailAuthMsg", "Retail Partner Authenticated.");
-};
-document.getElementById("retailSignout").onclick = () => updateRetailAuth(null);
-
-document.getElementById("retailPublishForm").onsubmit = e => {
-  e.preventDefault();
-  if(!retailUser) return msg("retailPublishMsg", "Authenticate first.", true);
-  let list = JSON.parse(localStorage.getItem("novaRetailCustomListings") || "[]");
-  list.unshift({
-    name: document.getElementById("rProdName").value,
-    price: Number(document.getElementById("rProdPrice").value),
-    discount: document.getElementById("rProdDiscount").value,
-    img: document.getElementById("rProdImg").value,
-    seller: document.getElementById("retailStoreName").value || "Corporate Brand"
-  });
-  localStorage.setItem("novaRetailCustomListings", JSON.stringify(list));
-  e.target.reset(); msg("retailPublishMsg", "Published to Retail Market!");
-};
-
-if(retailUser) updateRetailAuth(retailUser);
+} // Retail listings now use the authenticated seller account and Products table.
 sb.auth.getSession().then(({data}) => updateUser(data?.session?.user || null));
 sb.auth.onAuthStateChange((_,s) => updateUser(s?.user || null));
 
