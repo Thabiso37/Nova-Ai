@@ -75,10 +75,9 @@ function useLocation(){
 function which(c){c=String(c||"").toLowerCase();if(c==="auto"||c==="motors & vehicles")return "motors";if(c==="property for sale"||c==="property to rent")return "property";return "retail"}
 function photo(p){var u=p.image_url||"";if(!u&&Array.isArray(p.images)){for(var i=0;i<p.images.length;i++){if(typeof p.images[i]==="string"){u=p.images[i];break}if(p.images[i]&&p.images[i].url){u=p.images[i].url;break}}}try{var x=new URL(u);return x.protocol==="http:"||x.protocol==="https:"?x.href:""}catch(e){return ""}}
 async function search(){
- var status=el("novaNearbyStatus"),box=el("novaNearbyResults"),q=el("novaNearbyQuery").value.trim().toLowerCase(),city=el("novaNearbyCity").value.trim().toLowerCase(),suburb=el("novaNearbySuburb").value.trim().toLowerCase(),province=el("novaNearbyProvince").value.trim().toLowerCase(),radius=Number(el("novaNearbyRadius").value);status.textContent="Searching approved listings…";box.innerHTML="";
+ var status=el("novaNearbyStatus"),box=el("novaNearbyResults"),q=el("novaNearbyQuery").value.trim().toLowerCase(),city=el("novaNearbyCity").value.trim().toLowerCase(),suburb=el("novaNearbySuburb").value.trim().toLowerCase(),province=el("novaNearbyProvince").value.trim().toLowerCase(),radius=Number(el("novaNearbyRadius").value),runId=++searchRunId;status.textContent="Searching approved listings…";box.innerHTML="";
  try{
   if(!window.supabase)throw new Error("Marketplace connection is unavailable.");client=client||window.supabase.createClient(URL,KEY);
-  var runId=++searchRunId;
   var data;
   if(searchDataCache&&Date.now()-searchDataCacheAt<30000){data=searchDataCache}
   else{
