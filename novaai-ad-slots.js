@@ -191,8 +191,8 @@
     const detail=event&&event.detail;
     if(detail&&detail.version===1)applyManagedCampaigns(detail.campaigns);
   });
-  window.NOVAAI_ADS.setCampaigns=rows=>api.announceCampaigns(rows);
-  window.NOVAAI_ADS.clearManagedCampaigns=()=>api.announceCampaigns([]);
+  api.setCampaigns=rows=>api.announceCampaigns(rows);
+  api.clearManagedCampaigns=()=>api.announceCampaigns([]);
 
   function initHomeCarousel(){
     const banner=document.getElementById('novaHeroCarousel');
