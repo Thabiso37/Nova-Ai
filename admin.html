@@ -889,26 +889,49 @@ async function checkAdmin(user) {
 async function login() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
+  const loginBtn = document.getElementById("loginBtn");
+  const loginMessage = document.getElementById("loginMessage");
 
   if (!email || !password) {
-    document.getElementById("loginMessage").textContent =
-      "Enter your email and password.";
+    loginMessage.textContent = "Enter your email and password.";
     return;
   }
 
-  document.getElementById("loginMessage").textContent = "Signing in...";
+  loginBtn.disabled = true;
+  loginBtn.textContent = "Signing in…";
+  loginMessage.textContent = "Connecting securely to NOVAAI…";
 
-  const { data, error } = await sb.auth.signInWithPassword({
-    email,
-    password
-  });
+  try {
+    const signInRequest = sb.auth.signInWithPassword({ email, password });
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(
+        "Sign-in timed out. Check your internet connection, then refresh the page and try again."
+      )), 15000)
+    );
 
-  if (error) {
-    document.getElementById("loginMessage").textContent = error.message;
-    return;
+    const { data, error } = await Promise.race([signInRequest, timeout]);
+
+    if (error) {
+      loginMessage.textContent = "Sign-in failed: " + error.message;
+      return;
+    }
+
+    if (!data?.user) {
+      loginMessage.textContent =
+        "Sign-in did not return a user. Please refresh and try again.";
+      return;
+    }
+
+    loginMessage.textContent = "Signed in. Verifying administrator access…";
+    await checkAdmin(data.user);
+  } catch (error) {
+    console.error("NOVAAI administrator sign-in error:", error);
+    loginMessage.textContent =
+      error?.message || "Unexpected sign-in error. Refresh the page and try again.";
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = "Sign In";
   }
-
-  await checkAdmin(data.user);
 }
 
 async function logout() {
