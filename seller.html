@@ -56,7 +56,7 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
   <div class="picker-intro">
     <div class="picker-kicker">NOVAAI seller centre</div>
     <h1>Choose where you want to sell</h1>
-    <p>Select a marketplace to continue to the matching seller sign-in or registration experience. One NOVAAI account works across all three marketplaces.</p>
+    <p>Choose ONE primary marketplace for this seller account. You will manage only that marketplace. A marketplace change later requires administrator approval.</p>
   </div>
   <div class="market-choice-grid">
     <article class="market-choice" data-marketplace="retail"><div class="choice-icon">R</div><h2>Retail Seller</h2><p>Open your online shop and manage products.</p><ul><li>Products</li><li>Electronics</li><li>Fashion</li><li>Groceries</li><li>Home and Living</li></ul><button class="btn" type="button" onclick="chooseMarketplace('retail')">Continue to Retail</button></article>
@@ -65,7 +65,7 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
   </div>
 </section>
 <div id="sellerWorkspace" class="hidden">
-  <div class="selected-market-bar"><div><small>Selected seller marketplace</small><strong id="selectedMarketLabel">Retail Seller</strong></div><button class="btn outline" type="button" onclick="returnToMarketplaceSelection()">← Change marketplace</button></div>
+  <div class="selected-market-bar"><div><small>Selected seller marketplace</small><strong id="selectedMarketLabel">Retail Seller</strong></div><button class="btn outline" id="changeMarketplaceButton" type="button" onclick="returnToMarketplaceSelection()">← Change marketplace</button></div>
 <div class="panel" id="sellerPublicLocationPanel" style="margin:14px 0">
 <h3>Public seller location</h3>
 <p class="muted">Set the province, city and suburb customers may see. Do not enter a street address or private home address. Public GPS coordinates are rounded to about 1 km before shoppers can see them.</p>
@@ -82,7 +82,7 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
 <div id="sellerLocStatus" class="msg" aria-live="polite"></div></div>
 <div class="panel" id="marketplaceAccessStatus">
   <h3>Marketplace access</h3>
-  <p class="muted">Each marketplace requires separate administrator approval.</p>
+  <p class="muted">Your account is assigned to one marketplace only. The administrator reviews that application.</p>
   <div id="marketplaceAccessRecords">Sign in to view marketplace permissions.</div>
 </div>
 
@@ -90,14 +90,16 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
 <div id="portalStd" class="grid">
   <div class="panel">
     <h3 id="authPanelTitle">🔐 Seller Sign-In & Registration</h3>
-    <div class="notice">Use one NOVAAI account across Retail, Motors and Property. New seller applications remain subject to administrator approval.</div>
+    <div class="notice">Choose ONE primary marketplace above. Your seller application and portal access are restricted to that marketplace, subject to administrator approval.</div>
     <div id="signedOut">
       <form id="authForm">
         <div class="field"><label>Email *</label><input id="email" type="email" required></div>
         <div class="field"><label>Password (min 6 chars) *</label><input id="password" type="password" minlength="6" required></div>
         <div id="newSellerFields" class="hidden">
         <div class="field"><label>Full Legal Name *</label><input id="sellerRealName"></div>
+        <div class="field"><label>Store / Business Name *</label><input id="sellerApplicationStoreName" maxlength="100"></div>
         <div class="field"><label>Mobile Number *</label><input id="sellerPhone" type="tel"></div>
+        <div class="field"><label>Choose ONE primary marketplace *</label><select id="applicationMarketplace" required><option value="">Select marketplace</option><option value="retail">RETAIL</option><option value="motors">MOTORS</option><option value="property">PROPERTY</option></select></div>
         <div class="field" style="text-align:center;border:1px dashed var(--p);padding:10px;border-radius:8px;">
           <label>📸 Seller Application Photo *</label>
           <video id="webcam" autoplay playsinline width="100%" style="max-height:140px;display:none;background:#000;border-radius:6px;"></video>
@@ -124,8 +126,8 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
   </div>
 
   <div class="panel">
-    <!-- ONE AUTHENTICATED SELLER ACCOUNT, THREE MARKETPLACES -->
-    <h3>Manage your NOVAAI marketplaces</h3>
+    <!-- One primary marketplace per seller account -->
+    <h3 id="sellerInventoryHeading">Manage your seller inventory</h3>
     <div class="tabs" role="tablist" aria-label="Choose marketplace">
       <button class="tab active" type="button" id="marketRetailTab" onclick="setListingMarket('retail')">My Shop Listings</button>
       <button class="tab" type="button" id="marketMotorsTab" onclick="setListingMarket('motors')">My Motor Listings</button>
@@ -173,7 +175,7 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
     </form>
 
     <!-- LISTINGS ARE GROUPED BY MARKETPLACE BELOW -->
-    <h3 style="margin-top:20px;">My Marketplace Listings</h3>
+    <h3 id="myMarketplaceListingsHeading" style="margin-top:20px;">My Seller Listings</h3>
 
     <div id="myProductsMsg" class="msg">
       Sign in to view items.
@@ -239,46 +241,37 @@ const propertyCategories = ["Property For Sale","Property To Rent"];
 let listingMarket = "retail";
 let selectedMarket = null;
 let marketplacePermissions = [];
-function hasMarketplaceAccess(market){ return String(storeData?.status||"").toLowerCase()==="approved" && marketplacePermissions.some(p=>p.marketplace===market && p.status==="approved"); }
+function hasMarketplaceAccess(market){ return !!storeData && storeData.primary_marketplace===market && String(storeData.status||"").toLowerCase()==="approved" && marketplacePermissions.some(p=>p.marketplace===market && p.status==="approved"); }
 function requireMarketplaceAccess(market){ if(!hasMarketplaceAccess(market)){ msg("sellerMsg","Access denied: your store and this marketplace must both be approved.",true); return false; } return true; }
 function renderMarketplacePermissionStatus(){
   const box=document.getElementById("marketplaceAccessRecords");
   if(!box)return;
-  if(!user){box.textContent="Sign in to view marketplace permissions.";return;}
-  const rows=["retail","motors","property"].map(market=>{
-    const record=marketplacePermissions.find(p=>p.marketplace===market);
-    const status=record?.status||"not requested";
-    const action=!record?'<button class="btn outline" type="button" onclick="requestMarketplaceAccess(\''+market+'\')">Request access</button>':"";
-    return '<div class="record"><strong>'+marketplaceLabels[market]+'</strong><p>Status: '+escapeHTML(status.toUpperCase())+'</p>'+action+'</div>';
-  });
-  box.innerHTML=rows.join("");
+  if(!user){box.textContent="Sign in to view your seller application.";return;}
+  const market=storeData?.primary_marketplace || selectedMarket;
+  const record=marketplacePermissions.find(p=>p.marketplace===market);
+  box.innerHTML='<div class="record"><strong>'+escapeHTML(marketplaceLabels[market]||"Primary marketplace")+'</strong><p>Application status: '+escapeHTML(String(record?.status||storeData?.status||"pending").toUpperCase())+'</p><p>This seller account cannot request or manage another marketplace.</p></div>';
 }
-async function requestMarketplaceAccess(market){
-  if(!user||!["retail","motors","property"].includes(market))return;
-  if(marketplacePermissions.some(p=>p.marketplace===market))return;
-  const {error}=await sb.from("seller_marketplace_permissions").insert({user_id:user.id,marketplace:market,status:"pending",requested_at:new Date().toISOString()});
-  if(error){document.getElementById("marketplaceAccessRecords").textContent="Request failed: "+error.message;return;}
-  const {data,error:reloadError}=await sb.from("seller_marketplace_permissions").select("marketplace,status").eq("user_id",user.id);
-  if(reloadError){document.getElementById("marketplaceAccessRecords").textContent="Request submitted, but status refresh failed: "+reloadError.message;return;}
-  marketplacePermissions=data||[];
-  renderMarketplacePermissionStatus();
-  renderMarketplaceChoices();
+async function requestMarketplaceAccess(){
+  const box=document.getElementById("marketplaceAccessRecords");
+  if(box)box.textContent="Marketplace changes require administrator approval. Contact NOVAAI support.";
 }
 window.requestMarketplaceAccess=requestMarketplaceAccess;
 function renderMarketplaceChoices(){
   document.querySelectorAll(".market-choice[data-marketplace]").forEach(card=>{
     const market=card.dataset.marketplace;
-    card.classList.toggle("hidden",!!user && !hasMarketplaceAccess(market));
+    card.classList.toggle("hidden",!!user && (!storeData || storeData.primary_marketplace!==market));
+    card.classList.toggle("selected",!user && selectedMarket===market);
   });
 }
 const marketplaceLabels = {retail:"Retail Seller",motors:"Motor Seller",property:"Property Seller"};
 function chooseMarketplace(market) {
   if (!Object.prototype.hasOwnProperty.call(marketplaceLabels, market)) return;
-  if (user && !hasMarketplaceAccess(market)) { msg("sellerMsg","Access denied: this marketplace is not approved for your seller account.",true); return; }
+  if (user && storeData && storeData.primary_marketplace!==market) { msg("sellerMsg","Access denied: this seller account is assigned to "+(marketplaceLabels[storeData.primary_marketplace]||"another marketplace")+".",true); return; }
   selectedMarket = market;
   setListingMarket(market);
   document.getElementById("selectedMarketLabel").textContent = marketplaceLabels[market];
   document.getElementById("authPanelTitle").textContent = "Sign in or register · " + marketplaceLabels[market];
+  const appMarket=document.getElementById("applicationMarketplace");if(appMarket)appMarket.value=market;
   document.getElementById("marketplacePicker").classList.add("hidden");
   document.getElementById("sellerWorkspace").classList.remove("hidden");
   document.getElementById("portalStd").classList.toggle("is-authenticated", !!user);
@@ -289,6 +282,7 @@ function chooseMarketplace(market) {
   else document.getElementById("signedOut").scrollIntoView({behavior:"smooth",block:"start"});
 }
 function returnToMarketplaceSelection() {
+  if(user && storeData){msg("sellerMsg","Your primary marketplace is fixed for this seller application. Administrator approval is required to change it.",true);return;}
   document.getElementById("sellerWorkspace").classList.add("hidden");
   document.getElementById("marketplacePicker").classList.remove("hidden");
   selectedMarket = null;
@@ -304,6 +298,11 @@ function setListingMarket(market) {
   document.getElementById("marketRetailTab").classList.toggle("active", market === "retail");
   document.getElementById("marketMotorsTab").classList.toggle("active", market === "motors");
   document.getElementById("marketPropertyTab").classList.toggle("active", market === "property");
+  document.getElementById("marketRetailTab").classList.toggle("hidden", market !== "retail");
+  document.getElementById("marketMotorsTab").classList.toggle("hidden", market !== "motors");
+  document.getElementById("marketPropertyTab").classList.toggle("hidden", market !== "property");
+  document.getElementById("sellerInventoryHeading").textContent = "Manage your " + marketplaceLabels[market] + " inventory";
+  document.getElementById("myMarketplaceListingsHeading").textContent = "My " + marketplaceLabels[market] + " Listings";
   const category = document.getElementById("category");
   const label = document.getElementById("categoryLabel");
   const title = document.getElementById("listingFormTitle");
@@ -393,7 +392,7 @@ const version = ++authVersion;
 user = u;
 storeData = null;
 if (!u) marketplacePermissions = [];
-if (u && !selectedMarket) selectedMarket = "retail";
+
 if (selectedMarket) {
   setListingMarket(selectedMarket);
   document.getElementById("selectedMarketLabel").textContent = marketplaceLabels[selectedMarket];
@@ -436,7 +435,7 @@ document.getElementById("userMsg").textContent = "Checking store approval...";
 
 const { data, error } = await sb
 .from("seller_stores")
-.select("id,store_name,store_slug,status")
+.select("id,store_name,store_slug,status,primary_marketplace")
 .eq("user_id", u.id)
 .maybeSingle();
 
@@ -452,6 +451,14 @@ return;
 
 storeData = data;
 
+if (!storeData && u.user_metadata?.seller_store_name && u.user_metadata?.seller_primary_marketplace && u.user_metadata?.phone) {
+  const {error:applicationError}=await sb.rpc("submit_seller_application",{p_store_name:u.user_metadata.seller_store_name,p_phone:u.user_metadata.phone,p_marketplace:u.user_metadata.seller_primary_marketplace});
+  if(applicationError){document.getElementById("userMsg").textContent="Seller application could not be submitted: "+applicationError.message;publish.disabled=true;return;}
+  const refreshed=await sb.from("seller_stores").select("id,store_name,store_slug,status,primary_marketplace").eq("user_id",u.id).maybeSingle();
+  if(refreshed.error){document.getElementById("userMsg").textContent="Application saved, but seller status could not be loaded: "+refreshed.error.message;return;}
+  storeData=refreshed.data;
+}
+
 if (!storeData) {
   marketplacePermissions = [];
   renderMarketplaceChoices();
@@ -465,6 +472,14 @@ document.getElementById("userMsg").textContent =
 return;
 }
 
+selectedMarket = storeData.primary_marketplace;
+setListingMarket(selectedMarket);
+document.getElementById("selectedMarketLabel").textContent = marketplaceLabels[selectedMarket];
+document.getElementById("marketplacePicker").classList.add("hidden");
+document.getElementById("sellerWorkspace").classList.remove("hidden");
+document.getElementById("portalStd").classList.add("is-authenticated");
+document.getElementById("changeMarketplaceButton")?.classList.add("hidden");
+const params = new URLSearchParams(window.location.search);params.set("market",selectedMarket);history.replaceState(null,"",window.location.pathname+"?"+params.toString());
 const {data: permissionRows, error: permissionError} = await sb
   .from("seller_marketplace_permissions")
   .select("marketplace,status")
@@ -481,12 +496,6 @@ marketplacePermissions = permissionRows || [];
 renderMarketplaceChoices();
 renderMarketplacePermissionStatus();
 if (!hasMarketplaceAccess(selectedMarket)) {
-  const firstAllowed = ["retail","motors","property"].find(hasMarketplaceAccess);
-  if (firstAllowed) {
-    selectedMarket = firstAllowed;
-    setListingMarket(firstAllowed);
-    document.getElementById("selectedMarketLabel").textContent = marketplaceLabels[firstAllowed];
-  } else {
     publish.disabled = true;
     publish.textContent = "Marketplace Approval Required";
     document.getElementById("userMsg").textContent = "Your seller store is approved, but no marketplace permission has been approved yet.";
@@ -528,6 +537,7 @@ document.getElementById("authForm").onsubmit = async e => {
 };
 
 let sellerApplicationMode = false;
+document.getElementById("applicationMarketplace").addEventListener("change",function(){if(["retail","motors","property"].includes(this.value)){selectedMarket=this.value;setListingMarket(this.value);document.getElementById("selectedMarketLabel").textContent=marketplaceLabels[this.value];}});
 document.getElementById("signup").onclick = async () => {
   if (!sellerApplicationMode) {
     sellerApplicationMode = true;
@@ -537,14 +547,21 @@ document.getElementById("signup").onclick = async () => {
     return;
   }
   let email = document.getElementById("email").value, password = document.getElementById("password").value;
-  let full_name = document.getElementById("sellerRealName").value, phone = document.getElementById("sellerPhone").value;
-  if(!email || password.length<6 || !full_name || !phone || !faceBlob) return msg("authMsg", "Complete the fields and capture your seller application photo.", true);
+  let full_name = document.getElementById("sellerRealName").value.trim(), phone = document.getElementById("sellerPhone").value.trim(), store_name=document.getElementById("sellerApplicationStoreName").value.trim(), primary_marketplace=document.getElementById("applicationMarketplace").value;
+  if(!email || password.length<6 || !full_name || !store_name || !phone || !["retail","motors","property"].includes(primary_marketplace) || !faceBlob) return msg("authMsg", "Complete all application fields, choose one primary marketplace and capture your seller application photo.", true);
   
-  let {data, error} = await sb.auth.signUp({email, password, options:{data:{full_name, phone, approved:false}}});
+  let {data, error} = await sb.auth.signUp({email, password, options:{data:{full_name, phone, seller_store_name:store_name, seller_primary_marketplace:primary_marketplace}}});
   if(error) return msg("authMsg", error.message, true);
   const u = data.user || data.session?.user;
-  if(u && faceBlob) await sb.storage.from("Nova AI").upload(`${u.id}/face.jpg`, faceBlob, {contentType:"image/jpeg", upsert:true});
-  msg("authMsg", "Submitted for review!");
+  if(u && data.session){
+    const {error:applicationError}=await sb.rpc("submit_seller_application",{p_store_name:store_name,p_phone:phone,p_marketplace:primary_marketplace});
+    if(applicationError)return msg("authMsg","Your Auth account was created, but the seller application could not be saved: "+applicationError.message,true);
+    if(faceBlob)await sb.storage.from("Nova AI").upload(`${u.id}/face.jpg`,faceBlob,{contentType:"image/jpeg",upsert:true});
+    msg("authMsg","Seller application submitted for "+marketplaceLabels[primary_marketplace]+". Await administrator approval.");
+    await updateUser(u);
+  } else {
+    msg("authMsg","Confirm your email, then sign in. Your selected "+marketplaceLabels[primary_marketplace]+" application details will be submitted when you sign in.");
+  }
 };
 
 document.getElementById("signout").onclick = () => sb.auth.signOut().then(()=>updateUser(null));
@@ -746,17 +763,14 @@ async function loadMyProducts() {
   msgEl.textContent =
     products.length + " product(s) in your inventory.";
 
-  const retailListings = products.filter(p => !motorCategories.includes(p.category) && !propertyCategories.includes(p.category));
-  const motorListings = products.filter(p => motorCategories.includes(p.category));
-  const propertyListings = products.filter(p => ["Property For Sale","Property To Rent"].includes(p.category));
+  const primary = storeData?.primary_marketplace || selectedMarket;
+  const primaryListings = products.filter(p => primary==="motors" ? motorCategories.includes(p.category) : primary==="property" ? propertyCategories.includes(p.category) : !motorCategories.includes(p.category) && !propertyCategories.includes(p.category));
   const renderGroup = (heading, rows) => `
     <section style="margin:16px 0;padding:12px;border:1px solid var(--line);border-radius:10px;">
       <h3>${heading} <small style="color:#64748b">(${rows.length})</small></h3>
       ${rows.length ? rows.map(p => renderSellerListing(p)).join("") : '<p class="msg">No listings in this marketplace yet.</p>'}
     </section>`;
-  list.innerHTML = renderGroup("My Shop Listings", retailListings) +
-    renderGroup("My Motor Listings", motorListings) +
-    renderGroup("My Property Listings", propertyListings);
+  list.innerHTML = renderGroup(marketplaceLabels[primary] + " Listings", primaryListings);
 }
 function renderSellerListing(p) {
     const image = p.image_url || (Array.isArray(p.images) ? p.images[0] : "");
