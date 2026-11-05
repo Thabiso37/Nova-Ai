@@ -615,7 +615,7 @@ async function editProduct(id) {
   document.getElementById("productName").value = product.name || "";
   document.getElementById("description").value = getBaseDescription(product.description || "");
   const details = String(product.description || "");
-  const fillDetail = (id,label) => { const el=document.getElementById(id); if(!el)return; const line=details.split(/\\r?\\n/).find(row=>row.toLowerCase().startsWith(label.toLowerCase()+":")); if(line)el.value=line.slice(label.length+1).trim(); };
+  const fillDetail = (id,label) => { const el=document.getElementById(id); if(!el)return; const line=details.split(/\r?\n/).find(row=>row.toLowerCase().startsWith(label.toLowerCase()+":")); if(line)el.value=line.slice(label.length+1).trim(); };
   if (market === "motors") {
     fillDetail("vehicleYear","Year"); fillDetail("vehicleMileage","Mileage"); fillDetail("vehicleTransmission","Transmission"); fillDetail("vehicleFuel","Fuel"); fillDetail("vehicleType","Vehicle type"); fillDetail("vehicleLocation","Location");
   } else if (market === "property") {
