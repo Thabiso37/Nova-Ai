@@ -577,7 +577,7 @@ button {
   <h2>Administrator Login</h2>
   <p class="muted">Sign in using your authorised administrator account.</p>
 
-  <form id="adminLoginForm" novalidate>
+  <form id="adminLoginForm" novalidate onsubmit="return false;">
     <label for="email">Email address</label>
     <input id="email" name="email" type="email" autocomplete="username"
            placeholder="Administrator email" required>
@@ -589,6 +589,7 @@ button {
     <button class="primary" id="loginBtn" type="submit" style="width:100%">Sign In</button>
   </form>
   <p id="loginMessage" role="status" aria-live="polite"></p>
+  <p id="loginDebugMessage" class="muted" role="status" aria-live="polite"></p>
 </section>
 
 <section id="dashboard" class="hidden">
@@ -825,11 +826,14 @@ const ADMIN_ID = "2fc320e9-40b6-407f-9e71-e8a1999956a7";
 
 const sb = window.supabase.createClient(
   "https://nxplffvklkopwfjaqexo.supabase.co",
-  "sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ"
+  "sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ",
+  { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
 );
 
 let currentAdmin = null;
 let loginInProgress = false;
+let adminCheckPromise = null;
+let verifiedAdminId = null;
 let allProducts = [];
 let allPaymentOrders = [];
 let allSellerFinancials = [];
@@ -853,42 +857,70 @@ function money(value) {
 }
 
 async function checkAdmin(user) {
-  currentAdmin = null;
-
-  document.getElementById("dashboard").classList.add("hidden");
-  document.getElementById("loginPanel").classList.remove("hidden");
-
   if (!user) {
+    currentAdmin = null;
+    verifiedAdminId = null;
+    document.getElementById("dashboard").classList.add("hidden");
+    document.getElementById("loginPanel").classList.remove("hidden");
     document.getElementById("loginMessage").textContent = "Please sign in.";
-    return;
+    return false;
   }
 
-  if (user.id !== ADMIN_ID) {
-    document.getElementById("loginMessage").textContent =
-      "This account is not authorised as a NOVAAI administrator.";
-    return;
+  if (verifiedAdminId === user.id && currentAdmin?.id === user.id) return true;
+  if (adminCheckPromise) return adminCheckPromise;
+
+  adminCheckPromise = (async () => {
+    currentAdmin = null;
+    document.getElementById("dashboard").classList.add("hidden");
+    document.getElementById("loginPanel").classList.remove("hidden");
+    document.getElementById("loginMessage").textContent = "Verifying administrator permissions…";
+
+    if (user.id !== ADMIN_ID) {
+      document.getElementById("loginMessage").textContent =
+        "This account is not authorised as a NOVAAI administrator.";
+      return false;
+    }
+
+    try {
+      const { data, error } = await sb.rpc("is_novaai_admin");
+      if (error) {
+        console.error("NOVAAI is_novaai_admin RPC error:", error);
+        document.getElementById("loginMessage").textContent =
+          "Administrator database verification failed: " + error.message;
+        return false;
+      }
+      if (data !== true) {
+        document.getElementById("loginMessage").textContent =
+          "Administrator verification returned false. Access denied.";
+        return false;
+      }
+
+      currentAdmin = user;
+      verifiedAdminId = user.id;
+      document.getElementById("loginPanel").classList.add("hidden");
+      document.getElementById("dashboard").classList.remove("hidden");
+      document.getElementById("adminEmail").textContent = user.email || "";
+      document.getElementById("loginMessage").textContent = "Administrator access verified.";
+      await Promise.all([
+        loadProducts(),
+        loadPaymentData(),
+        loadMarketplacePermissions(),
+        loadSellerLocationReviews()
+      ]);
+      return true;
+    } catch (error) {
+      console.error("NOVAAI administrator verification error:", error);
+      document.getElementById("loginMessage").textContent =
+        "Administrator verification error: " + (error?.message || "Unexpected error.");
+      return false;
+    }
+  })();
+
+  try {
+    return await adminCheckPromise;
+  } finally {
+    adminCheckPromise = null;
   }
-
-  const { data, error } = await sb.rpc("is_novaai_admin");
-
-  if (error || data !== true) {
-    document.getElementById("loginMessage").textContent =
-      "Administrator verification failed. Access denied.";
-    return;
-  }
-
-  currentAdmin = user;
-
-  document.getElementById("loginPanel").classList.add("hidden");
-  document.getElementById("dashboard").classList.remove("hidden");
-  document.getElementById("adminEmail").textContent = user.email || "";
-
-  await Promise.all([
-    loadProducts(),
-    loadPaymentData(),
-    loadMarketplacePermissions(),
-    loadSellerLocationReviews()
-  ]);
 }
 
 async function login() {
@@ -912,21 +944,37 @@ async function login() {
   loginMessage.textContent = "Connecting securely to NOVAAI…";
 
   try {
+    console.info("NOVAAI login: submitting credentials to Supabase Auth.");
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
     if (error) {
+      console.error("NOVAAI Supabase signInWithPassword error:", error);
       loginMessage.textContent = "Sign-in failed: " + error.message;
       return;
     }
 
-    if (!data?.user) {
-      loginMessage.textContent = "Sign-in did not return a user. Please try again.";
+    if (!data?.user || !data?.session) {
+      console.error("NOVAAI sign-in returned no user/session:", data);
+      loginMessage.textContent =
+        "Sign-in response did not include an active session. Your fields have been kept; please try again.";
       return;
     }
 
-    // The SIGNED_IN auth-state listener performs the existing database
-    // administrator check. Credentials remain in the fields until success.
-    loginMessage.textContent = "Sign-in successful. Verifying administrator access…";
+    const { data: sessionData, error: sessionError } = await sb.auth.getSession();
+    if (sessionError) {
+      console.error("NOVAAI session persistence check failed:", sessionError);
+      loginMessage.textContent = "Signed in, but session could not be confirmed: " + sessionError.message;
+      return;
+    }
+
+    if (!sessionData?.session || sessionData.session.user.id !== data.user.id) {
+      loginMessage.textContent =
+        "Supabase accepted the sign-in, but the browser session was not restored. Check browser storage settings and try again.";
+      return;
+    }
+
+    loginMessage.textContent = "Credentials accepted. Checking NOVAAI administrator permissions…";
+    await checkAdmin(data.user);
   } catch (error) {
     console.error("NOVAAI administrator sign-in error:", error);
     loginMessage.textContent =
@@ -1410,7 +1458,12 @@ async function changeStatus(id, newStatus) {
 
 document.getElementById("adminLoginForm").addEventListener("submit", (event) => {
   event.preventDefault();
-  login();
+  event.stopPropagation();
+  login().catch((error) => {
+    console.error("NOVAAI login submit handler failed:", error);
+    document.getElementById("loginMessage").textContent =
+      "Login handler error: " + (error?.message || "Unexpected error.");
+  });
 });
 document.getElementById("logoutBtn").onclick = logout;
 document.getElementById("filter").onchange = renderProducts;
