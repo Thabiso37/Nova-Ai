@@ -1068,7 +1068,7 @@ body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb;col
   
 </header>
 
-<div id="shopTvAds" class="shop-tv-ads" role="region" aria-label="NOVAAI featured advertisements" aria-roledescription="carousel">
+<div id="shopTvAds" data-nova-ad-slot="shop_tv" data-nova-ad-format="carousel" data-nova-ad-version="1" class="shop-tv-ads" role="region" aria-label="NOVAAI featured advertisements" aria-roledescription="carousel">
   <article class="shop-tv-slide is-active" data-theme="blue" aria-hidden="false">
     <div class="shop-tv-copy"><span class="shop-tv-kicker">NOVAAI SPOTLIGHT</span><h2>Discover something<br>worth bringing home.</h2><p>Explore finds from South African marketplace sellers.</p><a class="shop-tv-cta" href="#products">Explore the shop&nbsp; →</a></div><span class="shop-tv-art" aria-hidden="true"></span>
   </article>
@@ -2111,12 +2111,13 @@ function closeCart() {
   let active=0;
   let timer=null;
   const show=(index)=>{
+    if(banner.dataset.novaManagedCampaign)return;
     active=(index+slides.length)%slides.length;
     slides.forEach((slide,i)=>{const on=i===active;slide.classList.toggle("is-active",on);slide.setAttribute("aria-hidden",String(!on));});
     dots.forEach((dot,i)=>dot.setAttribute("aria-current",String(i===active)));
   };
   const stop=()=>{if(timer){clearInterval(timer);timer=null;}};
-  const start=()=>{stop();if(!document.hidden&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches)timer=setInterval(()=>show(active+1),5200);};
+  const start=()=>{stop();if(!banner.dataset.novaManagedCampaign&&!document.hidden&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches)timer=setInterval(()=>show(active+1),5200);};
   dots.forEach(dot=>dot.addEventListener("click",()=>{show(Number(dot.dataset.shopTvGo));start();}));
   banner.addEventListener("mouseenter",stop);
   banner.addEventListener("mouseleave",start);
