@@ -1,6 +1,6 @@
 async function loadSellerPublicLocation(){
  const box=document.getElementById("sellerLocStatus");if(!user)return;
- const {data,error}=await sb.from("seller_public_locations").select("province,city,suburb,latitude,longitude,public_location_enabled,approval_status,review_note").eq("user_id",user.id).maybeSingle();
+ const {data,error}=await sb.from("seller_public_locations").select("province,city,suburb,latitude,longitude,public_location_enabled,approval_status").eq("user_id",user.id).maybeSingle();
  if(error){if(box)box.textContent="Location settings could not be loaded: "+error.message;return;}
  const v=data||{};
  document.getElementById("sellerLocProvince").value=v.province||"";
