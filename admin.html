@@ -871,7 +871,7 @@ async function checkAdmin(user) {
   if (verifiedAdminId === user.id && currentAdmin?.id === user.id) return true;
   const authVersionAtStart = adminAuthVersion;
 
-  adminCheckPromise = (async () => {
+  const checkPromise = (async () => {
     currentAdmin = null;
     document.getElementById("dashboard").classList.add("hidden");
     document.getElementById("loginPanel").classList.remove("hidden");
@@ -925,10 +925,11 @@ async function checkAdmin(user) {
     }
   })();
 
+  adminCheckPromise = checkPromise;
   try {
-    return await adminCheckPromise;
+    return await checkPromise;
   } finally {
-    adminCheckPromise = null;
+    if (adminCheckPromise === checkPromise) adminCheckPromise = null;
   }
 }
 
@@ -997,6 +998,7 @@ async function login() {
 async function logout() {
   await sb.auth.signOut();
   adminAuthVersion++;
+  adminCheckPromise = null;
   verifiedAdminId = null;
   currentAdmin = null;
   allProducts = [];
@@ -1552,6 +1554,7 @@ sb.auth.getSession().then(({ data, error }) => {
 sb.auth.onAuthStateChange((event, session) => {
   if (event === "SIGNED_OUT") {
     adminAuthVersion++;
+    adminCheckPromise = null;
     verifiedAdminId = null;
     currentAdmin = null;
     document.getElementById("dashboard").classList.add("hidden");
