@@ -1771,26 +1771,7 @@ document.getElementById("closeProductModal").onclick=closeProductModal;
 renderWishlist();
 </script>
 
-<style>
-.mobile-bottom-nav { display: none; }
-@media (max-width: 768px) {
-  .mobile-bottom-nav {
-    display: flex; position: fixed; bottom: 0; left: 0; width: 100%; height: 66px; background: #ffffff; border-top: 1px solid #e5e7eb; box-shadow: 0 -3px 12px rgba(0,0,0,.08); justify-content: space-around; align-items: center; z-index: 999;
-  }
-  .mobile-bottom-nav button, .mobile-bottom-nav a {
-    border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #174ea6; font-size: 20px; text-decoration: none;
-  }
-  .mobile-bottom-nav span { font-size: 10px; font-weight: 700; }
-  body { padding-bottom: 75px; }
-}
-</style>
 
-<nav class="mobile-bottom-nav">
-  <button onclick="go('shop')">🏠<span>Home</span></button>
-  <a href="seller-motors-houses.html" style="color:#d97706;">🚗🔑<span>Motors/Prop</span></a>
-  <button onclick="go('wishlist')">❤️<span>Wishlist</span></button>
-  <button onclick="window.location.href='seller-retail.html'">🏷️<span>Retail Sell</span></button>
-</nav>
 
 <script>
 let previousCartScrollPosition = 0;
