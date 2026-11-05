@@ -177,6 +177,20 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
 .home-detail-thumb-button{padding:0;border:0;background:transparent;border-radius:8px;overflow:hidden;cursor:pointer}
 .home-detail-thumb-button:focus-visible{outline:3px solid #f5b900}
 </style>
+
+<style>
+/* Clean product-first NOVAAI MARKET homepage */
+.home-search-hint{margin:8px 3px 0;color:#667085;font-size:12px}
+.home-categories{margin:12px 0 28px}
+.home-category-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-top:14px}
+.home-category-card{min-width:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;gap:9px;padding:10px 8px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;color:#17345b;font-size:12px;font-weight:850;text-align:center;box-shadow:0 3px 12px rgba(16,40,75,.05);transition:transform .18s,box-shadow .18s}
+.home-category-card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(16,40,75,.1)}
+.home-category-card img{width:100%;height:105px;object-fit:cover;border-radius:9px;background:#edf2f7}
+.home-featured{margin-top:10px}
+@media(max-width:760px){.home-category-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.home-category-card{font-size:11px;padding:8px 6px 10px}.home-category-card img{height:88px}.home-categories{margin-top:8px}}
+@media(max-width:360px){.home-category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.home-category-card img{height:105px}}
+</style>
+
 </head>
 <body>
 <div class="top">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
@@ -199,30 +213,28 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
       <button type="button" id="homeUseLocation" class="home-location-button">📍 Near me</button>
     </form>
     <p id="homeLocationStatus" class="home-location-status" aria-live="polite">Search products above, or choose Near me to share your location.</p>
-    <div class="quick-links" aria-label="Quick market categories">
-      <a class="quick-link" href="./retail.html#shop"><span>🛍️</span> Retail & Deals</a>
-      <a class="quick-link" href="./seller-motors-houses.html?market=motors"><span>🚗</span> Cars & Motors</a>
-      <a class="quick-link" href="./seller-motors-houses.html?market=property"><span>🏡</span> Property</a>
-      <a class="quick-link" href="./seller.html"><span>🏪</span> Start Selling</a>
-    </div>
+    <div class="home-search-hint">Find products from independent sellers across South Africa.</div>
   </div>
-  <section class="intro">
-    <span class="eyebrow">ONE DESTINATION · THREE MARKETS</span>
-    <h1>Your Marketplace.<br>Your Opportunity.</h1>
-    <p>Choose a market to get started. Discover products, vehicles and property opportunities from across South Africa.</p>
+  <section class="home-categories" aria-label="Shop by category">
+    <div class="section-kicker"><h2>Shop by Category</h2><a href="./retail.html#shop">See all →</a></div>
+    <div class="home-category-grid">
+      <a class="home-category-card" href="./retail.html#shop"><img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=500&q=80" alt="Laptop and electronics"><span>Electronics</span></a>
+      <a class="home-category-card" href="./retail.html#shop"><img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=500&q=80" alt="Fashion sneakers"><span>Sneakers</span></a>
+      <a class="home-category-card" href="./retail.html#shop"><img src="https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=500&q=80" alt="Clothing and fashion"><span>Fashion</span></a>
+      <a class="home-category-card" href="./retail.html#shop"><img src="https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=500&q=80" alt="Beauty products"><span>Beauty</span></a>
+      <a class="home-category-card" href="./retail.html#shop"><img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=500&q=80" alt="Home furniture"><span>Home & Living</span></a>
+      <a class="home-category-card" href="./retail.html#shop"><img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=500&q=80" alt="Headphones and accessories"><span>Accessories</span></a>
+    </div>
   </section>
   
   <section class="home-featured" id="homeFeatured" aria-label="Featured marketplace products">
-    <div class="section-kicker"><h2>Popular products</h2><a href="./retail.html#shop">View all products →</a></div>
-    <p class="featured-subtitle">Products currently approved for sale by NOVAAI marketplace sellers.</p>
+    <div class="section-kicker"><h2>Trending Products</h2><a href="./retail.html#shop">View all products →</a></div>
+    <p class="featured-subtitle">Discover products listed by approved NOVAAI marketplace sellers.</p>
     <div id="homeProductGrid" class="home-product-grid" aria-live="polite">
       <div class="home-products-message">Loading available products…</div>
     </div>
   </section>
-\n  <section class="promo-grid" aria-label="Marketplace highlights">
-    <a class="promo" href="./retail.html"><strong>Discover products across South Africa</strong><span>Explore the retail catalogue, browse categories and shop independent sellers.</span></a>
-    <a class="promo alt" href="./seller.html"><strong>Your business belongs here</strong><span>Visit the existing Seller Portal to explore seller options.</span></a>
-  </section>
+\n
   
 </main>
 <footer><strong><span style="color:#6da8ff">NOVA</span><span style="color:#f5b900">AI</span><span style="color:#ffffff"> MARKET</span></strong> · Built for South Africa · Your Marketplace. Your Opportunity.</footer>
