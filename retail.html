@@ -391,14 +391,26 @@ body.categories-view #categories { display: block !important; min-height: 70vh; 
   position: sticky;
   top: 0;
   z-index: 2;
-  height: 62px;
-  background: white;
-  border-bottom: 1px solid #e1e6ee;
+  min-height: 62px;
+  background: #fef08a;
+  border: 0;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
+  margin: 10px 12px 0;
 }
+.cart-page-header button{color:#172033!important}
+.cart-page-header button:last-child{color:#ef4444!important;font-size:25px}
+.cart-item-photo-wrap{width:96px;height:96px;flex:0 0 96px;padding:6px;background:#fffde7;border-radius:9px;display:grid;place-items:center}
+.cart-item-photo{width:100%;height:100%;flex:auto;object-fit:contain;background:#fff;border:0;border-radius:6px}
+.cart-item-card{background:#fff;border:1px solid #edf0f5;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 2px 5px rgba(16,40,75,.05)}
+.cart-item-main{align-items:flex-start}
+.cart-item-copy b{font-size:15px}
+.cart-item-subtotal{color:#1d4ed8}
+.cart-item-card .cart-item-controls{border-top:1px solid #f3f4f6;padding-top:11px;margin-top:10px;justify-content:space-between}
+@media(max-width:760px){.cart-item-photo-wrap{width:80px;height:80px;flex-basis:80px}}
 
 .cart-page-header h2 {
   margin: 0;
@@ -1050,9 +1062,10 @@ function renderCart(){
   if(itemsEl)itemsEl.innerHTML=cart.length?cart.map(i=>{
     const p=cartProduct(i),photos=Array.isArray(p.images)?p.images:[],photo=safeImg(photos[0]||"");
     const sellerId=p.sellerId||"",unit=Number(p.price)||0,lineTotal=unit*Number(i.qty);
-    return `<article class="cartitem">
+    const isSaved=(JSON.parse(localStorage.getItem("novaWishlist")||"[]")).map(String).includes(String(i.id));
+    return `<article class="cart-item-card">
       <div class="cart-item-main" role="button" tabindex="0" onclick="openCartProduct('${esc(i.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openCartProduct('${esc(i.id)}')}">
-        ${photo?`<img class="cart-item-photo" src="${esc(photo)}" alt="${esc(p.name||"Product photo")}" onerror="this.style.display='none'">`:`<div class="cart-item-photo" style="display:grid;place-items:center;color:#98a2b3">Product</div>`}
+        ${photo?`<span class="cart-item-photo-wrap"><img class="cart-item-photo" src="${esc(photo)}" alt="${esc(p.name||"Product photo")}" onerror="this.style.display='none'"></span>`:`<span class="cart-item-photo-wrap" style="color:#98a2b3">Product</span>`}
         <div class="cart-item-copy"><b>${esc(p.name||"Saved product")}</b>
           <p class="cart-item-unit">${cash(unit)} each</p>
           <p class="muted">Seller: ${esc(p.seller||"Independent seller")}</p>
