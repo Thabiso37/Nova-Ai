@@ -827,3 +827,27 @@ body.product-view-active .nova-hero-carousel{display:none!important}
 .home-product-photo{padding:0!important}
 .home-product-photo img{width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important;border-radius:0!important}
 </style>
+
+<style>
+/* HOME product photos: edge-to-edge square image, with no white frame/background.
+   Existing square dimensions and card sizing remain unchanged. */
+.home-product-photo{
+  padding:0!important;
+  background:transparent!important;
+  border:0!important;
+}
+.home-product-photo img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+</style>
