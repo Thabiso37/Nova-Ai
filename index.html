@@ -495,7 +495,7 @@ body.product-view-active .nova-hero-carousel{display:none!important}
 (function(){
   const grid=document.getElementById('homeProductGrid');
   if(!grid)return;
-  const escapeHTML=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const escapeHTML=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
   const money=value=>'R '+new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(value)||0);
   const safeImage=value=>{try{const u=new URL(value);return ['https:','http:'].includes(u.protocol)?u.href:''}catch(e){return ''}};
   const cartKey='novaMarketplaceCartV1';
@@ -543,7 +543,7 @@ body.product-view-active .nova-hero-carousel{display:none!important}
     const gallery=photos.length?'<div class="home-detail-main-wrap"><img class="home-detail-image" id="homeDetailMainImage" src="'+escapeHTML(photos[0])+'" alt="'+escapeHTML(detail.name)+'"></div><div class="home-detail-gallery">'+photos.map((url,index)=>'<button type="button" class="home-detail-thumb-button" data-photo-index="'+index+'" aria-label="Show product photo '+(index+1)+'"><img class="home-detail-thumb" src="'+escapeHTML(url)+'" alt=""></button>').join('')+'</div>':'<div class="home-products-message">No product photo supplied by the seller.</div>';
     const storeName=store.store_name||detail.seller_name||'Independent seller';
     const storeDescription=store.description||'The seller has not added a store description yet.';
-    const detailDescription=["Property For Sale","Property To Rent"].includes(detail.category)?String(detail.description||"").split(/\r?\n/).filter(line=>!/^\s*(?:NOVAAI DETAILS|Property type|Bedrooms|Bathrooms|Parking|Floor area m2|Erf size m2|Location)\s*[:=-]?\s*/i.test(line)).join("\n").trim():(detail.description||"The seller has not provided a product description.");
+    const detailDescription=["Property For Sale","Property To Rent"].includes(detail.category)?String(detail.description||"").split(String.fromCharCode(10)).filter(line=>!["NOVAAI DETAILS","Property type","Bedrooms","Bathrooms","Parking","Floor area m2","Erf size m2","Location"].some(label=>line.trim().toLowerCase().startsWith(label.toLowerCase()))).join("\n").trim():(detail.description||"The seller has not provided a product description.");
     
     detailSection.innerHTML='<a class="home-detail-back" href="./index.html">← Back to NOVAAI MARKET</a><div class="home-detail-layout"><div>'+gallery+'</div><div class="home-detail-info"><div class="category">'+escapeHTML(detail.category||'Marketplace product')+'</div><div class="home-detail-seller"><strong>'+escapeHTML(storeName)+'</strong><span class="home-approved-label">Approved seller store</span></div><h1>'+escapeHTML(detail.name)+'</h1><div class="home-rating-status">Customer rating: Not rated yet</div><div class="home-reviews-note"><strong>Customer reviews:</strong> Reviews will appear here once the marketplace review feature is available. No rating or review count is being displayed as verified.</div><div class="home-detail-description">'+escapeHTML(detailDescription)+'</div><div class="home-store-info"><strong>Seller store information</strong><p>'+escapeHTML(storeDescription)+'</p>'+(store.store_slug?'<p><strong>Store ID:</strong> '+escapeHTML(store.store_slug)+'</p>':'')+'<p>Seller contact details are protected. Use a secure contact action.</p><div class="home-detail-actions"><button type="button" id="homeDetailCall" class="home-add-cart">Call seller</button><button type="button" id="homeDetailWhatsApp" class="home-add-cart">WhatsApp seller</button></div>'+'</div><div class="home-stock-note">Shipping times, delivery fees and available stock quantity are not confirmed in this listing. Please check the order details before placing an order.</div><div class="home-detail-price">'+money(detail.price)+'</div><div class="home-detail-actions"><button type="button" id="homeDetailAddCart" class="home-add-cart">🛒 Add to cart</button></div></div></div>';
     document.querySelector('main').replaceChildren(detailSection);
@@ -601,15 +601,22 @@ body.product-view-active .nova-hero-carousel{display:none!important}
       grid.innerHTML=items.map(p=>{
         const imgs=productPhotos(p);
         const img=imgs[0]||'';
-        return '<article class="home-product-card" data-open-home-product="'+escapeHTML(p.id)+'" tabindex="0" role="link" aria-label="Open '+escapeHTML(p.name)+' details">'+
-          '<div class="home-product-photo">'+(img?'<img src="'+escapeHTML(img)+'" alt="'+escapeHTML(p.name)+'" loading="lazy" decoding="async">':'<span class="home-no-photo"><small>Photo not supplied</small></span>')+'<button type="button" class="home-wishlist-toggle'+(readHomeWishlist().includes(String(p.id))?' is-saved':'')+'" data-home-wishlist="'+escapeHTML(p.id)+'" aria-label="'+(readHomeWishlist().includes(String(p.id))?'Remove from wishlist':'Add to wishlist')+'" aria-pressed="'+String(readHomeWishlist().includes(String(p.id)))+'" title="Save to wishlist">'+(readHomeWishlist().includes(String(p.id))?'♥':'♡')+'</button>+'</div>'+
-          '<div class="home-product-info">'+
-          '<div class="home-product-category">'+escapeHTML(p.category||'Marketplace product')+'</div>'+
-          '<h3>'+escapeHTML(p.name)+'</h3>'+
-          '<div class="home-card-seller"><span class="verified-check" aria-hidden="true">✓</span>'+escapeHTML((storesBySeller.get(String(p.seller_id))||{}).store_name||p.seller_name||'Approved NOVAAI seller')+' <span class="verified-label">Verified seller</span></div>'+
-          '<div class="home-live-rating" aria-label="Live ratings coming soon"><span class="home-rating-stars" aria-hidden="true">☆☆☆☆☆</span><span class="home-rating-label">Live ratings coming soon</span></div>'+
-          '<div class="home-product-buy-row"><div class="home-product-price">'+money(p.price)+'</div>'+
-          '<button type="button" class="home-add-cart" data-add-product="'+escapeHTML(p.id)+'" aria-label="Add '+escapeHTML(p.name)+' to cart" title="Add to cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg></button></div></div></article>';
+        const saved=readHomeWishlist().includes(String(p.id));
+        const sellerName=(storesBySeller.get(String(p.seller_id))||{}).store_name||p.seller_name||'Approved NOVAA seller';
+        return `<article class="home-product-card" data-open-home-product="${escapeHTML(p.id)}" tabindex="0" role="link" aria-label="Open ${escapeHTML(p.name)} details">
+          <div class="home-product-photo">${img?`<img src="${escapeHTML(img)}" alt="${escapeHTML(p.name)}" loading="lazy" decoding="async">`:'<span class="home-no-photo"><small>Photo not supplied</small></span>'}
+            <button type="button" class="home-wishlist-toggle${saved?' is-saved':''}" data-home-wishlist="${escapeHTML(p.id)}" aria-label="${saved?'Remove from wishlist':'Add to wishlist'}" aria-pressed="${String(saved)}" title="Save to wishlist">${saved?'♥':'♡'}</button>
+          </div>
+          <div class="home-product-info">
+            <div class="home-product-category">${escapeHTML(p.category||'Marketplace product')}</div>
+            <h3>${escapeHTML(p.name)}</h3>
+            <div class="home-card-seller"><span class="verified-check" aria-hidden="true">✓</span>${escapeHTML(sellerName)} <span class="verified-label">Verified seller</span></div>
+            <div class="home-live-rating" aria-label="Live ratings coming soon"><span class="home-rating-stars" aria-hidden="true">☆☆☆☆☆</span><span class="home-rating-label">Live ratings coming soon</span></div>
+            <div class="home-product-buy-row"><div class="home-product-price">${money(p.price)}</div>
+              <button type="button" class="home-add-cart" data-add-product="${escapeHTML(p.id)}" aria-label="Add ${escapeHTML(p.name)} to cart" title="Add to cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg></button>
+            </div>
+          </div>
+        </article>`;
       }).join('');
       grid.querySelectorAll('[data-open-home-product]').forEach(card=>{
         const open=()=>{window.location.href='./index.html?product='+encodeURIComponent(card.dataset.openHomeProduct);};
