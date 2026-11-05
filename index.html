@@ -435,8 +435,8 @@ body.product-view-active .nova-hero-carousel{display:none!important}
 <main>
   <div class="home-search-wrap">
     <form class="home-search" id="homeSearchForm" role="search">
-      <input id="homeSearchInput" type="search" placeholder="Search products, categories or sellers…" aria-label="Search homepage products">
-      <button type="submit" aria-label="Search products">⌕ Search</button>
+      <input id="homeSearchInput" type="search" placeholder="Search products, brands or categories…" aria-label="Search homepage products">
+      <button type="submit" aria-label="Search products">🔍</button>
       <button type="button" id="homeUseLocation" class="home-location-button">📍 Near me</button>
     </form>
     <p id="homeLocationStatus" class="home-location-status" aria-live="polite">Search products above, or choose Near me to share your location.</p>
@@ -607,6 +607,64 @@ body.product-view-active .nova-hero-carousel{display:none!important}
   loadHomeProducts();
 })();
 </script>
+
+
+<style>
+/* Match the Retail search bar design on the homepage */
+.home-search-wrap{max-width:900px;margin:0 auto 22px;padding:0 12px}
+.home-search{
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  align-items:stretch;
+  gap:0!important;
+  min-height:48px;
+  background:#fff;
+  border:1px solid #d9e1ec;
+  border-radius:11px;
+  overflow:hidden;
+  box-shadow:0 3px 12px rgba(16,40,75,.06);
+}
+.home-search input{
+  flex:1 1 0!important;
+  width:1%;
+  min-width:0!important;
+  min-height:48px;
+  padding:10px 12px;
+  border:0!important;
+  outline:0;
+  background:#fff;
+  font-size:13px;
+}
+.home-search button[type="submit"]{
+  flex:0 0 44px;
+  min-height:48px;
+  padding:0 10px;
+  border:0;
+  border-radius:0;
+  background:#174ea6;
+  color:#fff;
+  font-size:17px;
+  font-weight:850;
+}
+.home-search .home-location-button{
+  flex:0 0 auto;
+  min-height:48px;
+  padding:0 12px;
+  border:0;
+  border-radius:0;
+  background:#f5b900;
+  color:#10284b;
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+}
+@media(max-width:520px){
+  .home-search{flex-wrap:nowrap!important}
+  .home-search input{flex:1 1 0!important;width:1%;min-width:0!important;padding:9px 7px;font-size:11px}
+  .home-search button[type="submit"]{flex:0 0 38px;min-height:46px;padding:0 7px;font-size:15px}
+  .home-search .home-location-button{min-height:46px;padding:0 7px;font-size:10px}
+}
+</style>
 
 </body>
 </html>
