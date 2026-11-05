@@ -698,7 +698,7 @@ button {
     </section>
 
     <section class="panel" id="marketplacePermissions">
-<h2>Marketplace Permissions</h2><p class="muted">Review each seller's selected primary marketplace application. Seller-store approval remains separate.</p>
+<h2>Marketplace Permissions</h2><p class="muted">Review each seller's selected primary marketplace application. Approving or rejecting also updates seller-store approval in the same database transaction.</p>
 <button class="primary" id="refreshMarketplacePermissions">Refresh Applications</button>
 <p id="marketplacePermissionMessage" class="muted" aria-live="polite">Marketplace permission applications will appear here.</p>
 <div id="marketplacePermissionRecords"></div>
@@ -931,7 +931,7 @@ async function loadMarketplacePermissions(){
 async function reviewMarketplacePermission(id,status){
  if(!currentAdmin||!["approved","rejected"].includes(status))return;
  if(!confirm("Set this marketplace application to "+status.toUpperCase()+"?"))return;
- const {error}=await sb.from("seller_marketplace_permissions").update({status,reviewed_at:new Date().toISOString(),reviewed_by:currentAdmin.id}).eq("id",id);
+ const {error}=await sb.rpc("review_seller_application",{p_permission_id:id,p_status:status});
  if(error){document.getElementById("marketplacePermissionMessage").textContent="Review failed: "+error.message;return;}
  document.getElementById("marketplacePermissionMessage").textContent="Review saved by Supabase.";
  await loadMarketplacePermissions();
