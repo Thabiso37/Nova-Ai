@@ -678,7 +678,7 @@ body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb;col
 <p class="muted" id="catalogueMessage">Browse available products from approved marketplace sellers.</p>
 <span class="badge" id="dbStatus" hidden></span>
 </div>
-<div id="products" class="grid"></div>
+<div id="products" class="grid" role="status" aria-live="polite"><div class="panel">Loading approved Retail products…</div></div>
 </section>
 
 <section id="retailMarketPage" class="section panel">
@@ -1624,7 +1624,7 @@ try {
     document.getElementById("catalogueMessage").textContent =
       "Products could not be loaded. Please try again.";
 
-    render();
+    document.getElementById("products").innerHTML = '<div class="panel msg error" role="alert">Products could not be loaded. Please try again.</div>';
     renderCart();
   }
 }
@@ -1634,7 +1634,6 @@ document.getElementById("search").oninput=render;
 document.getElementById("year").textContent=new Date().getFullYear();
 
 initCategories();
-render();
 renderCart();
 loadShared();
 
