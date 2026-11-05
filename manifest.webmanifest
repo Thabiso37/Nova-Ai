@@ -1,0 +1,12 @@
+{
+  "id": "./seller-motors-houses.html?market=property",
+  "name": "NOVAAI Property",
+  "short_name": "NOVAAI Property",
+  "description": "South African property listings on NOVAAI MARKET.",
+  "start_url": "./seller-motors-houses.html?market=property",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f6f9",
+  "theme_color": "#10284b",
+  "icons": [{ "src": "./novaai-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
