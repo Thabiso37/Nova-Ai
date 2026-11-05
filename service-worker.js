@@ -1,4 +1,4 @@
-const CACHE_NAME = "novaai-property-shell-v1";
+const CACHE_NAME = "novaai-property-shell-v2";
 const SHELL = ["./","./index.html","./seller-motors-houses.html?market=property","./property-details.html","./manifest.webmanifest","./novaai-icon.svg"];
 self.addEventListener("install", event => event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting())));
 self.addEventListener("activate", event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith("novaai-property-") && key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim())));
@@ -7,6 +7,11 @@ self.addEventListener("fetch", event => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  // Always fetch the current seller portal and its helper; do not reuse stale cached login pages.
+  if (/\/(seller(?:-property|-retail|-motors)?\.html|seller-location\.js)$/.test(url.pathname)) {
+    event.respondWith(fetch(request, {cache:"no-store"}));
+    return;
+  }
   if (request.mode === "navigate") {
     event.respondWith(fetch(request).then(response => {
       if (response && response.ok && /\/(index\.html|seller-motors-houses\.html|property-details\.html)?$/.test(url.pathname)) {
