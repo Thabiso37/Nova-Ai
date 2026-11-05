@@ -247,7 +247,8 @@ const retailCats = ["Accessories","Clothing Shoes & Accessories","Cellphones","C
 const motorCategories = ["Auto","Motors & Vehicles"];
 const propertyCategories = ["Property For Sale","Property To Rent"];
 let listingMarket = "retail";
-let selectedMarket = null;
+const requestedMarket = new URLSearchParams(window.location.search).get("market");
+let selectedMarket = ["retail","motors","property"].includes(requestedMarket) ? requestedMarket : null;
 let marketplacePermissions = [];
 function hasMarketplaceAccess(market){ return !!storeData && storeData.primary_marketplace===market && String(storeData.status||"").toLowerCase()==="approved" && marketplacePermissions.some(p=>p.marketplace===market && p.status==="approved"); }
 function requireMarketplaceAccess(market){ if(!hasMarketplaceAccess(market)){ msg("sellerMsg","Access denied: your store and this marketplace must both be approved.",true); return false; } return true; }
@@ -365,7 +366,7 @@ let editingProductId = null;
 let editingProductCategory = null;
 let editingProductMarket = null;
 let authVersion = 0;
-setListingMarket("retail");
+setListingMarket(selectedMarket || "retail");
 function switchPortal() { return; }
 const video = document.getElementById("webcam"), canvas = document.getElementById("snapshotCanvas"), preview = document.getElementById("facePreview");
 
