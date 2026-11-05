@@ -834,6 +834,7 @@ let currentAdmin = null;
 let loginInProgress = false;
 let adminCheckPromise = null;
 let verifiedAdminId = null;
+let adminAuthVersion = 0;
 let allProducts = [];
 let allPaymentOrders = [];
 let allSellerFinancials = [];
@@ -866,8 +867,9 @@ async function checkAdmin(user) {
     return false;
   }
 
-  if (verifiedAdminId === user.id && currentAdmin?.id === user.id) return true;
   if (adminCheckPromise) return adminCheckPromise;
+  if (verifiedAdminId === user.id && currentAdmin?.id === user.id) return true;
+  const authVersionAtStart = adminAuthVersion;
 
   adminCheckPromise = (async () => {
     currentAdmin = null;
@@ -895,8 +897,8 @@ async function checkAdmin(user) {
         return false;
       }
 
+      if (authVersionAtStart !== adminAuthVersion) return false;
       currentAdmin = user;
-      verifiedAdminId = user.id;
       document.getElementById("loginPanel").classList.add("hidden");
       document.getElementById("dashboard").classList.remove("hidden");
       document.getElementById("adminEmail").textContent = user.email || "";
@@ -907,6 +909,13 @@ async function checkAdmin(user) {
         loadMarketplacePermissions(),
         loadSellerLocationReviews()
       ]);
+      if (authVersionAtStart !== adminAuthVersion) {
+        currentAdmin = null;
+        document.getElementById("dashboard").classList.add("hidden");
+        document.getElementById("loginPanel").classList.remove("hidden");
+        return false;
+      }
+      verifiedAdminId = user.id;
       return true;
     } catch (error) {
       console.error("NOVAAI administrator verification error:", error);
@@ -987,7 +996,8 @@ async function login() {
 }
 async function logout() {
   await sb.auth.signOut();
-
+  adminAuthVersion++;
+  verifiedAdminId = null;
   currentAdmin = null;
   allProducts = [];
   allPaymentOrders = [];
@@ -1541,6 +1551,8 @@ sb.auth.getSession().then(({ data, error }) => {
 
 sb.auth.onAuthStateChange((event, session) => {
   if (event === "SIGNED_OUT") {
+    adminAuthVersion++;
+    verifiedAdminId = null;
     currentAdmin = null;
     document.getElementById("dashboard").classList.add("hidden");
     document.getElementById("loginPanel").classList.remove("hidden");
