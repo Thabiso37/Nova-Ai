@@ -1026,58 +1026,110 @@ async function loadSellerLocationReviews() {
   const msg = document.getElementById("sellerLocationReviewMessage");
   const box = document.getElementById("sellerLocationReviewRecords");
   msg.textContent = "Loading seller location submissions…";
-  const { data: rows, error } = await sb
-    .from("seller_public_locations")
-    .select("user_id,province,city,suburb,latitude,longitude,public_location_enabled,approval_status,updated_at")
-    .order("updated_at", { ascending: false });
-  if (error) {
-    msg.textContent = "Could not load location submissions: " + error.message;
-    box.innerHTML = "";
-    return;
-  }
-  const ids = [...new Set((rows || []).map(r => r.user_id))];
-  let stores = [];
-  if (ids.length) {
-    const result = await sb.from("seller_stores")
-      .select("user_id,store_name,status,primary_marketplace")
-      .in("user_id", ids);
-    if (result.error) {
-      msg.textContent = "Could not load seller details: " + result.error.message;
-      return;
-    }
-    stores = result.data || [];
-  }
-  const byUser = new Map(stores.map(s => [s.user_id, s]));
-  const pending = (rows || []).filter(r => r.approval_status === "pending");
-  msg.textContent = pending.length + " location(s) awaiting review · " +
-    (rows || []).length + " total location record(s).";
-  box.innerHTML = (rows || []).map(r => {
-    const st = byUser.get(r.user_id) || {};
-    const area = [r.suburb, r.city, r.province].filter(Boolean).join(", ");
-    const canReview = r.approval_status === "pending" &&
-      r.public_location_enabled === true && !!r.province && !!r.city &&
-      st.status === "approved";
-    return '<div class="record">' +
-      '<strong>' + escapeHTML(st.store_name || "Seller") + ' · ' +
-      escapeHTML(String(st.primary_marketplace || "Marketplace").toUpperCase()) + '</strong>' +
-      '<p>Seller account: ' + escapeHTML(st.status || "Not found") + '</p>' +
-      '<p>Public business area: ' + escapeHTML(area || "Area not completed") + '</p>' +
-      '<p>Public-sharing consent: <strong>' + (r.public_location_enabled ? "Enabled" : "Not enabled") + '</strong></p>' +
-      '<p>Approximate public coordinates: <strong>' +
-        (r.latitude != null && r.longitude != null
-          ? escapeHTML(Number(r.latitude).toFixed(2) + ", " + Number(r.longitude).toFixed(2))
-          : "Not submitted") + '</strong></p>' +
-      '<p>Review status: <strong>' + escapeHTML(r.approval_status || "pending") + '</strong></p>' +
-      '<p>Last submitted: ' + escapeHTML(r.updated_at || "Not recorded") + '</p>' +
-      (r.approval_status === "pending"
-        ? '<div class="actions"><button class="approve" type="button" ' + (canReview ? '' : 'disabled title="Seller approval, consent, province and city are required"') + ' onclick="reviewSellerPublicLocation(\\'' + escapeHTML(r.user_id) + '\\',\\'approved\\')">Approve location</button>' +
-          '<button class="reject" type="button" ' + (canReview ? '' : 'disabled title="Seller approval, consent, province and city are required"') + ' onclick="reviewSellerPublicLocation(\\'' + escapeHTML(r.user_id) + '\\',\\'rejected\\')">Reject location</button></div>' +
-          (canReview ? '' : '<p class="muted">Controls are disabled until seller approval, consent, province and city are complete.</p>')
-        : '') +
-      '</div>';
-  }).join("") || "<p class='muted'>No seller location records have been submitted.</p>";
-}
 
+  try {
+    const { data: rows, error } = await sb
+      .from("seller_public_locations")
+      .select("user_id,province,city,suburb,latitude,longitude,public_location_enabled,approval_status,updated_at")
+      .order("updated_at", { ascending: false });
+    if (error) throw error;
+
+    const ids = [...new Set((rows || []).map(r => r.user_id))];
+    let stores = [];
+    if (ids.length) {
+      const result = await sb.from("seller_stores")
+        .select("user_id,store_name,status,primary_marketplace")
+        .in("user_id", ids);
+      if (result.error) throw result.error;
+      stores = result.data || [];
+    }
+
+    const byUser = new Map(stores.map(s => [s.user_id, s]));
+    const pending = (rows || []).filter(r => r.approval_status === "pending");
+    msg.textContent = pending.length + " location(s) awaiting review · " +
+      (rows || []).length + " total location record(s).";
+    box.replaceChildren();
+
+    (rows || []).forEach(r => {
+      const st = byUser.get(r.user_id) || {};
+      const area = [r.suburb, r.city, r.province].filter(Boolean).join(", ");
+      const canReview = r.approval_status === "pending" &&
+        r.public_location_enabled === true && !!r.province && !!r.city &&
+        st.status === "approved";
+
+      const card = document.createElement("div");
+      card.className = "record";
+      const heading = document.createElement("strong");
+      heading.textContent = (st.store_name || "Seller") + " · " +
+        String(st.primary_marketplace || "Marketplace").toUpperCase();
+      card.appendChild(heading);
+
+      const addLine = (label, value, strongValue = false) => {
+        const p = document.createElement("p");
+        p.append(document.createTextNode(label));
+        if (strongValue) {
+          const strong = document.createElement("strong");
+          strong.textContent = value;
+          p.appendChild(strong);
+        } else {
+          p.append(document.createTextNode(value));
+        }
+        card.appendChild(p);
+      };
+
+      addLine("Seller account: ", st.status || "Not found");
+      addLine("Public business area: ", area || "Area not completed");
+      addLine("Public-sharing consent: ", r.public_location_enabled ? "Enabled" : "Not enabled", true);
+      addLine("Approximate public coordinates: ",
+        r.latitude != null && r.longitude != null
+          ? Number(r.latitude).toFixed(2) + ", " + Number(r.longitude).toFixed(2)
+          : "Not submitted", true);
+      addLine("Review status: ", r.approval_status || "pending", true);
+      addLine("Last submitted: ", r.updated_at || "Not recorded");
+
+      if (r.approval_status === "pending") {
+        const actions = document.createElement("div");
+        actions.className = "actions";
+        const approve = document.createElement("button");
+        approve.className = "approve";
+        approve.type = "button";
+        approve.textContent = "Approve location";
+        approve.disabled = !canReview;
+        approve.title = canReview ? "" : "Seller approval, consent, province and city are required";
+        approve.addEventListener("click", () => reviewSellerPublicLocation(r.user_id, "approved"));
+
+        const reject = document.createElement("button");
+        reject.className = "reject";
+        reject.type = "button";
+        reject.textContent = "Reject location";
+        reject.disabled = !canReview;
+        reject.title = canReview ? "" : "Seller approval, consent, province and city are required";
+        reject.addEventListener("click", () => reviewSellerPublicLocation(r.user_id, "rejected"));
+
+        actions.append(approve, reject);
+        card.appendChild(actions);
+        if (!canReview) {
+          const note = document.createElement("p");
+          note.className = "muted";
+          note.textContent = "Controls are disabled until seller approval, consent, province and city are complete.";
+          card.appendChild(note);
+        }
+      }
+      box.appendChild(card);
+    });
+
+    if (!(rows || []).length) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "No seller location records have been submitted.";
+      box.appendChild(empty);
+    }
+  } catch (error) {
+    console.error("NOVAAI seller location review load error:", error);
+    msg.textContent = "Could not load seller location submissions: " + (error?.message || "Unexpected error.");
+    box.replaceChildren();
+  }
+}
 async function reviewSellerPublicLocation(userId, status) {
   if (!currentAdmin || !["approved", "rejected"].includes(status)) return;
   let note = null;
