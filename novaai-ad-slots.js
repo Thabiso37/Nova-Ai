@@ -30,6 +30,10 @@
   };
 
   const liveMessages={
+    cart_banner:[
+      ['Special Offers','Featured Deals','Marketplace Picks'],
+      ['Discover great deals at NOVAAI','Explore offers from local sellers','Find your next favourite today']
+    ],
     shop_footer:[
       ['Find something you will love.','Fresh discoveries from South African sellers.','Your next great find is waiting.'],
       ['Browse fashion, tech and home essentials.','Shop local and discover more in one place.','Explore products across the marketplace.'],
@@ -92,7 +96,9 @@
     if(!slot||slot.dataset.novaLiveReady==='1')return;
     const id=slot.getAttribute('data-nova-ad-slot');
     if(!liveMessages[id])return;
-    const selectors=id==='property_banner'
+    const selectors=id==='cart_banner'
+      ? ['strong','span']
+      : id==='property_banner'
       ? ['.property-promo-copy h2','.property-promo-copy p','.property-promo-link']
       : id==='motors_banner'
       ? ['.motors-hero-copy h1','.motors-hero-copy p','.motors-explore']
@@ -240,7 +246,7 @@
   }
   function bootLiveAds(){
     initHomeCarousel();
-    ['wishlist_banner','property_banner','motors_banner','shop_footer','motors_footer','property_footer'].forEach(id=>initLiveSlot(document.querySelector('[data-nova-ad-slot="'+id+'"]')));
+    ['cart_banner','wishlist_banner','property_banner','motors_banner','shop_footer','motors_footer','property_footer'].forEach(id=>initLiveSlot(document.querySelector('[data-nova-ad-slot="'+id+'"]')));
     loadManagedCampaigns();
     if(!window.__novaAdRefreshTimer)window.__novaAdRefreshTimer=window.setInterval(loadManagedCampaigns,60000);
     if(!window.__novaAdObserver&&document.body){window.__novaAdObserver=new MutationObserver(()=>{const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');if(wishlist)initLiveSlot(wishlist);});window.__novaAdObserver.observe(document.body,{childList:true,subtree:true});}
