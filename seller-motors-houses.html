@@ -341,7 +341,7 @@ body.motors-mode header .head{display:flex;align-items:center;gap:12px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 "use strict";
-const sb = window.supabase.createClient("https://nxplffvklkopwfjaqexo.supabase.co","sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ");
+const sb = window.supabase ? window.supabase.createClient("https://nxplffvklkopwfjaqexo.supabase.co","sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ") : null;
 
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function cash(n){return new Intl.NumberFormat("en-ZA",{style:"currency",currency:"ZAR"}).format(Number(n)||0)}
@@ -360,6 +360,7 @@ async function loadListings(marketType, searchQuery = '') {
   const runId = ++listingLoadRun;
   const grid = document.getElementById('productGrid');
   grid.innerHTML = "<div class='msg' role='status'>Loading listings...</div>";
+  if (!sb) { grid.innerHTML = "<div class='msg' role='status'>Reconnect to the internet to load live marketplace listings.</div>"; return; }
 
   try {
     let data = listingCache[marketType];
