@@ -1551,19 +1551,19 @@ console.log(
 async function loadShared() {
 try {
 
-    const { data: productData, error: productError } = await sb
-      .from("Products")
-      .select("id,name,description,price,category,image_url,images,seller_name,seller_id,status")
-      .eq("status", "approved")
-      .order("created_at", { ascending: false });
+    const [productResult, storeResult] = await Promise.all([
+      sb.from("Products")
+        .select("id,name,description,price,category,image_url,images,seller_name,seller_id,status")
+        .eq("status", "approved")
+        .order("created_at", { ascending: false }),
+      sb.from("seller_stores")
+        .select("user_id,store_name,store_slug,phone,description,status")
+        .eq("status", "approved")
+    ]);
 
+    const { data: productData, error: productError } = productResult;
+    const { data: approvedStores, error: storeError } = storeResult;
     if (productError) throw productError;
-
-    const { data: approvedStores, error: storeError } = await sb
-      .from("seller_stores")
-      .select("user_id,store_name,store_slug,phone,description,status")
-      .eq("status", "approved");
-
     if (storeError) throw storeError;
 
     sellerStoresById=Object.create(null);
