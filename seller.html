@@ -405,6 +405,18 @@ function msg(id, txt, err=false) {
   const el = document.getElementById(id); el.textContent = txt; el.className = "msg " + (err?"error":"success");
 }
 
+function formatSupabaseError(label,error){
+  const parts=[
+    label,
+    "message: "+String(error?.message||"Unknown Supabase error"),
+    "code: "+String(error?.code||"not provided"),
+    "details: "+String(error?.details||"not provided"),
+    "hint: "+String(error?.hint||"not provided")
+  ];
+  console.error("[NOVAAI seller approval query]",{label,message:error?.message,code:error?.code,details:error?.details,hint:error?.hint});
+  return parts.join(" | ");
+}
+
 let updateUserPromise = null;
 let updateUserPromiseKey = undefined;
 
@@ -496,9 +508,9 @@ if (version !== authVersion) return;
 
 if (error) {
 publish.disabled = true;
-publish.textContent = "Approval Check Failed";
-document.getElementById("userMsg").textContent =
-"Store verification failed: " + error.message;
+publish.textContent = "Store Query Error";
+document.getElementById("approvalBox").textContent = "Store lookup failed. This is a data-access error, not an approval decision.";
+document.getElementById("userMsg").textContent = formatSupabaseError("seller_stores SELECT", error);
 return false;
 }
 
@@ -543,8 +555,9 @@ const {data: permissionRows, error: permissionError} = await sb
 if (version !== authVersion) return;
 if (permissionError) {
   publish.disabled = true;
-  publish.textContent = "Permission Check Failed";
-  document.getElementById("userMsg").textContent = "Marketplace permission check failed: " + permissionError.message;
+  publish.textContent = "Permission Query Error";
+  document.getElementById("approvalBox").textContent = "Marketplace permission lookup failed. This is a data-access error, not an approval decision.";
+  document.getElementById("userMsg").textContent = formatSupabaseError("seller_marketplace_permissions SELECT", permissionError);
   return false;
 }
 await loadSellerPublicLocation();
