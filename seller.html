@@ -66,6 +66,11 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
 </section>
 <div id="sellerWorkspace" class="hidden">
   <div class="selected-market-bar"><div><small>Selected seller marketplace</small><strong id="selectedMarketLabel">Retail Seller</strong></div><button class="btn outline" type="button" onclick="returnToMarketplaceSelection()">← Change marketplace</button></div>
+<div class="panel" id="marketplaceAccessStatus">
+  <h3>Marketplace access</h3>
+  <p class="muted">Each marketplace requires separate administrator approval.</p>
+  <div id="marketplaceAccessRecords">Sign in to view marketplace permissions.</div>
+</div>
 
 <!-- STANDARD SELLER PORTAL -->
 <div id="portalStd" class="grid">
@@ -222,6 +227,30 @@ let selectedMarket = null;
 let marketplacePermissions = [];
 function hasMarketplaceAccess(market){ return String(storeData?.status||"").toLowerCase()==="approved" && marketplacePermissions.some(p=>p.marketplace===market && p.status==="approved"); }
 function requireMarketplaceAccess(market){ if(!hasMarketplaceAccess(market)){ msg("sellerMsg","Access denied: your store and this marketplace must both be approved.",true); return false; } return true; }
+function renderMarketplacePermissionStatus(){
+  const box=document.getElementById("marketplaceAccessRecords");
+  if(!box)return;
+  if(!user){box.textContent="Sign in to view marketplace permissions.";return;}
+  const rows=["retail","motors","property"].map(market=>{
+    const record=marketplacePermissions.find(p=>p.marketplace===market);
+    const status=record?.status||"not requested";
+    const action=!record?'<button class="btn outline" type="button" onclick="requestMarketplaceAccess(\''+market+'\')">Request access</button>':"";
+    return '<div class="record"><strong>'+marketplaceLabels[market]+'</strong><p>Status: '+escapeHTML(status.toUpperCase())+'</p>'+action+'</div>';
+  });
+  box.innerHTML=rows.join("");
+}
+async function requestMarketplaceAccess(market){
+  if(!user||!["retail","motors","property"].includes(market))return;
+  if(marketplacePermissions.some(p=>p.marketplace===market))return;
+  const {error}=await sb.from("seller_marketplace_permissions").insert({user_id:user.id,marketplace:market,status:"pending",requested_at:new Date().toISOString()});
+  if(error){document.getElementById("marketplaceAccessRecords").textContent="Request failed: "+error.message;return;}
+  const {data,error:reloadError}=await sb.from("seller_marketplace_permissions").select("marketplace,status").eq("user_id",user.id);
+  if(reloadError){document.getElementById("marketplaceAccessRecords").textContent="Request submitted, but status refresh failed: "+reloadError.message;return;}
+  marketplacePermissions=data||[];
+  renderMarketplacePermissionStatus();
+  renderMarketplaceChoices();
+}
+window.requestMarketplaceAccess=requestMarketplaceAccess;
 function renderMarketplaceChoices(){
   document.querySelectorAll(".market-choice[data-marketplace]").forEach(card=>{
     const market=card.dataset.marketplace;
@@ -362,6 +391,7 @@ if (selectedMarket) {
 }
 document.getElementById("portalStd").classList.toggle("is-authenticated", !!u);
 renderMarketplaceChoices();
+renderMarketplacePermissionStatus();
 
 const publish = document.getElementById("publish");
 
@@ -371,6 +401,7 @@ document.getElementById("userEmail").textContent = u?.email || "";
 
 if (!u) {
 renderMarketplaceChoices();
+renderMarketplacePermissionStatus();
 publish.disabled = true;
 publish.textContent = "Pending Approval";
 document.getElementById("myProductsList").innerHTML = "";
@@ -403,6 +434,7 @@ storeData = data;
 if (!storeData) {
   marketplacePermissions = [];
   renderMarketplaceChoices();
+  renderMarketplacePermissionStatus();
 publish.disabled = true;
 publish.textContent = "Store Registration Required";
 document.getElementById("approvalBox").textContent =
@@ -425,6 +457,7 @@ if (permissionError) {
 }
 marketplacePermissions = permissionRows || [];
 renderMarketplaceChoices();
+renderMarketplacePermissionStatus();
 if (!hasMarketplaceAccess(selectedMarket)) {
   const firstAllowed = ["retail","motors","property"].find(hasMarketplaceAccess);
   if (firstAllowed) {
