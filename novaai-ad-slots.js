@@ -378,6 +378,17 @@
       let originalBoardSize=slot.__novaOriginalBoardSize||null;
       let index=0;
       const show=()=>{
+        // Snapshot the untouched board before replacing any campaign copy or
+        // installing creative media. Those changes can alter intrinsic height.
+        if(!originalBoardSize){
+          const naturalRect=slot.getBoundingClientRect();
+          if(naturalRect.width>0&&naturalRect.height>0){
+            originalBoardSize={width:naturalRect.width,height:naturalRect.height};
+            slot.__novaOriginalBoardSize=originalBoardSize;
+            slot.dataset.novaOriginalWidth=String(naturalRect.width);
+            slot.dataset.novaOriginalHeight=String(naturalRect.height);
+          }
+        }
         const c=campaigns[index];
         const title=String(c.title||'Featured offer').slice(0,100);
         const description=String(c.description||'Discover this featured offer.').slice(0,180);
@@ -417,20 +428,9 @@
           linkNode.dataset.novaAdDestination=href;
           bindCampaignClick(linkNode,id);
         }
-        // Match main's original order: update copy, install campaign media, then
-        // activate the legacy managed-campaign styles. Measure that exact baseline
-        // before enabling the new 75/25 layout flag.
+        // Apply the managed creative only after the original dimensions are saved.
         if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
         slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
-        if(!originalBoardSize){
-          const naturalRect=slot.getBoundingClientRect();
-          if(naturalRect.width>0&&naturalRect.height>0){
-            originalBoardSize={width:naturalRect.width,height:naturalRect.height};
-            slot.__novaOriginalBoardSize=originalBoardSize;
-            slot.dataset.novaOriginalWidth=String(naturalRect.width);
-            slot.dataset.novaOriginalHeight=String(naturalRect.height);
-          }
-        }
         slot.dataset.novaManagedLayout='1';
         if(originalBoardSize){
           slot.style.setProperty('box-sizing','border-box','important');
