@@ -135,6 +135,37 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
 .home-detail-gallery{display:flex;gap:8px;overflow-x:auto;margin-top:10px}
 .home-detail-thumb{width:64px;height:64px;object-fit:cover;border:1px solid #dce3ed;border-radius:8px;cursor:pointer}
 @media(max-width:700px){.home-detail-layout{grid-template-columns:1fr;padding:14px;gap:12px}.home-detail-image{height:290px}.home-detail-back{margin:15px 14px 0}.home-detail-info{padding:8px 2px}}
+/* Property-only image showcase: live listing content inside a phone mockup.
+   The surrounding detail layout, seller information and navigation remain unchanged. */
+.home-property-showcase{position:relative;isolation:isolate;display:grid;place-items:center;width:100%;height:390px;overflow:hidden;border:1px solid #edf0f5;border-radius:12px;background:#dce5ef;cursor:default}
+.home-property-showcase:before{content:"";position:absolute;z-index:-3;inset:-24px;background-image:linear-gradient(115deg,#0b1f3d77,#10284b33),var(--property-photo);background-position:center;background-size:cover;filter:blur(14px) saturate(.82);transform:scale(1.08)}
+.home-property-showcase:after{content:"";position:absolute;z-index:-2;inset:0;background:radial-gradient(ellipse at 50% 45%,#ffffff45,#dce6f3a6 65%,#cbd7e6dd)}
+.home-property-hand{position:absolute;z-index:-1;right:8%;bottom:-16%;width:48%;height:72%;border-radius:48% 44% 12% 12%;background:linear-gradient(110deg,#d8a17d 0%,#f0c3a2 38%,#c88b68 100%);transform:rotate(-13deg);box-shadow:inset 12px 0 20px #8c523c35,0 -8px 24px #152b4725}
+.home-property-hand:before{content:"";position:absolute;left:-18%;top:18%;width:39%;height:55%;border-radius:55% 35% 48% 55%;background:linear-gradient(120deg,#f0c2a0,#c98e6b);transform:rotate(-27deg);box-shadow:inset 5px 0 9px #8c523c25}
+.home-property-hand:after{content:"";position:absolute;right:18%;bottom:-7%;width:76%;height:29%;border-radius:18px 18px 0 0;background:linear-gradient(100deg,#253b59,#10284b)}
+.home-property-phone{position:relative;z-index:2;height:88%;max-height:365px;aspect-ratio:9/19.2;width:auto;max-width:66%;padding:7px;border:2px solid #252a32;border-radius:32px;background:linear-gradient(145deg,#444b55,#080b10 36%,#252b34);box-shadow:0 22px 42px #07152d66,inset 0 0 0 1px #ffffff55;transform:rotate(-7deg);overflow:hidden}
+.home-property-screen{position:relative;width:100%;height:100%;overflow:hidden;border-radius:25px;background:#fff;color:#18243a;display:flex;flex-direction:column}
+.home-property-notch{position:absolute;z-index:3;top:5px;left:50%;width:36%;height:13px;transform:translateX(-50%);border-radius:0 0 10px 10px;background:#101318}
+.home-property-status{height:19px;flex:0 0 19px;padding:3px 10px 0;display:flex;justify-content:space-between;font-size:7px;font-weight:850;color:#25324a}
+.home-property-appbar{height:31px;flex:0 0 31px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-bottom:1px solid #edf0f5;font-size:8px;font-weight:950;color:#174ea6}
+.home-property-appbar span{color:#f0b900}
+.home-property-photo{height:34%;min-height:75px;flex:0 0 34%;overflow:hidden;background:#e7edf5}
+.home-property-photo img{display:block!important;width:100%!important;height:100%!important;max-height:none!important;object-fit:cover!important;border-radius:0!important;cursor:zoom-in}
+.home-property-info{padding:8px 9px 5px;display:flex;flex:1;min-height:0;flex-direction:column;gap:5px}
+.home-property-tag{align-self:flex-start;padding:3px 5px;border-radius:4px;background:#eaf1ff;color:#174ea6;font-size:6px;font-weight:950;letter-spacing:.5px}
+.home-property-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:clamp(8px,2.2vw,11px);line-height:1.22;font-weight:900;color:#1c2c45}
+.home-property-price{font-size:clamp(10px,2.7vw,14px);font-weight:950;color:#10284b}
+.home-property-specs{display:flex;flex-wrap:wrap;gap:4px}
+.home-property-specs span{padding:3px 4px;border-radius:4px;background:#f1f4f8;color:#4b5a70;font-size:6px;font-weight:800}
+.home-property-agent{margin-top:auto;padding:6px;border:1px solid #e8edf4;border-radius:7px;background:#fbfcfe}
+.home-property-agent strong{display:block;font-size:7px;color:#182b48}
+.home-property-agent small{display:block;margin-top:2px;font-size:6px;color:#718096}
+.home-property-whatsapp{margin-top:5px;padding:6px 4px;border-radius:6px;background:#14b86a;color:#fff;text-align:center;font-size:7px;font-weight:950}
+.home-property-nav{height:25px;flex:0 0 25px;display:flex;justify-content:space-around;align-items:center;border-top:1px solid #edf0f5;color:#748197;font-size:6px;font-weight:800}
+.home-property-nav span:first-child{color:#174ea6}
+@media(max-width:700px){.home-property-showcase{height:clamp(330px,96vw,430px)}.home-property-phone{height:90%;max-height:390px;max-width:70%}}
+@media(max-width:360px){.home-property-hand{right:2%;width:55%}.home-property-phone{max-width:72%;height:88%}}
+
 </style>
 
 
@@ -540,7 +571,12 @@ body.product-view-active .nova-hero-carousel{display:none!important}
     const store=detail.seller_store||{};
     const detailSection=document.createElement('section');
     detailSection.className='home-detail';
-    const gallery=photos.length?'<div class="home-detail-main-wrap"><img class="home-detail-image" id="homeDetailMainImage" src="'+escapeHTML(photos[0])+'" alt="'+escapeHTML(detail.name)+'"></div><div class="home-detail-gallery">'+photos.map((url,index)=>'<button type="button" class="home-detail-thumb-button" data-photo-index="'+index+'" aria-label="Show product photo '+(index+1)+'"><img class="home-detail-thumb" src="'+escapeHTML(url)+'" alt=""></button>').join('')+'</div>':'<div class="home-products-message">No product photo supplied by the seller.</div>';
+    const isProperty=["Property For Sale","Property To Rent"].includes(detail.category);
+    const propertyFacts=[["Bedrooms","bed"],["Bathrooms","bath"],["Garages","garage"],["Parking","parking"],["Floor area m2","m²"],["Erf size m2","erf m²"]].map(([label,short])=>{const m=String(detail.description||"").match(new RegExp("(?:^|[\\n;,|])\\s*"+label+"\\s*[:=-]\\s*([^\\n;,|]+)","i"));return m&&m[1]?{label:short,value:m[1].trim()}:null}).filter(Boolean).slice(0,3);
+    const propertySpecs=propertyFacts.map(f=>'<span>'+escapeHTML(f.value)+' '+escapeHTML(f.label)+'</span>').join('');
+    const propertyGallery=photos.length?'<div class="home-property-showcase" style="--property-photo:url(&quot;'+escapeHTML(photos[0])+'&quot;)"><div class="home-property-hand" aria-hidden="true"></div><div class="home-property-phone"><div class="home-property-screen"><div class="home-property-notch"></div><div class="home-property-status"><span>9:41</span><span>● 4G ▰</span></div><div class="home-property-appbar"><strong>NOVA<span>AI</span> MARKET</strong><b>♡</b></div><div class="home-property-photo"><img class="home-detail-image" id="homeDetailMainImage" src="'+escapeHTML(photos[0])+'" alt="'+escapeHTML(detail.name)+'"></div><div class="home-property-info"><span class="home-property-tag">'+escapeHTML(detail.category||"PROPERTY LISTING")+'</span><strong class="home-property-title">'+escapeHTML(detail.name||"Property listing")+'</strong><b class="home-property-price">'+money(detail.price)+'</b><div class="home-property-specs">'+(propertySpecs||'<span>South African property</span>')+'</div><div class="home-property-agent"><strong>Contact Agent</strong><small>'+escapeHTML(store.store_name||detail.seller_name||"Approved seller store")+'</small><div class="home-property-whatsapp">◉ &nbsp; WhatsApp enquiry</div></div></div><div class="home-property-nav"><span>⌂ Home</span><span>⌕ Search</span><span>♡ Saved</span><span>♙ Profile</span></div></div></div></div>':'<div class="home-products-message">No property photo supplied by the seller.</div>';
+    const standardGallery=photos.length?'<div class="home-detail-main-wrap"><img class="home-detail-image" id="homeDetailMainImage" src="'+escapeHTML(photos[0])+'" alt="'+escapeHTML(detail.name)+'"></div>':'<div class="home-products-message">No product photo supplied by the seller.</div>';
+    const gallery=(isProperty?propertyGallery:standardGallery)+(photos.length?'<div class="home-detail-gallery">'+photos.map((url,index)=>'<button type="button" class="home-detail-thumb-button" data-photo-index="'+index+'" aria-label="Show product photo '+(index+1)+'"><img class="home-detail-thumb" src="'+escapeHTML(url)+'" alt=""></button>').join('')+'</div>':'');
     const storeName=store.store_name||detail.seller_name||'Independent seller';
     const storeDescription=store.description||'The seller has not added a store description yet.';
     const detailDescription=["Property For Sale","Property To Rent"].includes(detail.category)?String(detail.description||"").split(String.fromCharCode(10)).filter(line=>!["NOVAAI DETAILS","Property type","Bedrooms","Bathrooms","Parking","Floor area m2","Erf size m2","Location"].some(label=>line.trim().toLowerCase().startsWith(label.toLowerCase()))).join("\n").trim():(detail.description||"The seller has not provided a product description.");
@@ -549,7 +585,7 @@ body.product-view-active .nova-hero-carousel{display:none!important}
     document.querySelector('main').replaceChildren(detailSection);
     const mainImage=document.getElementById('homeDetailMainImage');
     if(mainImage)mainImage.addEventListener('click',()=>showPhoto(mainImage.src,detail.name));
-    detailSection.querySelectorAll('[data-photo-index]').forEach(thumb=>thumb.addEventListener('click',()=>{const selected=photos[Number(thumb.dataset.photoIndex)];if(mainImage&&selected)mainImage.src=selected;}));
+    detailSection.querySelectorAll('[data-photo-index]').forEach(thumb=>thumb.addEventListener('click',()=>{const selected=photos[Number(thumb.dataset.photoIndex)];if(mainImage&&selected)mainImage.src=selected;const showcase=detailSection.querySelector('.home-property-showcase');if(showcase&&selected)showcase.style.setProperty('--property-photo','url("'+selected.replace(/"/g,'')+'")');}));
     ['homeDetailCall','homeDetailWhatsApp'].forEach(id=>{const button=document.getElementById(id);if(button)button.addEventListener('click',()=>{const u=new URL('https://nxplffvklkopwfjaqexo.supabase.co/functions/v1/property-contact-action');u.searchParams.set('listing_id',String(detail.id));u.searchParams.set('action',id==='homeDetailCall'?'call':'whatsapp');window.location.assign(u.toString());});});
      document.getElementById('homeDetailAddCart')?.addEventListener('click',()=>addToCart(detail));
   }
