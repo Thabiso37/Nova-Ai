@@ -324,7 +324,6 @@
         if(descNode)descNode.textContent=description;
         if(linkNode){
           if(id!=='cart_banner')linkNode.textContent=String(c.cta_text||'Explore offer →').slice(0,36);
-          if(id==='motors_banner'&&linkNode.tagName==='BUTTON')linkNode.removeAttribute('onclick');
           if(linkNode.tagName==='A'){linkNode.href=href;linkNode.target='_blank';linkNode.rel='noopener noreferrer sponsored';}
           linkNode.dataset.novaAdClickCampaign=c.campaign_id||'';
           linkNode.dataset.novaAdDestination=href;
