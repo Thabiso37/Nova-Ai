@@ -135,7 +135,7 @@
       },220);
     }
     function stop(){if(timer){clearInterval(timer);timer=null;}}
-    function start(){stop();const delay=id==='motors_banner'?5000:5200;if(!document.hidden&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches)timer=setInterval(()=>show(active+1),delay);}
+    function start(){stop();const delay=id==='motors_banner'?5000:5200;if(!document.hidden&&(!window.matchMedia('(prefers-reduced-motion: reduce)').matches||id==='shop_footer'))timer=setInterval(()=>show(active+1),delay);}
     dots.forEach((dot,i)=>dot.addEventListener('click',()=>{show(i);start();}));
     slot.addEventListener('mouseenter',stop);slot.addEventListener('mouseleave',start);
     slot.addEventListener('focusin',stop);slot.addEventListener('focusout',start);
@@ -205,7 +205,7 @@
         index=(index+1)%campaigns.length;
       };
       show();
-      if(campaigns.length>1&&!document.hidden&&(!window.matchMedia('(prefers-reduced-motion: reduce)').matches||id==='shop_tv'))managedTimers[id]=setInterval(show,5000);
+      if(campaigns.length>1&&!document.hidden&&(!window.matchMedia('(prefers-reduced-motion: reduce)').matches||id==='shop_tv'||id==='shop_footer'))managedTimers[id]=setInterval(show,5000);
     });
   }
   window.addEventListener('novaai:ads:campaigns-ready',event=>{
