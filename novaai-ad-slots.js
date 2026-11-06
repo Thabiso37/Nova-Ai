@@ -441,9 +441,11 @@
             slot.dataset.novaOriginalHeight=String(naturalRect.height);
           }
         };
+        // Match main's legacy managed styling before measuring, but measure
+        // before setCampaignMedia positions the creative host absolutely.
+        slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
         captureOriginalSize();
         if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
-        slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
         slot.dataset.novaManagedLayout='1';
         if(originalBoardSize){
           slot.style.setProperty('box-sizing','border-box','important');
