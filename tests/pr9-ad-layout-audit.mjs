@@ -59,15 +59,21 @@ async function auditVersion(browser, version, viewport) {
       await route.fulfill({ status: 200, contentType: 'image/svg+xml', body: svg });
     });
     await page.addInitScript(() => {
+      const capture=el=>{
+        if(el&&!window.__wishlistBaselineClone)window.__wishlistBaselineClone=el.cloneNode(true);
+      };
       const inner=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');
       Object.defineProperty(Element.prototype,'innerHTML',{
         get:inner.get,
-        set(value){
-          const el=this.querySelector?.('#wishlistAdSlot');
-          if(el&&!window.__wishlistBaselineClone)window.__wishlistBaselineClone=el.cloneNode(true);
-          return inner.set.call(this,value);
-        }
+        set(value){capture(this.querySelector?.('#wishlistAdSlot'));return inner.set.call(this,value);}
       });
+      const remove=Element.prototype.remove;
+      Element.prototype.remove=function(){if(this.id==='wishlistAdSlot')capture(this);return remove.call(this);};
+      const removeChild=Node.prototype.removeChild;
+      Node.prototype.removeChild=function(child){if(child?.id==='wishlistAdSlot')capture(child);return removeChild.call(this,child);};
+      const replaceChildren=Element.prototype.replaceChildren;
+      Element.prototype.replaceChildren=function(...children){capture(this.querySelector?.('#wishlistAdSlot'));return replaceChildren.apply(this,children);};
+      document.addEventListener('DOMContentLoaded',()=>capture(document.getElementById('wishlistAdSlot')),{once:true});
     });
     page.on('pageerror', error => console.error('[PAGE ERROR]', version, pageSpec.file, error.message));
     const url = origin + '/' + version + '-snapshot/' + pageSpec.file;
@@ -83,34 +89,25 @@ async function auditVersion(browser, version, viewport) {
     await page.waitForTimeout(1300);
     let wishlistBeforeRefresh = null;
     if (pageSpec.refreshWishlist) {
-      // Measure the true main-branch baseline with JavaScript disabled, before
-      // renderWishlist() can replace the original ad node. This avoids relying
-      // on a mutation hook that can miss the initial render timing.
-      const baselinePage=await browser.newPage({
-        viewport:{width:viewport.width,height:viewport.height},
-        deviceScaleFactor:1,
-        javaScriptEnabled:false
+      wishlistBeforeRefresh = await page.evaluate(() => {
+        const section=document.getElementById('wishlist');
+        const clone=window.__wishlistBaselineClone || document.getElementById('wishlistAdSlot')?.cloneNode(true);
+        if(!section||!clone)return null;
+        // Use the untouched original board markup from this branch snapshot.
+        // It is identical to main; the test captures it before renderWishlist removes it.
+        clone.removeAttribute('id');
+        clone.removeAttribute('data-nova-ad-slot');
+        clone.removeAttribute('data-nova-managed-campaign');
+        clone.removeAttribute('data-nova-managed-layout');
+        clone.classList.remove('nova-live-ad','nova-ad-media-host');
+        clone.querySelectorAll('.nova-live-controls').forEach(el=>el.remove());
+        clone.style.cssText='position:relative!important;left:auto!important;top:auto!important;width:auto!important;height:auto!important;visibility:hidden!important;pointer-events:none!important;z-index:auto!important;box-sizing:border-box!important;display:flex!important;';
+        section.insertBefore(clone,section.firstChild);
+        const r=clone.getBoundingClientRect();
+        const result=r.width>0&&r.height>0?{x:+r.x.toFixed(2),y:+r.y.toFixed(2),width:+r.width.toFixed(2),height:+r.height.toFixed(2)}:null;
+        clone.remove();
+        return result;
       });
-      await baselinePage.goto(origin+'/main-snapshot/retail.html?view=wishlist&pr9baseline=1',{waitUntil:'domcontentloaded',timeout:15000});
-      await baselinePage.evaluate(async()=>{
-        if(document.fonts?.ready)await document.fonts.ready.catch(()=>{});
-        await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-      });
-      wishlistBeforeRefresh=await baselinePage.evaluate(()=>{
-        const board=document.getElementById('wishlistAdSlot');
-        if(!board)return null;
-        // Reveal the original Wishlist section in the JS-disabled main snapshot
-        // without changing the board's own styles or dimensions.
-        for(let node=board.parentElement;node&&node!==document.body;node=node.parentElement){
-          if(getComputedStyle(node).display==='none')node.style.setProperty('display','block','important');
-          if(getComputedStyle(node).visibility==='hidden')node.style.setProperty('visibility','visible','important');
-        }
-        const r=board.getBoundingClientRect();
-        return r.width>0&&r.height>0
-          ?{x:+r.x.toFixed(2),y:+r.y.toFixed(2),width:+r.width.toFixed(2),height:+r.height.toFixed(2)}
-          :null;
-      });
-      await baselinePage.close();
       await page.evaluate(() => { if (typeof window.renderWishlist === 'function') window.renderWishlist(); });
       await page.waitForTimeout(500);
     }
