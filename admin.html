@@ -297,9 +297,10 @@ button { cursor:pointer; }
  .workspace-heading{margin:0 0 18px;padding:4px 2px 12px;border-bottom:1px solid var(--line)}
 .workspace-heading .workspace-eyebrow{display:block;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:5px}
 .workspace-heading h1{margin:0;color:var(--blue-dark);font-size:clamp(21px,2.4vw,28px);letter-spacing:-.5px}
-.main-content>.workspace-panel{display:none}
-.main-content>.workspace-panel.workspace-active{display:block}
-.main-content>.workspace-panel#sellerLocationReviews.workspace-related-active{display:block}
+.workspace-host{display:block;min-width:0}
+.workspace-host>.workspace-panel[hidden]{display:none!important}
+.workspace-host>.workspace-panel{display:block}
+.workspace-host>.workspace-panel.workspace-active{display:block}
 
 .panel h2 {
   margin:0 0 8px;
@@ -658,6 +659,7 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
 <a href="#marketplacePermissions"><span class="nav-icon">♙</span>Seller Management</a>
 <a href="#customerManagement"><span class="nav-icon">♧</span>Customer Management</a>
 <a href="#retailManagement"><span class="nav-icon">▦</span>Retail Management</a>
+<a href="#productsSection"><span class="nav-icon">▤</span>Products & Listings</a>
 <a href="#motorsManagement"><span class="nav-icon">▰</span>Motors Management</a>
 <a href="#propertyManagement"><span class="nav-icon">⌂</span>Property Management</a>
 <a href="#advertisementManagement"><span class="nav-icon">▣</span>Advertising Management</a>
@@ -713,11 +715,11 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
       <div class="module-grid">
         <a class="module" href="#marketplacePermissions"><div class="module-icon">♙</div><h3>Seller Management</h3><p>Review marketplace applications and public location submissions.</p></a>
         <div class="module disabled"><div class="module-icon">♧</div><h3>Customer Management</h3><p>Customer account administration is not connected yet.</p></div>
-        <a class="module" href="#productsSection"><div class="module-icon">▦</div><h3>Retail Management</h3><p>Moderate existing listings through the shared product queue.</p></a>
+        <a class="module" href="#retailManagement"><div class="module-icon">▦</div><h3>Retail Management</h3><p>Moderate existing listings through the shared product queue.</p></a>
         <a class="module" href="#motorsManagement"><div class="module-icon">▰</div><h3>Motors Management</h3><p>Marketplace-specific controls are not exposed separately.</p></a>
         <a class="module" href="#propertyManagement"><div class="module-icon">⌂</div><h3>Property Management</h3><p>Marketplace-specific controls are not exposed separately.</p></a>
         <a class="module" href="#advertisementManagement"><div class="module-icon">▣</div><h3>Advertising Management</h3><p>Manage campaigns across all nine existing boards.</p></a>
-        <a class="module" href="#paymentCentre"><div class="module-icon">▤</div><h3>Orders & Fulfilment</h3><p>Review existing order and fulfilment records.</p></a>
+        <a class="module" href="#ordersFulfilment"><div class="module-icon">▤</div><h3>Orders & Fulfilment</h3><p>Review existing order and fulfilment records.</p></a>
         <a class="module" href="#paymentCentre"><div class="module-icon">◈</div><h3>Payments & Settlements</h3><p>Review recorded statuses and calculated entitlements.</p></a>
         <a class="module" href="#reportsAnalytics"><div class="module-icon">▥</div><h3>Reports & Analytics</h3><p>Read-only live totals from loaded marketplace data.</p></a>
         <a class="module" href="#adminSettings"><div class="module-icon">⚙</div><h3>Settings</h3><p>View the current secure administrator session.</p></a>
@@ -1864,17 +1866,59 @@ const ADMIN_WORKSPACES = {
   adminSettings: { title: "Admin Settings", sections: ["adminSettings"] }
 };
 
+let adminWorkspaceHost = null;
+let adminWorkspaceNavigationReady = false;
+
+function prepareAdminWorkspaceHost() {
+  const main = document.querySelector(".main-content");
+  if (!main) return null;
+
+  adminWorkspaceHost = document.getElementById("adminWorkspaceHost");
+  if (!adminWorkspaceHost) {
+    adminWorkspaceHost = document.createElement("div");
+    adminWorkspaceHost.id = "adminWorkspaceHost";
+    adminWorkspaceHost.className = "workspace-host";
+    const firstWorkspace = Array.from(main.children).find(node =>
+      node.tagName === "SECTION" && node.id
+    );
+    if (firstWorkspace) main.insertBefore(adminWorkspaceHost, firstWorkspace);
+    else main.appendChild(adminWorkspaceHost);
+  }
+
+  // Move every top-level management section into one dedicated host.
+  // The heading remains outside this host and is therefore always visible.
+  Array.from(main.children).forEach(node => {
+    if (node !== adminWorkspaceHost && node.tagName === "SECTION" && node.id) {
+      adminWorkspaceHost.appendChild(node);
+    }
+  });
+
+  adminWorkspaceHost.querySelectorAll(":scope > section[id]").forEach(section => {
+    section.classList.add("workspace-panel");
+    section.hidden = true;
+    section.setAttribute("aria-hidden", "true");
+    section.style.setProperty("display", "none", "important");
+  });
+  return adminWorkspaceHost;
+}
+
 function showAdminWorkspace(workspaceId, updateHash = false) {
   const selected = ADMIN_WORKSPACES[workspaceId] ? workspaceId : "overview";
   const workspace = ADMIN_WORKSPACES[selected];
-  const main = document.querySelector(".main-content");
-  if (!main) return;
+  const host = adminWorkspaceHost || prepareAdminWorkspaceHost();
+  if (!host) return;
 
-  main.querySelectorAll(":scope > section").forEach(section => {
-    section.classList.add("workspace-panel");
-    section.classList.remove("workspace-active", "workspace-related-active");
-    if (workspace.sections.includes(section.id)) {
-      section.classList.add(section.id === "sellerLocationReviews" ? "workspace-related-active" : "workspace-active");
+  // Enforce single-workspace visibility in the DOM, not just by CSS classes.
+  host.querySelectorAll(":scope > section.workspace-panel").forEach(section => {
+    const visible = workspace.sections.includes(section.id);
+    section.hidden = !visible;
+    section.setAttribute("aria-hidden", String(!visible));
+    if (visible) {
+      section.style.removeProperty("display");
+      section.classList.add("workspace-active");
+    } else {
+      section.style.setProperty("display", "none", "important");
+      section.classList.remove("workspace-active");
     }
   });
 
@@ -1888,32 +1932,44 @@ function showAdminWorkspace(workspaceId, updateHash = false) {
     else link.removeAttribute("aria-current");
   });
 
-  if (updateHash && location.hash !== "#" + selected) history.pushState(null, "", "#" + selected);
+  if (updateHash && location.hash !== "#" + selected) {
+    history.pushState({ adminWorkspace: selected }, "", "#" + selected);
+  }
   closeAdminDrawer();
 }
 
+function resolveAdminWorkspaceFromHash() {
+  let id = "overview";
+  try { id = decodeURIComponent(location.hash.slice(1) || "overview"); } catch (_) {}
+  return ADMIN_WORKSPACES[id] ? id : "overview";
+}
+
 function initializeAdminWorkspaces() {
-  const main = document.querySelector(".main-content");
-  if (!main) return;
-  main.querySelectorAll(":scope > section").forEach(section => section.classList.add("workspace-panel"));
+  if (!prepareAdminWorkspaceHost()) return;
 
-  document.querySelectorAll('a[href^="#"]').forEach(link => {
-    const targetId = link.getAttribute("href").slice(1);
-    if (!ADMIN_WORKSPACES[targetId]) return;
-    link.addEventListener("click", event => {
+  if (!adminWorkspaceNavigationReady) {
+    // Capture-phase delegation prevents native anchor scrolling for every
+    // internal shortcut, sidebar link, and legacy link to a known workspace.
+    document.addEventListener("click", event => {
+      const link = event.target.closest && event.target.closest('a[href^="#"]');
+      if (!link) return;
+      const targetId = link.getAttribute("href").slice(1);
+      if (!ADMIN_WORKSPACES[targetId]) return;
       event.preventDefault();
+      event.stopPropagation();
       showAdminWorkspace(targetId, true);
+    }, true);
+
+    window.addEventListener("hashchange", () => {
+      showAdminWorkspace(resolveAdminWorkspaceFromHash(), false);
     });
-  });
+    window.addEventListener("popstate", () => {
+      showAdminWorkspace(resolveAdminWorkspaceFromHash(), false);
+    });
+    adminWorkspaceNavigationReady = true;
+  }
 
-  window.addEventListener("hashchange", () => {
-    showAdminWorkspace(decodeURIComponent(location.hash.slice(1) || "overview"), false);
-  });
-  window.addEventListener("popstate", () => {
-    showAdminWorkspace(decodeURIComponent(location.hash.slice(1) || "overview"), false);
-  });
-
-  showAdminWorkspace(decodeURIComponent(location.hash.slice(1) || "overview"), false);
+  showAdminWorkspace(resolveAdminWorkspaceFromHash(), false);
 }
 
 function closeAdminDrawer(){document.querySelector(".sidebar")?.classList.remove("mobile-open");document.getElementById("sidebarBackdrop")?.classList.remove("open");document.getElementById("mobileMenuToggle")?.setAttribute("aria-expanded","false");}
