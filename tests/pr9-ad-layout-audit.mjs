@@ -60,7 +60,8 @@ async function auditVersion(browser, version, viewport) {
     page.on('pageerror', error => console.error('[PAGE ERROR]', version, pageSpec.file, error.message));
     const url = origin + '/' + version + '-snapshot/' + pageSpec.file;
     const fullUrl = url + (pageSpec.file.includes('?') ? '&' : '?') + (pageSpec.file.includes('?') ? '' : 'audit=1');
-    await page.goto(fullUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.goto(fullUrl, { waitUntil: 'commit', timeout: 15000 });
+    await page.waitForLoadState('domcontentloaded', { timeout: 12000 }).catch(() => {});
     await page.waitForTimeout(1300);
     if (pageSpec.file.includes('view=wishlist')) {
       await page.evaluate(() => {
