@@ -45,6 +45,20 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
 #portalStd.is-authenticated>.panel:nth-child(2){display:block}
 #portalStd:not(.is-authenticated){grid-template-columns:minmax(0,520px);justify-content:center}
 @media(max-width:760px){.market-choice-grid{grid-template-columns:1fr}.market-choice{padding:17px}.selected-market-bar{align-items:flex-start}.picker-wrap{padding:0 14px}#sellerWorkspace{padding:0 14px 25px}}
+
+/* Property seller listings: compact cards matching the marketplace Recently added layout */
+#myProductsList .seller-property-grid{display:grid;grid-template-columns:repeat(2,minmax(0,180px));gap:12px;align-items:start}
+#myProductsList .seller-property-card{width:100%;max-width:180px;height:260px;display:flex;flex-direction:column;box-sizing:border-box;overflow:hidden;background:#fff;border:1px solid #e1e6ee;border-radius:12px;padding:8px;box-shadow:0 2px 7px rgba(16,40,75,.06)}
+#myProductsList .seller-property-card img{display:block;width:100%;height:120px;min-height:120px;object-fit:cover;border-radius:8px;background:#edf1f7}
+#myProductsList .seller-property-card .property-card-image-empty{width:100%;height:120px;min-height:120px;display:grid;place-items:center;background:#edf1f7;color:#718096;border-radius:8px;font-size:11px}
+#myProductsList .seller-property-card .property-card-name{font-size:12px;line-height:1.3;font-weight:800;color:#10284b;margin:7px 0 3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#myProductsList .seller-property-card .property-card-price{font-size:14px;font-weight:900;color:#174ea6}
+#myProductsList .seller-property-card .property-card-meta{font-size:10px;color:#64748b;line-height:1.3;margin-top:2px}
+#myProductsList .seller-property-card .property-card-status{font-size:9px;font-weight:800;margin-top:5px}
+#myProductsList .seller-property-card .property-card-actions{display:flex;gap:5px;margin-top:auto;padding-top:7px}
+#myProductsList .seller-property-card .property-card-actions .btn{flex:1;min-width:0;padding:6px 3px;font-size:10px;white-space:nowrap}
+@media(max-width:390px){#myProductsList .seller-property-grid{gap:8px;grid-template-columns:repeat(2,minmax(0,1fr))}#myProductsList .seller-property-card{max-width:none}}
+
 </style>
 </head>
 <body>
@@ -873,7 +887,7 @@ async function loadMyProducts() {
   const renderGroup = (heading, rows) => `
     <section style="margin:16px 0;padding:12px;border:1px solid var(--line);border-radius:10px;">
       <h3>${heading} <small style="color:#64748b">(${rows.length})</small></h3>
-      ${rows.length ? rows.map(p => renderSellerListing(p)).join("") : '<p class="msg">No listings in this marketplace yet.</p>'}
+      ${rows.length ? (primary==="property" ? '<div class="seller-property-grid">' + rows.map(p => renderSellerListing(p)).join("") + '</div>' : rows.map(p => renderSellerListing(p)).join("")) : '<p class="msg">No listings in this marketplace yet.</p>'}
     </section>`;
   list.innerHTML = renderGroup(marketplaceLabels[primary] + " Listings", primaryListings);
 }
@@ -881,6 +895,21 @@ function renderSellerListing(p) {
     const image = p.image_url || (Array.isArray(p.images) ? p.images[0] : "");
     const status = p.status || "pending";
     const statusColors = {pending:"#d18a24",approved:"#16a36a",rejected:"#d64c59",hidden:"#6579dc"};
+    if (propertyCategories.includes(p.category)) {
+      return `
+        <article class="seller-property-card">
+          ${image ? `<img loading="lazy" decoding="async" src="${escapeHTML(image)}" alt="${escapeHTML(p.name || "Property listing")}">` : '<div class="property-card-image-empty">Property photo</div>'}
+          <div class="property-card-name">${escapeHTML(p.name)}</div>
+          <div class="property-card-price">R${Number(p.price || 0).toLocaleString("en-ZA",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+          <div class="property-card-meta">${escapeHTML(p.category || "")}</div>
+          <div class="property-card-status" style="color:${statusColors[status] || "#aaa"}">STATUS: ${escapeHTML(status.toUpperCase())}</div>
+          ${status === "rejected" && p.rejection_reason ? `<div class="property-card-meta" style="color:#d64c59">${escapeHTML(p.rejection_reason)}</div>` : ""}
+          <div class="property-card-actions">
+            <button class="btn outline" type="button" onclick="editProduct(${Number(p.id)})">Edit</button>
+            <button class="btn outline" type="button" style="color:#b52828" onclick="deleteProduct(${Number(p.id)})">Delete</button>
+          </div>
+        </article>`;
+    }
     return `
       <div style="padding:12px;border-bottom:1px solid var(--line);">
         <div style="display:flex;gap:10px;align-items:center;">
