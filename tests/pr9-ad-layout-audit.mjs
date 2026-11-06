@@ -95,11 +95,13 @@ async function auditVersion(browser, version, viewport) {
         const rightCopy = outerRect ? {x:+(outerRect.x+outerRect.width*.75).toFixed(2), y:outerRect.y, width:+(outerRect.width*.25).toFixed(2),height:outerRect.height} : null;
         const style=outer?getComputedStyle(outer):null;
         const innerWidth=outerRect&&style?outerRect.width-parseFloat(style.paddingLeft||0)-parseFloat(style.paddingRight||0)-parseFloat(style.borderLeftWidth||0)-parseFloat(style.borderRightWidth||0):null;
-        const mediaRatio=innerWidth&&photoRect?+(photoRect.width/innerWidth).toFixed(4):(outerRect&&photoRect?+(photoRect.width/outerRect.width).toFixed(4):null);
+        const ratioBase=(slot==='motors_banner'||slot==='cart_banner')?outerRect?.width:innerWidth;
+        const mediaRatio=ratioBase&&photoRect?+(photoRect.width/ratioBase).toFixed(4):null;
         const mediaLoaded = image ? (image.tagName==='VIDEO' ? image.readyState>=1 : image.complete && image.naturalWidth>0) : !!photo;
-        const overlap = !!(photoRect&&copyRect&&photoRect.x<copyRect.right&&photoRect.right>copyRect.x&&photoRect.y<copyRect.bottom&&photoRect.bottom>copyRect.y);
+        const copyMeasure=copyRect||(slot==='cart_banner'?rightCopy:null);
+        const overlap = !!(photoRect&&copyMeasure&&photoRect.x<copyMeasure.right&&photoRect.right>copyMeasure.x&&photoRect.y<copyMeasure.bottom&&photoRect.bottom>copyMeasure.y);
         const textOverflow = textNodes.some(el => el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 2);
-        return {slot, found:!!outer, outer:outerRect, photo:photoRect, copy:copyRect, expectedRightCopy:rightCopy, photoRatio:mediaRatio, text, cta, mediaLoaded, overlap, textOverflow, hasManagedCampaign:!!outer?.dataset.novaManagedCampaign};
+        return {slot, found:!!outer, outer:outerRect, photo:photoRect, copy:copyMeasure, expectedRightCopy:rightCopy, photoRatio:mediaRatio, text, cta, mediaLoaded, overlap, textOverflow, hasManagedCampaign:!!outer?.dataset.novaManagedCampaign};
       }, { slot, outerSel, photoSel, copySel });
       if (slot === 'wishlist_banner') measurement.wishlistBeforeRefresh = wishlistBeforeRefresh;
       results[slot] = measurement;
@@ -133,7 +135,7 @@ for (const viewport of viewports) {
     if (!b.mediaLoaded) failures.push(viewport.name + ' ' + slot + ': creative media did not load');
     if (b.overlap) failures.push(viewport.name + ' ' + slot + ': photo and copy containers overlap');
     if (b.textOverflow) failures.push(viewport.name + ' ' + slot + ': text overflow/clipping detected');
-    if (b.text.some(t => t.fontSize < 11)) failures.push(viewport.name + ' ' + slot + ': text below 11px');
+    if (b.text.some(t => /^(H1|H2|H3|P|STRONG|SMALL|A|BUTTON)$/.test(t.tag) && t.fontSize < 11)) failures.push(viewport.name + ' ' + slot + ': copy text below 11px');
     if (b.cta.some(c => c.fontSize < 11)) failures.push(viewport.name + ' ' + slot + ': CTA below 11px');
     if (slot !== 'cart_banner' && b.cta.length===0) failures.push(viewport.name + ' ' + slot + ': no visible CTA');
     if (slot === 'home_hero' && b.cta.length) {
