@@ -12,6 +12,7 @@ permissions:
 jobs:
   chromium-layout-audit:
     runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.56.1-noble
     timeout-minutes: 20
     steps:
       - name: Check out current main
@@ -34,12 +35,11 @@ jobs:
       - name: Install Playwright and Chromium
         run: |
           npm init -y
-          npm install --no-save playwright
-          npx playwright install --with-deps chromium
+          npm install --no-save playwright@1.56.1 http-server@14.1.1
 
       - name: Serve both real page snapshots
         run: |
-          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/novaai-http.log 2>&1 &
+          npx http-server . -p 4173 -a 0.0.0.0 -s > /tmp/novaai-http.log 2>&1 &
           echo $! > /tmp/novaai-http.pid
           for i in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
