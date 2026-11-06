@@ -376,6 +376,18 @@
         return;
       }
       let originalBoardSize=slot.__novaOriginalBoardSize||null;
+      // Capture the unmodified, visible board box BEFORE campaign copy, media,
+      // legacy managed styles, or the 75/25 layout can affect its intrinsic size.
+      // Capturing later made content-dependent heights become the new baseline.
+      if(!originalBoardSize){
+        const naturalRect=slot.getBoundingClientRect();
+        if(naturalRect.width>0&&naturalRect.height>0){
+          originalBoardSize={width:naturalRect.width,height:naturalRect.height};
+          slot.__novaOriginalBoardSize=originalBoardSize;
+          slot.dataset.novaOriginalWidth=String(naturalRect.width);
+          slot.dataset.novaOriginalHeight=String(naturalRect.height);
+        }
+      }
       let index=0;
       const show=()=>{
         // Wishlist's original node is removed by main's renderer before managed
