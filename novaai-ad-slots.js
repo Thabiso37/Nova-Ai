@@ -92,16 +92,6 @@
       "https://aaclinic.shop/assets/engine-parts-BlXfXwfD.jpg"
     ]
   };
-  function captureNaturalBoardSize(slot){
-    if(!slot||slot.__novaOriginalBoardSize)return;
-    const rect=slot.getBoundingClientRect();
-    if(rect.width>0&&rect.height>0){
-      const size={width:rect.width,height:rect.height};
-      slot.__novaOriginalBoardSize=size;
-      slot.dataset.novaOriginalWidth=String(rect.width);
-      slot.dataset.novaOriginalHeight=String(rect.height);
-    }
-  }
   function initLiveSlot(slot){
     if(!slot||slot.dataset.novaLiveReady==='1')return;
     const id=slot.getAttribute('data-nova-ad-slot');
@@ -386,18 +376,6 @@
         return;
       }
       let originalBoardSize=slot.__novaOriginalBoardSize||null;
-      // Capture the unmodified, visible board box BEFORE campaign copy, media,
-      // legacy managed styles, or the 75/25 layout can affect its intrinsic size.
-      // Capturing later made content-dependent heights become the new baseline.
-      if(!originalBoardSize){
-        const naturalRect=slot.getBoundingClientRect();
-        if(naturalRect.width>0&&naturalRect.height>0){
-          originalBoardSize={width:naturalRect.width,height:naturalRect.height};
-          slot.__novaOriginalBoardSize=originalBoardSize;
-          slot.dataset.novaOriginalWidth=String(naturalRect.width);
-          slot.dataset.novaOriginalHeight=String(naturalRect.height);
-        }
-      }
       let index=0;
       const show=()=>{
         // Wishlist's original node is removed by main's renderer before managed
@@ -541,11 +519,6 @@
   }
   function bootLiveAds(){
     initHomeCarousel();
-    // Save each currently visible board's real, pre-rotation box before the
-    // legacy live-message carousel can change copy length and intrinsic height.
-    document.querySelectorAll('[data-nova-ad-slot]').forEach(slot=>{
-      if(!slot.closest('[hidden]'))captureNaturalBoardSize(slot);
-    });
     ['cart_banner','property_banner','motors_banner','shop_footer','motors_footer','property_footer'].forEach(id=>initLiveSlot(document.querySelector('[data-nova-ad-slot="'+id+'"]')));
     loadManagedCampaigns().finally(()=>{
       window.__novaManagedCampaignsReady=true;
