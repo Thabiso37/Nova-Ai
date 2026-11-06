@@ -201,12 +201,12 @@ async function verifyCampaignRotation(browser) {
   });
   await page.goto(origin+'/pr-snapshot/index.html?audit=rotation',{waitUntil:'domcontentloaded',timeout:15000});
   await page.waitForFunction(()=>!!document.querySelector('#novaHeroCarousel')?.dataset.novaCampaignCode,null,{timeout:15000});
-  const first=await page.locator('#novaHeroCarousel').getAttribute('data-novaCampaignCode');
+  const first=await page.locator('#novaHeroCarousel').evaluate(el=>el.dataset.novaCampaignCode);
   await page.waitForFunction(previous=>{
     const slot=document.querySelector('#novaHeroCarousel');
     return !!slot?.dataset.novaCampaignCode&&slot.dataset.novaCampaignCode!==previous;
   },first,{timeout:8000});
-  const second=await page.locator('#novaHeroCarousel').getAttribute('data-novaCampaignCode');
+  const second=await page.locator('#novaHeroCarousel').evaluate(el=>el.dataset.novaCampaignCode);
   const link=page.locator('.nova-hero-copy a').first();
   const href=await link.getAttribute('href');
   const destination=await link.getAttribute('data-nova-ad-destination');
