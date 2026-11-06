@@ -473,12 +473,12 @@
       // board dimensions. Otherwise an image/font finishing later can change the
       // "original" height after the managed creative has already frozen it.
       if(document.readyState!=='complete'){
-        await new Promise(resolve=>window.addEventListener('load',resolve,{once:true}));
+        await Promise.race([new Promise(resolve=>window.addEventListener('load',resolve,{once:true})),new Promise(resolve=>setTimeout(resolve,4000))]);
       }
       if(document.fonts&&document.fonts.ready)await document.fonts.ready.catch(()=>{});
       await Promise.all(Array.from(document.images).map(img=>{
         if(img.complete)return img.decode?img.decode().catch(()=>{}):Promise.resolve();
-        return new Promise(resolve=>{img.addEventListener('load',resolve,{once:true});img.addEventListener('error',resolve,{once:true});});
+        return Promise.race([new Promise(resolve=>{img.addEventListener('load',resolve,{once:true});img.addEventListener('error',resolve,{once:true});}),new Promise(resolve=>setTimeout(resolve,4000))]);
       }));
       await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
       api.announceCampaigns(Array.isArray(campaigns)?campaigns:[]);
