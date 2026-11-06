@@ -220,19 +220,23 @@
   function setCampaignMedia(imageNode,slot,campaign,id,mediaUrl){
     const isVideo=campaign.creative_type==='video';
     let host=imageNode||slot;
-    // Existing property artwork is an IMG; use its responsive photo frame as
-    // the media host so the uploaded creative fills the same visible area.
+    // Use the existing photo frame for property; keep all other board media
+    // hosts in their original layout/position rather than converting them
+    // into normal-flow elements.
     if(imageNode&&imageNode.tagName==='IMG')host=imageNode.parentElement||slot;
     if(!host)return;
-    if(!host.__novaAdMediaFallback)host.__novaAdMediaFallback={position:host.style.position,overflow:host.style.overflow,hadClass:host.classList.contains('nova-ad-media-host')};
+    if(!host.__novaAdMediaFallback)host.__novaAdMediaFallback={
+      style:host.getAttribute('style'),
+      ariaHidden:host.getAttribute('aria-hidden'),
+      hadClass:host.classList.contains('nova-ad-media-host')
+    };
     host.classList.add('nova-ad-media-host');
-    host.style.position='relative';
-    host.style.overflow='hidden';
-    // Hide the old static property photo while a managed creative is active.
+    const hostCss=getComputedStyle(host);
+    if(hostCss.position==='static')host.style.position='relative';
+    if(hostCss.overflowX==='visible'&&hostCss.overflowY==='visible')host.style.overflow='hidden';
+    if(host.hasAttribute('aria-hidden'))host.setAttribute('aria-hidden','false');
     if(imageNode&&imageNode.tagName==='IMG')imageNode.style.display='none';
 
-    // Keep the campaign media as a real HTML element on every board. The
-    // media occupies the host; existing title/description/CTA stay above it.
     let image=host.querySelector(':scope > img[data-nova-ad-image]');
     let video=host.querySelector(':scope > video[data-nova-ad-video]');
     if(isVideo){
@@ -264,8 +268,20 @@
       image.style.display='block';
       if(image.src!==mediaUrl)image.src=mediaUrl;
     }
-    // Keep existing copy and CTA above the media through the scoped CSS rule.
-    if(id==='home_hero')host.dataset.novaManagedImage='1';
+
+    // Dedicated image areas keep copy/CTAs from sitting over the uploaded
+    // creative on boards whose original markup had no separate art column.
+    const media=isVideo?video:image;
+    if(id==='motors_banner'){
+      media.style.cssText='position:absolute;top:0;right:0;bottom:0;left:58%;width:42%;height:100%;object-fit:cover;display:block;z-index:0;pointer-events:none';
+    }else if(id==='cart_banner'){
+      media.style.cssText='position:absolute;top:6px;bottom:6px;left:8px;width:54px;height:calc(100% - 12px);object-fit:cover;display:block;z-index:0;pointer-events:none';
+    }else if(['shop_footer','motors_footer','property_footer','wishlist_banner'].includes(id)&&host.classList.contains('nova-footer-ad-image')){
+      host.style.left='52%';host.style.right='0';host.style.top='0';host.style.bottom='0';
+      host.style.width='48%';host.style.zIndex='0';host.style.opacity='1';
+      media.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:0;pointer-events:none';
+    }
+    host.dataset.novaManagedImage='1';
   }
   function captureAdFallback(slot,id){
     if(slot.__novaAdFallback)return;
@@ -435,6 +451,7 @@
   const style=document.createElement('style');
   style.textContent='.nova-hero-art[data-nova-managed-image="1"] .hero-art-circle,.nova-hero-art[data-nova-managed-image="1"] .hero-art-card{display:none!important}.nova-live-ad{position:relative;isolation:isolate;overflow:hidden}.nova-live-ad:before{content:"";position:absolute;inset:-45%;z-index:0;pointer-events:none;background:linear-gradient(110deg,transparent 38%,rgba(255,255,255,.13) 48%,transparent 58%);transform:translateX(-65%) rotate(8deg);animation:novaAdShimmer 6s ease-in-out infinite}.nova-live-ad:after{content:"";position:absolute;z-index:0;right:-35px;top:-55px;width:145px;height:145px;border:1px solid rgba(255,255,255,.2);border-radius:50%;box-shadow:0 0 0 18px rgba(255,255,255,.035),0 0 0 38px rgba(255,255,255,.025);pointer-events:none;animation:novaAdOrbit 9s linear infinite}.nova-live-ad>*{position:relative;z-index:1}.nova-hero-art{background-size:cover!important;background-position:center!important}.nova-hero-art .hero-art-circle{opacity:.16}.nova-hero-art .hero-art-card{background:rgba(16,40,75,.88);backdrop-filter:blur(3px)}.nova-live-ad .nova-live-controls{position:absolute;z-index:5;right:12px;bottom:9px;display:flex;align-items:center;gap:9px}.nova-live-onair{font-size:7px;font-weight:900;letter-spacing:1px;color:rgba(255,255,255,.82)}.nova-live-onair:before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:#f5b900;margin-right:5px;box-shadow:0 0 8px #f5b900;animation:novaAdPulse 1.4s infinite}.nova-live-dots{display:flex;gap:5px}.nova-live-dots button{width:6px;height:6px;padding:0;border:0;border-radius:9px;background:#ffffff75}.nova-live-dots button[aria-current="true"]{width:18px;background:#f5b900}.nova-live-changing .property-promo-copy,.nova-live-changing strong,.nova-live-changing small{opacity:.25;transition:opacity .22s ease}@keyframes novaAdShimmer{0%,15%{transform:translateX(-65%) rotate(8deg)}65%,100%{transform:translateX(65%) rotate(8deg)}}@keyframes novaAdOrbit{to{transform:rotate(360deg)}}@keyframes novaAdPulse{50%{opacity:.45;box-shadow:0 0 0 6px rgba(245,185,0,.1)}}@media(prefers-reduced-motion:reduce){.nova-live-ad:before,.nova-live-ad:after,.nova-live-onair:before{animation:none!important}}';
   style.textContent += '.nova-ad-media-host{position:relative;overflow:hidden}.nova-ad-media-host>:not([data-nova-ad-image]):not([data-nova-ad-video]){position:relative;z-index:1}';
+\n  style.textContent += '[data-nova-ad-slot="motors_banner"][data-nova-managed-campaign] .motors-hero-copy{position:relative;z-index:1;max-width:54%}[data-nova-ad-slot="motors_banner"][data-nova-managed-campaign] .motors-avatar{display:none}[data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;min-height:58px;padding-left:70px;text-align:left}[data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]>strong,[data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]>span{position:relative;z-index:1}[data-nova-ad-slot="shop_tv"][data-nova-managed-campaign] .shop-tv-art[data-nova-managed-image="1"]::before,[data-nova-ad-slot="shop_tv"][data-nova-managed-campaign] .shop-tv-art[data-nova-managed-image="1"]::after{display:none!important}[data-nova-ad-slot="shop_footer"][data-nova-managed-campaign] .nova-footer-ad-copy,[data-nova-ad-slot="motors_footer"][data-nova-managed-campaign] .nova-footer-ad-copy,[data-nova-ad-slot="property_footer"][data-nova-managed-campaign] .nova-footer-ad-copy,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-campaign] .nova-footer-ad-copy{position:relative;z-index:1;width:52%}';
   document.head.appendChild(style);
   document.querySelectorAll('[data-nova-ad-slot]').forEach(el=>{
     const id=el.getAttribute('data-nova-ad-slot');
