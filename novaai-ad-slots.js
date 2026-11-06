@@ -200,9 +200,10 @@
       recordAdEvent(code,'click');
       if(id==='motors_banner'){
         event.preventDefault();
+        event.stopImmediatePropagation();
         window.location.assign(destination);
       }
-    });
+    },id==='motors_banner');
   }
   function recordAdEvent(campaignCode,eventType){
     if(!campaignCode||!['impression','click'].includes(eventType))return;
@@ -259,6 +260,7 @@
     else if(id==='property_banner')selectors=['.property-promo-copy h2','.property-promo-copy p','.property-promo-link','.property-promo-photo img'];
     else selectors=['.nova-footer-ad-copy strong','.nova-footer-ad-copy small','.nova-footer-ad-copy a','.nova-footer-ad-image'];
     slot.style.backgroundImage=saved.slotBackgroundImage||'';
+    slot.removeAttribute('data-nova-ad-click-campaign');slot.removeAttribute('data-nova-ad-destination');
     if(id==='cart_banner'){
       if(saved.slotHref===null)slot.removeAttribute('href');else if(saved.slotHref!==undefined)slot.setAttribute('href',saved.slotHref);
       if(saved.slotTarget===null)slot.removeAttribute('target');else if(saved.slotTarget!==undefined)slot.setAttribute('target',saved.slotTarget);
