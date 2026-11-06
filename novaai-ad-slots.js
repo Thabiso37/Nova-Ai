@@ -580,7 +580,7 @@
   [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-kicker,
   [data-nova-ad-slot][data-nova-managed-layout] .motors-eyebrow,
   [data-nova-ad-slot][data-nova-managed-layout] .property-promo-kicker,
-  [data-nova-ad-slot][data-nova-managed-layout] .nova-footer-ad-kicker{display:block!important;font-size:9px!important;line-height:1.15!important;letter-spacing:.2px!important;white-space:normal!important;overflow-wrap:break-word!important;word-break:normal!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-footer-ad-kicker{display:block!important;font-size:11px!important;line-height:1.15!important;letter-spacing:.2px!important;white-space:normal!important;overflow-wrap:break-word!important;word-break:normal!important}
   [data-nova-ad-slot][data-nova-managed-layout] .nova-live-controls,
   [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-controls{position:absolute!important;z-index:8!important;top:4px!important;bottom:auto!important;left:auto!important;right:3px!important;width:calc(25% - 6px)!important;max-width:calc(25% - 6px)!important;min-width:0!important;box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:3px!important;padding:0!important}
   [data-nova-ad-slot][data-nova-managed-layout] .nova-live-onair,
