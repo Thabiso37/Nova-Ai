@@ -86,9 +86,11 @@ async function auditVersion(browser, version, viewport) {
         const text = textNodes.map(el => ({ tag: el.tagName, text: (el.innerText || '').trim().slice(0,100), fontSize: parseFloat(getComputedStyle(el).fontSize), lineHeight: getComputedStyle(el).lineHeight, rect: rect(el) }));
         const cta = outer ? [...outer.querySelectorAll('a,button')].filter(visible).map(el=>({text:(el.innerText||el.getAttribute('aria-label')||'').trim().slice(0,80),rect:rect(el),fontSize:parseFloat(getComputedStyle(el).fontSize),href:el.getAttribute('href')})) : [];
         const image = outer?.querySelector('img[data-nova-ad-image],video[data-nova-ad-video]') || (photo?.querySelector('img[data-nova-ad-image]') || photo?.querySelector('img'));
-        const mediaHost = outer?.querySelector('.nova-ad-media-host') || photo;
-        const outerRect=rect(outer), photoRect=rect(mediaHost), copyRect=rect(copy);
-        const rightCopy = outerRect ? {x:+(outerRect.x+outerRect.width*.75).toFixed(2), y:outerRect.y, width:+(outerRect.width*.25).toFixed(2),height:outerRect.height} : null;\n        const style=outer?getComputedStyle(outer):null;\n        const innerWidth=outerRect&&style?outerRect.width-parseFloat(style.paddingLeft||0)-parseFloat(style.paddingRight||0)-parseFloat(style.borderLeftWidth||0)-parseFloat(style.borderRightWidth||0):null;\n        const mediaRatio=innerWidth&&photoRect?+(photoRect.width/innerWidth).toFixed(4):(outerRect&&photoRect?+(photoRect.width/outerRect.width).toFixed(4):null);
+        const outerRect=rect(outer), photoRect=rect(photo), copyRect=rect(copy);
+        const rightCopy = outerRect ? {x:+(outerRect.x+outerRect.width*.75).toFixed(2), y:outerRect.y, width:+(outerRect.width*.25).toFixed(2),height:outerRect.height} : null;
+        const style=outer?getComputedStyle(outer):null;
+        const innerWidth=outerRect&&style?outerRect.width-parseFloat(style.paddingLeft||0)-parseFloat(style.paddingRight||0)-parseFloat(style.borderLeftWidth||0)-parseFloat(style.borderRightWidth||0):null;
+        const mediaRatio=innerWidth&&photoRect?+(photoRect.width/innerWidth).toFixed(4):(outerRect&&photoRect?+(photoRect.width/outerRect.width).toFixed(4):null);
         const mediaLoaded = image ? (image.tagName==='VIDEO' ? image.readyState>=1 : image.complete && image.naturalWidth>0) : !!photo;
         const overlap = !!(photoRect&&copyRect&&photoRect.x<copyRect.right&&photoRect.right>copyRect.x&&photoRect.y<copyRect.bottom&&photoRect.bottom>copyRect.y);
         const textOverflow = textNodes.some(el => el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 2);
@@ -117,7 +119,11 @@ for (const viewport of viewports) {
   const pr = report.versions[viewport.name].pr;
   for (const slot of campaignSlots) {
     const a = base[slot], b = pr[slot];
-    if (slot === 'wishlist_banner') {\n      const original = a?.wishlistBeforeRefresh;\n      if (!original || !b?.found) { failures.push(viewport.name + ' wishlist_banner: original or refreshed board missing'); continue; }\n      if (Math.abs(original.width-b.outer.width)>1 || Math.abs(original.height-b.outer.height)>1) failures.push(viewport.name + ' wishlist_banner: dimensions changed during refresh');\n    } else if (!a?.found || !b?.found) { failures.push(viewport.name + ' ' + slot + ': board missing'); continue; }
+    if (slot === 'wishlist_banner') {
+      const original = a?.wishlistBeforeRefresh;
+      if (!original || !b?.found) { failures.push(viewport.name + ' wishlist_banner: original or refreshed board missing'); continue; }
+      if (Math.abs(original.width-b.outer.width)>1 || Math.abs(original.height-b.outer.height)>1) failures.push(viewport.name + ' wishlist_banner: dimensions changed during refresh');
+    } else if (!a?.found || !b?.found) { failures.push(viewport.name + ' ' + slot + ': board missing'); continue; }
     if (slot !== 'wishlist_banner' && (!a.outer || !b.outer || Math.abs(a.outer.width-b.outer.width)>1 || Math.abs(a.outer.height-b.outer.height)>1)) failures.push(viewport.name + ' ' + slot + ': outer dimensions differ from main');
     if (!b.mediaLoaded) failures.push(viewport.name + ' ' + slot + ': creative media did not load');
     if (b.overlap) failures.push(viewport.name + ' ' + slot + ': photo and copy containers overlap');
@@ -129,7 +135,7 @@ for (const viewport of viewports) {
       const cr=b.copy, c=b.cta[0].rect;
       if (cr && c && (c.x<cr.x-1 || c.right>cr.right+1)) failures.push(viewport.name + ' home_hero: carousel CTA/control outside copy area');
     }
-    if (slot !== 'cart_banner' && slot !== 'motors_banner' && slot !== 'property_banner') {
+    if (slot !== 'wishlist_banner' || b.photoRatio!==null) {
       if (b.photoRatio!==null && Math.abs(b.photoRatio-.75)>.03) failures.push(viewport.name + ' ' + slot + ': measured photo width is not 75%');
     }
   }
