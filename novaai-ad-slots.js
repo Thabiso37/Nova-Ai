@@ -165,7 +165,10 @@
     const style=window.getComputedStyle(slot);
     if(style.display==='none'||style.visibility==='hidden'||Number(style.opacity)===0)return false;
     const rect=slot.getBoundingClientRect();
-    return rect.width>0&&rect.height>0&&rect.bottom>0&&rect.right>0&&rect.top<window.innerHeight&&rect.left<window.innerWidth;
+    if(rect.width<=0||rect.height<=0)return false;
+    const visibleWidth=Math.max(0,Math.min(rect.right,window.innerWidth)-Math.max(rect.left,0));
+    const visibleHeight=Math.max(0,Math.min(rect.bottom,window.innerHeight)-Math.max(rect.top,0));
+    return (visibleWidth*visibleHeight)/(rect.width*rect.height)>=0.5;
   }
   function recordDisplayedImpression(slot,campaignCode){
     if(!slot||!campaignCode)return;
