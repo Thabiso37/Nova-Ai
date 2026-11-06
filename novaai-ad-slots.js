@@ -263,17 +263,8 @@
     }
     // Raise the existing copy and CTA above the media without moving them
     // out of their original responsive layout.
-    Array.from(host.children).forEach(child=>{
-      if(child!==image&&child!==video){
-        if(!child.style.position)child.style.position='relative';
-        child.style.zIndex='1';
-      }
-    });
-    // Home's decorative mock-up is not campaign media and would cover it.
-    if(id==='home_hero'){
-      host.dataset.novaManagedImage='1';
-      host.querySelectorAll('.hero-art-circle,.hero-art-card').forEach(el=>el.style.display='none');
-    }
+    // Keep existing copy and CTA above the media through the scoped CSS rule.
+    if(id==='home_hero')host.dataset.novaManagedImage='1';
   }
   function captureAdFallback(slot,id){
     if(slot.__novaAdFallback)return;
@@ -301,7 +292,6 @@
     else selectors=['.nova-footer-ad-copy strong','.nova-footer-ad-copy small','.nova-footer-ad-copy a','.nova-footer-ad-image'];
     slot.style.backgroundImage=saved.slotBackgroundImage||'';
     if(id==='home_hero'){
-      slot.querySelectorAll('.nova-hero-art img[data-nova-ad-image]').forEach(image=>image.remove());
       slot.querySelectorAll('.nova-hero-art').forEach(art=>delete art.dataset.novaManagedImage);
     }
     slot.removeAttribute('data-nova-ad-click-campaign');slot.removeAttribute('data-nova-ad-destination');
@@ -321,7 +311,7 @@
       if(node.tagName==='IMG'&&value.src)node.setAttribute('src',value.src);
       node.style.display=value.display||'';
     });
-    slot.querySelectorAll('video[data-nova-ad-video]').forEach(video=>video.remove());
+    slot.querySelectorAll('img[data-nova-ad-image],video[data-nova-ad-video]').forEach(media=>{if(media.tagName==='VIDEO')media.pause();media.remove();});
     delete slot.dataset.novaCampaignCode;slot.removeAttribute('data-nova-managed-campaign');
   }
   function applyManagedCampaigns(rows){
@@ -442,6 +432,7 @@
   window.NOVAAI_ADS=api;
   const style=document.createElement('style');
   style.textContent='.nova-hero-art[data-nova-managed-image="1"] .hero-art-circle,.nova-hero-art[data-nova-managed-image="1"] .hero-art-card{display:none!important}.nova-live-ad{position:relative;isolation:isolate;overflow:hidden}.nova-live-ad:before{content:"";position:absolute;inset:-45%;z-index:0;pointer-events:none;background:linear-gradient(110deg,transparent 38%,rgba(255,255,255,.13) 48%,transparent 58%);transform:translateX(-65%) rotate(8deg);animation:novaAdShimmer 6s ease-in-out infinite}.nova-live-ad:after{content:"";position:absolute;z-index:0;right:-35px;top:-55px;width:145px;height:145px;border:1px solid rgba(255,255,255,.2);border-radius:50%;box-shadow:0 0 0 18px rgba(255,255,255,.035),0 0 0 38px rgba(255,255,255,.025);pointer-events:none;animation:novaAdOrbit 9s linear infinite}.nova-live-ad>*{position:relative;z-index:1}.nova-hero-art{background-size:cover!important;background-position:center!important}.nova-hero-art .hero-art-circle{opacity:.16}.nova-hero-art .hero-art-card{background:rgba(16,40,75,.88);backdrop-filter:blur(3px)}.nova-live-ad .nova-live-controls{position:absolute;z-index:5;right:12px;bottom:9px;display:flex;align-items:center;gap:9px}.nova-live-onair{font-size:7px;font-weight:900;letter-spacing:1px;color:rgba(255,255,255,.82)}.nova-live-onair:before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:#f5b900;margin-right:5px;box-shadow:0 0 8px #f5b900;animation:novaAdPulse 1.4s infinite}.nova-live-dots{display:flex;gap:5px}.nova-live-dots button{width:6px;height:6px;padding:0;border:0;border-radius:9px;background:#ffffff75}.nova-live-dots button[aria-current="true"]{width:18px;background:#f5b900}.nova-live-changing .property-promo-copy,.nova-live-changing strong,.nova-live-changing small{opacity:.25;transition:opacity .22s ease}@keyframes novaAdShimmer{0%,15%{transform:translateX(-65%) rotate(8deg)}65%,100%{transform:translateX(65%) rotate(8deg)}}@keyframes novaAdOrbit{to{transform:rotate(360deg)}}@keyframes novaAdPulse{50%{opacity:.45;box-shadow:0 0 0 6px rgba(245,185,0,.1)}}@media(prefers-reduced-motion:reduce){.nova-live-ad:before,.nova-live-ad:after,.nova-live-onair:before{animation:none!important}}';
+  style.textContent += '.nova-ad-media-host{position:relative;overflow:hidden}.nova-ad-media-host>:not([data-nova-ad-image]):not([data-nova-ad-video]){position:relative;z-index:1}';
   document.head.appendChild(style);
   document.querySelectorAll('[data-nova-ad-slot]').forEach(el=>{
     const id=el.getAttribute('data-nova-ad-slot');
