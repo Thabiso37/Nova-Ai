@@ -378,6 +378,17 @@
       let originalBoardSize=slot.__novaOriginalBoardSize||null;
       let index=0;
       const show=()=>{
+        // Wishlist's original node is removed by main's renderer before managed
+        // campaigns can replace its copy. Preserve that static board baseline.
+        if(id==='wishlist_banner'&&!originalBoardSize){
+          const baselineRect=slot.getBoundingClientRect();
+          if(baselineRect.width>0&&baselineRect.height>0){
+            originalBoardSize={width:baselineRect.width,height:baselineRect.height};
+            slot.__novaOriginalBoardSize=originalBoardSize;
+            slot.dataset.novaOriginalWidth=String(baselineRect.width);
+            slot.dataset.novaOriginalHeight=String(baselineRect.height);
+          }
+        }
         const c=campaigns[index];
         const title=String(c.title||'Featured offer').slice(0,100);
         const description=String(c.description||'Discover this featured offer.').slice(0,180);
