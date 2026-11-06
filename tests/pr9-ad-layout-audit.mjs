@@ -84,8 +84,9 @@ async function auditVersion(browser, version, viewport) {
     await page.goto(fullUrl, { waitUntil: 'commit', timeout: 15000 });
     await page.waitForLoadState('domcontentloaded', { timeout: 12000 }).catch(() => {});
     await page.evaluate(async () => {
-      if(document.fonts?.ready)await document.fonts.ready.catch(()=>{});
-      await Promise.all(Array.from(document.images).map(img=>img.decode?img.decode().catch(()=>{}):Promise.resolve()));
+      const bounded=promise=>Promise.race([promise.catch(()=>{}),new Promise(resolve=>setTimeout(resolve,2500))]);
+      if(document.fonts?.ready)await bounded(document.fonts.ready);
+      await Promise.all(Array.from(document.images).map(img=>img.decode?bounded(img.decode()):Promise.resolve()));
       await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
     });
     await page.waitForTimeout(1300);
@@ -131,7 +132,7 @@ async function auditVersion(browser, version, viewport) {
         });
         const textOutsideCopy = !!copyMeasure && textNodes.some(el => {
           const r=el.getBoundingClientRect();
-          return r.width>0&&(r.left<copyMeasure.x-1||r.right>copyMeasure.right+1);
+          return r.width>0&&(r.left<copyMeasure.x-1||r.right>copyMeasure.right+1||r.top<copyMeasure.y-1||r.bottom>copyMeasure.bottom+1);
         });
         const awkwardBreak = textNodes.some(el => {
           const cs=getComputedStyle(el);
@@ -178,7 +179,7 @@ for (const viewport of viewports) {
     if (b.cta.some(c => c.text && c.fontSize < 12 && !/^(‹|›|Advertisement )/.test(c.text))) failures.push(viewport.name + ' ' + slot + ': CTA below 12px');
     if (slot !== 'cart_banner' && b.cta.length===0) failures.push(viewport.name + ' ' + slot + ': no visible CTA');
     if (slot !== 'cart_banner' && b.copy && b.cta.length) {
-      for (const c of b.cta) if (c.rect && (c.rect.x < b.copy.x-1 || c.rect.right > b.copy.right+1)) failures.push(viewport.name + ' ' + slot + ': CTA/control outside copy area');
+      for (const c of b.cta) if (c.rect && (c.rect.x < b.copy.x-1 || c.rect.right > b.copy.right+1 || c.rect.y < b.copy.y-1 || c.rect.bottom > b.copy.bottom+1)) failures.push(viewport.name + ' ' + slot + ': CTA/control outside copy area');
     }
     if (slot !== 'wishlist_banner' || b.photoRatio!==null) {
       if (b.photoRatio!==null && Math.abs(b.photoRatio-.75)>.03) failures.push(viewport.name + ' ' + slot + ': measured photo width is not 75%');
