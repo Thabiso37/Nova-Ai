@@ -1431,6 +1431,9 @@ function clearWishlist(){
 function renderWishlist(){
   const section=document.getElementById("wishlist");
   if(!section)return;
+  // Preserve the existing admin-managed wishlist advertising board while refreshing products.
+  const wishlistAd=section.querySelector('[data-nova-ad-slot="wishlist_banner"]');
+  if(wishlistAd)wishlistAd.remove();
   let saved=[];
   try{saved=JSON.parse(localStorage.getItem("novaWishlist")||"[]");if(!Array.isArray(saved))saved=[];}catch(e){saved=[];}
   const favourites=saved.map(id=>products.find(p=>String(p.id)===String(id))).filter(Boolean);
@@ -1448,6 +1451,7 @@ function renderWishlist(){
       </article>`;
     }).join(""):`<div class="wishlist-empty">Your wishlist is empty. Tap a heart on a product to save it.</div>`}
   `;
+  if(wishlistAd)section.insertBefore(wishlistAd,section.firstChild);
   section.querySelectorAll("[data-wishlist-open]").forEach(button=>{
     button.addEventListener("click",()=>{
       const product=products.find(item=>String(item.id)===String(button.dataset.wishlistOpen));
