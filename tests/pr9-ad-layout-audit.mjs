@@ -100,7 +100,17 @@ async function auditVersion(browser, version, viewport) {
         clone.removeAttribute('data-nova-managed-campaign');
         clone.removeAttribute('data-nova-managed-layout');
         clone.classList.remove('nova-live-ad','nova-ad-media-host');
-        clone.querySelectorAll('.nova-live-controls').forEach(el=>el.remove());
+        clone.querySelectorAll('.nova-live-controls,[data-nova-ad-image],[data-nova-ad-video]').forEach(el=>el.remove());
+        const media=clone.querySelector('.nova-footer-ad-image');
+        if(media)media.removeAttribute('style');
+        const kicker=clone.querySelector('.nova-footer-ad-kicker');
+        const heading=clone.querySelector('.nova-footer-ad-copy strong');
+        const body=clone.querySelector('.nova-footer-ad-copy small');
+        const link=clone.querySelector('.nova-footer-ad-copy a');
+        if(kicker)kicker.textContent='NOVAAI WISHLIST • FEATURED';
+        if(heading)heading.textContent='Discover more from South African sellers.';
+        if(body)body.textContent='Fresh finds and local offers are waiting for you.';
+        if(link){link.textContent='Explore marketplace →';link.setAttribute('href','#products');}
         clone.style.cssText='position:relative!important;left:auto!important;top:auto!important;width:auto!important;height:auto!important;visibility:hidden!important;pointer-events:none!important;z-index:auto!important;box-sizing:border-box!important;display:flex!important;';
         section.insertBefore(clone,section.firstChild);
         const r=clone.getBoundingClientRect();
