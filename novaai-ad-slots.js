@@ -328,6 +328,14 @@
         let titleNode=null,descNode=null,linkNode=null,imageNode=null;
         if(id==='home_hero'){
           const slide=slot.querySelector('.nova-hero-slide');
+          // The legacy carousel may advance before the asynchronous campaign feed
+          // arrives. Activate the exact slide receiving the managed creative before
+          // setting the managed flag that stops legacy slide transitions.
+          slot.querySelectorAll('.nova-hero-slide').forEach((el,k)=>{
+            el.classList.toggle('active',k===0);
+            el.setAttribute('aria-hidden',String(k!==0));
+          });
+          slot.querySelectorAll('[data-hero-slide]').forEach((dot,k)=>dot.classList.toggle('active',k===0));
           titleNode=slide?.querySelector('.nova-hero-copy h1');descNode=slide?.querySelector('.nova-hero-copy p');linkNode=slide?.querySelector('.nova-hero-copy a');imageNode=slide?.querySelector('.nova-hero-art');
           slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
         }else if(id==='shop_tv'){
