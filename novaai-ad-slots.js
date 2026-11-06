@@ -273,12 +273,12 @@
     // creative on boards whose original markup had no separate art column.
     const media=isVideo?video:image;
     if(id==='motors_banner'){
-      media.style.cssText='position:absolute;top:0;right:0;bottom:0;left:58%;width:42%;height:100%;object-fit:cover;display:block;z-index:0;pointer-events:none';
+      media.style.cssText='position:absolute;top:0;right:auto;bottom:0;left:0;width:75%;height:100%;object-fit:cover;display:block;z-index:0;pointer-events:none';
     }else if(id==='cart_banner'){
-      media.style.cssText='position:absolute;top:6px;bottom:6px;left:8px;width:54px;height:calc(100% - 12px);object-fit:cover;display:block;z-index:0;pointer-events:none';
+      media.style.cssText='position:absolute;top:0;bottom:0;left:0;width:75%;height:100%;object-fit:cover;display:block;z-index:0;pointer-events:none';
     }else if(['shop_footer','motors_footer','property_footer','wishlist_banner'].includes(id)&&host.classList.contains('nova-footer-ad-image')){
-      host.style.left='52%';host.style.right='0';host.style.top='0';host.style.bottom='0';
-      host.style.width='48%';host.style.zIndex='0';host.style.opacity='1';
+      host.style.position='absolute';host.style.left='25%';host.style.right='0';host.style.top='0';host.style.bottom='0';
+      host.style.width='75%';host.style.zIndex='0';host.style.opacity='1';
       media.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:0;pointer-events:none';
     }
     host.dataset.novaManagedImage='1';
@@ -293,7 +293,8 @@
     else if(id==='property_banner')selectors=['.property-promo-copy h2','.property-promo-copy p','.property-promo-link','.property-promo-photo img'];
     else selectors=['.nova-footer-ad-copy strong','.nova-footer-ad-copy small','.nova-footer-ad-copy a','.nova-footer-ad-image'];
     const nodes=selectors.map(selector=>selector?slot.querySelector(selector):null);
-    slot.__novaAdFallback={slotBackgroundImage:slot.style.backgroundImage,slotHref:slot.getAttribute('href'),slotTarget:slot.getAttribute('target'),slotRel:slot.getAttribute('rel'),nodes:nodes.map(node=>node?{
+    const outerSizing=Object.fromEntries(['width','height','min-height','max-height','box-sizing'].map(name=>[name,{value:slot.style.getPropertyValue(name),priority:slot.style.getPropertyPriority(name)}]));
+    slot.__novaAdFallback={outerSizing,slotBackgroundImage:slot.style.backgroundImage,slotHref:slot.getAttribute('href'),slotTarget:slot.getAttribute('target'),slotRel:slot.getAttribute('rel'),nodes:nodes.map(node=>node?{
       element:node,text:node.textContent,href:node.getAttribute('href'),target:node.getAttribute('target'),rel:node.getAttribute('rel'),
       backgroundImage:node.style.backgroundImage,src:node.tagName==='IMG'?node.getAttribute('src'):null,display:node.style.display
     }:null)};
@@ -308,6 +309,12 @@
     else if(id==='property_banner')selectors=['.property-promo-copy h2','.property-promo-copy p','.property-promo-link','.property-promo-photo img'];
     else selectors=['.nova-footer-ad-copy strong','.nova-footer-ad-copy small','.nova-footer-ad-copy a','.nova-footer-ad-image'];
     slot.style.backgroundImage=saved.slotBackgroundImage||'';
+    if(saved.outerSizing){
+      Object.entries(saved.outerSizing).forEach(([name,value])=>{
+        if(value&&value.value)slot.style.setProperty(name,value.value,value.priority||'');
+        else slot.style.removeProperty(name);
+      });
+    }
     if(id==='home_hero'){
       slot.querySelectorAll('.nova-hero-art').forEach(art=>delete art.dataset.novaManagedImage);
     }
@@ -330,10 +337,15 @@
     });
     slot.querySelectorAll('img[data-nova-ad-image],video[data-nova-ad-video]').forEach(media=>{if(media.tagName==='VIDEO')media.pause();media.remove();});
     slot.querySelectorAll('.nova-ad-media-host').forEach(host=>{const savedHost=host.__novaAdMediaFallback;if(savedHost){if(savedHost.style===null)host.removeAttribute('style');else host.setAttribute('style',savedHost.style);if(savedHost.ariaHidden===null)host.removeAttribute('aria-hidden');else host.setAttribute('aria-hidden',savedHost.ariaHidden);delete host.dataset.novaManagedImage;if(!savedHost.hadClass)host.classList.remove('nova-ad-media-host');delete host.__novaAdMediaFallback;}});
-    delete slot.dataset.novaCampaignCode;slot.removeAttribute('data-nova-managed-campaign');
+    delete slot.dataset.novaCampaignCode;
+    slot.removeAttribute('data-nova-managed-campaign');
+    slot.removeAttribute('data-nova-managed-layout');
+    slot.removeAttribute('data-nova-original-width');
+    slot.removeAttribute('data-nova-original-height');
+    delete slot.__novaOriginalBoardSize;
   }
-  function applyManagedCampaigns(rows){
-    const managedSlots=["home_hero","shop_tv","cart_banner","wishlist_banner","motors_banner","property_banner","shop_footer","motors_footer","property_footer"];
+  function applyManagedCampaigns(rows,onlySlot){
+    const managedSlots=["home_hero","shop_tv","cart_banner","wishlist_banner","motors_banner","property_banner","shop_footer","motors_footer","property_footer"].filter(id=>!onlySlot||id===onlySlot);
     managedSlots.forEach(id=>{
       if(managedTimers[id]){clearTimeout(managedTimers[id]);delete managedTimers[id];}
       const slot=document.querySelector('[data-nova-ad-slot="'+id+'"]')||document.getElementById(({home_hero:"novaHeroCarousel",shop_tv:"shopTvAds",cart_banner:"cartAdBoard",wishlist_banner:"wishlistAdSlot",motors_banner:"motorsWelcomeAd",property_banner:"propertyAdSlot",shop_footer:"shopFooterAd",motors_footer:"motorsFooterAd",property_footer:"propertyFooterAd"})[id]);
@@ -346,8 +358,37 @@
         restoreAdFallback(slot,id);
         slot.setAttribute('data-nova-ad-status','awaiting_management_campaign');return;
       }
+      // Defer hidden boards (Cart, Wishlist, Motors/Property footers) until their
+      // containing view is shown, so the original natural dimensions can be measured.
+      const visibleRect=slot.getBoundingClientRect();
+      if(visibleRect.width<=0||visibleRect.height<=0){
+        if(!slot.__novaDeferredCampaignObserver&&typeof ResizeObserver!=='undefined'){
+          const observer=new ResizeObserver(()=>{
+            const rect=slot.getBoundingClientRect();
+            if(rect.width>0&&rect.height>0){
+              observer.disconnect();delete slot.__novaDeferredCampaignObserver;
+              applyManagedCampaigns(rows,id);
+            }
+          });
+          slot.__novaDeferredCampaignObserver=observer;
+          observer.observe(slot);
+        }
+        return;
+      }
+      let originalBoardSize=slot.__novaOriginalBoardSize||null;
       let index=0;
       const show=()=>{
+        // Wishlist's original node is removed by main's renderer before managed
+        // campaigns can replace its copy. Preserve that static board baseline.
+        if(id==='wishlist_banner'&&!originalBoardSize){
+          const baselineRect=slot.getBoundingClientRect();
+          if(baselineRect.width>0&&baselineRect.height>0){
+            originalBoardSize={width:baselineRect.width,height:baselineRect.height};
+            slot.__novaOriginalBoardSize=originalBoardSize;
+            slot.dataset.novaOriginalWidth=String(baselineRect.width);
+            slot.dataset.novaOriginalHeight=String(baselineRect.height);
+          }
+        }
         const c=campaigns[index];
         const title=String(c.title||'Featured offer').slice(0,100);
         const description=String(c.description||'Discover this featured offer.').slice(0,180);
@@ -365,11 +406,9 @@
           });
           slot.querySelectorAll('[data-hero-slide]').forEach((dot,k)=>dot.classList.toggle('active',k===0));
           titleNode=slide?.querySelector('.nova-hero-copy h1');descNode=slide?.querySelector('.nova-hero-copy p');linkNode=slide?.querySelector('.nova-hero-copy a');imageNode=slide?.querySelector('.nova-hero-art');
-          slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
         }else if(id==='shop_tv'){
           const slide=slot.querySelector('.shop-tv-slide');
           titleNode=slide?.querySelector('.shop-tv-copy h2');descNode=slide?.querySelector('.shop-tv-copy p');linkNode=slide?.querySelector('.shop-tv-copy a');imageNode=slide?.querySelector('.shop-tv-art');
-          slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
           if(slide){slot.querySelectorAll('.shop-tv-slide').forEach((el,k)=>{el.classList.toggle('is-active',k===0);el.setAttribute('aria-hidden',String(k!==0));});}
         }else if(id==='cart_banner'){
           titleNode=slot.querySelector('strong');descNode=slot.querySelector('span');linkNode=slot;imageNode=slot;
@@ -389,8 +428,36 @@
           linkNode.dataset.novaAdDestination=href;
           bindCampaignClick(linkNode,id);
         }
-        if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
-        slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
+        const captureOriginalSize=()=>{
+          if(originalBoardSize)return;
+          const naturalRect=slot.getBoundingClientRect();
+          if(naturalRect.width>0&&naturalRect.height>0){
+            originalBoardSize={width:naturalRect.width,height:naturalRect.height};
+            slot.__novaOriginalBoardSize=originalBoardSize;
+            slot.dataset.novaOriginalWidth=String(naturalRect.width);
+            slot.dataset.novaOriginalHeight=String(naturalRect.height);
+          }
+        };
+        // Match main's media -> legacy managed flag -> measurement order for
+        // normally rendered boards. Wishlist is measured from its static node
+        // before media because main removes that node before campaign rendering.
+        if(id==='wishlist_banner'){
+          slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
+          captureOriginalSize();
+          if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
+        }else{
+          if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
+          slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
+          captureOriginalSize();
+        }
+        slot.dataset.novaManagedLayout='1';
+        if(originalBoardSize){
+          slot.style.setProperty('box-sizing','border-box','important');
+          slot.style.setProperty('width',originalBoardSize.width+'px','important');
+          slot.style.setProperty('height',originalBoardSize.height+'px','important');
+          slot.style.setProperty('min-height',originalBoardSize.height+'px','important');
+          slot.style.setProperty('max-height',originalBoardSize.height+'px','important');
+        }
         slot.dataset.novaCampaignCode=c.campaign_id||'';
         recordDisplayedImpression(slot,c.campaign_id);
         slot.setAttribute('data-nova-ad-status','management_campaign_active');
@@ -435,15 +502,31 @@
       const response=await fetch(apiUrl,{method:'POST',headers:{'apikey':publishableKey,'Authorization':'Bearer '+publishableKey,'Content-Type':'application/json'},body:'{}'});
       if(!response.ok)throw new Error('Campaign feed returned HTTP '+response.status);
       const campaigns=await response.json();
+      // Wait for the real page's initial layout assets before recording its natural
+      // board dimensions. Otherwise an image/font finishing later can change the
+      // "original" height after the managed creative has already frozen it.
+      if(document.readyState!=='complete'){
+        await Promise.race([new Promise(resolve=>window.addEventListener('load',resolve,{once:true})),new Promise(resolve=>setTimeout(resolve,4000))]);
+      }
+      if(document.fonts&&document.fonts.ready)await document.fonts.ready.catch(()=>{});
+      await Promise.all(Array.from(document.images).map(img=>{
+        if(img.complete)return img.decode?img.decode().catch(()=>{}):Promise.resolve();
+        return Promise.race([new Promise(resolve=>{img.addEventListener('load',resolve,{once:true});img.addEventListener('error',resolve,{once:true});}),new Promise(resolve=>setTimeout(resolve,4000))]);
+      }));
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
       api.announceCampaigns(Array.isArray(campaigns)?campaigns:[]);
     }catch(error){console.warn('NOVAAI managed advertisement feed unavailable; managed campaigns cleared.',error);api.announceCampaigns([]);}
   }
   function bootLiveAds(){
     initHomeCarousel();
-    ['cart_banner','wishlist_banner','property_banner','motors_banner','shop_footer','motors_footer','property_footer'].forEach(id=>initLiveSlot(document.querySelector('[data-nova-ad-slot="'+id+'"]')));
-    loadManagedCampaigns();
+    ['cart_banner','property_banner','motors_banner','shop_footer','motors_footer','property_footer'].forEach(id=>initLiveSlot(document.querySelector('[data-nova-ad-slot="'+id+'"]')));
+    loadManagedCampaigns().finally(()=>{
+      window.__novaManagedCampaignsReady=true;
+      const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');
+      if(wishlist)initLiveSlot(wishlist);
+    });
     if(!window.__novaAdRefreshTimer)window.__novaAdRefreshTimer=window.setInterval(loadManagedCampaigns,60000);
-    if(!window.__novaAdObserver&&document.body){window.__novaAdObserver=new MutationObserver(()=>{const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');if(wishlist)initLiveSlot(wishlist);});window.__novaAdObserver.observe(document.body,{childList:true,subtree:true});}
+    if(!window.__novaAdObserver&&document.body){window.__novaAdObserver=new MutationObserver(()=>{const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');if(wishlist&&window.__novaManagedCampaignsReady)initLiveSlot(wishlist);});window.__novaAdObserver.observe(document.body,{childList:true,subtree:true});}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootLiveAds,{once:true});else bootLiveAds();
 
@@ -452,6 +535,103 @@
   style.textContent='.nova-hero-art[data-nova-managed-image="1"] .hero-art-circle,.nova-hero-art[data-nova-managed-image="1"] .hero-art-card{display:none!important}.nova-live-ad{position:relative;isolation:isolate;overflow:hidden}.nova-live-ad:before{content:"";position:absolute;inset:-45%;z-index:0;pointer-events:none;background:linear-gradient(110deg,transparent 38%,rgba(255,255,255,.13) 48%,transparent 58%);transform:translateX(-65%) rotate(8deg);animation:novaAdShimmer 6s ease-in-out infinite}.nova-live-ad:after{content:"";position:absolute;z-index:0;right:-35px;top:-55px;width:145px;height:145px;border:1px solid rgba(255,255,255,.2);border-radius:50%;box-shadow:0 0 0 18px rgba(255,255,255,.035),0 0 0 38px rgba(255,255,255,.025);pointer-events:none;animation:novaAdOrbit 9s linear infinite}.nova-live-ad>*{position:relative;z-index:1}.nova-hero-art{background-size:cover!important;background-position:center!important}.nova-hero-art .hero-art-circle{opacity:.16}.nova-hero-art .hero-art-card{background:rgba(16,40,75,.88);backdrop-filter:blur(3px)}.nova-live-ad .nova-live-controls{position:absolute;z-index:5;right:12px;bottom:9px;display:flex;align-items:center;gap:9px}.nova-live-onair{font-size:7px;font-weight:900;letter-spacing:1px;color:rgba(255,255,255,.82)}.nova-live-onair:before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:#f5b900;margin-right:5px;box-shadow:0 0 8px #f5b900;animation:novaAdPulse 1.4s infinite}.nova-live-dots{display:flex;gap:5px}.nova-live-dots button{width:6px;height:6px;padding:0;border:0;border-radius:9px;background:#ffffff75}.nova-live-dots button[aria-current="true"]{width:18px;background:#f5b900}.nova-live-changing .property-promo-copy,.nova-live-changing strong,.nova-live-changing small{opacity:.25;transition:opacity .22s ease}@keyframes novaAdShimmer{0%,15%{transform:translateX(-65%) rotate(8deg)}65%,100%{transform:translateX(65%) rotate(8deg)}}@keyframes novaAdOrbit{to{transform:rotate(360deg)}}@keyframes novaAdPulse{50%{opacity:.45;box-shadow:0 0 0 6px rgba(245,185,0,.1)}}@media(prefers-reduced-motion:reduce){.nova-live-ad:before,.nova-live-ad:after,.nova-live-onair:before{animation:none!important}}';
   style.textContent += '.nova-ad-media-host{position:relative;overflow:hidden}.nova-ad-media-host>:not([data-nova-ad-image]):not([data-nova-ad-video]){position:relative;z-index:1}';
   style.textContent += '[data-nova-ad-slot="motors_banner"][data-nova-managed-campaign] .motors-hero-copy{position:relative;z-index:1;max-width:54%}[data-nova-ad-slot="motors_banner"][data-nova-managed-campaign] .motors-avatar{display:none}[data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;min-height:58px;padding-left:70px;text-align:left}[data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]>strong,[data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]>span{position:relative;z-index:1}[data-nova-ad-slot="shop_tv"][data-nova-managed-campaign] .shop-tv-art[data-nova-managed-image="1"]::before,[data-nova-ad-slot="shop_tv"][data-nova-managed-campaign] .shop-tv-art[data-nova-managed-image="1"]::after{display:none!important}[data-nova-ad-slot="shop_footer"][data-nova-managed-campaign] .nova-footer-ad-copy,[data-nova-ad-slot="motors_footer"][data-nova-managed-campaign] .nova-footer-ad-copy,[data-nova-ad-slot="property_footer"][data-nova-managed-campaign] .nova-footer-ad-copy,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-campaign] .nova-footer-ad-copy{position:relative;z-index:1;width:52%}';
+  // Managed campaigns retain the board's pre-layout outer dimensions and use
+  // a strict 75% media / 25% copy split. Copy wraps at word boundaries; no text
+  // is clipped with line clamps or hidden overflow.
+  style.textContent += `
+  [data-nova-ad-slot][data-nova-managed-layout]{box-sizing:border-box!important;overflow:hidden!important}
+  [data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-slide{display:grid!important;grid-template-columns:minmax(0,3fr) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important}
+  [data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-art{grid-column:1!important;grid-row:1!important;width:100%!important;min-width:0!important;min-height:0!important}
+  [data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-copy{grid-column:2!important;grid-row:1!important;width:100%!important;max-width:none!important;min-width:0!important;min-height:0!important;box-sizing:border-box!important;padding:30px 4px 6px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:6px!important;overflow:visible!important;overflow-wrap:normal!important;word-break:normal!important}
+  [data-nova-ad-slot="shop_tv"][data-nova-managed-layout] .shop-tv-slide{position:relative!important;width:100%!important;height:100%!important;min-height:0!important}
+  [data-nova-ad-slot="shop_tv"][data-nova-managed-layout] .shop-tv-art[data-nova-managed-image="1"]{position:absolute!important;left:0!important;right:auto!important;top:0!important;bottom:0!important;width:75%!important;height:100%!important;aspect-ratio:auto!important;transform:none!important;border-radius:0!important}
+  [data-nova-ad-slot="shop_tv"][data-nova-managed-layout] .shop-tv-copy{position:absolute!important;top:0!important;right:0!important;bottom:0!important;left:auto!important;width:25%!important;max-width:none!important;min-width:0!important;height:100%!important;box-sizing:border-box!important;padding:24px 3px 4px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:5px!important;overflow:visible!important;background:linear-gradient(145deg,#10284b,#174ea6)!important;overflow-wrap:break-word!important;word-break:normal!important}
+  [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]{position:relative!important;display:block!important;padding:0!important;min-height:0!important}
+  [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>.nova-ad-media-host{position:absolute!important;inset:0 auto 0 0!important;width:75%!important;height:100%!important;overflow:hidden!important}
+  [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>strong,[data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>span:not(.nova-live-controls):not(.nova-live-onair){position:absolute!important;left:75%!important;right:0!important;width:25%!important;box-sizing:border-box!important;padding:2px 2px!important;text-align:left!important;overflow:visible!important;overflow-wrap:break-word!important;word-break:normal!important}
+  [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>strong{top:8px!important;font-size:14px!important;line-height:1.1!important}
+  [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>span:not(.nova-live-controls):not(.nova-live-onair){top:0!important;display:none!important}
+  [data-nova-ad-slot="motors_banner"][data-nova-managed-layout] .motors-hero-copy{position:absolute!important;top:0!important;right:0!important;bottom:0!important;left:auto!important;width:25%!important;max-width:none!important;min-width:0!important;height:100%!important;box-sizing:border-box!important;margin:0!important;padding:28px 4px 8px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:7px!important;overflow:visible!important;background:linear-gradient(145deg,#10284b,#174ea6)!important;overflow-wrap:break-word!important;word-break:normal!important}
+  [data-nova-ad-slot="motors_banner"][data-nova-managed-layout] .motors-welcome-top{position:absolute!important;top:4px!important;right:0!important;left:75%!important;width:25%!important;box-sizing:border-box!important;justify-content:center!important;padding:0 3px!important;font-size:9px!important;z-index:2!important}
+  [data-nova-ad-slot="motors_banner"][data-nova-managed-layout] .motors-avatar{display:none!important};
+  [data-nova-ad-slot="motors_banner"][data-nova-managed-layout] .motors-welcome-top{display:none!important}
+  [data-nova-ad-slot="property_banner"][data-nova-managed-layout]{display:grid!important;grid-template-columns:minmax(0,3fr) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;align-items:stretch!important}
+  [data-nova-ad-slot="property_banner"][data-nova-managed-layout] .property-promo-photo{grid-column:1!important;grid-row:1!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;overflow:hidden!important}
+  [data-nova-ad-slot="property_banner"][data-nova-managed-layout] .property-promo-copy{grid-column:2!important;grid-row:1!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;box-sizing:border-box!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:6px!important;padding:24px 3px 5px!important;overflow:visible!important;overflow-wrap:break-word!important;word-break:normal!important}
+  [data-nova-ad-slot$="_footer"][data-nova-managed-layout] .nova-footer-ad-copy,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-footer-ad-copy{position:absolute!important;z-index:2!important;left:0!important;right:auto!important;top:0!important;bottom:0!important;width:25%!important;max-width:25%!important;min-width:0!important;height:100%!important;box-sizing:border-box!important;padding:24px 2px 6px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:5px!important;overflow:visible!important;overflow-wrap:normal!important;word-break:normal!important}
+  [data-nova-ad-slot$="_footer"][data-nova-managed-layout] .nova-footer-ad-image,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-footer-ad-image{position:absolute!important;left:25%!important;right:0!important;top:0!important;bottom:0!important;width:75%!important;height:100%!important;overflow:hidden!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-hero-copy h1,
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-copy h2,
+  [data-nova-ad-slot][data-nova-managed-layout] .motors-hero-copy h1,
+  [data-nova-ad-slot][data-nova-managed-layout] .property-promo-copy h2,
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-footer-ad-copy strong,
+  [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>strong{display:block!important;max-width:100%!important;max-height:none!important;height:auto!important;margin:0!important;font-size:14px!important;line-height:1.15!important;font-weight:800!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;-webkit-line-clamp:unset!important;-webkit-box-orient:initial!important;overflow-wrap:normal!important;word-break:normal!important;hyphens:none!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-hero-copy p,
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-copy p,
+  [data-nova-ad-slot][data-nova-managed-layout] .motors-hero-copy p,
+  [data-nova-ad-slot][data-nova-managed-layout] .property-promo-copy p,
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-footer-ad-copy small{display:block!important;max-width:100%!important;max-height:none!important;height:auto!important;margin:0!important;font-size:12px!important;line-height:1.2!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;-webkit-line-clamp:unset!important;-webkit-box-orient:initial!important;overflow-wrap:break-word!important;word-break:normal!important;hyphens:none!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-hero-copy>a,
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-cta,
+  [data-nova-ad-slot][data-nova-managed-layout] .motors-explore,
+  [data-nova-ad-slot][data-nova-managed-layout] .property-promo-link,
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-footer-ad-copy a{display:inline-flex!important;align-items:center!important;justify-content:center!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;padding:5px 3px!important;margin:0!important;font-size:12px!important;line-height:1.15!important;white-space:normal!important;text-align:left!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:break-word!important;word-break:normal!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-hero-kicker,
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-kicker,
+  [data-nova-ad-slot][data-nova-managed-layout] .motors-eyebrow,
+  [data-nova-ad-slot][data-nova-managed-layout] .property-promo-kicker,
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-footer-ad-kicker{display:block!important;font-size:11px!important;line-height:1.15!important;letter-spacing:.2px!important;white-space:normal!important;overflow-wrap:break-word!important;word-break:normal!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-live-controls,
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-controls{position:absolute!important;z-index:8!important;top:4px!important;bottom:auto!important;left:auto!important;right:3px!important;width:calc(25% - 6px)!important;max-width:calc(25% - 6px)!important;min-width:0!important;box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:3px!important;padding:0!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-live-onair,
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-onair{display:none!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-live-dots,
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-dots{display:flex!important;align-items:center!important;justify-content:center!important;gap:3px!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-live-dots button,
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-dots button{width:5px!important;height:5px!important;min-width:5px!important;padding:0!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-live-dots button[aria-current="true"],
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-dots button.active{width:12px!important;min-width:12px!important}
+  [data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-controls{position:absolute!important;z-index:8!important;left:75%!important;right:4px!important;top:4px!important;bottom:auto!important;width:auto!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:3px!important;box-sizing:border-box!important}
+  [data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-controls>button{width:18px!important;height:18px!important;min-width:18px!important;font-size:14px!important}
+  [data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-copy{padding-top:30px!important}
+  @media(max-width:380px){
+    [data-nova-ad-slot][data-nova-managed-layout] .nova-hero-kicker,
+    [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-kicker,
+    [data-nova-ad-slot][data-nova-managed-layout] .motors-eyebrow,
+    [data-nova-ad-slot][data-nova-managed-layout] .property-promo-kicker,
+    [data-nova-ad-slot][data-nova-managed-layout] .nova-footer-ad-kicker{display:none!important}
+    [data-nova-ad-slot][data-nova-managed-layout] .nova-hero-copy p,
+    [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-copy p,
+    [data-nova-ad-slot][data-nova-managed-layout] .motors-hero-copy p,
+    [data-nova-ad-slot][data-nova-managed-layout] .property-promo-copy p,
+    [data-nova-ad-slot][data-nova-managed-layout] .nova-footer-ad-copy small,
+    [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>span:not(.nova-live-controls):not(.nova-live-onair){display:none!important}
+    [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>.nova-live-controls{top:3px!important;right:3px!important}
+    [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>strong{top:14px!important}
+    [data-nova-ad-slot="shop_tv"][data-nova-managed-layout] .shop-tv-copy{padding-top:22px!important;gap:4px!important}
+    [data-nova-ad-slot="property_banner"][data-nova-managed-layout] .property-promo-copy{padding-top:22px!important;gap:5px!important}
+    [data-nova-ad-slot="motors_banner"][data-nova-managed-layout] .motors-hero-copy{padding-top:24px!important;gap:6px!important}
+    [data-nova-ad-slot$="_footer"][data-nova-managed-layout] .nova-footer-ad-copy,
+    [data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-footer-ad-copy{padding:20px 2px 5px!important;gap:4px!important}
+    [data-nova-ad-slot$="_footer"][data-nova-managed-layout] .nova-footer-ad-copy strong,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-footer-ad-copy strong{font-size:11.5px!important;line-height:1.12!important;letter-spacing:-.3px!important;overflow-wrap:normal!important;word-break:normal!important}
+    [data-nova-ad-slot$="_footer"][data-nova-managed-layout] .nova-footer-ad-copy small,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-footer-ad-copy small{font-size:11.5px!important;line-height:1.15!important;letter-spacing:-.25px!important;overflow-wrap:normal!important;word-break:normal!important}
+    [data-nova-ad-slot$="_footer"][data-nova-managed-layout] .nova-footer-ad-copy a,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-footer-ad-copy a{font-size:12px!important;line-height:1.1!important;padding:4px 2px!important;letter-spacing:-.2px!important;overflow-wrap:normal!important;word-break:normal!important}
+  }`;
+  style.textContent += '[data-nova-ad-slot$="_footer"][data-nova-managed-layout] .nova-live-controls,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-live-controls{left:4px!important;right:auto!important;width:calc(25% - 8px)!important;max-width:calc(25% - 8px)!important;justify-content:center!important}';
+  style.textContent += '[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-controls{left:calc(75% - 6px)!important;right:auto!important;width:calc(25% - 12px)!important;max-width:calc(25% - 12px)!important;gap:2px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-controls>button{width:16px!important;height:16px!important;min-width:16px!important;font-size:14px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-dots{gap:2px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-dots button{width:5px!important;height:5px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-dots button.active{width:10px!important}';
+  style.textContent += '[data-nova-ad-slot="shop_footer"][data-nova-managed-layout] .nova-live-controls,[data-nova-ad-slot="motors_footer"][data-nova-managed-layout] .nova-live-controls,[data-nova-ad-slot="property_footer"][data-nova-managed-layout] .nova-live-controls,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-live-controls{left:4px!important;right:auto!important;top:4px!important;bottom:auto!important;width:calc(25% - 8px)!important;max-width:calc(25% - 8px)!important;justify-content:center!important;gap:2px!important}';
+  style.textContent += `
+  /* Cart: the full header is the ad board; utility buttons overlay its edges. */
+  #cartModal .cart-page-header{position:relative!important;box-sizing:border-box!important;overflow:hidden!important;height:62px!important;min-height:62px!important;padding:0!important}
+  #cartModal .cart-page-header>#cartAdBoard{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;max-height:none!important;max-width:none!important;margin:0!important;display:block!important;flex:none!important;z-index:1!important;text-align:left!important;overflow:hidden!important}
+  #cartModal .cart-page-header>button{position:absolute!important;z-index:12!important;top:50%!important;transform:translateY(-50%)!important;padding:8px!important}
+  #cartModal .cart-page-header>button:first-child{left:8px!important}
+  #cartModal .cart-page-header>button:last-child{right:calc(25% + 8px)!important;top:8px!important;transform:none!important}
+  #cartModal .cart-page-header>#cartAdBoard>strong{top:26px!important;left:75%!important;right:0!important;width:25%!important;padding:2px 1px!important;font-size:14px!important;line-height:1.15!important;overflow-wrap:normal!important;word-break:normal!important;hyphens:none!important;letter-spacing:-.2px!important}
+  #cartModal .cart-page-header>#cartAdBoard>span:not(.nova-live-controls):not(.nova-live-onair){display:none!important}
+  @media(max-width:380px){#cartModal .cart-page-header{height:101px!important;min-height:101px!important}}
+  @media(max-width:340px){#cartModal .cart-page-header{height:148.5px!important;min-height:148.5px!important}}
+  `;
   document.head.appendChild(style);
   document.querySelectorAll('[data-nova-ad-slot]').forEach(el=>{
     const id=el.getAttribute('data-nova-ad-slot');
