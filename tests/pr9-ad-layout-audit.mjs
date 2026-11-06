@@ -205,7 +205,7 @@ for (const viewport of viewports) {
     if (b.textOverflow) failures.push(viewport.name + ' ' + slot + ': text overflow/clipping detected');
     if (b.textOutsideCopy) failures.push(viewport.name + ' ' + slot + ': text extends outside copy area');
     if (b.awkwardBreak) failures.push(viewport.name + ' ' + slot + ': CSS forces mid-word wrapping');
-    if (b.text.some(t => (/^(H1|H2|H3|STRONG)$/.test(t.tag) && t.fontSize < 14) || (/^(P|SMALL)$/.test(t.tag) && t.fontSize < 12) || (/^SPAN$/.test(t.tag) && t.fontSize < 9))) failures.push(viewport.name + ' ' + slot + ': headline/body/kicker readability threshold failed');
+    if (b.text.some(t => (/^(H1|H2|H3|STRONG)$/.test(t.tag) && t.fontSize < 14) || (/^(P|SMALL)$/.test(t.tag) && t.fontSize < 12) || (/^SPAN$/.test(t.tag) && t.fontSize < 11))) failures.push(viewport.name + ' ' + slot + ': headline/body/kicker readability threshold failed');
     if (b.copyRatio!==null && Math.abs(b.copyRatio-.25)>.03) failures.push(viewport.name + ' ' + slot + ': measured copy width is not 25%');
     if (b.cta.some(c => c.text && c.fontSize < 12 && !/^(‹|›|Advertisement )/.test(c.text))) failures.push(viewport.name + ' ' + slot + ': CTA below 12px');
     if (slot !== 'cart_banner' && b.cta.length===0) failures.push(viewport.name + ' ' + slot + ': no visible CTA');
