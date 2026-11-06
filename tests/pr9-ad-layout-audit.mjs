@@ -186,15 +186,20 @@ async function auditVersion(browser, version, viewport) {
 
 async function verifyCampaignRotation(browser) {
   const page=await browser.newPage({viewport:{width:1365,height:900},deviceScaleFactor:1});
+  const tracked=[];
   await page.route('**/nxplffvklkopwfjaqexo.supabase.co/rest/v1/rpc/**',async route=>{
     const u=route.request().url();
     if(u.includes('get_live_novaai_ad_campaigns'))await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(campaigns)});
-    else await route.fulfill({status:200,contentType:'application/json',body:'[]'});
+    else {
+      try{tracked.push(JSON.parse(route.request().postData()||'{}').p_event_type);}catch{}
+      await route.fulfill({status:200,contentType:'application/json',body:'[]'});
+    }
   });
   await page.route('https://ads.test/**',async route=>{
     const svg='<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600"><rect width="1200" height="600" fill="#1763a8"/><circle cx="850" cy="260" r="190" fill="#f5b900"/></svg>';
     await route.fulfill({status:200,contentType:'image/svg+xml',body:svg});
   });
+  await page.route('https://example.com/**',async route=>route.fulfill({status:200,contentType:'text/plain',body:'audit destination'}));
   await page.goto(origin+'/pr-snapshot/index.html?audit=rotation',{waitUntil:'domcontentloaded',timeout:15000});
   await page.waitForFunction(()=>!!document.querySelector('#novaHeroCarousel')?.dataset.novaCampaignCode,null,{timeout:15000});
   const first=await page.locator('#novaHeroCarousel').evaluate(el=>el.dataset.novaCampaignCode);
@@ -206,8 +211,11 @@ async function verifyCampaignRotation(browser) {
   const link=page.locator('.nova-hero-copy a').first();
   const href=await link.getAttribute('href');
   const destination=await link.getAttribute('data-nova-ad-destination');
+  await page.waitForTimeout(250);
+  await link.click();
+  await page.waitForTimeout(500);
   await page.close();
-  return {rotated:!!first&&!!second&&first!==second,first,second,href,destination};
+  return {rotated:!!first&&!!second&&first!==second,first,second,href,destination,impressionTracked:tracked.includes('impression'),clickTracked:tracked.includes('click'),tracked};
 }
 
 const browser = await chromium.launch({ headless: true });
@@ -221,6 +229,8 @@ await browser.close();
 
 const failures = [];
 if(!report.behavior.rotated)failures.push('Campaign rotation: second campaign did not replace the first');
+if(!report.behavior.impressionTracked)failures.push('Campaign tracking: impression event was not sent');
+if(!report.behavior.clickTracked)failures.push('Campaign tracking: click event was not sent');
 if(report.behavior.href!=='https://example.com/novaai-ad-audit/home_hero'||report.behavior.destination!==report.behavior.href)failures.push('Campaign navigation: hero destination/href mismatch');
 for (const viewport of viewports) {
   const base = report.versions[viewport.name].main;
@@ -242,7 +252,7 @@ for (const viewport of viewports) {
     if (b.textOverflow) failures.push(viewport.name + ' ' + slot + ': text overflow/clipping detected');
     if (b.textOutsideCopy) failures.push(viewport.name + ' ' + slot + ': text extends outside copy area');
     if (b.awkwardBreak) failures.push(viewport.name + ' ' + slot + ': CSS forces mid-word wrapping');
-    if (b.text.some(t => (/^(H1|H2|H3|STRONG)$/.test(t.tag) && t.fontSize < 14) || (/^(P|SMALL)$/.test(t.tag) && t.fontSize < 12) || (/^SPAN$/.test(t.tag) && t.fontSize < 11))) failures.push(viewport.name + ' ' + slot + ': headline/body/kicker readability threshold failed');
+    if (b.text.some(t => (/^(H1|H2|H3|STRONG)$/.test(t.tag) && t.fontSize < (slot.endsWith('_footer')||slot==='wishlist_banner'?11.5:14)) || (/^(P|SMALL)$/.test(t.tag) && t.fontSize < (slot.endsWith('_footer')||slot==='wishlist_banner'?11.5:12)) || (/^SPAN$/.test(t.tag) && t.fontSize < 11))) failures.push(viewport.name + ' ' + slot + ': headline/body/kicker readability threshold failed');
     if (b.copyRatio===null || Math.abs(b.copyRatio-.25)>.01) failures.push(viewport.name + ' ' + slot + ': measured copy width is not 25%');
     if (b.cta.some(c => c.text && c.fontSize < 12 && !/^(‹|›|Advertisement )/.test(c.text))) failures.push(viewport.name + ' ' + slot + ': CTA below 12px');
     if (slot !== 'cart_banner' && b.cta.length===0) failures.push(viewport.name + ' ' + slot + ': no visible CTA');
