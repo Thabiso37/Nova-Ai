@@ -763,7 +763,7 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
     <section class="panel" id="advertisementManagement">
       <h2>Advertisement Management</h2>
       <p class="muted">Manage all nine NOVAAI advertising boards separately. Each board has its own campaigns, schedule and activation controls.</p>
-      <div class="notice">Campaign management is separate from orders, payments, seller balances and product records. Images and destination links must use HTTPS.</div>
+      <div class="notice">Create campaigns directly from your phone. Upload an image or MP4/WebM video to NOVAAI Storage, or reuse an existing public HTTPS media URL. Choose an internal NOVAAI destination below. Campaign management remains separate from orders, payments, seller balances and product records.</div>
       <form id="adCampaignForm" class="ad-campaign-form">
         <input type="hidden" id="adCampaignId">
         <label for="adCampaignCode">Campaign reference (optional)</label>
@@ -789,11 +789,16 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
         <select id="adCampaignCreativeType"><option value="image">Image</option><option value="video">Video (MP4 / WebM)</option></select>
         <label for="adCampaignFile">Upload advertisement image or video</label>
         <input id="adCampaignFile" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm">
-        <div id="adCreativePreview" class="muted" aria-live="polite">No new media selected. You can also use a public HTTPS media URL below.</div>
-        <label for="adCampaignImage">Media URL (HTTPS, optional when uploading)</label>
-        <input id="adCampaignImage" type="url" placeholder="https://...">
-        <label for="adCampaignDestination">Destination link (HTTPS)</label>
-        <input id="adCampaignDestination" type="url" required placeholder="https://...">
+        <small class="muted">Choose a file from your Android phone. Maximum size: 100 MB. The secure NOVAAI Storage URL is generated automatically after upload.</small>
+        <div id="adCreativePreview" class="muted" aria-live="polite">No new media selected. For an existing campaign, its saved media is reused unless you upload a replacement.</div>
+        <label for="adCampaignImage">Existing media URL (optional fallback)</label>
+        <input id="adCampaignImage" type="url" inputmode="url" placeholder="Only needed if reusing an existing public HTTPS media URL">
+        <label for="adCampaignDestination">NOVAAI destination</label>
+        <select id="adCampaignDestination" required>
+          <option value="">Choose where the advertisement should open</option>
+          <option value="home">NOVAAI Home</option><option value="retail">Retail Shop</option><option value="motors">Motors</option><option value="property">Property</option><option value="cart">Shopping Cart</option><option value="wishlist">Wishlist</option>
+        </select>
+        <small class="muted">NOVAAI generates the destination link automatically. No external website is required.</small>
         <label for="adCampaignCta">Button text</label>
         <input id="adCampaignCta" maxlength="36" value="Explore offer →">
         <div class="ad-campaign-grid">
@@ -1021,12 +1026,16 @@ async function checkAdmin(user) {
 
 let adCampaignRows = [];
 function adCampaignMessage(text){const el=document.getElementById("adCampaignMessage");if(el)el.textContent=text;}
+const AD_CAMPAIGN_DESTINATIONS={home:{label:"NOVAAI Home",path:"./index.html"},retail:{label:"Retail Shop",path:"./retail.html"},motors:{label:"Motors",path:"./seller-motors-houses.html?market=motors"},property:{label:"Property",path:"./seller-motors-houses.html?market=property"},cart:{label:"Shopping Cart",path:"./retail.html?view=cart"},wishlist:{label:"Wishlist",path:"./retail.html?view=wishlist"}};
+function adCampaignDestinationUrl(key){const item=AD_CAMPAIGN_DESTINATIONS[key];if(!item)return "";const url=new URL(item.path,window.location.href);return url.protocol==="https:"?url.href:"";}
+function adCampaignDestinationKey(value){if(!value)return "";try{const candidate=new URL(value,window.location.href);return Object.keys(AD_CAMPAIGN_DESTINATIONS).find(key=>adCampaignDestinationUrl(key)===candidate.href)||"";}catch(_){return "";}}
+function adCampaignFileMime(file){const ext=(file.name.split(".").pop()||"").toLowerCase();const map={jpg:"image/jpeg",jpeg:"image/jpeg",png:"image/png",webp:"image/webp",mp4:"video/mp4",webm:"video/webm"};const allowed=["image/jpeg","image/png","image/webp","video/mp4","video/webm"];return allowed.includes(file.type)?file.type:(map[ext]||"");}
 function resetAdCampaignForm(){
   const form=document.getElementById("adCampaignForm");if(!form)return;
   form.reset();document.getElementById("adCampaignId").value="";
   Array.from(document.getElementById("adCampaignSlots").options).forEach(o=>o.selected=false);
   document.getElementById("adCampaignCreativeType").value="image";document.getElementById("adCampaignDuration").value=5;
-  document.getElementById("adCreativePreview").textContent="No new media selected. You can also use a public HTTPS media URL below.";
+  document.getElementById("adCreativePreview").textContent="No new media selected. For an existing campaign, its saved media is reused unless you upload a replacement.";
   document.getElementById("adCampaignCta").value="Explore offer →";
   document.getElementById("adCampaignPriority").value="0";
   document.getElementById("saveAdCampaignBtn").textContent="Save campaign";
@@ -1088,7 +1097,7 @@ function editAdCampaign(id){
   document.getElementById("adCampaignDuration").value=Number(c.duration_seconds)||5;
   document.getElementById("adCampaignFile").value="";
   document.getElementById("adCreativePreview").textContent="Current media: "+(c.creative_type||"image");
-  document.getElementById("adCampaignDestination").value=c.destination_url||"";
+  document.getElementById("adCampaignDestination").value=adCampaignDestinationKey(c.destination_url);
   document.getElementById("adCampaignCta").value=c.cta_text||"Explore offer →";
   document.getElementById("adCampaignStart").value=formatAdDate(c.starts_at);
   document.getElementById("adCampaignEnd").value=formatAdDate(c.ends_at);
@@ -1098,7 +1107,7 @@ function editAdCampaign(id){
   document.getElementById("advertisementManagement").scrollIntoView({behavior:"smooth"});
 }
 async function saveAdCampaign(event){
-  event.preventDefault();if(!currentAdmin)return;
+  event.preventDefault();if(!currentAdmin||currentAdmin.id!==ADMIN_ID||verifiedAdminId!==ADMIN_ID){adCampaignMessage("Administrator verification is missing. Please sign in again.");return;}
   const value=id=>document.getElementById(id).value.trim();
   const toIso=id=>{const v=value(id);return v?new Date(v).toISOString():null;};
   const slot_ids=Array.from(document.getElementById("adCampaignSlots").selectedOptions).map(o=>o.value);
@@ -1107,18 +1116,26 @@ async function saveAdCampaign(event){
   const mediaFile=document.getElementById("adCampaignFile").files[0];
   const creative_type=value("adCampaignCreativeType");
   if(mediaFile){
+    const detectedMime=adCampaignFileMime(mediaFile);
     const allowed=creative_type==="video"?["video/mp4","video/webm"]:["image/jpeg","image/png","image/webp"];
-    if(!allowed.includes(mediaFile.type)){adCampaignMessage("Choose a file that matches the selected creative format.");return;}
+    if(!detectedMime||!allowed.includes(detectedMime)){adCampaignMessage("Choose a JPG, PNG or WebP image, or an MP4/WebM video matching the selected creative format.");return;}
     if(mediaFile.size>100*1024*1024){adCampaignMessage("Media must be 100 MB or smaller.");return;}
     const safeName=mediaFile.name.replace(/[^a-zA-Z0-9._-]/g,"-");
     const storagePath="advertisements/"+currentAdmin.id+"/"+Date.now()+"-"+safeName;
     try{
-      const {data:uploaded,error:uploadError}=await sb.storage.from("Nova AI").upload(storagePath,mediaFile,{contentType:mediaFile.type,upsert:false});
+      const {data:uploaded,error:uploadError}=await sb.storage.from("Nova AI").upload(storagePath,mediaFile,{contentType:detectedMime,cacheControl:"3600",upsert:false});
       if(uploadError)throw uploadError;
       creative_url=sb.storage.from("Nova AI").getPublicUrl(uploaded.path).data.publicUrl;
+      if(new URL(creative_url).protocol!=="https:")throw new Error("Storage did not return a public HTTPS media URL.");
+      document.getElementById("adCampaignImage").value=creative_url;
+      document.getElementById("adCreativePreview").textContent="Uploaded successfully. NOVAAI media URL generated and ready to save.";
     }catch(uploadError){adCampaignMessage("Media upload failed: "+(uploadError?.message||"Unknown error"));return;}
   }
-  if(!creative_url){adCampaignMessage("Upload a creative or enter a public HTTPS media URL.");return;}
+  if(!creative_url){adCampaignMessage("Upload an image/video or enter an existing public HTTPS media URL.");return;}
+  try{if(new URL(creative_url).protocol!=="https:"){adCampaignMessage("Media must be a valid public HTTPS URL.");return;}}catch(_){adCampaignMessage("Media must be a valid public HTTPS URL.");return;}
+  const destinationKey=value("adCampaignDestination");
+  const destination_url=adCampaignDestinationUrl(destinationKey);
+  if(!destination_url||adCampaignDestinationKey(destination_url)!==destinationKey){adCampaignMessage("Choose a valid internal NOVAAI destination.");return;}
   const payload={
     id:value("adCampaignId")||null,
     campaign_code:value("adCampaignCode")||null,
@@ -1129,7 +1146,7 @@ async function saveAdCampaign(event){
     title:value("adCampaignTitle"),
     description:value("adCampaignDescription"),
     creative_url,
-    destination_url:value("adCampaignDestination"),
+    destination_url,
     cta_text:value("adCampaignCta")||"Explore offer →",
     starts_at:toIso("adCampaignStart"),
     ends_at:toIso("adCampaignEnd"),
