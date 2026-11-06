@@ -83,29 +83,25 @@ async function auditVersion(browser, version, viewport) {
     await page.waitForTimeout(1300);
     let wishlistBeforeRefresh = null;
     if (pageSpec.refreshWishlist) {
-      wishlistBeforeRefresh = await page.evaluate(({title,description,cta}) => {
-        // Clone the actual, live baseline board immediately before renderWishlist
-        // rebuilds the section. Do not depend on intercepting innerHTML writes:
-        // that hook can miss frameworks or render paths that replace the node.
-        const original=document.getElementById('wishlistAdSlot');
-        const section=document.getElementById('wishlist');
-        if(!original||!section)return null;
-        const clone=original.cloneNode(true);
-        clone.removeAttribute('id');
-        clone.setAttribute('data-pr9-baseline-probe','1');
-        clone.style.cssText='position:relative!important;left:auto!important;top:auto!important;width:auto!important;height:auto!important;visibility:hidden!important;pointer-events:none!important;z-index:auto!important;box-sizing:border-box!important;display:flex!important;';
-        const heading=clone.querySelector('.nova-footer-ad-copy strong');
-        const body=clone.querySelector('.nova-footer-ad-copy small');
-        const link=clone.querySelector('.nova-footer-ad-copy a');
-        if(heading)heading.textContent=title;
-        if(body)body.textContent=description;
-        if(link)link.textContent=cta;
-        section.insertBefore(clone,section.firstChild);
-        const r=clone.getBoundingClientRect();
-        const result=r.width>0&&r.height>0?{x:+r.x.toFixed(2),y:+r.y.toFixed(2),width:+r.width.toFixed(2),height:+r.height.toFixed(2)}:null;
-        clone.remove();
-        return result;
-      }, campaigns.find(c=>c.slot_id==='wishlist_banner'));
+      // Measure the true main-branch baseline with JavaScript disabled, before
+      // renderWishlist() can replace the original ad node. This avoids relying
+      // on a mutation hook that can miss the initial render timing.
+      const baselinePage=await browser.newPage({
+        viewport:{width:viewport.width,height:viewport.height},
+        deviceScaleFactor:1,
+        javaScriptEnabled:false
+      });
+      await baselinePage.goto(origin+'/main-snapshot/retail.html?view=wishlist&pr9baseline=1',{waitUntil:'domcontentloaded',timeout:15000});
+      wishlistBeforeRefresh=await baselinePage.evaluate(()=>{
+        document.body.classList.add('wishlist-view');
+        const board=document.getElementById('wishlistAdSlot');
+        if(!board)return null;
+        const r=board.getBoundingClientRect();
+        return r.width>0&&r.height>0
+          ?{x:+r.x.toFixed(2),y:+r.y.toFixed(2),width:+r.width.toFixed(2),height:+r.height.toFixed(2)}
+          :null;
+      });
+      await baselinePage.close();
       await page.evaluate(() => { if (typeof window.renderWishlist === 'function') window.renderWishlist(); });
       await page.waitForTimeout(500);
     }
