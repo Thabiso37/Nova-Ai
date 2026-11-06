@@ -18,7 +18,7 @@ const pages = [
 const selectors = {
   home_hero: ['#novaHeroCarousel', '.nova-hero-art', '.nova-hero-copy'],
   shop_tv: ['#shopTvAds', '.shop-tv-art', '.shop-tv-copy'],
-  cart_banner: ['#cartAdBoard', 'img[data-nova-ad-image]', null],
+  cart_banner: ['.cart-page-header', '#cartAdBoard img[data-nova-ad-image]', null],
   wishlist_banner: ['#wishlistAdSlot', '.nova-footer-ad-image img[data-nova-ad-image], #wishlistAdSlot img[data-nova-ad-image]', '.nova-footer-ad-copy'],
   motors_banner: ['#motorsWelcomeAd', 'img[data-nova-ad-image]', '.motors-hero-copy'],
   property_banner: ['#propertyAdSlot', '.property-promo-photo', '.property-promo-copy'],
@@ -127,10 +127,12 @@ async function auditVersion(browser, version, viewport) {
           return r.width>0&&r.height>0;
         };
         const slotNodes=[...document.querySelectorAll('[data-nova-ad-slot="' + slot + '"]')];
-        const outer = slotNodes.filter(visible).sort((a,b)=>{
-          const ra=a.getBoundingClientRect(),rb=b.getBoundingClientRect();
-          return (rb.width*rb.height)-(ra.width*ra.height);
-        })[0] || document.querySelector(outerSel) || slotNodes[0] || null;
+        const outer = slot==='cart_banner'
+          ? document.querySelector(outerSel)
+          : slotNodes.filter(visible).sort((a,b)=>{
+              const ra=a.getBoundingClientRect(),rb=b.getBoundingClientRect();
+              return (rb.width*rb.height)-(ra.width*ra.height);
+            })[0] || document.querySelector(outerSel) || slotNodes[0] || null;
         const photo = outer?.querySelector(photoSel) || (photoSel ? document.querySelector(photoSel) : null);
         const copy = copySel ? (outer?.querySelector(copySel) || document.querySelector(copySel)) : null;
         const isCarouselIndicator = el => !!el.closest('.nova-live-controls,.shop-tv-controls,.nova-hero-controls,[data-carousel-control],[aria-label^="Advertisement "]');
