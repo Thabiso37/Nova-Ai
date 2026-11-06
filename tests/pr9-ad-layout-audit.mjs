@@ -141,7 +141,10 @@ async function auditVersion(browser, version, viewport) {
           : copy ? [copy, ...copy.querySelectorAll('h1,h2,h3,p,strong,small,span,a,button')].filter((el,i,a)=>a.indexOf(el)===i && visible(el) && !isCarouselIndicator(el) && (el.children.length===0 || /^(H1|H2|H3|P|STRONG|SMALL|SPAN|A|BUTTON)$/.test(el.tagName))) : (outer ? [...outer.querySelectorAll('strong,span,h1,h2,p,a,button')].filter(el=>visible(el)&&!isCarouselIndicator(el)) : []);
         const text = textNodes.map(el => ({ tag: el.tagName, text: (el.innerText || '').trim().slice(0,100), fontSize: parseFloat(getComputedStyle(el).fontSize), lineHeight: getComputedStyle(el).lineHeight, rect: rect(el) }));
         const isCartChrome = el => slot==='cart_banner' && (el.id==='cartAdBoard' || el.matches('.cart-page-header > button'));
-        const cta = outer ? [...outer.querySelectorAll('a,button')].filter(el=>visible(el)&&!isCarouselIndicator(el)&&!isCartChrome(el)).map(el=>({text:(el.innerText||el.getAttribute('aria-label')||'').trim().slice(0,80),rect:rect(el),fontSize:parseFloat(getComputedStyle(el).fontSize),href:el.getAttribute('href')})) : [];
+        const cta = outer ? [...outer.querySelectorAll('a,button')].filter(el=>visible(el)&&!isCarouselIndicator(el)&&!isCartChrome(el)).map(el=>({text:(el.innerText||el.getAttribute('aria-label')||'').trim().slice(0,80),rect:rect(el),fontSize:parseFloat(getComputedStyle(el).fontSize),href:el.getAttribute('href'),destination:el.dataset.novaAdDestination||el.getAttribute('href')})) : [];
+        const boardLink=slot==='cart_banner'?outer?.querySelector('#cartAdBoard'):(copy?.querySelector('a,button')||outer?.querySelector('a,button'));
+        const destination=boardLink?.dataset.novaAdDestination||boardLink?.getAttribute('href')||null;
+        const managedSlot=slotNodes[0]||outer;
         const carouselIndicators = outer ? [...outer.querySelectorAll('.nova-live-controls,.shop-tv-controls,.nova-hero-controls')].map(group=>({group:rect(group),items:[...group.querySelectorAll('button,a,[role="button"]')].filter(visible).map(el=>({text:(el.innerText||el.getAttribute('aria-label')||'').trim().slice(0,50),rect:rect(el),fontSize:parseFloat(getComputedStyle(el).fontSize),insideGroup:group.contains(el)}))})) : [];
         const image = outer?.querySelector('img[data-nova-ad-image],video[data-nova-ad-video]') || (photo?.querySelector('img[data-nova-ad-image]') || photo?.querySelector('img'));
         const outerRect=rect(outer), photoRect=rect(photo), copyRect=rect(copy);
@@ -174,7 +177,7 @@ async function auditVersion(browser, version, viewport) {
           const cs=getComputedStyle(el);
           return {rect:rect(el),position:cs.position,left:cs.left,right:cs.right,width:cs.width,display:cs.display};
         }):[];
-        return {slot, found:!!outer, outer:outerRect, originalSize:outer?{width:Number(outer.dataset.novaOriginalWidth)||null,height:Number(outer.dataset.novaOriginalHeight)||null}:null, photo:photoRect, copy:copyMeasure, expectedRightCopy:rightCopy, photoRatio:mediaRatio, copyRatio, text, cta, carouselIndicators, controls, mediaLoaded, overlap, textOverflow, textOutsideCopy, awkwardBreak, hasManagedCampaign:!!outer?.dataset.novaManagedCampaign};
+        return {slot, found:!!outer, outer:outerRect, originalSize:outer?{width:Number(outer.dataset.novaOriginalWidth)||null,height:Number(outer.dataset.novaOriginalHeight)||null}:null, photo:photoRect, copy:copyMeasure, expectedRightCopy:rightCopy, photoRatio:mediaRatio, copyRatio, text, cta, destination, carouselIndicators, controls, mediaLoaded, overlap, textOverflow, textOutsideCopy, awkwardBreak, hasManagedCampaign:!!managedSlot?.dataset.novaManagedCampaign};
       }, { slot, outerSel, photoSel, copySel });
       if (slot === 'wishlist_banner') measurement.wishlistBeforeRefresh = wishlistBeforeRefresh;
       results[slot] = measurement;
@@ -185,15 +188,44 @@ async function auditVersion(browser, version, viewport) {
   return results;
 }
 
+async function verifyCampaignRotation(browser) {
+  const page=await browser.newPage({viewport:{width:1365,height:900},deviceScaleFactor:1});
+  await page.route('**/nxplffvklkopwfjaqexo.supabase.co/rest/v1/rpc/**',async route=>{
+    const u=route.request().url();
+    if(u.includes('get_live_novaai_ad_campaigns'))await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(campaigns)});
+    else await route.fulfill({status:200,contentType:'application/json',body:'[]'});
+  });
+  await page.route('https://ads.test/**',async route=>{
+    const svg='<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600"><rect width="1200" height="600" fill="#1763a8"/><circle cx="850" cy="260" r="190" fill="#f5b900"/></svg>';
+    await route.fulfill({status:200,contentType:'image/svg+xml',body:svg});
+  });
+  await page.goto(origin+'/pr-snapshot/index.html?audit=rotation',{waitUntil:'domcontentloaded',timeout:15000});
+  await page.waitForFunction(()=>!!document.querySelector('#novaHeroCarousel')?.dataset.novaCampaignCode,null,{timeout:15000});
+  const first=await page.locator('#novaHeroCarousel').getAttribute('data-novaCampaignCode');
+  await page.waitForFunction(previous=>{
+    const slot=document.querySelector('#novaHeroCarousel');
+    return !!slot?.dataset.novaCampaignCode&&slot.dataset.novaCampaignCode!==previous;
+  },first,{timeout:8000});
+  const second=await page.locator('#novaHeroCarousel').getAttribute('data-novaCampaignCode');
+  const link=page.locator('.nova-hero-copy a').first();
+  const href=await link.getAttribute('href');
+  const destination=await link.getAttribute('data-nova-ad-destination');
+  await page.close();
+  return {rotated:!!first&&!!second&&first!==second,first,second,href,destination};
+}
+
 const browser = await chromium.launch({ headless: true });
 const report = { generatedAt: new Date().toISOString(), viewports, versions: {} };
 for (const viewport of viewports) {
   report.versions[viewport.name] = {};
   for (const version of ['main', 'pr']) report.versions[viewport.name][version] = await auditVersion(browser, version, viewport);
 }
+report.behavior = await verifyCampaignRotation(browser);
 await browser.close();
 
 const failures = [];
+if(!report.behavior.rotated)failures.push('Campaign rotation: second campaign did not replace the first');
+if(report.behavior.href!=='https://example.com/novaai-ad-audit/home_hero'||report.behavior.destination!==report.behavior.href)failures.push('Campaign navigation: hero destination/href mismatch');
 for (const viewport of viewports) {
   const base = report.versions[viewport.name].main;
   const pr = report.versions[viewport.name].pr;
@@ -206,6 +238,8 @@ for (const viewport of viewports) {
     } else if (!a?.found || !b?.found) { failures.push(viewport.name + ' ' + slot + ': board missing'); continue; }
     if (slot !== 'wishlist_banner' && (!a.outer || !b.outer || Math.abs(a.outer.width-b.outer.width)>1 || Math.abs(a.outer.height-b.outer.height)>1)) failures.push(viewport.name + ' ' + slot + ': outer dimensions differ from main');
     if (!b.mediaLoaded) failures.push(viewport.name + ' ' + slot + ': creative media did not load');
+    if (!b.hasManagedCampaign) failures.push(viewport.name + ' ' + slot + ': managed campaign was not applied');
+    if (b.destination!=='https://example.com/novaai-ad-audit/'+slot) failures.push(viewport.name + ' ' + slot + ': campaign destination mismatch');
     if (b.overlap) failures.push(viewport.name + ' ' + slot + ': photo and copy containers overlap');
     if (b.textOverflow) failures.push(viewport.name + ' ' + slot + ': text overflow/clipping detected');
     if (b.textOutsideCopy) failures.push(viewport.name + ' ' + slot + ': text extends outside copy area');
