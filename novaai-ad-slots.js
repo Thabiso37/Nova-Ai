@@ -150,9 +150,59 @@
   function campaignIsActive(c){
     if(!c||c.status!=='active')return false;
     const now=Date.now();
-    const start=c.starts_at?Date.parse(c.starts_at):0;
-    const end=c.ends_at?Date.parse(c.ends_at):Infinity;
-    return (!start||Number.isFinite(start)&&now>=start)&&(!end||Number.isFinite(end)&&now<=end);
+    if(c.starts_at){
+      const start=Date.parse(c.starts_at);
+      if(!Number.isFinite(start)||now<start)return false;
+    }
+    if(c.ends_at){
+      const end=Date.parse(c.ends_at);
+      if(!Number.isFinite(end)||now>=end)return false;
+    }
+    return true;
+  }
+  function adSlotIsActuallyVisible(slot){
+    if(!slot||document.visibilityState==='hidden'||slot.closest('[hidden]'))return false;
+    const style=window.getComputedStyle(slot);
+    if(style.display==='none'||style.visibility==='hidden'||Number(style.opacity)===0)return false;
+    const rect=slot.getBoundingClientRect();
+    return rect.width>0&&rect.height>0&&rect.bottom>0&&rect.right>0&&rect.top<window.innerHeight&&rect.left<window.innerWidth;
+  }
+  function recordDisplayedImpression(slot,campaignCode){
+    if(!slot||!campaignCode)return;
+    if(!slot.__novaAdImpressions)slot.__novaAdImpressions=new Set();
+    const check=()=>{
+      if(slot.dataset.novaCampaignCode!==campaignCode||slot.__novaAdImpressions.has(campaignCode)||!adSlotIsActuallyVisible(slot))return;
+      slot.__novaAdImpressions.add(campaignCode);
+      recordAdEvent(campaignCode,'impression');
+    };
+    if(!slot.__novaAdVisibilityObserver&&'IntersectionObserver' in window){
+      slot.__novaAdVisibilityObserver=new IntersectionObserver(entries=>{
+        if(entries.some(entry=>entry.isIntersecting&&entry.intersectionRatio>=0.5)){
+          const current=slot.dataset.novaCampaignCode;
+          if(current)recordDisplayedImpression(slot,current);
+        }
+      },{threshold:[0.5]});
+      slot.__novaAdVisibilityObserver.observe(slot);
+    }
+    if(!slot.__novaAdVisibilityRefreshBound){
+      slot.__novaAdVisibilityRefreshBound='1';
+      document.addEventListener('visibilitychange',()=>{if(!document.hidden){const current=slot.dataset.novaCampaignCode;if(current)recordDisplayedImpression(slot,current);}});
+    }
+    if(typeof requestAnimationFrame==='function')requestAnimationFrame(check);else window.setTimeout(check,0);
+  }
+  function bindCampaignClick(target,id){
+    if(!target||target.dataset.novaAdClickBound==='1')return;
+    target.dataset.novaAdClickBound='1';
+    target.addEventListener('click',event=>{
+      const code=target.dataset.novaAdClickCampaign;
+      const destination=target.dataset.novaAdDestination;
+      if(!code||!destination)return;
+      recordAdEvent(code,'click');
+      if(id==='motors_banner'){
+        event.preventDefault();
+        window.location.assign(destination);
+      }
+    });
   }
   function recordAdEvent(campaignCode,eventType){
     if(!campaignCode||!['impression','click'].includes(eventType))return;
@@ -216,6 +266,7 @@
     }
     selectors.forEach((selector,index)=>{
       const node=selector?slot.querySelector(selector):null;const value=saved.nodes[index];if(!node||!value)return;
+      node.removeAttribute('data-nova-ad-click-campaign');node.removeAttribute('data-nova-ad-destination');
       node.textContent=value.text;
       if(value.href===null)node.removeAttribute('href');else if(value.href!==undefined)node.setAttribute('href',value.href);
       if(value.target===null)node.removeAttribute('target');else if(value.target!==undefined)node.setAttribute('target',value.target);
@@ -269,15 +320,18 @@
         }
         if(titleNode)titleNode.textContent=title;
         if(descNode)descNode.textContent=description;
-        if(linkNode){if(id!=='cart_banner')linkNode.textContent=String(c.cta_text||'Explore offer →').slice(0,36);linkNode.href=href;linkNode.target='_blank';linkNode.rel='noopener noreferrer sponsored';}
+        if(linkNode){
+          if(id!=='cart_banner')linkNode.textContent=String(c.cta_text||'Explore offer →').slice(0,36);
+          if(id==='motors_banner'&&linkNode.tagName==='BUTTON')linkNode.removeAttribute('onclick');
+          if(linkNode.tagName==='A'){linkNode.href=href;linkNode.target='_blank';linkNode.rel='noopener noreferrer sponsored';}
+          linkNode.dataset.novaAdClickCampaign=c.campaign_id||'';
+          linkNode.dataset.novaAdDestination=href;
+          bindCampaignClick(linkNode,id);
+        }
         if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
         slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
         slot.dataset.novaCampaignCode=c.campaign_id||'';
-        if(slot.dataset.novaAdTrackBound!=='1'){
-          slot.dataset.novaAdTrackBound='1';
-          slot.addEventListener('click',()=>recordAdEvent(slot.dataset.novaCampaignCode,'click'));
-        }
-        recordAdEvent(c.campaign_id,'impression');
+        recordDisplayedImpression(slot,c.campaign_id);
         slot.setAttribute('data-nova-ad-status','management_campaign_active');
         slot.setAttribute('aria-label','Featured advertisement: '+title);
         const delay=Math.max(2,Math.min(60,Number(c.duration_seconds)||5))*1000;
