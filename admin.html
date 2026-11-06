@@ -570,6 +570,24 @@ button {
 .ad-campaign-record-actions button{padding:7px 9px;border:1px solid #dce3ee;border-radius:8px;background:#fff;color:#174ea6;font-size:11px;font-weight:700}
 .ad-status{display:inline-block;margin-top:5px;padding:4px 7px;border-radius:20px;background:#eaf1ff;color:#174ea6;font-size:10px;font-weight:700}
 @media(max-width:600px){.ad-campaign-grid{grid-template-columns:1fr}.ad-campaign-record{align-items:flex-start;flex-wrap:wrap}.ad-campaign-record-actions{width:100%}}
+
+/* Professional NOVAAI administration control-centre */
+:root{--blue:#174ea6;--blue-dark:#10284b;--yellow:#f5b900;--page:#f5f7fb;--line:#e7ebf2;--text:#17243b;--muted:#718096;--radius:16px;--shadow:0 8px 28px rgba(16,40,75,.055)}
+html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#18263d}
+.topbar{height:76px;padding:0 clamp(16px,3vw,34px);background:#fff;color:var(--text);border-bottom:1px solid var(--line);box-shadow:0 2px 12px rgba(16,40,75,.035)}
+.brand-mark{background:var(--blue);border:0;border-radius:12px;color:var(--yellow);font-weight:900}.brand h1{font-size:19px;letter-spacing:1.1px;color:var(--blue-dark)}.brand p{color:var(--muted);opacity:1}
+.header-pill{background:#fff8dc;color:#775900;border:1px solid #f2df9b;padding:9px 13px}
+.app-shell{max-width:1600px;grid-template-columns:252px minmax(0,1fr);gap:25px;padding:26px clamp(14px,2.6vw,34px)}
+.sidebar{top:92px;border:1px solid #e8edf5;border-radius:18px;padding:20px 13px;box-shadow:0 8px 28px rgba(16,40,75,.045)}.sidebar h2{font-size:20px;letter-spacing:1px;color:var(--blue-dark);padding:0 10px}.sidebar-label{letter-spacing:1.5px;margin:7px 10px 16px}
+.sidebar nav a{padding:11px 12px;margin:3px 0;border-radius:10px;font-size:12px;color:#58677e;transition:background .15s,color .15s}.sidebar nav a:hover,.sidebar nav a.active{background:#edf3ff;color:var(--blue)}.nav-icon{width:23px;font-size:15px}
+.logout{margin-top:18px;padding:12px;background:#fff0f1;border:1px solid #f7dadd}
+.welcome-panel{padding:24px 26px;margin-bottom:20px;background:linear-gradient(115deg,#10284b,#174ea6);color:white;border-radius:18px;box-shadow:0 12px 30px rgba(23,78,166,.16)}.welcome-panel h2{font-size:clamp(22px,2.5vw,30px);letter-spacing:-.5px}.welcome-panel p{color:rgba(255,255,255,.78)}.welcome-panel p strong{color:white}.date-label{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white}
+.section-title{font-size:15px;font-weight:750;letter-spacing:.1px;margin:25px 0 12px}.stats{gap:14px}.stat,.panel,.module{border:1px solid #e8edf5;box-shadow:0 5px 22px rgba(16,40,75,.04);border-radius:16px}.stat{padding:18px;min-height:112px}.stat strong{font-size:25px;letter-spacing:-.5px}.module{padding:17px;min-height:126px;transition:transform .18s,border-color .18s,box-shadow .18s}.module:hover{transform:translateY(-2px);border-color:#b9cafa;box-shadow:0 10px 24px rgba(16,40,75,.08)}.module-icon{background:#edf3ff;color:var(--blue);border-radius:12px}
+.panel{padding:clamp(16px,2vw,25px);margin-bottom:18px;scroll-margin-top:94px}.panel h2{font-size:18px;letter-spacing:-.2px}.notice{border-radius:11px}.record{border-color:#e8edf5;border-radius:12px}button{transition:filter .15s,transform .15s}button:hover{filter:brightness(.98)}button:active{transform:translateY(1px)}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid rgba(245,185,0,.5);outline-offset:2px}.primary{background:var(--blue)}input,select{border-color:#dfe6f0;border-radius:10px}#loginPanel{margin:7vh auto;border-radius:18px}
+.mobile-menu-toggle{display:none;background:#edf3ff;color:var(--blue);padding:10px 12px;border-radius:10px}.sidebar-backdrop{display:none}.capability-note{padding:15px;border:1px dashed #d8e1ef;border-radius:12px;background:#fbfcfe;color:#66758b;font-size:12px;line-height:1.6}.capability-note strong{display:block;color:#243650;margin-bottom:4px}.overview-kicker{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:#d8e5ff;font-weight:800;margin-bottom:8px}
+@media(max-width:850px){.topbar{height:66px}.mobile-menu-toggle{display:inline-flex;align-items:center;gap:7px}.app-shell{display:block;padding:15px 13px 32px}.sidebar{display:block;position:fixed;z-index:150;left:0;top:0;bottom:0;width:min(290px,86vw);border-radius:0 18px 18px 0;overflow-y:auto;transform:translateX(-105%);transition:transform .22s ease;padding:22px 15px;box-shadow:15px 0 35px rgba(12,30,60,.15)}.sidebar.mobile-open{transform:translateX(0)}.sidebar-backdrop.open{display:block;position:fixed;inset:0;background:rgba(12,26,48,.42);z-index:140}.mobile-nav{display:none!important}.welcome-panel{padding:21px 18px}.welcome-panel .date-label{display:block}}
+@media(max-width:520px){.header-actions{gap:7px}.header-pill{font-size:10px;padding:8px}.brand{gap:9px}.brand h1{font-size:16px}.brand p{font-size:9px}.brand-mark{width:36px;height:36px}.welcome-panel{display:block}.welcome-panel h2{font-size:22px}.welcome-panel .date-label{display:inline-block;margin-top:13px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.financial-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 </style>
 </head>
 
@@ -610,19 +628,24 @@ button {
 
 <section id="dashboard" class="hidden">
 
-<div class="app-shell">
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>\n<div class="app-shell">
 
   <aside class="sidebar">
     <h2>NOVAAI</h2>
-    <p class="sidebar-label">ADMINISTRATION</p>
+    <p class="sidebar-label">CONTROL CENTRE</p>
 
-    <nav>
-      <a href="#overview" class="active"><span class="nav-icon">⌂</span>Dashboard</a>
-      <a href="#productsSection"><span class="nav-icon">▦</span>Product Moderation</a>
-      <a href="#paymentCentre"><span class="nav-icon">▤</span>Payment Centre</a>
-      <a href="#sellerFinancialRecords"><span class="nav-icon">◈</span>Seller Finances</a>
-      <a href="#advertisementManagement"><span class="nav-icon">▣</span>Advertisement Management</a>
-    </nav>
+    <nav aria-label="Administration">
+<a href="#overview" class="active"><span class="nav-icon">⌂</span>Overview</a>
+<a href="#marketplacePermissions"><span class="nav-icon">♙</span>Seller Management</a>
+<a href="#customerManagement"><span class="nav-icon">♧</span>Customer Management</a>
+<a href="#retailManagement"><span class="nav-icon">▦</span>Retail Management</a>
+<a href="#motorsManagement"><span class="nav-icon">▰</span>Motors Management</a>
+<a href="#propertyManagement"><span class="nav-icon">⌂</span>Property Management</a>
+<a href="#advertisementManagement"><span class="nav-icon">▣</span>Advertising Management</a>
+<a href="#paymentCentre"><span class="nav-icon">▤</span>Orders & Fulfilment</a>
+<a href="#paymentCentre"><span class="nav-icon">◈</span>Payments & Settlements</a>
+<a href="#reportsAnalytics"><span class="nav-icon">▥</span>Reports & Analytics</a>
+<a href="#adminSettings"><span class="nav-icon">⚙</span>Settings</a></nav>
 
     <button class="logout" id="logoutBtn">Sign Out</button>
   </aside>
@@ -632,14 +655,14 @@ button {
     <section id="overview">
       <div class="welcome-panel">
         <div>
-          <h2>Administrator Dashboard</h2>
+          <div class="overview-kicker">NOVAAI MARKETPLACE CONTROL CENTRE</div><h2>Marketplace overview</h2>
           <p>Welcome back. Your marketplace overview is below.</p>
           <p>Signed in as: <strong id="adminEmail"></strong></p>
         </div>
         <div class="date-label">🛡️ Secure Admin Session</div>
       </div>
 
-      <h3 class="section-title">Product Overview</h3>
+      <h3 class="section-title">Live product moderation</h3>
 
       <div class="stats">
         <div class="stat amber">
@@ -660,68 +683,19 @@ button {
         </div>
       </div>
 
-      <h3 class="section-title">Administration Centre</h3>
+      <div class="stats" style="margin-top:-8px"><div class="stat blue"><div class="stat-label">Orders in database</div><strong id="overviewOrderCount">—</strong></div><div class="stat"><div class="stat-label">Seller applications</div><strong id="overviewSellerCount">—</strong></div><div class="stat"><div class="stat-label">Advertising campaigns</div><strong id="overviewCampaignCount">—</strong></div><div class="stat amber"><div class="stat-label">Ad impressions recorded</div><strong id="overviewAdImpressions">—</strong></div></div>\n<h3 class="section-title">Administration modules</h3>
 
       <div class="module-grid">
-        <a class="module" href="#overview">
-          <div class="module-icon">⌂</div>
-          <h3>Main Administration</h3>
-          <p>Marketplace administration overview.</p>
-        </a>
-
-        <a class="module" href="#productsSection">
-          <div class="module-icon">▦</div>
-          <h3>Products & Listings</h3>
-          <p>Review, approve, reject and hide listings.</p>
-        </a>
-
-        <a class="module" href="#marketplacePermissions">
-          <div class="module-icon">♙</div>
-          <h3>Seller Management</h3>
-          <p>Review seller applications, marketplace access and store approval.</p>
-        </a>
-
-        <div class="module disabled">
-          <div class="module-icon">♧</div>
-          <h3>Customer Management</h3>
-          <p>Customer management tools are not connected in this admin file.</p>
-        </div>
-
-        <div class="module disabled">
-          <div class="module-icon">▣</div>
-          <h3>Orders & Fulfilments</h3>
-          <p>Order management tools are not connected in this admin file.</p>
-        </div>
-
-        <a class="module" href="#paymentCentre">
-          <div class="module-icon">▤</div>
-          <h3>Payments & Reconciliation</h3>
-          <p>Review recorded payment information.</p>
-        </a>
-
-        <a class="module" href="#sellerFinancialRecords">
-          <div class="module-icon">◈</div>
-          <h3>Payout Management</h3>
-          <p>Review seller financial accounting records.</p>
-        </a>
-
-        <a class="module" href="#advertisementManagement">
-          <div class="module-icon">▣</div>
-          <h3>Advertisement Management</h3>
-          <p>Create, schedule, pause and publish adverts for Shop, Motors and Property.</p>
-        </a>
-
-        <div class="module disabled">
-          <div class="module-icon">▥</div>
-          <h3>Reports & Analytics</h3>
-          <p>Reporting tools are not connected in this admin file.</p>
-        </div>
-
-        <div class="module disabled">
-          <div class="module-icon">♢</div>
-          <h3>Security & Audit Logs</h3>
-          <p>Security audit tools are not connected in this admin file.</p>
-        </div>
+        <a class="module" href="#marketplacePermissions"><div class="module-icon">♙</div><h3>Seller Management</h3><p>Review marketplace applications and public location submissions.</p></a>
+        <div class="module disabled"><div class="module-icon">♧</div><h3>Customer Management</h3><p>Customer account administration is not connected yet.</p></div>
+        <a class="module" href="#productsSection"><div class="module-icon">▦</div><h3>Retail Management</h3><p>Moderate existing listings through the shared product queue.</p></a>
+        <a class="module" href="#motorsManagement"><div class="module-icon">▰</div><h3>Motors Management</h3><p>Marketplace-specific controls are not exposed separately.</p></a>
+        <a class="module" href="#propertyManagement"><div class="module-icon">⌂</div><h3>Property Management</h3><p>Marketplace-specific controls are not exposed separately.</p></a>
+        <a class="module" href="#advertisementManagement"><div class="module-icon">▣</div><h3>Advertising Management</h3><p>Manage campaigns across all nine existing boards.</p></a>
+        <a class="module" href="#paymentCentre"><div class="module-icon">▤</div><h3>Orders & Fulfilment</h3><p>Review existing order and fulfilment records.</p></a>
+        <a class="module" href="#paymentCentre"><div class="module-icon">◈</div><h3>Payments & Settlements</h3><p>Review recorded statuses and calculated entitlements.</p></a>
+        <a class="module" href="#reportsAnalytics"><div class="module-icon">▥</div><h3>Reports & Analytics</h3><p>Read-only live totals from loaded marketplace data.</p></a>
+        <a class="module" href="#adminSettings"><div class="module-icon">⚙</div><h3>Settings</h3><p>View the current secure administrator session.</p></a>
       </div>
     </section>
 
@@ -740,7 +714,10 @@ button {
   <div id="sellerLocationReviewRecords"></div>
 </section>
 
-<section class="panel" id="productsSection">
+<section class="panel" id="customerManagement"><h2>Customer Management</h2><p class="muted">Customer account management is not connected to this admin dashboard.</p><div class="capability-note"><strong>Not connected</strong>No customer directory, account suspension, profile editing, or customer-support actions have been added. Customer records and authentication remain untouched.</div></section>
+<section class="panel" id="retailManagement"><h2>Retail Management</h2><p class="muted">Retail listings continue to use the existing shared Products moderation queue.</p><div class="actions"><a href="#productsSection">Open Product Moderation</a></div><div class="capability-note"><strong>Current connected function</strong>Search, filter, approve, reject, hide, and return existing product listings to pending review. No separate Retail database or duplicate admin system has been created.</div></section>
+<section class="panel" id="motorsManagement"><h2>Motors Management</h2><p class="muted">Motors listing records remain in the existing marketplace product system.</p><div class="capability-note"><strong>Shared moderation only</strong>Use Product Moderation for the existing listing workflow. A dedicated Motors-only administration query and action set is not currently exposed.</div></section>
+<section class="panel" id="propertyManagement"><h2>Property Management</h2><p class="muted">Property listing records remain in the existing marketplace product system.</p><div class="capability-note"><strong>Shared moderation only</strong>Use Product Moderation for the existing listing workflow. A dedicated Property-only administration query and action set is not currently exposed.</div></section>\n<section class="panel" id="productsSection">
       <h2>Product Moderation</h2>
       <p class="muted">Review and manage seller product listings.</p>
 
@@ -808,7 +785,8 @@ button {
       <div id="adCampaignRecords"></div>
     </section>
 
-    <section class="panel" id="paymentCentre">
+<section class="panel" id="reportsAnalytics"><h2>Reports & Analytics</h2><p class="muted">Live read-only totals calculated from records already retrieved by this dashboard.</p><div class="financial-grid"><div class="stat"><div class="stat-label">Products loaded</div><strong id="reportProductCount">—</strong></div><div class="stat"><div class="stat-label">Orders loaded</div><strong id="reportOrderCount">—</strong></div><div class="stat"><div class="stat-label">Fulfilment records</div><strong id="reportFulfilmentCount">—</strong></div><div class="stat"><div class="stat-label">Ad clicks recorded</div><strong id="reportAdClicks">—</strong></div></div><div class="capability-note"><strong>Reporting scope</strong>These figures reflect the rows returned by existing admin queries. This dashboard does not claim to provide a complete accounting ledger, verified cash receipts, fraud-resistant ad analytics, or historical exports.</div></section>
+<section class="panel" id="adminSettings"><h2>Administrator Settings</h2><p class="muted">Session and access information for the currently authenticated administrator.</p><div class="record"><strong>Administrator account</strong><p id="settingsAdminEmail">Not signed in</p><p>Authorization: <strong>Supabase Auth + is_novaai_admin() + existing administrator ID check</strong></p><p>Security configuration changes are not exposed here.</p></div><button class="logout" type="button" id="settingsLogoutBtn">Sign Out</button></section>\n    <section class="panel" id="paymentCentre">
       <h2>🛡️ Payment Control Centre</h2>
       <p class="muted">Marketplace financial monitoring and reconciliation.</p>
 
@@ -1032,7 +1010,7 @@ async function loadAdCampaigns(){
   try{
     const {data,error}=await sb.rpc("admin_list_novaai_ad_campaigns");
     if(error)throw error;
-    adCampaignRows=Array.isArray(data)?data:[];
+    adCampaignRows=Array.isArray(data)?data:[];\n    updateAdminOverview();
     adCampaignMessage(adCampaignRows.length+" campaign(s) saved. Changes publish to the live boards when active and within schedule.");
     const boardLabels={"home_hero":"Home – Main advertising board","shop_tv":"Shop – Main carousel","cart_banner":"Cart advertising board","wishlist_banner":"Wishlist (heart) advertising board","motors_banner":"Motors – Main advertising board","property_banner":"Property – Main advertising board","shop_footer":"Shop – Bottom advertising board","motors_footer":"Motors – Bottom advertising board","property_footer":"Property – Bottom advertising board"};
     const boardOrder=["home_hero","shop_tv","cart_banner","wishlist_banner","motors_banner","property_banner","shop_footer","motors_footer","property_footer"];
@@ -1479,7 +1457,7 @@ async function loadProducts() {
     return;
   }
 
-  allProducts = data || [];
+  allProducts = data || [];\n  updateAdminOverview();
 
   document.getElementById("pendingCount").textContent =
     allProducts.filter(p => p.status === "pending").length;
@@ -1818,7 +1796,14 @@ async function changeStatus(id, newStatus) {
   await loadProducts();
 }
 
-document.getElementById("adminLoginForm").addEventListener("submit", (event) => {
+
+function closeAdminDrawer(){document.querySelector(".sidebar")?.classList.remove("mobile-open");document.getElementById("sidebarBackdrop")?.classList.remove("open");document.getElementById("mobileMenuToggle")?.setAttribute("aria-expanded","false");}
+document.getElementById("mobileMenuToggle")?.addEventListener("click",()=>{const side=document.querySelector(".sidebar");const open=side?.classList.toggle("mobile-open");document.getElementById("sidebarBackdrop")?.classList.toggle("open",!!open);document.getElementById("mobileMenuToggle")?.setAttribute("aria-expanded",String(!!open));});
+document.getElementById("sidebarBackdrop")?.addEventListener("click",closeAdminDrawer);
+document.querySelectorAll(".sidebar nav a").forEach(a=>a.addEventListener("click",()=>{document.querySelectorAll(".sidebar nav a").forEach(n=>n.classList.toggle("active",n===a));closeAdminDrawer();}));
+document.getElementById("settingsLogoutBtn")?.addEventListener("click",logout);
+function updateAdminOverview(){const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=String(v);};set("overviewOrderCount",allPaymentOrders.length);set("overviewSellerCount",document.querySelectorAll("#marketplacePermissionRecords .record").length);set("overviewCampaignCount",adCampaignRows.length);set("overviewAdImpressions",adCampaignRows.reduce((n,c)=>n+Number(c.impression_count||0),0).toLocaleString());set("reportProductCount",allProducts.length);set("reportOrderCount",allPaymentOrders.length);set("reportFulfilmentCount",allSellerFinancials.length);set("reportAdClicks",adCampaignRows.reduce((n,c)=>n+Number(c.click_count||0),0).toLocaleString());set("settingsAdminEmail",currentAdmin?.email||"Not signed in");}
+\ndocument.getElementById("adminLoginForm").addEventListener("submit", (event) => {
   event.preventDefault();
   event.stopPropagation();
   login().catch((error) => {
