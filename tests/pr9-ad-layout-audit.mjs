@@ -89,6 +89,10 @@ async function auditVersion(browser, version, viewport) {
     await page.waitForTimeout(1300);
     let wishlistBeforeRefresh = null;
     if (pageSpec.refreshWishlist) {
+      // Trigger one deterministic refresh first so both branches expose the
+      // original node to the capture hooks before the baseline is measured.
+      await page.evaluate(() => { if (typeof window.renderWishlist === 'function') window.renderWishlist(); });
+      await page.waitForTimeout(150);
       wishlistBeforeRefresh = await page.evaluate(() => {
         const section=document.getElementById('wishlist');
         const clone=window.__wishlistBaselineClone || document.getElementById('wishlistAdSlot')?.cloneNode(true);
@@ -112,6 +116,11 @@ async function auditVersion(browser, version, viewport) {
         if(body)body.textContent='Fresh finds and local offers are waiting for you.';
         if(link){link.textContent='Explore marketplace →';link.setAttribute('href','#products');}
         clone.style.cssText='position:relative!important;left:auto!important;top:auto!important;width:auto!important;height:auto!important;visibility:hidden!important;pointer-events:none!important;z-index:auto!important;box-sizing:border-box!important;display:flex!important;';
+        for(let node=section;node&&node!==document.body;node=node.parentElement){
+          const cs=getComputedStyle(node);
+          if(cs.display==='none')node.style.setProperty('display','block','important');
+          if(cs.visibility==='hidden')node.style.setProperty('visibility','visible','important');
+        }
         section.insertBefore(clone,section.firstChild);
         const r=clone.getBoundingClientRect();
         const result=r.width>0&&r.height>0?{x:+r.x.toFixed(2),y:+r.y.toFixed(2),width:+r.width.toFixed(2),height:+r.height.toFixed(2)}:null;
@@ -222,7 +231,13 @@ for (const viewport of viewports) {
     if (b.cta.some(c => c.text && c.fontSize < 12 && !/^(‹|›|Advertisement )/.test(c.text))) failures.push(viewport.name + ' ' + slot + ': CTA below 12px');
     if (slot !== 'cart_banner' && b.cta.length===0) failures.push(viewport.name + ' ' + slot + ': no visible CTA');
     if (slot !== 'cart_banner' && b.copy && b.cta.length) {
-      for (const c of b.cta) if (c.rect && (c.rect.x < b.copy.x-1 || c.rect.right > b.copy.right+1 || c.rect.y < b.copy.y-1 || c.rect.bottom > b.copy.bottom+1)) failures.push(viewport.name + ' ' + slot + ': CTA/control outside copy area');
+      for (const c of b.cta) if (c.rect && (c.rect.x < b.copy.x-1 || c.rect.right > b.copy.right+1 || c.rect.y < b.copy.y-1 || c.rect.bottom > b.copy.bottom+1)) failures.push(viewport.name + ' ' + slot + ': CTA outside copy area');
+    }
+    if (b.copy) {
+      for (const group of b.carouselIndicators||[]) {
+        if(group.group&&(group.group.x<b.copy.x-1||group.group.right>b.copy.right+1||group.group.y<b.copy.y-1||group.group.bottom>b.copy.bottom+1)) failures.push(viewport.name + ' ' + slot + ': carousel controls outside copy area');
+        for(const item of group.items||[])if(item.rect&&(item.rect.x<b.copy.x-1||item.rect.right>b.copy.right+1||item.rect.y<b.copy.y-1||item.rect.bottom>b.copy.bottom+1))failures.push(viewport.name + ' ' + slot + ': carousel item outside copy area');
+      }
     }
     if (slot !== 'wishlist_banner' || b.photoRatio!==null) {
       if (b.photoRatio!==null && Math.abs(b.photoRatio-.75)>.03) failures.push(viewport.name + ' ' + slot + ': measured photo width is not 75%');
