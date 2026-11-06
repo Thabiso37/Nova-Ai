@@ -93,9 +93,14 @@ async function auditVersion(browser, version, viewport) {
       });
       await baselinePage.goto(origin+'/main-snapshot/retail.html?view=wishlist&pr9baseline=1',{waitUntil:'domcontentloaded',timeout:15000});
       wishlistBeforeRefresh=await baselinePage.evaluate(()=>{
-        document.body.classList.add('wishlist-view');
         const board=document.getElementById('wishlistAdSlot');
         if(!board)return null;
+        // Reveal the original Wishlist section in the JS-disabled main snapshot
+        // without changing the board's own styles or dimensions.
+        for(let node=board.parentElement;node&&node!==document.body;node=node.parentElement){
+          if(getComputedStyle(node).display==='none')node.style.setProperty('display','block','important');
+          if(getComputedStyle(node).visibility==='hidden')node.style.setProperty('visibility','visible','important');
+        }
         const r=board.getBoundingClientRect();
         return r.width>0&&r.height>0
           ?{x:+r.x.toFixed(2),y:+r.y.toFixed(2),width:+r.width.toFixed(2),height:+r.height.toFixed(2)}
