@@ -412,9 +412,10 @@
           linkNode.dataset.novaAdDestination=href;
           bindCampaignClick(linkNode,id);
         }
-        // Measure after updating the campaign copy but before changing the original
-        // photo host into an absolute 75% media region. This preserves main's natural
-        // campaign-rendered outer dimensions, including auto-height boards.
+        // Activate the legacy managed-campaign styling first. That is the exact
+        // pre-PR layout used by main (including Motors' 54% copy and footer 52% copy).
+        // Measure it before the new 75/25 layout flag and media-host positioning.
+        slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
         if(!originalBoardSize){
           const naturalRect=slot.getBoundingClientRect();
           if(naturalRect.width>0&&naturalRect.height>0){
@@ -424,7 +425,7 @@
           }
         }
         if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
-        slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
+        slot.dataset.novaManagedLayout='1';
         if(originalBoardSize){
           slot.style.setProperty('box-sizing','border-box','important');
           slot.style.setProperty('width',originalBoardSize.width+'px','important');
@@ -509,83 +510,83 @@
   // a strict 75% media / 25% copy split. Copy wraps at word boundaries; no text
   // is clipped with line clamps or hidden overflow.
   style.textContent += `
-  [data-nova-ad-slot][data-nova-managed-campaign]{box-sizing:border-box!important;overflow:hidden!important}
-  [data-nova-ad-slot="home_hero"][data-nova-managed-campaign] .nova-hero-slide{display:grid!important;grid-template-columns:minmax(0,3fr) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important}
-  [data-nova-ad-slot="home_hero"][data-nova-managed-campaign] .nova-hero-art{grid-column:1!important;grid-row:1!important;width:100%!important;min-width:0!important;min-height:0!important}
-  [data-nova-ad-slot="home_hero"][data-nova-managed-campaign] .nova-hero-copy{grid-column:2!important;grid-row:1!important;width:100%!important;max-width:none!important;min-width:0!important;min-height:0!important;box-sizing:border-box!important;padding:30px 4px 6px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:6px!important;overflow:visible!important;overflow-wrap:break-word!important;word-break:normal!important}
-  [data-nova-ad-slot="shop_tv"][data-nova-managed-campaign] .shop-tv-slide{position:relative!important;width:100%!important;height:100%!important;min-height:0!important}
-  [data-nova-ad-slot="shop_tv"][data-nova-managed-campaign] .shop-tv-art[data-nova-managed-image="1"]{position:absolute!important;left:0!important;right:auto!important;top:0!important;bottom:0!important;width:75%!important;height:100%!important;aspect-ratio:auto!important;transform:none!important;border-radius:0!important}
-  [data-nova-ad-slot="shop_tv"][data-nova-managed-campaign] .shop-tv-copy{position:absolute!important;top:0!important;right:0!important;bottom:0!important;left:auto!important;width:25%!important;max-width:none!important;min-width:0!important;height:100%!important;box-sizing:border-box!important;padding:24px 3px 4px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:5px!important;overflow:visible!important;background:linear-gradient(145deg,#10284b,#174ea6)!important;overflow-wrap:break-word!important;word-break:normal!important}
-  [data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]{position:relative!important;display:block!important;padding:0!important;min-height:0!important}
-  [data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]>.nova-ad-media-host{position:absolute!important;inset:0 auto 0 0!important;width:75%!important;height:100%!important;overflow:hidden!important}
-  [data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]>strong,[data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]>span:not(.nova-live-controls):not(.nova-live-onair){position:absolute!important;left:75%!important;right:0!important;width:25%!important;box-sizing:border-box!important;padding:2px 2px!important;text-align:left!important;overflow:visible!important;overflow-wrap:break-word!important;word-break:normal!important}
-  [data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]>strong{top:8px!important;font-size:14px!important;line-height:1.1!important}
-  [data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]>span:not(.nova-live-controls):not(.nova-live-onair){top:0!important;display:none!important}
-  [data-nova-ad-slot="motors_banner"][data-nova-managed-campaign] .motors-hero-copy{position:absolute!important;top:0!important;right:0!important;bottom:0!important;left:auto!important;width:25%!important;max-width:none!important;min-width:0!important;height:100%!important;box-sizing:border-box!important;margin:0!important;padding:28px 4px 8px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:7px!important;overflow:visible!important;background:linear-gradient(145deg,#10284b,#174ea6)!important;overflow-wrap:break-word!important;word-break:normal!important}
-  [data-nova-ad-slot="motors_banner"][data-nova-managed-campaign] .motors-welcome-top{position:absolute!important;top:4px!important;right:0!important;left:75%!important;width:25%!important;box-sizing:border-box!important;justify-content:center!important;padding:0 3px!important;font-size:9px!important;z-index:2!important}
-  [data-nova-ad-slot="motors_banner"][data-nova-managed-campaign] .motors-avatar{display:none!important}
-  [data-nova-ad-slot="property_banner"][data-nova-managed-campaign]{display:grid!important;grid-template-columns:minmax(0,3fr) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;align-items:stretch!important}
-  [data-nova-ad-slot="property_banner"][data-nova-managed-campaign] .property-promo-photo{grid-column:1!important;grid-row:1!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;overflow:hidden!important}
-  [data-nova-ad-slot="property_banner"][data-nova-managed-campaign] .property-promo-copy{grid-column:2!important;grid-row:1!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;box-sizing:border-box!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:6px!important;padding:24px 3px 5px!important;overflow:visible!important;overflow-wrap:break-word!important;word-break:normal!important}
-  [data-nova-ad-slot$="_footer"][data-nova-managed-campaign] .nova-footer-ad-copy,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-campaign] .nova-footer-ad-copy{position:absolute!important;z-index:2!important;left:0!important;right:auto!important;top:0!important;bottom:0!important;width:25%!important;max-width:25%!important;min-width:0!important;height:100%!important;box-sizing:border-box!important;padding:24px 4px 6px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:6px!important;overflow:visible!important;overflow-wrap:break-word!important;word-break:normal!important}
-  [data-nova-ad-slot$="_footer"][data-nova-managed-campaign] .nova-footer-ad-image,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-campaign] .nova-footer-ad-image{position:absolute!important;left:25%!important;right:0!important;top:0!important;bottom:0!important;width:75%!important;height:100%!important;overflow:hidden!important}
-  [data-nova-ad-slot][data-nova-managed-campaign] .nova-hero-copy h1,
-  [data-nova-ad-slot][data-nova-managed-campaign] .shop-tv-copy h2,
-  [data-nova-ad-slot][data-nova-managed-campaign] .motors-hero-copy h1,
-  [data-nova-ad-slot][data-nova-managed-campaign] .property-promo-copy h2,
-  [data-nova-ad-slot][data-nova-managed-campaign] .nova-footer-ad-copy strong,
-  [data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]>strong{display:block!important;max-width:100%!important;max-height:none!important;height:auto!important;margin:0!important;font-size:14px!important;line-height:1.15!important;font-weight:800!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;-webkit-line-clamp:unset!important;-webkit-box-orient:initial!important;overflow-wrap:break-word!important;word-break:normal!important;hyphens:none!important}
-  [data-nova-ad-slot][data-nova-managed-campaign] .nova-hero-copy p,
-  [data-nova-ad-slot][data-nova-managed-campaign] .shop-tv-copy p,
-  [data-nova-ad-slot][data-nova-managed-campaign] .motors-hero-copy p,
-  [data-nova-ad-slot][data-nova-managed-campaign] .property-promo-copy p,
-  [data-nova-ad-slot][data-nova-managed-campaign] .nova-footer-ad-copy small{display:block!important;max-width:100%!important;max-height:none!important;height:auto!important;margin:0!important;font-size:12px!important;line-height:1.2!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;-webkit-line-clamp:unset!important;-webkit-box-orient:initial!important;overflow-wrap:break-word!important;word-break:normal!important;hyphens:none!important}
-  [data-nova-ad-slot][data-nova-managed-campaign] .nova-hero-copy>a,
-  [data-nova-ad-slot][data-nova-managed-campaign] .shop-tv-cta,
-  [data-nova-ad-slot][data-nova-managed-campaign] .motors-explore,
-  [data-nova-ad-slot][data-nova-managed-campaign] .property-promo-link,
-  [data-nova-ad-slot][data-nova-managed-campaign] .nova-footer-ad-copy a{display:inline-flex!important;align-items:center!important;justify-content:center!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;padding:5px 3px!important;margin:0!important;font-size:12px!important;line-height:1.15!important;white-space:normal!important;text-align:left!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:break-word!important;word-break:normal!important}
-  [data-nova-ad-slot][data-nova-managed-campaign] .nova-hero-kicker,
-  [data-nova-ad-slot][data-nova-managed-campaign] .shop-tv-kicker,
-  [data-nova-ad-slot][data-nova-managed-campaign] .motors-eyebrow,
-  [data-nova-ad-slot][data-nova-managed-campaign] .property-promo-kicker,
-  [data-nova-ad-slot][data-nova-managed-campaign] .nova-footer-ad-kicker{display:block!important;font-size:9px!important;line-height:1.15!important;letter-spacing:.2px!important;white-space:normal!important;overflow-wrap:break-word!important;word-break:normal!important}
-  [data-nova-ad-slot][data-nova-managed-campaign] .nova-live-controls,
-  [data-nova-ad-slot][data-nova-managed-campaign] .shop-tv-controls{position:absolute!important;z-index:8!important;top:4px!important;bottom:auto!important;left:auto!important;right:3px!important;width:calc(25% - 6px)!important;max-width:calc(25% - 6px)!important;min-width:0!important;box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:3px!important;padding:0!important}
-  [data-nova-ad-slot][data-nova-managed-campaign] .nova-live-onair,
-  [data-nova-ad-slot][data-nova-managed-campaign] .shop-tv-onair{display:none!important}
-  [data-nova-ad-slot][data-nova-managed-campaign] .nova-live-dots,
-  [data-nova-ad-slot][data-nova-managed-campaign] .shop-tv-dots{display:flex!important;align-items:center!important;justify-content:center!important;gap:3px!important}
-  [data-nova-ad-slot][data-nova-managed-campaign] .nova-live-dots button,
-  [data-nova-ad-slot][data-nova-managed-campaign] .shop-tv-dots button{width:5px!important;height:5px!important;min-width:5px!important;padding:0!important}
-  [data-nova-ad-slot][data-nova-managed-campaign] .nova-live-dots button[aria-current="true"],
-  [data-nova-ad-slot][data-nova-managed-campaign] .shop-tv-dots button.active{width:12px!important;min-width:12px!important}
-  [data-nova-ad-slot="home_hero"][data-nova-managed-campaign] .nova-hero-controls{position:absolute!important;z-index:8!important;left:75%!important;right:4px!important;top:4px!important;bottom:auto!important;width:auto!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:3px!important;box-sizing:border-box!important}
-  [data-nova-ad-slot="home_hero"][data-nova-managed-campaign] .nova-hero-controls>button{width:18px!important;height:18px!important;min-width:18px!important;font-size:14px!important}
-  [data-nova-ad-slot="home_hero"][data-nova-managed-campaign] .nova-hero-copy{padding-top:30px!important}
+  [data-nova-ad-slot][data-nova-managed-layout]{box-sizing:border-box!important;overflow:hidden!important}
+  [data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-slide{display:grid!important;grid-template-columns:minmax(0,3fr) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important}
+  [data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-art{grid-column:1!important;grid-row:1!important;width:100%!important;min-width:0!important;min-height:0!important}
+  [data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-copy{grid-column:2!important;grid-row:1!important;width:100%!important;max-width:none!important;min-width:0!important;min-height:0!important;box-sizing:border-box!important;padding:30px 4px 6px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:6px!important;overflow:visible!important;overflow-wrap:break-word!important;word-break:normal!important}
+  [data-nova-ad-slot="shop_tv"][data-nova-managed-layout] .shop-tv-slide{position:relative!important;width:100%!important;height:100%!important;min-height:0!important}
+  [data-nova-ad-slot="shop_tv"][data-nova-managed-layout] .shop-tv-art[data-nova-managed-image="1"]{position:absolute!important;left:0!important;right:auto!important;top:0!important;bottom:0!important;width:75%!important;height:100%!important;aspect-ratio:auto!important;transform:none!important;border-radius:0!important}
+  [data-nova-ad-slot="shop_tv"][data-nova-managed-layout] .shop-tv-copy{position:absolute!important;top:0!important;right:0!important;bottom:0!important;left:auto!important;width:25%!important;max-width:none!important;min-width:0!important;height:100%!important;box-sizing:border-box!important;padding:24px 3px 4px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:5px!important;overflow:visible!important;background:linear-gradient(145deg,#10284b,#174ea6)!important;overflow-wrap:break-word!important;word-break:normal!important}
+  [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]{position:relative!important;display:block!important;padding:0!important;min-height:0!important}
+  [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>.nova-ad-media-host{position:absolute!important;inset:0 auto 0 0!important;width:75%!important;height:100%!important;overflow:hidden!important}
+  [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>strong,[data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>span:not(.nova-live-controls):not(.nova-live-onair){position:absolute!important;left:75%!important;right:0!important;width:25%!important;box-sizing:border-box!important;padding:2px 2px!important;text-align:left!important;overflow:visible!important;overflow-wrap:break-word!important;word-break:normal!important}
+  [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>strong{top:8px!important;font-size:14px!important;line-height:1.1!important}
+  [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>span:not(.nova-live-controls):not(.nova-live-onair){top:0!important;display:none!important}
+  [data-nova-ad-slot="motors_banner"][data-nova-managed-layout] .motors-hero-copy{position:absolute!important;top:0!important;right:0!important;bottom:0!important;left:auto!important;width:25%!important;max-width:none!important;min-width:0!important;height:100%!important;box-sizing:border-box!important;margin:0!important;padding:28px 4px 8px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:7px!important;overflow:visible!important;background:linear-gradient(145deg,#10284b,#174ea6)!important;overflow-wrap:break-word!important;word-break:normal!important}
+  [data-nova-ad-slot="motors_banner"][data-nova-managed-layout] .motors-welcome-top{position:absolute!important;top:4px!important;right:0!important;left:75%!important;width:25%!important;box-sizing:border-box!important;justify-content:center!important;padding:0 3px!important;font-size:9px!important;z-index:2!important}
+  [data-nova-ad-slot="motors_banner"][data-nova-managed-layout] .motors-avatar{display:none!important};\n  [data-nova-ad-slot="motors_banner"][data-nova-managed-layout] .motors-welcome-top{display:none!important}
+  [data-nova-ad-slot="property_banner"][data-nova-managed-layout]{display:grid!important;grid-template-columns:minmax(0,3fr) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;align-items:stretch!important}
+  [data-nova-ad-slot="property_banner"][data-nova-managed-layout] .property-promo-photo{grid-column:1!important;grid-row:1!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;overflow:hidden!important}
+  [data-nova-ad-slot="property_banner"][data-nova-managed-layout] .property-promo-copy{grid-column:2!important;grid-row:1!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;box-sizing:border-box!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:6px!important;padding:24px 3px 5px!important;overflow:visible!important;overflow-wrap:break-word!important;word-break:normal!important}
+  [data-nova-ad-slot$="_footer"][data-nova-managed-layout] .nova-footer-ad-copy,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-footer-ad-copy{position:absolute!important;z-index:2!important;left:0!important;right:auto!important;top:0!important;bottom:0!important;width:25%!important;max-width:25%!important;min-width:0!important;height:100%!important;box-sizing:border-box!important;padding:24px 4px 6px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:6px!important;overflow:visible!important;overflow-wrap:break-word!important;word-break:normal!important}
+  [data-nova-ad-slot$="_footer"][data-nova-managed-layout] .nova-footer-ad-image,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-footer-ad-image{position:absolute!important;left:25%!important;right:0!important;top:0!important;bottom:0!important;width:75%!important;height:100%!important;overflow:hidden!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-hero-copy h1,
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-copy h2,
+  [data-nova-ad-slot][data-nova-managed-layout] .motors-hero-copy h1,
+  [data-nova-ad-slot][data-nova-managed-layout] .property-promo-copy h2,
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-footer-ad-copy strong,
+  [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>strong{display:block!important;max-width:100%!important;max-height:none!important;height:auto!important;margin:0!important;font-size:14px!important;line-height:1.15!important;font-weight:800!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;-webkit-line-clamp:unset!important;-webkit-box-orient:initial!important;overflow-wrap:break-word!important;word-break:normal!important;hyphens:none!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-hero-copy p,
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-copy p,
+  [data-nova-ad-slot][data-nova-managed-layout] .motors-hero-copy p,
+  [data-nova-ad-slot][data-nova-managed-layout] .property-promo-copy p,
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-footer-ad-copy small{display:block!important;max-width:100%!important;max-height:none!important;height:auto!important;margin:0!important;font-size:12px!important;line-height:1.2!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;-webkit-line-clamp:unset!important;-webkit-box-orient:initial!important;overflow-wrap:break-word!important;word-break:normal!important;hyphens:none!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-hero-copy>a,
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-cta,
+  [data-nova-ad-slot][data-nova-managed-layout] .motors-explore,
+  [data-nova-ad-slot][data-nova-managed-layout] .property-promo-link,
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-footer-ad-copy a{display:inline-flex!important;align-items:center!important;justify-content:center!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;padding:5px 3px!important;margin:0!important;font-size:12px!important;line-height:1.15!important;white-space:normal!important;text-align:left!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:break-word!important;word-break:normal!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-hero-kicker,
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-kicker,
+  [data-nova-ad-slot][data-nova-managed-layout] .motors-eyebrow,
+  [data-nova-ad-slot][data-nova-managed-layout] .property-promo-kicker,
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-footer-ad-kicker{display:block!important;font-size:9px!important;line-height:1.15!important;letter-spacing:.2px!important;white-space:normal!important;overflow-wrap:break-word!important;word-break:normal!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-live-controls,
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-controls{position:absolute!important;z-index:8!important;top:4px!important;bottom:auto!important;left:auto!important;right:3px!important;width:calc(25% - 6px)!important;max-width:calc(25% - 6px)!important;min-width:0!important;box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:3px!important;padding:0!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-live-onair,
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-onair{display:none!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-live-dots,
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-dots{display:flex!important;align-items:center!important;justify-content:center!important;gap:3px!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-live-dots button,
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-dots button{width:5px!important;height:5px!important;min-width:5px!important;padding:0!important}
+  [data-nova-ad-slot][data-nova-managed-layout] .nova-live-dots button[aria-current="true"],
+  [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-dots button.active{width:12px!important;min-width:12px!important}
+  [data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-controls{position:absolute!important;z-index:8!important;left:75%!important;right:4px!important;top:4px!important;bottom:auto!important;width:auto!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:3px!important;box-sizing:border-box!important}
+  [data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-controls>button{width:18px!important;height:18px!important;min-width:18px!important;font-size:14px!important}
+  [data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-copy{padding-top:30px!important}
   @media(max-width:380px){
-    [data-nova-ad-slot][data-nova-managed-campaign] .nova-hero-kicker,
-    [data-nova-ad-slot][data-nova-managed-campaign] .shop-tv-kicker,
-    [data-nova-ad-slot][data-nova-managed-campaign] .motors-eyebrow,
-    [data-nova-ad-slot][data-nova-managed-campaign] .property-promo-kicker,
-    [data-nova-ad-slot][data-nova-managed-campaign] .nova-footer-ad-kicker{display:none!important}
-    [data-nova-ad-slot][data-nova-managed-campaign] .nova-hero-copy p,
-    [data-nova-ad-slot][data-nova-managed-campaign] .shop-tv-copy p,
-    [data-nova-ad-slot][data-nova-managed-campaign] .motors-hero-copy p,
-    [data-nova-ad-slot][data-nova-managed-campaign] .property-promo-copy p,
-    [data-nova-ad-slot][data-nova-managed-campaign] .nova-footer-ad-copy small,
-    [data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]>span:not(.nova-live-controls):not(.nova-live-onair){display:none!important}
-    [data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]>.nova-live-controls{top:3px!important;right:3px!important}
-    [data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]>strong{top:14px!important}
-    [data-nova-ad-slot="shop_tv"][data-nova-managed-campaign] .shop-tv-copy{padding-top:22px!important;gap:4px!important}
-    [data-nova-ad-slot="property_banner"][data-nova-managed-campaign] .property-promo-copy{padding-top:22px!important;gap:5px!important}
-    [data-nova-ad-slot="motors_banner"][data-nova-managed-campaign] .motors-hero-copy{padding-top:24px!important;gap:6px!important}
-    [data-nova-ad-slot$="_footer"][data-nova-managed-campaign] .nova-footer-ad-copy,
-    [data-nova-ad-slot="wishlist_banner"][data-nova-managed-campaign] .nova-footer-ad-copy{padding-top:22px!important;gap:5px!important}
+    [data-nova-ad-slot][data-nova-managed-layout] .nova-hero-kicker,
+    [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-kicker,
+    [data-nova-ad-slot][data-nova-managed-layout] .motors-eyebrow,
+    [data-nova-ad-slot][data-nova-managed-layout] .property-promo-kicker,
+    [data-nova-ad-slot][data-nova-managed-layout] .nova-footer-ad-kicker{display:none!important}
+    [data-nova-ad-slot][data-nova-managed-layout] .nova-hero-copy p,
+    [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-copy p,
+    [data-nova-ad-slot][data-nova-managed-layout] .motors-hero-copy p,
+    [data-nova-ad-slot][data-nova-managed-layout] .property-promo-copy p,
+    [data-nova-ad-slot][data-nova-managed-layout] .nova-footer-ad-copy small,
+    [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>span:not(.nova-live-controls):not(.nova-live-onair){display:none!important}
+    [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>.nova-live-controls{top:3px!important;right:3px!important}
+    [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>strong{top:14px!important}
+    [data-nova-ad-slot="shop_tv"][data-nova-managed-layout] .shop-tv-copy{padding-top:22px!important;gap:4px!important}
+    [data-nova-ad-slot="property_banner"][data-nova-managed-layout] .property-promo-copy{padding-top:22px!important;gap:5px!important}
+    [data-nova-ad-slot="motors_banner"][data-nova-managed-layout] .motors-hero-copy{padding-top:24px!important;gap:6px!important}
+    [data-nova-ad-slot$="_footer"][data-nova-managed-layout] .nova-footer-ad-copy,
+    [data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-footer-ad-copy{padding-top:22px!important;gap:5px!important}
   }`;
-  style.textContent += '[data-nova-ad-slot$="_footer"][data-nova-managed-campaign] .nova-live-controls,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-campaign] .nova-live-controls{left:4px!important;right:auto!important;width:calc(25% - 8px)!important;max-width:calc(25% - 8px)!important;justify-content:center!important}';
-  style.textContent += '[data-nova-ad-slot="home_hero"][data-nova-managed-campaign] .nova-hero-controls{left:75%!important;right:3px!important;width:auto!important;gap:2px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-campaign] .nova-hero-controls>button{width:16px!important;height:16px!important;min-width:16px!important;font-size:14px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-campaign] .nova-hero-dots{gap:2px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-campaign] .nova-hero-dots button{width:5px!important;height:5px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-campaign] .nova-hero-dots button.active{width:10px!important}';
-  style.textContent += '[data-nova-ad-slot="shop_footer"][data-nova-managed-campaign] .nova-live-controls,[data-nova-ad-slot="motors_footer"][data-nova-managed-campaign] .nova-live-controls,[data-nova-ad-slot="property_footer"][data-nova-managed-campaign] .nova-live-controls,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-campaign] .nova-live-controls{left:4px!important;right:auto!important;top:4px!important;bottom:auto!important;width:calc(25% - 8px)!important;max-width:calc(25% - 8px)!important;justify-content:center!important;gap:2px!important}';
+  style.textContent += '[data-nova-ad-slot$="_footer"][data-nova-managed-layout] .nova-live-controls,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-live-controls{left:4px!important;right:auto!important;width:calc(25% - 8px)!important;max-width:calc(25% - 8px)!important;justify-content:center!important}';
+  style.textContent += '[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-controls{left:75%!important;right:3px!important;width:auto!important;gap:2px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-controls>button{width:16px!important;height:16px!important;min-width:16px!important;font-size:14px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-dots{gap:2px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-dots button{width:5px!important;height:5px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-dots button.active{width:10px!important}';
+  style.textContent += '[data-nova-ad-slot="shop_footer"][data-nova-managed-layout] .nova-live-controls,[data-nova-ad-slot="motors_footer"][data-nova-managed-layout] .nova-live-controls,[data-nova-ad-slot="property_footer"][data-nova-managed-layout] .nova-live-controls,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-live-controls{left:4px!important;right:auto!important;top:4px!important;bottom:auto!important;width:calc(25% - 8px)!important;max-width:calc(25% - 8px)!important;justify-content:center!important;gap:2px!important}';
   document.head.appendChild(style);
   document.querySelectorAll('[data-nova-ad-slot]').forEach(el=>{
     const id=el.getAttribute('data-nova-ad-slot');
