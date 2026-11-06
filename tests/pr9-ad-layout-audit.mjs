@@ -121,7 +121,7 @@ async function auditVersion(browser, version, viewport) {
           if(!el||!el.getClientRects().length)return false;
           for(let node=el;node&&node!==document.documentElement;node=node.parentElement){
             const cs=getComputedStyle(node);
-            if(node.hidden||cs.display==='none'||cs.visibility==='hidden'||Number(cs.opacity)<=0.01)return false;
+            if(node.hidden||node.getAttribute('aria-hidden')==='true'||cs.display==='none'||cs.visibility==='hidden'||Number(cs.opacity)<=0.01)return false;
           }
           const r=el.getBoundingClientRect();
           return r.width>0&&r.height>0;
