@@ -2165,6 +2165,11 @@ function closeCart() {
 </style>
 
 <style>
+/* Wishlist view: keep its dedicated top board and suppress the Shop footer board. */
+body.wishlist-view #shopFooterAd{display:none!important}
+</style>
+
+<style>
 /* Bottom promotional boards: Shop, Motors and Property only. */
 .nova-footer-ad{position:relative;display:flex;align-items:stretch;min-height:142px;margin:18px 0 12px;overflow:hidden;border:1px solid #234f88;border-radius:16px;background:linear-gradient(115deg,#10284b 0%,#174ea6 58%,#2869b8 100%);color:#fff;isolation:isolate;box-shadow:0 8px 22px rgba(16,40,75,.16)}
 .nova-footer-ad[hidden]{display:none!important}
