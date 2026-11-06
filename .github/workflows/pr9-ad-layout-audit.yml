@@ -1,0 +1,62 @@
+name: PR 9 advertising layout audit
+
+on:
+  push:
+    branches:
+      - fix/novaai-ad-boards-75-25-internal-split
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  chromium-layout-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out current main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-snapshot
+
+      - name: Check out PR 9 branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/novaai-ad-boards-75-25-internal-split
+          path: pr-snapshot
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright and Chromium
+        run: |
+          npm init -y
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Serve both real page snapshots
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/novaai-http.log 2>&1 &
+          echo $! > /tmp/novaai-http.pid
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/novaai-http.log
+          exit 1
+
+      - name: Run desktop and mobile Chromium comparison
+        run: node pr-snapshot/tests/pr9-ad-layout-audit.mjs
+        env:
+          NOVAAI_TEST_ORIGIN: http://127.0.0.1:4173
+
+      - name: Upload measurements and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr9-ad-layout-audit
+          path: pr-snapshot/test-results/pr9-ad-layout-audit/
+          if-no-files-found: warn
