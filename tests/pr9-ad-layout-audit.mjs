@@ -115,9 +115,20 @@ async function auditVersion(browser, version, viewport) {
           const r = el.getBoundingClientRect();
           return { x: +r.x.toFixed(2), y: +r.y.toFixed(2), width: +r.width.toFixed(2), height: +r.height.toFixed(2), right: +r.right.toFixed(2), bottom: +r.bottom.toFixed(2) };
         };
-        const visible = el => !!el && !!(el.getClientRects().length) && getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden';
+        const visible = el => {
+          if(!el||!el.getClientRects().length)return false;
+          for(let node=el;node&&node!==document.documentElement;node=node.parentElement){
+            const cs=getComputedStyle(node);
+            if(node.hidden||cs.display==='none'||cs.visibility==='hidden'||Number(cs.opacity)<=0.01)return false;
+          }
+          const r=el.getBoundingClientRect();
+          return r.width>0&&r.height>0;
+        };
         const slotNodes=[...document.querySelectorAll('[data-nova-ad-slot="' + slot + '"]')];
-        const outer = slotNodes.find(visible) || document.querySelector(outerSel) || slotNodes[0] || null;
+        const outer = slotNodes.filter(visible).sort((a,b)=>{
+          const ra=a.getBoundingClientRect(),rb=b.getBoundingClientRect();
+          return (rb.width*rb.height)-(ra.width*ra.height);
+        })[0] || document.querySelector(outerSel) || slotNodes[0] || null;
         const photo = outer?.querySelector(photoSel) || (photoSel ? document.querySelector(photoSel) : null);
         const copy = copySel ? (outer?.querySelector(copySel) || document.querySelector(copySel)) : null;
         const textNodes = copy ? [copy, ...copy.querySelectorAll('h1,h2,h3,p,strong,small,span,a,button')].filter((el,i,a)=>a.indexOf(el)===i && visible(el) && (el.children.length===0 || /^(H1|H2|H3|P|STRONG|SMALL|SPAN|A|BUTTON)$/.test(el.tagName))) : (outer ? [...outer.querySelectorAll('strong,span,h1,h2,p,a,button')].filter(visible) : []);
@@ -154,7 +165,7 @@ async function auditVersion(browser, version, viewport) {
           const cs=getComputedStyle(el);
           return {rect:rect(el),position:cs.position,left:cs.left,right:cs.right,width:cs.width,display:cs.display};
         }):[];
-        return {slot, found:!!outer, outer:outerRect, photo:photoRect, copy:copyMeasure, expectedRightCopy:rightCopy, photoRatio:mediaRatio, copyRatio, text, cta, controls, mediaLoaded, overlap, textOverflow, textOutsideCopy, awkwardBreak, hasManagedCampaign:!!outer?.dataset.novaManagedCampaign};
+        return {slot, found:!!outer, outer:outerRect, originalSize:outer?{width:Number(outer.dataset.novaOriginalWidth)||null,height:Number(outer.dataset.novaOriginalHeight)||null}:null, photo:photoRect, copy:copyMeasure, expectedRightCopy:rightCopy, photoRatio:mediaRatio, copyRatio, text, cta, controls, mediaLoaded, overlap, textOverflow, textOutsideCopy, awkwardBreak, hasManagedCampaign:!!outer?.dataset.novaManagedCampaign};
       }, { slot, outerSel, photoSel, copySel });
       if (slot === 'wishlist_banner') measurement.wishlistBeforeRefresh = wishlistBeforeRefresh;
       results[slot] = measurement;
