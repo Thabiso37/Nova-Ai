@@ -142,6 +142,15 @@ header{box-shadow:0 3px 14px rgba(16,40,75,.07)}
 .picker-wrap{padding-left:clamp(12px,2vw,24px);padding-right:clamp(12px,2vw,24px)}
 #sellerWorkspace{padding-left:clamp(12px,2vw,24px);padding-right:clamp(12px,2vw,24px)}
 
+
+/* Remove outer side gutters so Seller Portal fills the screen */
+html,body{width:100%;min-width:0}
+body{overflow-x:hidden}
+main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
+#sellerWorkspace{width:100%;max-width:none!important;margin:0!important;padding:0 0 28px!important}
+.head{width:100%;max-width:none!important;margin:0!important;padding-left:14px!important;padding-right:14px!important}
+.picker-wrap{width:100%;max-width:none!important;margin-left:0!important;margin-right:0!important;padding-left:14px!important;padding-right:14px!important}
+
 </style>
 </head>
 <body>
