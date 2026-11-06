@@ -294,6 +294,13 @@ button { cursor:pointer; }
   scroll-margin-top:100px;
 }
 
+ .workspace-heading{margin:0 0 18px;padding:4px 2px 12px;border-bottom:1px solid var(--line)}
+.workspace-heading .workspace-eyebrow{display:block;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:5px}
+.workspace-heading h1{margin:0;color:var(--blue-dark);font-size:clamp(21px,2.4vw,28px);letter-spacing:-.5px}
+.main-content>.workspace-panel{display:none}
+.main-content>.workspace-panel.workspace-active{display:block}
+.main-content>.workspace-panel#sellerLocationReviews.workspace-related-active{display:block}
+
 .panel h2 {
   margin:0 0 8px;
   font-size:19px;
@@ -664,6 +671,10 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
   </aside>
 
   <main class="main-content">
+    <div class="workspace-heading" id="workspaceHeading" aria-live="polite">
+      <span class="workspace-eyebrow">NOVAAI ADMIN WORKSPACE</span>
+      <h1>Overview</h1>
+    </div>
 
     <section id="overview">
       <div class="welcome-panel">
@@ -972,6 +983,7 @@ async function checkAdmin(user) {
       currentAdmin = user;
       document.getElementById("loginPanel").classList.add("hidden");
       document.getElementById("dashboard").classList.remove("hidden");
+      initializeAdminWorkspaces();
       document.getElementById("adminEmail").textContent = user.email || "";
       document.getElementById("loginMessage").textContent = "Administrator access verified.";
       await Promise.all([
@@ -1835,6 +1847,74 @@ async function changeStatus(id, newStatus) {
   await loadProducts();
 }
 
+
+const ADMIN_WORKSPACES = {
+  overview: { title: "Overview", sections: ["overview"] },
+  marketplacePermissions: { title: "Seller Management", sections: ["marketplacePermissions", "sellerLocationReviews"] },
+  customerManagement: { title: "Customer Management", sections: ["customerManagement"] },
+  retailManagement: { title: "Retail Management", sections: ["retailManagement"] },
+  motorsManagement: { title: "Motors Management", sections: ["motorsManagement"] },
+  propertyManagement: { title: "Property Management", sections: ["propertyManagement"] },
+  advertisementManagement: { title: "Advertising Management", sections: ["advertisementManagement"] },
+  productsSection: { title: "Products & Listings", sections: ["productsSection"] },
+  ordersFulfilment: { title: "Orders & Fulfilment", sections: ["ordersFulfilment"] },
+  paymentCentre: { title: "Payments & Settlements", sections: ["paymentCentre"] },
+  sellerFinancialRecords: { title: "Seller Financial Records", sections: ["sellerFinancialRecords"] },
+  reportsAnalytics: { title: "Reports & Analytics", sections: ["reportsAnalytics"] },
+  adminSettings: { title: "Admin Settings", sections: ["adminSettings"] }
+};
+
+function showAdminWorkspace(workspaceId, updateHash = false) {
+  const selected = ADMIN_WORKSPACES[workspaceId] ? workspaceId : "overview";
+  const workspace = ADMIN_WORKSPACES[selected];
+  const main = document.querySelector(".main-content");
+  if (!main) return;
+
+  main.querySelectorAll(":scope > section").forEach(section => {
+    section.classList.add("workspace-panel");
+    section.classList.remove("workspace-active", "workspace-related-active");
+    if (workspace.sections.includes(section.id)) {
+      section.classList.add(section.id === "sellerLocationReviews" ? "workspace-related-active" : "workspace-active");
+    }
+  });
+
+  const heading = document.querySelector("#workspaceHeading h1");
+  if (heading) heading.textContent = workspace.title;
+
+  document.querySelectorAll('.sidebar nav a[href^="#"]').forEach(link => {
+    const active = link.getAttribute("href") === "#" + selected;
+    link.classList.toggle("active", active);
+    if (active) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  });
+
+  if (updateHash && location.hash !== "#" + selected) history.pushState(null, "", "#" + selected);
+  closeAdminDrawer();
+}
+
+function initializeAdminWorkspaces() {
+  const main = document.querySelector(".main-content");
+  if (!main) return;
+  main.querySelectorAll(":scope > section").forEach(section => section.classList.add("workspace-panel"));
+
+  document.querySelectorAll('a[href^="#"]').forEach(link => {
+    const targetId = link.getAttribute("href").slice(1);
+    if (!ADMIN_WORKSPACES[targetId]) return;
+    link.addEventListener("click", event => {
+      event.preventDefault();
+      showAdminWorkspace(targetId, true);
+    });
+  });
+
+  window.addEventListener("hashchange", () => {
+    showAdminWorkspace(decodeURIComponent(location.hash.slice(1) || "overview"), false);
+  });
+  window.addEventListener("popstate", () => {
+    showAdminWorkspace(decodeURIComponent(location.hash.slice(1) || "overview"), false);
+  });
+
+  showAdminWorkspace(decodeURIComponent(location.hash.slice(1) || "overview"), false);
+}
 
 function closeAdminDrawer(){document.querySelector(".sidebar")?.classList.remove("mobile-open");document.getElementById("sidebarBackdrop")?.classList.remove("open");document.getElementById("mobileMenuToggle")?.setAttribute("aria-expanded","false");}
 document.getElementById("mobileMenuToggle")?.addEventListener("click",()=>{const side=document.querySelector(".sidebar");const open=side?.classList.toggle("mobile-open");document.getElementById("sidebarBackdrop")?.classList.toggle("open",!!open);document.getElementById("mobileMenuToggle")?.setAttribute("aria-expanded",String(!!open));});
