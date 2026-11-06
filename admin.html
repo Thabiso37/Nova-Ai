@@ -1183,8 +1183,10 @@ document.getElementById("adCampaignFile")?.addEventListener("change",event=>{
   const file=event.target.files?.[0];const preview=document.getElementById("adCreativePreview");
   if(!file){preview.textContent="No new media selected.";return;}
   const expected=document.getElementById("adCampaignCreativeType").value;
-  const isVideo=file.type.startsWith("video/");
-  if((expected==="video")!==isVideo){preview.textContent="Choose a file matching the selected creative format.";return;}
+  const detectedMime=adCampaignFileMime(file);
+  const isVideo=detectedMime.startsWith("video/");
+  const isImage=detectedMime.startsWith("image/");
+  if(!detectedMime||((expected==="video")?!isVideo:!isImage)){preview.textContent="Choose a JPG, PNG or WebP image, or an MP4/WebM video matching the selected format.";return;}
   const url=URL.createObjectURL(file);
   preview.innerHTML=isVideo?'<video controls muted playsinline style="max-width:100%;max-height:180px"></video>':'<img alt="Advertisement preview" style="max-width:100%;max-height:180px;object-fit:contain">';
   const media=preview.querySelector(isVideo?"video":"img");media.src=url;
