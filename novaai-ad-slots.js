@@ -194,10 +194,10 @@
     else if(id==='property_banner')selectors=['.property-promo-copy h2','.property-promo-copy p','.property-promo-link','.property-promo-photo img'];
     else selectors=['.nova-footer-ad-copy strong','.nova-footer-ad-copy small','.nova-footer-ad-copy a','.nova-footer-ad-image'];
     const nodes=selectors.map(selector=>selector?slot.querySelector(selector):null);
-    slot.__novaAdFallback=nodes.map(node=>node?{
+    slot.__novaAdFallback={slotBackgroundImage:slot.style.backgroundImage,nodes:nodes.map(node=>node?{
       text:node.textContent,href:node.getAttribute('href'),target:node.getAttribute('target'),rel:node.getAttribute('rel'),
       backgroundImage:node.style.backgroundImage,src:node.tagName==='IMG'?node.getAttribute('src'):null,display:node.style.display
-    }:null);
+    }:null)};
   }
   function restoreAdFallback(slot,id){
     const saved=slot.__novaAdFallback;if(!saved)return;
@@ -208,8 +208,9 @@
     else if(id==='motors_banner')selectors=['.motors-hero-copy h1','.motors-hero-copy p','.motors-explore',null];
     else if(id==='property_banner')selectors=['.property-promo-copy h2','.property-promo-copy p','.property-promo-link','.property-promo-photo img'];
     else selectors=['.nova-footer-ad-copy strong','.nova-footer-ad-copy small','.nova-footer-ad-copy a','.nova-footer-ad-image'];
+    slot.style.backgroundImage=saved.slotBackgroundImage||'';
     selectors.forEach((selector,index)=>{
-      const node=selector?slot.querySelector(selector):null;const value=saved[index];if(!node||!value)return;
+      const node=selector?slot.querySelector(selector):null;const value=saved.nodes[index];if(!node||!value)return;
       node.textContent=value.text;
       if(value.href===null)node.removeAttribute('href');else if(value.href!==undefined)node.setAttribute('href',value.href);
       if(value.target===null)node.removeAttribute('target');else if(value.target!==undefined)node.setAttribute('target',value.target);
