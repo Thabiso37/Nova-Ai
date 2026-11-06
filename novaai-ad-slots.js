@@ -469,7 +469,17 @@
       const response=await fetch(apiUrl,{method:'POST',headers:{'apikey':publishableKey,'Authorization':'Bearer '+publishableKey,'Content-Type':'application/json'},body:'{}'});
       if(!response.ok)throw new Error('Campaign feed returned HTTP '+response.status);
       const campaigns=await response.json();
+      // Wait for the real page's initial layout assets before recording its natural
+      // board dimensions. Otherwise an image/font finishing later can change the
+      // "original" height after the managed creative has already frozen it.
+      if(document.readyState!=='complete'){
+        await new Promise(resolve=>window.addEventListener('load',resolve,{once:true}));
+      }
       if(document.fonts&&document.fonts.ready)await document.fonts.ready.catch(()=>{});
+      await Promise.all(Array.from(document.images).map(img=>{
+        if(img.complete)return img.decode?img.decode().catch(()=>{}):Promise.resolve();
+        return new Promise(resolve=>{img.addEventListener('load',resolve,{once:true});img.addEventListener('error',resolve,{once:true});});
+      }));
       await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
       api.announceCampaigns(Array.isArray(campaigns)?campaigns:[]);
     }catch(error){console.warn('NOVAAI managed advertisement feed unavailable; managed campaigns cleared.',error);api.announceCampaigns([]);}
