@@ -617,6 +617,18 @@
   style.textContent += '[data-nova-ad-slot$="_footer"][data-nova-managed-layout] .nova-live-controls,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-live-controls{left:4px!important;right:auto!important;width:calc(25% - 8px)!important;max-width:calc(25% - 8px)!important;justify-content:center!important}';
   style.textContent += '[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-controls{left:calc(75% - 6px)!important;right:auto!important;width:calc(25% - 12px)!important;max-width:calc(25% - 12px)!important;gap:2px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-controls>button{width:16px!important;height:16px!important;min-width:16px!important;font-size:14px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-dots{gap:2px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-dots button{width:5px!important;height:5px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-dots button.active{width:10px!important}';
   style.textContent += '[data-nova-ad-slot="shop_footer"][data-nova-managed-layout] .nova-live-controls,[data-nova-ad-slot="motors_footer"][data-nova-managed-layout] .nova-live-controls,[data-nova-ad-slot="property_footer"][data-nova-managed-layout] .nova-live-controls,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-live-controls{left:4px!important;right:auto!important;top:4px!important;bottom:auto!important;width:calc(25% - 8px)!important;max-width:calc(25% - 8px)!important;justify-content:center!important;gap:2px!important}';
+  style.textContent += `
+  /* Cart: the full header is the ad board; utility buttons overlay its edges. */
+  #cartModal .cart-page-header{position:relative!important;box-sizing:border-box!important;overflow:hidden!important;height:62px!important;min-height:62px!important;padding:0!important}
+  #cartModal .cart-page-header>#cartAdBoard{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;max-height:none!important;max-width:none!important;margin:0!important;display:block!important;flex:none!important;z-index:1!important;text-align:left!important;overflow:hidden!important}
+  #cartModal .cart-page-header>button{position:absolute!important;z-index:12!important;top:50%!important;transform:translateY(-50%)!important;padding:8px!important}
+  #cartModal .cart-page-header>button:first-child{left:8px!important}
+  #cartModal .cart-page-header>button:last-child{right:calc(25% + 8px)!important;top:8px!important;transform:none!important}
+  #cartModal .cart-page-header>#cartAdBoard>strong{top:26px!important;left:75%!important;right:0!important;width:25%!important;padding:2px 4px!important;font-size:14px!important;line-height:1.15!important;overflow-wrap:normal!important;word-break:normal!important;hyphens:none!important}
+  #cartModal .cart-page-header>#cartAdBoard>span:not(.nova-live-controls):not(.nova-live-onair){display:none!important}
+  @media(max-width:380px){#cartModal .cart-page-header{height:101px!important;min-height:101px!important}}
+  @media(max-width:340px){#cartModal .cart-page-header{height:148.5px!important;min-height:148.5px!important}}
+  `;
   document.head.appendChild(style);
   document.querySelectorAll('[data-nova-ad-slot]').forEach(el=>{
     const id=el.getAttribute('data-nova-ad-slot');
