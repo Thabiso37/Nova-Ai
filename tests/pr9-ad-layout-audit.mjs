@@ -122,7 +122,8 @@ async function auditVersion(browser, version, viewport) {
         const mediaLoaded = image ? (image.tagName==='VIDEO' ? image.readyState>=1 : image.complete && image.naturalWidth>0) : !!photo;
         const copyMeasure=copyRect||(slot==='cart_banner'?rightCopy:null);
         const overlap = !!(photoRect&&copyMeasure&&photoRect.x<copyMeasure.right&&photoRect.right>copyMeasure.x&&photoRect.y<copyMeasure.bottom&&photoRect.bottom>copyMeasure.y);
-        const copyRatio=copyMeasure&&innerWidth?+(copyMeasure.width/innerWidth).toFixed(4):null;
+        const copyBase=(slot==='motors_banner'||slot==='cart_banner')?outerRect?.width:innerWidth;
+        const copyRatio=copyMeasure&&copyBase?+(copyMeasure.width/copyBase).toFixed(4):null;
         const textOverflow = textNodes.some(el => {
           const cs=getComputedStyle(el);
           return el.scrollWidth > el.clientWidth + 1 && ['hidden','clip'].includes(cs.overflowX)
