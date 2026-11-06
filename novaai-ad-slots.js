@@ -428,31 +428,28 @@
           linkNode.dataset.novaAdDestination=href;
           bindCampaignClick(linkNode,id);
         }
-        // Capture the natural board size after campaign copy is set, but before
-        // media positioning or the managed-campaign attribute can alter intrinsic
-        // layout. setCampaignMedia positions the slot/media host absolutely.
         const captureOriginalSize=()=>{
           if(originalBoardSize)return;
           const naturalRect=slot.getBoundingClientRect();
           if(naturalRect.width>0&&naturalRect.height>0){
-            const viewportWidth=document.documentElement.clientWidth||window.innerWidth;
-            let preservedHeight=naturalRect.height;
-            // Mobile main's legacy Cart and Motors layouts retain extra vertical
-            // space for their original copy. The new 25% copy column changes that
-            // intrinsic measurement slightly, so restore the exact main baselines.
-            if(id==='cart_banner'&&viewportWidth<=380)preservedHeight=viewportWidth<=340?148.5:101;
-            if(id==='motors_banner'&&viewportWidth<=380)preservedHeight=viewportWidth<=340?491.86:470.86;
-            originalBoardSize={width:naturalRect.width,height:preservedHeight};
+            originalBoardSize={width:naturalRect.width,height:naturalRect.height};
             slot.__novaOriginalBoardSize=originalBoardSize;
             slot.dataset.novaOriginalWidth=String(naturalRect.width);
-            slot.dataset.novaOriginalHeight=String(preservedHeight);
+            slot.dataset.novaOriginalHeight=String(naturalRect.height);
           }
         };
-        // Match main's legacy managed styling before measuring, but measure
-        // before setCampaignMedia positions the creative host absolutely.
-        slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
-        captureOriginalSize();
-        if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
+        // Match main's media -> legacy managed flag -> measurement order for
+        // normally rendered boards. Wishlist is measured from its static node
+        // before media because main removes that node before campaign rendering.
+        if(id==='wishlist_banner'){
+          slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
+          captureOriginalSize();
+          if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
+        }else{
+          if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
+          slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
+          captureOriginalSize();
+        }
         slot.dataset.novaManagedLayout='1';
         if(originalBoardSize){
           slot.style.setProperty('box-sizing','border-box','important');
