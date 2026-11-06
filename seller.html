@@ -165,19 +165,10 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
   #sellerModerationPage{margin-left:-12px!important;margin-right:-12px!important}
 }
 
-/* Extend only the blue information panel of the right-hand property listing */
-#myProductsList .seller-property-card:nth-child(2){overflow:visible}
-#myProductsList .seller-property-card:nth-child(2) .seller-property-body{position:relative;isolation:isolate}
-#myProductsList .seller-property-card:nth-child(2) .seller-property-body::after{
-  content:"";
-  position:absolute;
-  z-index:-1;
-  top:0;
-  bottom:0;
-  left:0;
-  width:100vw;
-  background:linear-gradient(145deg,#10284b,#174ea6);
-}
+/* Keep the right-hand property listing inside the Seller Portal viewport */
+#myProductsList .seller-property-card:nth-child(2){overflow:hidden}
+#myProductsList .seller-property-card:nth-child(2) .seller-property-body{position:relative;isolation:auto}
+#myProductsList .seller-property-card:nth-child(2) .seller-property-body::after{content:none}
 </style>
 </head>
 <body>
