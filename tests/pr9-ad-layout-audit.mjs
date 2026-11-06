@@ -174,7 +174,7 @@ async function auditVersion(browser, version, viewport) {
           const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
           let node;
           while((node=walker.nextNode())){
-            const re=/\\S+/g;let match;
+            const re=/\S+/g;let match;
             while((match=re.exec(node.nodeValue||''))){
               const range=document.createRange();
               range.setStart(node,match.index);range.setEnd(node,match.index+match[0].length);
