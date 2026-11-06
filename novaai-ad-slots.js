@@ -407,16 +407,16 @@
           linkNode.dataset.novaAdDestination=href;
           bindCampaignClick(linkNode,id);
         }
-        if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
-        // Measure after inserting the same campaign copy that main displays, but
-        // before enabling the 75/25 inner layout. This preserves main's true
-        // campaign-rendered outer dimensions rather than the shorter placeholder copy.
+        // Measure after updating the campaign copy but before changing the original
+        // photo host into an absolute 75% media region. This preserves main's natural
+        // campaign-rendered outer dimensions, including auto-height boards.
         if(!originalBoardSize){
           const naturalRect=slot.getBoundingClientRect();
           if(naturalRect.width>0&&naturalRect.height>0){
             originalBoardSize={width:naturalRect.width,height:naturalRect.height};
           }
         }
+        if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
         slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
         if(originalBoardSize){
           slot.style.boxSizing='border-box';
