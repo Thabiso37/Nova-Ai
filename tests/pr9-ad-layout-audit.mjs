@@ -59,9 +59,12 @@ async function auditVersion(browser, version, viewport) {
       await route.fulfill({ status: 200, contentType: 'image/svg+xml', body: svg });
     });
     await page.addInitScript(() => {
-      const remember = () => { const el=document.querySelector('#wishlistAdSlot'); if(el && !window.__wishlistInitialRect){ const r=el.getBoundingClientRect(); window.__wishlistInitialRect={x:r.x,y:r.y,width:r.width,height:r.height}; } };
-      new MutationObserver(remember).observe(document,{childList:true,subtree:true});
-      document.addEventListener('DOMContentLoaded',remember,{once:true});
+      const saveRect = el => { if(!el || window.__wishlistInitialRect)return; const r=el.getBoundingClientRect(); if(r.width>0&&r.height>0)window.__wishlistInitialRect={x:r.x,y:r.y,width:r.width,height:r.height}; };
+      const inner=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');
+      Object.defineProperty(Element.prototype,'innerHTML',{get:inner.get,set(value){if(this.id==='wishlist')saveRect(this.querySelector('#wishlistAdSlot'));return inner.set.call(this,value);}});
+      const remove=Element.prototype.remove;
+      Element.prototype.remove=function(){if(this.id==='wishlistAdSlot')saveRect(this);return remove.call(this);};
+      new MutationObserver(()=>saveRect(document.querySelector('#wishlistAdSlot'))).observe(document,{childList:true,subtree:true});
     });
     page.on('pageerror', error => console.error('[PAGE ERROR]', version, pageSpec.file, error.message));
     const url = origin + '/' + version + '-snapshot/' + pageSpec.file;
@@ -135,12 +138,11 @@ for (const viewport of viewports) {
     if (!b.mediaLoaded) failures.push(viewport.name + ' ' + slot + ': creative media did not load');
     if (b.overlap) failures.push(viewport.name + ' ' + slot + ': photo and copy containers overlap');
     if (b.textOverflow) failures.push(viewport.name + ' ' + slot + ': text overflow/clipping detected');
-    if (b.text.some(t => /^(H1|H2|H3|P|STRONG|SMALL|A|BUTTON)$/.test(t.tag) && t.fontSize < 11)) failures.push(viewport.name + ' ' + slot + ': copy text below 11px');
-    if (b.cta.some(c => c.fontSize < 11)) failures.push(viewport.name + ' ' + slot + ': CTA below 11px');
+    if (b.text.some(t => (/^(H1|H2|H3|STRONG)$/.test(t.tag) && t.fontSize < 14) || (/^(P|SMALL)$/.test(t.tag) && t.fontSize < 12) || (/^SPAN$/.test(t.tag) && t.fontSize < 9))) failures.push(viewport.name + ' ' + slot + ': headline/body/kicker readability threshold failed');
+    if (b.cta.some(c => c.text && c.fontSize < 12 && !/^(‹|›|Advertisement )/.test(c.text))) failures.push(viewport.name + ' ' + slot + ': CTA below 12px');
     if (slot !== 'cart_banner' && b.cta.length===0) failures.push(viewport.name + ' ' + slot + ': no visible CTA');
-    if (slot === 'home_hero' && b.cta.length) {
-      const cr=b.copy, c=b.cta[0].rect;
-      if (cr && c && (c.x<cr.x-1 || c.right>cr.right+1)) failures.push(viewport.name + ' home_hero: carousel CTA/control outside copy area');
+    if (slot !== 'cart_banner' && b.copy && b.cta.length) {
+      for (const c of b.cta) if (c.rect && (c.rect.x < b.copy.x-1 || c.rect.right > b.copy.right+1)) failures.push(viewport.name + ' ' + slot + ': CTA/control outside copy area');
     }
     if (slot !== 'wishlist_banner' || b.photoRatio!==null) {
       if (b.photoRatio!==null && Math.abs(b.photoRatio-.75)>.03) failures.push(viewport.name + ' ' + slot + ': measured photo width is not 75%');
