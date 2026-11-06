@@ -184,18 +184,55 @@
       else if(imageNode){imageNode.style.backgroundImage='url("'+imageUrl.replace(/["\\]/g,'')+'")';imageNode.style.backgroundSize='cover';imageNode.style.backgroundPosition='center';}
     }
   }
+  function captureAdFallback(slot,id){
+    if(slot.__novaAdFallback)return;
+    let selectors;
+    if(id==='home_hero')selectors=['.nova-hero-slide .nova-hero-copy h1','.nova-hero-slide .nova-hero-copy p','.nova-hero-slide .nova-hero-copy a','.nova-hero-slide .nova-hero-art'];
+    else if(id==='shop_tv')selectors=['.shop-tv-slide .shop-tv-copy h2','.shop-tv-slide .shop-tv-copy p','.shop-tv-slide .shop-tv-copy a','.shop-tv-slide .shop-tv-art'];
+    else if(id==='cart_banner')selectors=['strong','span',null,null];
+    else if(id==='motors_banner')selectors=['.motors-hero-copy h1','.motors-hero-copy p','.motors-explore',null];
+    else if(id==='property_banner')selectors=['.property-promo-copy h2','.property-promo-copy p','.property-promo-link','.property-promo-photo img'];
+    else selectors=['.nova-footer-ad-copy strong','.nova-footer-ad-copy small','.nova-footer-ad-copy a','.nova-footer-ad-image'];
+    const nodes=selectors.map(selector=>selector?slot.querySelector(selector):null);
+    slot.__novaAdFallback=nodes.map(node=>node?{
+      text:node.textContent,href:node.getAttribute('href'),target:node.getAttribute('target'),rel:node.getAttribute('rel'),
+      backgroundImage:node.style.backgroundImage,src:node.tagName==='IMG'?node.getAttribute('src'):null,display:node.style.display
+    }:null);
+  }
+  function restoreAdFallback(slot,id){
+    const saved=slot.__novaAdFallback;if(!saved)return;
+    let selectors;
+    if(id==='home_hero')selectors=['.nova-hero-slide .nova-hero-copy h1','.nova-hero-slide .nova-hero-copy p','.nova-hero-slide .nova-hero-copy a','.nova-hero-slide .nova-hero-art'];
+    else if(id==='shop_tv')selectors=['.shop-tv-slide .shop-tv-copy h2','.shop-tv-slide .shop-tv-copy p','.shop-tv-slide .shop-tv-copy a','.shop-tv-slide .shop-tv-art'];
+    else if(id==='cart_banner')selectors=['strong','span',null,null];
+    else if(id==='motors_banner')selectors=['.motors-hero-copy h1','.motors-hero-copy p','.motors-explore',null];
+    else if(id==='property_banner')selectors=['.property-promo-copy h2','.property-promo-copy p','.property-promo-link','.property-promo-photo img'];
+    else selectors=['.nova-footer-ad-copy strong','.nova-footer-ad-copy small','.nova-footer-ad-copy a','.nova-footer-ad-image'];
+    selectors.forEach((selector,index)=>{
+      const node=selector?slot.querySelector(selector):null;const value=saved[index];if(!node||!value)return;
+      node.textContent=value.text;
+      if(value.href===null)node.removeAttribute('href');else if(value.href!==undefined)node.setAttribute('href',value.href);
+      if(value.target===null)node.removeAttribute('target');else if(value.target!==undefined)node.setAttribute('target',value.target);
+      if(value.rel===null)node.removeAttribute('rel');else if(value.rel!==undefined)node.setAttribute('rel',value.rel);
+      node.style.backgroundImage=value.backgroundImage||'';
+      if(node.tagName==='IMG'&&value.src)node.setAttribute('src',value.src);
+      node.style.display=value.display||'';
+    });
+    slot.querySelectorAll('video[data-nova-ad-video]').forEach(video=>video.remove());
+    delete slot.dataset.novaCampaignCode;slot.removeAttribute('data-nova-managed-campaign');
+  }
   function applyManagedCampaigns(rows){
     const managedSlots=["home_hero","shop_tv","cart_banner","wishlist_banner","motors_banner","property_banner","shop_footer","motors_footer","property_footer"];
     managedSlots.forEach(id=>{
       if(managedTimers[id]){clearTimeout(managedTimers[id]);delete managedTimers[id];}
       const slot=document.querySelector('[data-nova-ad-slot="'+id+'"]')||document.getElementById(({home_hero:"novaHeroCarousel",shop_tv:"shopTvAds",cart_banner:"cartAdBoard",wishlist_banner:"wishlistAdSlot",motors_banner:"motorsWelcomeAd",property_banner:"propertyAdSlot",shop_footer:"shopFooterAd",motors_footer:"motorsFooterAd",property_footer:"propertyFooterAd"})[id]);
       if(!slot)return;
+      captureAdFallback(slot,id);
       const campaigns=(Array.isArray(rows)?rows:[])
         .filter(c=>c&&c.slot_id===id&&campaignIsActive(c)&&safeHttpsUrl(c.creative_url)&&safeHttpsUrl(c.destination_url))
         .sort((a,b)=>(Number(b.priority)||0)-(Number(a.priority)||0)).slice(0,5);
       if(!campaigns.length){
-        slot.removeAttribute('data-nova-managed-campaign');delete slot.dataset.novaCampaignCode;
-        slot.querySelectorAll('video[data-nova-ad-video]').forEach(video=>video.remove());
+        restoreAdFallback(slot,id);
         slot.setAttribute('data-nova-ad-status','awaiting_management_campaign');return;
       }
       let index=0;
