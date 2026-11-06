@@ -417,9 +417,9 @@
           linkNode.dataset.novaAdDestination=href;
           bindCampaignClick(linkNode,id);
         }
-        // Capture the same legacy-managed baseline as main. Main installs media
-        // before its managed flag; Wishlist is the exception because its original
-        // node is removed before the feed can install media.
+        // Capture the natural board size after campaign copy is set, but before
+        // media positioning or the managed-campaign attribute can alter intrinsic
+        // layout. setCampaignMedia positions the slot/media host absolutely.
         const captureOriginalSize=()=>{
           if(originalBoardSize)return;
           const naturalRect=slot.getBoundingClientRect();
@@ -430,15 +430,9 @@
             slot.dataset.novaOriginalHeight=String(naturalRect.height);
           }
         };
-        if(id==='wishlist_banner'){
-          slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
-          captureOriginalSize();
-          if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
-        }else{
-          if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
-          slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
-          captureOriginalSize();
-        }
+        captureOriginalSize();
+        if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
+        slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
         slot.dataset.novaManagedLayout='1';
         if(originalBoardSize){
           slot.style.setProperty('box-sizing','border-box','important');
