@@ -9,7 +9,7 @@ fs.mkdirSync(outDir, { recursive: true });
 const viewports = [{ name: 'desktop-1365', width: 1365, height: 900 }, { name: 'mobile-360', width: 360, height: 800 }, { name: 'mobile-320', width: 320, height: 740 }];
 const pages = [
   { file: 'index.html', slots: ['home_hero'] },
-  { file: 'retail.html', slots: ['shop_tv', 'cart_banner', 'shop_footer'] },
+  { file: 'retail.html', slots: ['shop_tv', 'shop_footer'] },
   { file: 'retail.html?view=wishlist', slots: ['wishlist_banner'], refreshWishlist: true },
   { file: 'retail.html?view=cart', slots: ['cart_banner'] },
   { file: 'seller-motors-houses.html?market=motors', slots: ['motors_banner', 'motors_footer'] },
@@ -64,12 +64,11 @@ async function auditVersion(browser, version, viewport) {
     await page.goto(fullUrl, { waitUntil: 'commit', timeout: 15000 });
     await page.waitForLoadState('domcontentloaded', { timeout: 12000 }).catch(() => {});
     await page.waitForTimeout(1300);
-    if (pageSpec.file.includes('view=wishlist')) {
-      await page.evaluate(() => {
-        if (typeof window.renderWishlist === 'function') window.renderWishlist();
-        else if (typeof window.loadWishlist === 'function') window.loadWishlist();
-      });
-      await page.waitForTimeout(300);
+    let wishlistBeforeRefresh = null;
+    if (pageSpec.refreshWishlist) {
+      wishlistBeforeRefresh = await page.evaluate(() => { const el=document.querySelector('#wishlistAdSlot'); if(!el)return null; const r=el.getBoundingClientRect(); return {x:r.x,y:r.y,width:r.width,height:r.height}; });
+      await page.evaluate(() => { if (typeof window.renderWishlist === 'function') window.renderWishlist(); });
+      await page.waitForTimeout(500);
     }
     for (const slot of pageSpec.slots) {
       const [outerSel, photoSel, copySel] = selectors[slot];
@@ -93,8 +92,9 @@ async function auditVersion(browser, version, viewport) {
         const mediaLoaded = image ? (image.tagName==='VIDEO' ? image.readyState>=1 : image.complete && image.naturalWidth>0) : !!photo;
         const overlap = !!(photoRect&&copyRect&&photoRect.x<copyRect.right&&photoRect.right>copyRect.x&&photoRect.y<copyRect.bottom&&photoRect.bottom>copyRect.y);
         const textOverflow = textNodes.some(el => el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 2);
-        return {slot, found:!!outer, outer:outerRect, photo:photoRect, copy:copyRect, expectedRightCopy:rightCopy, photoRatio:mediaRatio, text, cta, mediaLoaded, overlap, textOverflow, hasManagedCampaign:!!outer?.dataset.novaManagedCampaign, wishlistBeforeRefresh: slot==='wishlist_banner' ? wishlistBeforeRefresh : null};
+        return {slot, found:!!outer, outer:outerRect, photo:photoRect, copy:copyRect, expectedRightCopy:rightCopy, photoRatio:mediaRatio, text, cta, mediaLoaded, overlap, textOverflow, hasManagedCampaign:!!outer?.dataset.novaManagedCampaign};
       }, { slot, outerSel, photoSel, copySel });
+      if (slot === 'wishlist_banner') measurement.wishlistBeforeRefresh = wishlistBeforeRefresh;
       results[slot] = measurement;
       await page.screenshot({ path: path.join(outDir, version + '-' + viewport.name + '-' + slot + '.png'), fullPage: false });
     }
