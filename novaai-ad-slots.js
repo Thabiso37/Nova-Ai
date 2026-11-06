@@ -224,6 +224,7 @@
     // the media host so the uploaded creative fills the same visible area.
     if(imageNode&&imageNode.tagName==='IMG')host=imageNode.parentElement||slot;
     if(!host)return;
+    if(!host.__novaAdMediaFallback)host.__novaAdMediaFallback={position:host.style.position,overflow:host.style.overflow,hadClass:host.classList.contains('nova-ad-media-host')};
     host.classList.add('nova-ad-media-host');
     host.style.position='relative';
     host.style.overflow='hidden';
@@ -277,7 +278,7 @@
     else selectors=['.nova-footer-ad-copy strong','.nova-footer-ad-copy small','.nova-footer-ad-copy a','.nova-footer-ad-image'];
     const nodes=selectors.map(selector=>selector?slot.querySelector(selector):null);
     slot.__novaAdFallback={slotBackgroundImage:slot.style.backgroundImage,slotHref:slot.getAttribute('href'),slotTarget:slot.getAttribute('target'),slotRel:slot.getAttribute('rel'),nodes:nodes.map(node=>node?{
-      text:node.textContent,href:node.getAttribute('href'),target:node.getAttribute('target'),rel:node.getAttribute('rel'),
+      element:node,text:node.textContent,href:node.getAttribute('href'),target:node.getAttribute('target'),rel:node.getAttribute('rel'),
       backgroundImage:node.style.backgroundImage,src:node.tagName==='IMG'?node.getAttribute('src'):null,display:node.style.display
     }:null)};
   }
@@ -301,7 +302,7 @@
       if(saved.slotRel===null)slot.removeAttribute('rel');else if(saved.slotRel!==undefined)slot.setAttribute('rel',saved.slotRel);
     }
     selectors.forEach((selector,index)=>{
-      const node=selector?slot.querySelector(selector):null;const value=saved.nodes[index];if(!node||!value)return;
+      const value=saved.nodes[index];const node=value&&value.element&&slot.contains(value.element)?value.element:(selector?slot.querySelector(selector):null);if(!node||!value)return;
       node.removeAttribute('data-nova-ad-click-campaign');node.removeAttribute('data-nova-ad-destination');
       node.textContent=value.text;
       if(value.href===null)node.removeAttribute('href');else if(value.href!==undefined)node.setAttribute('href',value.href);
@@ -312,6 +313,7 @@
       node.style.display=value.display||'';
     });
     slot.querySelectorAll('img[data-nova-ad-image],video[data-nova-ad-video]').forEach(media=>{if(media.tagName==='VIDEO')media.pause();media.remove();});
+    slot.querySelectorAll('.nova-ad-media-host').forEach(host=>{const savedHost=host.__novaAdMediaFallback;if(savedHost){host.style.position=savedHost.position;host.style.overflow=savedHost.overflow;if(!savedHost.hadClass)host.classList.remove('nova-ad-media-host');delete host.__novaAdMediaFallback;}});
     delete slot.dataset.novaCampaignCode;slot.removeAttribute('data-nova-managed-campaign');
   }
   function applyManagedCampaigns(rows){
