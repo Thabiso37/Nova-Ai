@@ -105,6 +105,10 @@ header{box-shadow:0 3px 14px rgba(16,40,75,.07)}
 #myProductsList .seller-property-card{width:100%;max-width:none;min-width:0;min-height:240px;display:grid;grid-template-columns:minmax(0,7fr) minmax(0,3fr);grid-template-rows:1fr;align-items:stretch;overflow:hidden;background:#123b79;border:0;border-radius:16px;padding:0;box-shadow:0 8px 22px rgba(16,40,75,.15)}
 #myProductsList .seller-property-gallery{position:relative;grid-column:1;grid-row:1;width:100%;height:100%;min-height:240px;overflow:hidden;background:#dce5f1}
 #myProductsList .seller-property-gallery img,#myProductsList .seller-property-gallery .property-card-image-empty{position:absolute;inset:0;display:grid;width:100%;height:100%;min-height:0;object-fit:cover;border-radius:0;background:linear-gradient(135deg,#e8eef7,#dce5f1)}
+#myProductsList .seller-property-gallery .seller-image-arrow{position:absolute;top:50%;z-index:3;transform:translateY(-50%);width:28px;height:36px;padding:0;border:1px solid rgba(255,255,255,.75);border-radius:8px;background:rgba(16,40,75,.72);color:#fff;display:grid;place-items:center;font-size:23px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+#myProductsList .seller-property-gallery .seller-image-arrow.prev{left:5px}
+#myProductsList .seller-property-gallery .seller-image-arrow.next{right:5px}
+#myProductsList .seller-property-gallery .seller-image-count{position:absolute;z-index:3;bottom:6px;left:50%;transform:translateX(-50%);padding:2px 7px;border-radius:20px;background:rgba(16,40,75,.72);color:#fff;font-size:9px;font-weight:800;pointer-events:none}
 #myProductsList .seller-property-body{grid-column:2;grid-row:1;display:flex;min-width:0;flex-direction:column;align-items:flex-start;gap:5px;padding:10px 8px;color:#fff;background:linear-gradient(145deg,#10284b,#174ea6)}
 #myProductsList .seller-property-card .property-card-category{font-size:7px;line-height:1.2;text-transform:uppercase;color:#ffd34f;font-weight:900;letter-spacing:.6px}
 #myProductsList .seller-property-card .property-card-name{font-size:clamp(11px,3vw,15px);line-height:1.15;font-weight:800;color:#fff;margin:2px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
@@ -1031,7 +1035,9 @@ async function loadMyProducts() {
   list.innerHTML = renderGroup(marketplaceLabels[primary] + " Listings", primaryListings);
 }
 function renderSellerListing(p) {
-    const image = p.image_url || (Array.isArray(p.images) ? p.images[0] : "");
+    const imageList = [...new Set([p.image_url, ...(Array.isArray(p.images) ? p.images : [])].filter(v => typeof v === "string" && v.trim()).map(v => v.trim()))];
+    const image = imageList[0] || "";
+    const imageData = escapeHTML(JSON.stringify(imageList));
     const status = p.status || "pending";
     const statusColors = {pending:"#b7791f",approved:"#16845b",rejected:"#c43d4b",hidden:"#64748b"};
     const statusHelp = {
@@ -1042,8 +1048,11 @@ function renderSellerListing(p) {
     };
     return `
       <article class="seller-property-card">
-        <div class="seller-property-gallery">
-          ${image ? `<img loading="lazy" decoding="async" src="${escapeHTML(image)}" alt="${escapeHTML(p.name || "Seller listing")}">` : '<div class="property-card-image-empty">Listing photo</div>'}
+        <div class="seller-property-gallery" data-images="${imageData}" data-index="0">
+          ${image ? `<img class="seller-listing-image" loading="lazy" decoding="async" src="${escapeHTML(image)}" alt="${escapeHTML(p.name || "Seller listing")}">` : '<div class="property-card-image-empty">Listing photo</div>'}
+          <button class="seller-image-arrow prev" type="button" aria-label="Previous product photo" onclick="changeSellerListingImage(this,-1)">‹</button>
+          <button class="seller-image-arrow next" type="button" aria-label="Next product photo" onclick="changeSellerListingImage(this,1)">›</button>
+          ${imageList.length > 1 ? '<span class="seller-image-count">1 / ' + imageList.length + '</span>' : ""}
         </div>
         <div class="seller-property-body">
           <div class="property-card-category">${escapeHTML(p.category || "LISTING")}</div>
@@ -1059,6 +1068,21 @@ function renderSellerListing(p) {
         </div>
       </article>`;
 }
+function changeSellerListingImage(button, direction) {
+  const gallery = button.closest(".seller-property-gallery");
+  if (!gallery) return;
+  let images = [];
+  try { images = JSON.parse(gallery.dataset.images || "[]"); } catch (_) { return; }
+  if (!Array.isArray(images) || images.length < 2) return;
+  const nextIndex = (Number(gallery.dataset.index || 0) + direction + images.length) % images.length;
+  const img = gallery.querySelector(".seller-listing-image");
+  if (!img) return;
+  gallery.dataset.index = String(nextIndex);
+  img.src = images[nextIndex];
+  const count = gallery.querySelector(".seller-image-count");
+  if (count) count.textContent = (nextIndex + 1) + " / " + images.length;
+}
+
 // Edit a seller-owned listing; changes are returned to pending moderation.
 
 async function editProduct(id) {
