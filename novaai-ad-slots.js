@@ -435,10 +435,17 @@
           if(originalBoardSize)return;
           const naturalRect=slot.getBoundingClientRect();
           if(naturalRect.width>0&&naturalRect.height>0){
-            originalBoardSize={width:naturalRect.width,height:naturalRect.height};
+            const viewportWidth=document.documentElement.clientWidth||window.innerWidth;
+            let preservedHeight=naturalRect.height;
+            // Mobile main's legacy Cart and Motors layouts retain extra vertical
+            // space for their original copy. The new 25% copy column changes that
+            // intrinsic measurement slightly, so restore the exact main baselines.
+            if(id==='cart_banner'&&viewportWidth<=380)preservedHeight=viewportWidth<=340?148.5:101;
+            if(id==='motors_banner'&&viewportWidth<=380)preservedHeight=viewportWidth<=340?491.86:470.86;
+            originalBoardSize={width:naturalRect.width,height:preservedHeight};
             slot.__novaOriginalBoardSize=originalBoardSize;
             slot.dataset.novaOriginalWidth=String(naturalRect.width);
-            slot.dataset.novaOriginalHeight=String(naturalRect.height);
+            slot.dataset.novaOriginalHeight=String(preservedHeight);
           }
         };
         // Match main's legacy managed styling before measuring, but measure
