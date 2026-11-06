@@ -92,6 +92,10 @@ async function auditVersion(browser, version, viewport) {
         javaScriptEnabled:false
       });
       await baselinePage.goto(origin+'/main-snapshot/retail.html?view=wishlist&pr9baseline=1',{waitUntil:'domcontentloaded',timeout:15000});
+      await baselinePage.evaluate(async()=>{
+        if(document.fonts?.ready)await document.fonts.ready.catch(()=>{});
+        await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      });
       wishlistBeforeRefresh=await baselinePage.evaluate(()=>{
         const board=document.getElementById('wishlistAdSlot');
         if(!board)return null;
