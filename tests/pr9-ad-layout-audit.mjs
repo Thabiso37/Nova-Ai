@@ -89,38 +89,17 @@ async function auditVersion(browser, version, viewport) {
     await page.waitForTimeout(1300);
     let wishlistBeforeRefresh = null;
     if (pageSpec.refreshWishlist) {
-      // Trigger one deterministic refresh first so both branches expose the
-      // original node to the capture hooks before the baseline is measured.
-      await page.evaluate(() => { if (typeof window.renderWishlist === 'function') window.renderWishlist(); });
-      await page.waitForTimeout(150);
       wishlistBeforeRefresh = await page.evaluate(() => {
         const section=document.getElementById('wishlist');
         const clone=window.__wishlistBaselineClone || document.getElementById('wishlistAdSlot')?.cloneNode(true);
         if(!section||!clone)return null;
-        // Use the untouched original board markup from this branch snapshot.
-        // It is identical to main; the test captures it before renderWishlist removes it.
         clone.removeAttribute('id');
         clone.removeAttribute('data-nova-ad-slot');
         clone.removeAttribute('data-nova-managed-campaign');
         clone.removeAttribute('data-nova-managed-layout');
         clone.classList.remove('nova-live-ad','nova-ad-media-host');
-        clone.querySelectorAll('.nova-live-controls,[data-nova-ad-image],[data-nova-ad-video]').forEach(el=>el.remove());
-        const media=clone.querySelector('.nova-footer-ad-image');
-        if(media)media.removeAttribute('style');
-        const kicker=clone.querySelector('.nova-footer-ad-kicker');
-        const heading=clone.querySelector('.nova-footer-ad-copy strong');
-        const body=clone.querySelector('.nova-footer-ad-copy small');
-        const link=clone.querySelector('.nova-footer-ad-copy a');
-        if(kicker)kicker.textContent='NOVAAI WISHLIST • FEATURED';
-        if(heading)heading.textContent='Discover more from South African sellers.';
-        if(body)body.textContent='Fresh finds and local offers are waiting for you.';
-        if(link){link.textContent='Explore marketplace →';link.setAttribute('href','#products');}
+        clone.querySelectorAll('.nova-live-controls').forEach(el=>el.remove());
         clone.style.cssText='position:relative!important;left:auto!important;top:auto!important;width:auto!important;height:auto!important;visibility:hidden!important;pointer-events:none!important;z-index:auto!important;box-sizing:border-box!important;display:flex!important;';
-        for(let node=section;node&&node!==document.body;node=node.parentElement){
-          const cs=getComputedStyle(node);
-          if(cs.display==='none')node.style.setProperty('display','block','important');
-          if(cs.visibility==='hidden')node.style.setProperty('visibility','visible','important');
-        }
         section.insertBefore(clone,section.firstChild);
         const r=clone.getBoundingClientRect();
         const result=r.width>0&&r.height>0?{x:+r.x.toFixed(2),y:+r.y.toFixed(2),width:+r.width.toFixed(2),height:+r.height.toFixed(2)}:null;
