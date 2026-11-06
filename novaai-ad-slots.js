@@ -342,6 +342,7 @@
     slot.removeAttribute('data-nova-managed-layout');
     slot.removeAttribute('data-nova-original-width');
     slot.removeAttribute('data-nova-original-height');
+    delete slot.__novaOriginalBoardSize;
   }
   function applyManagedCampaigns(rows,onlySlot){
     const managedSlots=["home_hero","shop_tv","cart_banner","wishlist_banner","motors_banner","property_banner","shop_footer","motors_footer","property_footer"].filter(id=>!onlySlot||id===onlySlot);
@@ -374,7 +375,7 @@
         }
         return;
       }
-      let originalBoardSize=null;
+      let originalBoardSize=slot.__novaOriginalBoardSize||null;
       let index=0;
       const show=()=>{
         const c=campaigns[index];
@@ -424,6 +425,7 @@
           const naturalRect=slot.getBoundingClientRect();
           if(naturalRect.width>0&&naturalRect.height>0){
             originalBoardSize={width:naturalRect.width,height:naturalRect.height};
+            slot.__novaOriginalBoardSize=originalBoardSize;
             slot.dataset.novaOriginalWidth=String(naturalRect.width);
             slot.dataset.novaOriginalHeight=String(naturalRect.height);
           }
