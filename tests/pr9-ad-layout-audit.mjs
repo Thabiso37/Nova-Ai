@@ -88,7 +88,7 @@ async function auditVersion(browser, version, viewport) {
         const section=document.getElementById('wishlist');
         if(!clone||!section)return null;
         clone.removeAttribute('id');
-        clone.removeAttribute('data-nova-ad-slot');
+        clone.setAttribute('data-nova-ad-slot','wishlist_banner');
         clone.setAttribute('data-pr9-baseline-probe','1');
         clone.dataset.novaManagedCampaign='audit-baseline';
         clone.style.cssText='position:relative!important;left:auto!important;top:auto!important;width:auto!important;height:auto!important;visibility:hidden!important;pointer-events:none!important;z-index:auto!important;box-sizing:border-box!important;display:flex!important;';
@@ -99,12 +99,10 @@ async function auditVersion(browser, version, viewport) {
         if(body)body.textContent=description;
         if(link)link.textContent=cta;
         section.insertBefore(clone,section.firstChild);
-        return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>{
-          const r=clone.getBoundingClientRect();
-          const result=r.width>0&&r.height>0?{x:+r.x.toFixed(2),y:+r.y.toFixed(2),width:+r.width.toFixed(2),height:+r.height.toFixed(2)}:null;
-          clone.remove();
-          resolve(result);
-        })));
+        const r=clone.getBoundingClientRect();
+        const result=r.width>0&&r.height>0?{x:+r.x.toFixed(2),y:+r.y.toFixed(2),width:+r.width.toFixed(2),height:+r.height.toFixed(2)}:null;
+        clone.remove();
+        return result;
       }, campaigns.find(c=>c.slot_id==='wishlist_banner'));
       await page.evaluate(() => { if (typeof window.renderWishlist === 'function') window.renderWishlist(); });
       await page.waitForTimeout(500);
