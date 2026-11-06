@@ -749,15 +749,10 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
       <h2>Product Moderation</h2>
       <p class="muted">Review and manage seller product listings.</p>
 
-      <div class="toolbar">
+      <div class="toolbar global-products-toolbar">
         <input id="search" type="search" placeholder="Search products or sellers...">
-        <select id="filter">
-          <option value="all">All Products</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-          <option value="hidden">Hidden</option>
-        </select>
+        <select id="filter"><option value="all">All statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="hidden">Hidden</option></select>
+        <select id="globalMarketplaceFilter" aria-label="Filter by marketplace"><option value="all">All marketplaces</option><option value="retail">Retail</option><option value="motors">Motors</option><option value="property">Property</option></select>
       </div>
 
       <p id="message" class="muted" aria-live="polite">Loading products...</p>
