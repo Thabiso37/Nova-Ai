@@ -18,7 +18,7 @@ const pages = [
 const selectors = {
   home_hero: ['#novaHeroCarousel', '.nova-hero-art', '.nova-hero-copy'],
   shop_tv: ['#shopTvAds', '.shop-tv-art', '.shop-tv-copy'],
-  cart_banner: ['.cart-page-header', '#cartAdBoard img[data-nova-ad-image]', null],
+  cart_banner: ['.cart-page-header', '#cartAdBoard img[data-nova-ad-image]', '#cartAdBoard > strong'],
   wishlist_banner: ['#wishlistAdSlot', '.nova-footer-ad-image img[data-nova-ad-image], #wishlistAdSlot img[data-nova-ad-image]', '.nova-footer-ad-copy'],
   motors_banner: ['#motorsWelcomeAd', 'img[data-nova-ad-image]', '.motors-hero-copy'],
   property_banner: ['#propertyAdSlot', '.property-promo-photo', '.property-promo-copy'],
@@ -40,7 +40,7 @@ const campaigns = campaignSlots.flatMap((slot, i) => [0, 1].map((n) => ({
   ends_at: '2035-01-01T00:00:00.000Z',
   priority: n === 0 ? 100 : 50,
   duration_seconds: 2
-})));
+}))).reverse();
 
 async function auditVersion(browser, version, viewport) {
   const results = {};
@@ -59,21 +59,13 @@ async function auditVersion(browser, version, viewport) {
       await route.fulfill({ status: 200, contentType: 'image/svg+xml', body: svg });
     });
     await page.addInitScript(() => {
-      const capture=el=>{
-        if(el&&!window.__wishlistBaselineClone)window.__wishlistBaselineClone=el.cloneNode(true);
-      };
-      const inner=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');
-      Object.defineProperty(Element.prototype,'innerHTML',{
-        get:inner.get,
-        set(value){capture(this.querySelector?.('#wishlistAdSlot'));return inner.set.call(this,value);}
-      });
-      const remove=Element.prototype.remove;
-      Element.prototype.remove=function(){if(this.id==='wishlistAdSlot')capture(this);return remove.call(this);};
-      const removeChild=Node.prototype.removeChild;
-      Node.prototype.removeChild=function(child){if(child?.id==='wishlistAdSlot')capture(child);return removeChild.call(this,child);};
-      const replaceChildren=Element.prototype.replaceChildren;
-      Element.prototype.replaceChildren=function(...children){capture(this.querySelector?.('#wishlistAdSlot'));return replaceChildren.apply(this,children);};
-      document.addEventListener('DOMContentLoaded',()=>capture(document.getElementById('wishlistAdSlot')),{once:true});
+      // Capture the original rendered Wishlist board before application handlers mutate it.
+      document.addEventListener('DOMContentLoaded',()=>{
+        const el=document.getElementById('wishlistAdSlot');
+        if(!el)return;
+        const r=el.getBoundingClientRect();
+        window.__wishlistOriginalRect=r.width>0&&r.height>0?{x:+r.x.toFixed(2),y:+r.y.toFixed(2),width:+r.width.toFixed(2),height:+r.height.toFixed(2)}:null;
+      },{once:true});
     });
     page.on('pageerror', error => console.error('[PAGE ERROR]', version, pageSpec.file, error.message));
     const url = origin + '/' + version + '-snapshot/' + pageSpec.file;
@@ -89,23 +81,7 @@ async function auditVersion(browser, version, viewport) {
     await page.waitForTimeout(1300);
     let wishlistBeforeRefresh = null;
     if (pageSpec.refreshWishlist) {
-      wishlistBeforeRefresh = await page.evaluate(() => {
-        const section=document.getElementById('wishlist');
-        const clone=window.__wishlistBaselineClone || document.getElementById('wishlistAdSlot')?.cloneNode(true);
-        if(!section||!clone)return null;
-        clone.removeAttribute('id');
-        clone.removeAttribute('data-nova-ad-slot');
-        clone.removeAttribute('data-nova-managed-campaign');
-        clone.removeAttribute('data-nova-managed-layout');
-        clone.classList.remove('nova-live-ad','nova-ad-media-host');
-        clone.querySelectorAll('.nova-live-controls').forEach(el=>el.remove());
-        clone.style.cssText='position:relative!important;left:auto!important;top:auto!important;width:auto!important;height:auto!important;visibility:hidden!important;pointer-events:none!important;z-index:auto!important;box-sizing:border-box!important;display:flex!important;';
-        section.insertBefore(clone,section.firstChild);
-        const r=clone.getBoundingClientRect();
-        const result=r.width>0&&r.height>0?{x:+r.x.toFixed(2),y:+r.y.toFixed(2),width:+r.width.toFixed(2),height:+r.height.toFixed(2)}:null;
-        clone.remove();
-        return result;
-      });
+      wishlistBeforeRefresh = await page.evaluate(() => window.__wishlistOriginalRect || null);
       await page.evaluate(() => { if (typeof window.renderWishlist === 'function') window.renderWishlist(); });
       await page.waitForTimeout(500);
     }
@@ -154,7 +130,7 @@ async function auditVersion(browser, version, viewport) {
         const ratioBase=(slot==='motors_banner'||slot==='cart_banner')?outerRect?.width:innerWidth;
         const mediaRatio=ratioBase&&photoRect?+(photoRect.width/ratioBase).toFixed(4):null;
         const mediaLoaded = image ? (image.tagName==='VIDEO' ? image.readyState>=1 : image.complete && image.naturalWidth>0) : !!photo;
-        const copyMeasure=copyRect||(slot==='cart_banner'?rightCopy:null);
+        const copyMeasure=copyRect;
         const overlap = !!(photoRect&&copyMeasure&&photoRect.x<copyMeasure.right&&photoRect.right>copyMeasure.x&&photoRect.y<copyMeasure.bottom&&photoRect.bottom>copyMeasure.y);
         const copyBase=(slot==='motors_banner'||slot==='cart_banner')?outerRect?.width:innerWidth;
         const copyRatio=copyMeasure&&copyBase?+(copyMeasure.width/copyBase).toFixed(4):null;
@@ -197,7 +173,7 @@ async function auditVersion(browser, version, viewport) {
           const cs=getComputedStyle(el);
           return {rect:rect(el),position:cs.position,left:cs.left,right:cs.right,width:cs.width,display:cs.display};
         }):[];
-        return {slot, found:!!outer, outer:outerRect, originalSize:outer?{width:Number(outer.dataset.novaOriginalWidth)||null,height:Number(outer.dataset.novaOriginalHeight)||null}:null, photo:photoRect, copy:copyMeasure, expectedRightCopy:rightCopy, photoRatio:mediaRatio, copyRatio, text, cta, destination, carouselIndicators, controls, mediaLoaded, overlap, textOverflow:textOverflow||textClip, textOutsideCopy, awkwardBreak, wordBreaks, hasManagedCampaign:!!managedSlot?.dataset.novaManagedCampaign};
+        return {slot, found:!!outer, outer:outerRect, originalSize:outer?{width:Number(outer.dataset.novaOriginalWidth)||null,height:Number(outer.dataset.novaOriginalHeight)||null}:null, photo:photoRect, copy:copyMeasure, expectedRightCopy:rightCopy, photoRatio:mediaRatio, copyRatio, text, cta, destination, campaignCode:managedSlot?.dataset.novaCampaignCode||null, carouselIndicators, controls, mediaLoaded, overlap, textOverflow:textOverflow||textClip, textOutsideCopy, awkwardBreak, wordBreaks, hasManagedCampaign:!!managedSlot?.dataset.novaManagedCampaign};
       }, { slot, outerSel, photoSel, copySel });
       if (slot === 'wishlist_banner') measurement.wishlistBeforeRefresh = wishlistBeforeRefresh;
       results[slot] = measurement;
@@ -257,7 +233,9 @@ for (const viewport of viewports) {
       if (Math.abs(original.width-b.outer.width)>0.5 || Math.abs(original.height-b.outer.height)>0.5) failures.push(viewport.name + ' wishlist_banner: dimensions changed during refresh');
     } else if (!a?.found || !b?.found) { failures.push(viewport.name + ' ' + slot + ': board missing'); continue; }
     if (slot !== 'wishlist_banner' && (!a.outer || !b.outer || Math.abs(a.outer.width-b.outer.width)>0.5 || Math.abs(a.outer.height-b.outer.height)>0.5)) failures.push(viewport.name + ' ' + slot + ': outer dimensions differ from main');
+    if (!b.outer || !b.photo || !b.copy || !Number.isFinite(b.outer.width) || !Number.isFinite(b.outer.height) || !Number.isFinite(b.photo.width) || !Number.isFinite(b.copy.width)) failures.push(viewport.name + ' ' + slot + ': required outer/photo/copy measurement is missing or null');
     if (!b.mediaLoaded) failures.push(viewport.name + ' ' + slot + ': creative media did not load');
+    if (b.campaignCode !== 'AUDIT-' + slot + '-0') failures.push(viewport.name + ' ' + slot + ': highest-priority campaign was not selected first');
     if (!b.hasManagedCampaign) failures.push(viewport.name + ' ' + slot + ': managed campaign was not applied');
     if (b.destination!=='https://example.com/novaai-ad-audit/'+slot) failures.push(viewport.name + ' ' + slot + ': campaign destination mismatch');
     if (b.overlap) failures.push(viewport.name + ' ' + slot + ': photo and copy containers overlap');
