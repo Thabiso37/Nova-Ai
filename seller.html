@@ -202,7 +202,7 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
 
 <!-- STANDARD SELLER PORTAL -->
 <div id="portalStd" class="grid">
-  <div class="panel">
+  <div class="panel" id="sellerAccountPanel">
     <h3 id="authPanelTitle">🔐 Seller Sign-In & Registration</h3>
     <div class="notice">Choose ONE primary marketplace above. Your seller application and portal access are restricted to that marketplace, subject to administrator approval.</div>
     <div id="signedOut">
@@ -247,10 +247,10 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
     </div>
   </div>
 
-  <div class="panel">
+  <div class="panel" id="sellerInventoryPanel">
     <!-- One primary marketplace per seller account -->
     <h3 id="sellerInventoryHeading">Manage your seller inventory</h3>
-    <div class="tabs" role="tablist" aria-label="Assigned marketplace inventory">
+    <div class="tabs" id="sellerInventoryTabs" role="tablist" aria-label="Assigned marketplace inventory">
       <button class="tab active" type="button" id="marketRetailTab" onclick="setListingMarket('retail')">My Shop Listings</button>
       <button class="tab" type="button" id="marketMotorsTab" onclick="setListingMarket('motors')">My Motor Listings</button>
       <button class="tab" type="button" id="marketPropertyTab" onclick="setListingMarket('property')">My Property Listings</button>
@@ -398,9 +398,21 @@ function renderMarketplaceChoices(){
 }
 const marketplaceLabels = {retail:"Retail Seller",motors:"Motors Seller",property:"Property Seller"};
 function openSellerPage(id) {
+  const validPages = ["sellerPublicLocationPanel","marketplaceAccessStatus","sellerAccountPanel","sellerListingEditorPage","sellerModerationPage","sellerOrdersPage"];
+  if (!validPages.includes(id)) return;
+  const inventoryPanel = document.getElementById("sellerInventoryPanel");
+  const inventoryPage = ["sellerListingEditorPage","sellerModerationPage","sellerOrdersPage"].includes(id);
+  document.getElementById("sellerPublicLocationPanel").classList.toggle("hidden", id !== "sellerPublicLocationPanel");
+  document.getElementById("marketplaceAccessStatus").classList.toggle("hidden", id !== "marketplaceAccessStatus");
+  document.getElementById("sellerAccountPanel").classList.toggle("hidden", id !== "sellerAccountPanel");
+  inventoryPanel.classList.toggle("hidden", !inventoryPage);
+  document.getElementById("sellerInventoryHeading").classList.toggle("hidden", !inventoryPage);
+  document.getElementById("sellerInventoryTabs").classList.toggle("hidden", !inventoryPage);
+  document.getElementById("sellerListingEditorPage").classList.toggle("hidden", id !== "sellerListingEditorPage");
+  document.getElementById("sellerModerationPage").classList.toggle("hidden", id !== "sellerModerationPage");
+  document.getElementById("sellerOrdersPage").classList.toggle("hidden", id !== "sellerOrdersPage");
   const target = document.getElementById(id);
-  if (!target) return;
-  target.scrollIntoView({behavior:"smooth",block:"start"});
+  if (target) target.scrollIntoView({behavior:"smooth",block:"start"});
 }
 function chooseMarketplace(market) {
   if (!Object.prototype.hasOwnProperty.call(marketplaceLabels, market)) return;
@@ -417,8 +429,7 @@ function chooseMarketplace(market) {
   const params = new URLSearchParams(window.location.search);
   params.set("market", market);
   history.replaceState(null, "", window.location.pathname + "?" + params.toString());
-  if (user) document.getElementById("portalStd").scrollIntoView({behavior:"smooth",block:"start"});
-  else document.getElementById("signedOut").scrollIntoView({behavior:"smooth",block:"start"});
+  openSellerPage(user ? "sellerPublicLocationPanel" : "sellerAccountPanel");
 }
 function returnToMarketplaceSelection() {
   if(user && storeData){msg("sellerMsg","Your primary marketplace is fixed for this seller application. Administrator approval is required to change it.",true);return;}
