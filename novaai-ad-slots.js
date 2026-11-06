@@ -419,6 +419,8 @@
           const naturalRect=slot.getBoundingClientRect();
           if(naturalRect.width>0&&naturalRect.height>0){
             originalBoardSize={width:naturalRect.width,height:naturalRect.height};
+            slot.dataset.novaOriginalWidth=String(naturalRect.width);
+            slot.dataset.novaOriginalHeight=String(naturalRect.height);
           }
         }
         if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
