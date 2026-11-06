@@ -334,8 +334,8 @@
     slot.querySelectorAll('.nova-ad-media-host').forEach(host=>{const savedHost=host.__novaAdMediaFallback;if(savedHost){if(savedHost.style===null)host.removeAttribute('style');else host.setAttribute('style',savedHost.style);if(savedHost.ariaHidden===null)host.removeAttribute('aria-hidden');else host.setAttribute('aria-hidden',savedHost.ariaHidden);delete host.dataset.novaManagedImage;if(!savedHost.hadClass)host.classList.remove('nova-ad-media-host');delete host.__novaAdMediaFallback;}});
     delete slot.dataset.novaCampaignCode;slot.removeAttribute('data-nova-managed-campaign');
   }
-  function applyManagedCampaigns(rows){
-    const managedSlots=["home_hero","shop_tv","cart_banner","wishlist_banner","motors_banner","property_banner","shop_footer","motors_footer","property_footer"];
+  function applyManagedCampaigns(rows,onlySlot){
+    const managedSlots=["home_hero","shop_tv","cart_banner","wishlist_banner","motors_banner","property_banner","shop_footer","motors_footer","property_footer"].filter(id=>!onlySlot||id===onlySlot);
     managedSlots.forEach(id=>{
       if(managedTimers[id]){clearTimeout(managedTimers[id]);delete managedTimers[id];}
       const slot=document.querySelector('[data-nova-ad-slot="'+id+'"]')||document.getElementById(({home_hero:"novaHeroCarousel",shop_tv:"shopTvAds",cart_banner:"cartAdBoard",wishlist_banner:"wishlistAdSlot",motors_banner:"motorsWelcomeAd",property_banner:"propertyAdSlot",shop_footer:"shopFooterAd",motors_footer:"motorsFooterAd",property_footer:"propertyFooterAd"})[id]);
@@ -347,6 +347,23 @@
       if(!campaigns.length){
         restoreAdFallback(slot,id);
         slot.setAttribute('data-nova-ad-status','awaiting_management_campaign');return;
+      }
+      // Defer hidden boards (Cart, Wishlist, Motors/Property footers) until their
+      // containing view is shown, so the original natural dimensions can be measured.
+      const visibleRect=slot.getBoundingClientRect();
+      if(visibleRect.width<=0||visibleRect.height<=0){
+        if(!slot.__novaDeferredCampaignObserver&&typeof ResizeObserver!=='undefined'){
+          const observer=new ResizeObserver(()=>{
+            const rect=slot.getBoundingClientRect();
+            if(rect.width>0&&rect.height>0){
+              observer.disconnect();delete slot.__novaDeferredCampaignObserver;
+              applyManagedCampaigns(rows,id);
+            }
+          });
+          slot.__novaDeferredCampaignObserver=observer;
+          observer.observe(slot);
+        }
+        return;
       }
       // Snapshot the board's original rendered outer size before managed-campaign
       // classes/styles are applied. The inner 75/25 layout must never resize its board.
@@ -452,6 +469,8 @@
       const response=await fetch(apiUrl,{method:'POST',headers:{'apikey':publishableKey,'Authorization':'Bearer '+publishableKey,'Content-Type':'application/json'},body:'{}'});
       if(!response.ok)throw new Error('Campaign feed returned HTTP '+response.status);
       const campaigns=await response.json();
+      if(document.fonts&&document.fonts.ready)await document.fonts.ready.catch(()=>{});
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
       api.announceCampaigns(Array.isArray(campaigns)?campaigns:[]);
     }catch(error){console.warn('NOVAAI managed advertisement feed unavailable; managed campaigns cleared.',error);api.announceCampaigns([]);}
   }
