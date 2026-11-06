@@ -59,24 +59,15 @@ async function auditVersion(browser, version, viewport) {
       await route.fulfill({ status: 200, contentType: 'image/svg+xml', body: svg });
     });
     await page.addInitScript(() => {
-      const saveRect = el => {
-        if(!el || window.__wishlistInitialRect)return;
-        const section=document.getElementById('wishlist');
-        const oldDisplay=section?.style.display;
-        if(section)section.style.display='block';
-        const r=el.getBoundingClientRect();
-        if(r.width>0&&r.height>0)window.__wishlistInitialRect={x:r.x,y:r.y,width:r.width,height:r.height};
-        if(section)section.style.display=oldDisplay||'';
-      };
       const inner=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');
-      Object.defineProperty(Element.prototype,'innerHTML',{get:inner.get,set(value){saveRect(this.querySelector?.('#wishlistAdSlot'));return inner.set.call(this,value);}});
-      const remove=Element.prototype.remove;
-      Element.prototype.remove=function(){if(this.id==='wishlistAdSlot')saveRect(this);return remove.call(this);};
-      const removeChild=Node.prototype.removeChild;
-      Node.prototype.removeChild=function(child){if(child?.id==='wishlistAdSlot')saveRect(child);return removeChild.call(this,child);};
-      const replaceChildren=Element.prototype.replaceChildren;
-      Element.prototype.replaceChildren=function(...children){saveRect(this.querySelector?.('#wishlistAdSlot'));return replaceChildren.apply(this,children);};
-      new MutationObserver(()=>saveRect(document.querySelector('#wishlistAdSlot'))).observe(document,{childList:true,subtree:true});
+      Object.defineProperty(Element.prototype,'innerHTML',{
+        get:inner.get,
+        set(value){
+          const el=this.querySelector?.('#wishlistAdSlot');
+          if(el&&!window.__wishlistBaselineClone)window.__wishlistBaselineClone=el.cloneNode(true);
+          return inner.set.call(this,value);
+        }
+      });
     });
     page.on('pageerror', error => console.error('[PAGE ERROR]', version, pageSpec.file, error.message));
     const url = origin + '/' + version + '-snapshot/' + pageSpec.file;
@@ -92,7 +83,27 @@ async function auditVersion(browser, version, viewport) {
     await page.waitForTimeout(1300);
     let wishlistBeforeRefresh = null;
     if (pageSpec.refreshWishlist) {
-      wishlistBeforeRefresh = await page.evaluate(() => window.__wishlistInitialRect || (() => { const el=document.querySelector('#wishlistAdSlot'); if(!el)return null; const r=el.getBoundingClientRect(); return {x:r.x,y:r.y,width:r.width,height:r.height}; })());
+      wishlistBeforeRefresh = await page.evaluate(({title,description,cta}) => {
+        const clone=window.__wishlistBaselineClone;
+        const section=document.getElementById('wishlist');
+        if(!clone||!section)return null;
+        clone.removeAttribute('id');
+        clone.removeAttribute('data-nova-ad-slot');
+        clone.setAttribute('data-pr9-baseline-probe','1');
+        clone.style.cssText='position:absolute!important;left:0!important;top:0!important;width:100%!important;height:auto!important;visibility:hidden!important;pointer-events:none!important;z-index:-1!important;box-sizing:border-box!important;display:flex!important;';
+        section.style.position='relative';
+        const heading=clone.querySelector('.nova-footer-ad-copy strong');
+        const body=clone.querySelector('.nova-footer-ad-copy small');
+        const link=clone.querySelector('.nova-footer-ad-copy a');
+        if(heading)heading.textContent=title;
+        if(body)body.textContent=description;
+        if(link)link.textContent=cta;
+        section.appendChild(clone);
+        return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>{
+          const r=clone.getBoundingClientRect();
+          resolve(r.width>0&&r.height>0?{x:+r.x.toFixed(2),y:+r.y.toFixed(2),width:+r.width.toFixed(2),height:+r.height.toFixed(2)}:null);
+        })));
+      }, campaigns.find(c=>c.slot_id==='wishlist_banner'));
       await page.evaluate(() => { if (typeof window.renderWishlist === 'function') window.renderWishlist(); });
       await page.waitForTimeout(500);
     }
@@ -139,7 +150,11 @@ async function auditVersion(browser, version, viewport) {
           const cs=getComputedStyle(el);
           return cs.wordBreak==='break-all'||cs.overflowWrap==='anywhere';
         });
-        return {slot, found:!!outer, outer:outerRect, photo:photoRect, copy:copyMeasure, expectedRightCopy:rightCopy, photoRatio:mediaRatio, copyRatio, text, cta, mediaLoaded, overlap, textOverflow, textOutsideCopy, awkwardBreak, hasManagedCampaign:!!outer?.dataset.novaManagedCampaign};
+        const controls=outer?[...outer.querySelectorAll('.nova-live-controls,.shop-tv-controls,.nova-hero-controls')].map(el=>{
+          const cs=getComputedStyle(el);
+          return {rect:rect(el),position:cs.position,left:cs.left,right:cs.right,width:cs.width,display:cs.display};
+        }):[];
+        return {slot, found:!!outer, outer:outerRect, photo:photoRect, copy:copyMeasure, expectedRightCopy:rightCopy, photoRatio:mediaRatio, copyRatio, text, cta, controls, mediaLoaded, overlap, textOverflow, textOutsideCopy, awkwardBreak, hasManagedCampaign:!!outer?.dataset.novaManagedCampaign};
       }, { slot, outerSel, photoSel, copySel });
       if (slot === 'wishlist_banner') measurement.wishlistBeforeRefresh = wishlistBeforeRefresh;
       results[slot] = measurement;
