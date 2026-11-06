@@ -227,6 +227,8 @@
     host.classList.add('nova-ad-media-host');
     host.style.position='relative';
     host.style.overflow='hidden';
+    // Hide the old static property photo while a managed creative is active.
+    if(imageNode&&imageNode.tagName==='IMG')imageNode.style.display='none';
 
     // Keep the campaign media as a real HTML element on every board. The
     // media occupies the host; existing title/description/CTA stay above it.
@@ -261,8 +263,6 @@
       image.style.display='block';
       if(image.src!==mediaUrl)image.src=mediaUrl;
     }
-    // Raise the existing copy and CTA above the media without moving them
-    // out of their original responsive layout.
     // Keep existing copy and CTA above the media through the scoped CSS rule.
     if(id==='home_hero')host.dataset.novaManagedImage='1';
   }
