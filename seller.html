@@ -68,6 +68,65 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
 #sellerPublicLocationPanel,#marketplaceAccessStatus{border-radius:4px!important;box-shadow:0 3px 12px rgba(16,40,75,.045)}
 @media(max-width:600px){.seller-page-card{padding:13px;margin:12px 0}}
 
+
+/* Seller Portal visual refresh — isolated to seller.html */
+body{background:#f3f6fb;color:#17263d}
+.top{background:#10284b;padding:9px 14px;letter-spacing:.55px}
+header{box-shadow:0 3px 14px rgba(16,40,75,.07)}
+.head,main{max-width:1180px}
+.logo{letter-spacing:-.7px}
+#sellerWorkspace{max-width:1180px}
+.picker-wrap{max-width:1120px}
+.picker-intro{padding:30px 12px 24px}
+.picker-intro h1{font-weight:850;letter-spacing:-1px}
+.market-choice-grid{gap:18px}
+.market-choice{border-radius:12px;padding:22px;box-shadow:0 8px 26px rgba(16,40,75,.055)}
+.market-choice:hover{border-color:#a9c3eb;transform:translateY(-2px);transition:.18s ease}
+.market-choice .choice-icon{border-radius:10px}
+.selected-market-bar{border-radius:10px;background:#eaf1fb;border-color:#d4e1f3;padding:16px 18px}
+.seller-page-nav{position:sticky;top:56px;z-index:4;background:#f3f6fb;padding:12px 0;margin:0 0 14px}
+.seller-page-nav button{border-radius:7px;padding:11px 15px;box-shadow:0 2px 5px rgba(16,40,75,.035)}
+.seller-page-nav button:hover,.seller-page-nav button:focus{background:#174ea6;color:#fff;border-color:#174ea6}
+.seller-page-card,.panel,#sellerPublicLocationPanel,#marketplaceAccessStatus{background:#fff;border:1px solid #dce4ef;border-radius:10px;box-shadow:0 5px 18px rgba(16,40,75,.045)}
+.seller-page-card{padding:20px;margin:18px 0}
+.seller-page-card h3,.panel h3,#sellerPublicLocationPanel h3,#marketplaceAccessStatus h3{font-size:17px;font-weight:850;letter-spacing:-.25px;color:#10284b}
+#portalStd{align-items:start;gap:18px}
+#portalStd>.panel{padding:20px;min-width:0}
+#sellerListingEditorPage,#sellerModerationPage,#sellerOrdersPage{scroll-margin-top:125px}
+#sellerPublicLocationPanel,#marketplaceAccessStatus,#portalStd{scroll-margin-top:125px}
+.field label{color:#33445d}
+.field input,.field select,.field textarea{border-radius:7px;border-color:#d7e0ec;background:#fbfcfe;padding:11px}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid #c9dcfb;border-color:#174ea6}
+.btn{border-radius:7px;box-shadow:none}
+.btn.outline{border-color:#d4deeb}
+.tabs{gap:7px}
+.tab{border-radius:7px;font-size:12px}
+#myProductsList .seller-property-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:stretch}
+#myProductsList .seller-property-card{width:100%;max-width:none;min-width:0;height:100%;min-height:280px;display:flex;flex-direction:column;overflow:hidden;background:#fff;border:1px solid #dce4ef;border-radius:9px;padding:9px;box-shadow:0 3px 12px rgba(16,40,75,.055)}
+#myProductsList .seller-property-card img,#myProductsList .seller-property-card .property-card-image-empty{width:100%;height:132px;min-height:132px;object-fit:cover;border-radius:6px}
+#myProductsList .seller-property-card .property-card-name{font-size:12px;line-height:1.35;margin:9px 0 4px;min-height:32px}
+#myProductsList .seller-property-card .property-card-price{font-size:15px}
+#myProductsList .seller-property-card .property-card-meta{font-size:10px;line-height:1.4;overflow-wrap:anywhere}
+#myProductsList .seller-property-card .property-card-status{font-size:9px;font-weight:850;margin-top:7px}
+#myProductsList .seller-property-card .property-card-actions{display:flex;gap:6px;margin-top:auto;padding-top:10px}
+#myProductsList .seller-property-card .property-card-actions .btn{flex:1;min-width:0;padding:8px 3px;font-size:10px;white-space:nowrap}
+#myProductsList>section{margin:14px 0!important;padding:14px!important;border:1px solid #e2e8f0!important;border-radius:9px!important;background:#f9fbfe}
+#myProductsList>section h3{font-size:14px;margin:0 0 12px}
+#sellerOrdersList>div{border-radius:9px!important;border-color:#dce4ef!important;box-shadow:0 3px 12px rgba(16,40,75,.04)}
+@media(max-width:760px){
+ .head,main{padding-left:14px;padding-right:14px}
+ .market-choice-grid{grid-template-columns:1fr}
+ #portalStd{grid-template-columns:1fr}
+ .seller-page-nav{top:48px}
+ .seller-page-card{padding:15px}
+}
+@media(max-width:360px){
+ #myProductsList .seller-property-grid{gap:8px}
+ #myProductsList .seller-property-card{padding:7px}
+ #myProductsList .seller-property-card img,#myProductsList .seller-property-card .property-card-image-empty{height:112px;min-height:112px}
+ #myProductsList .seller-property-card .property-card-actions .btn{font-size:9px}
+}
+
 </style>
 </head>
 <body>
@@ -909,45 +968,34 @@ async function loadMyProducts() {
   const renderGroup = (heading, rows) => `
     <section style="margin:16px 0;padding:12px;border:1px solid var(--line);border-radius:10px;">
       <h3>${heading} <small style="color:#64748b">(${rows.length})</small></h3>
-      ${rows.length ? (primary==="property" ? '<div class="seller-property-grid">' + rows.map(p => renderSellerListing(p)).join("") + '</div>' : rows.map(p => renderSellerListing(p)).join("")) : '<p class="msg">No listings in this marketplace yet.</p>'}
+      ${rows.length ? '<div class="seller-property-grid">' + rows.map(p => renderSellerListing(p)).join("") + '</div>' : '<p class="msg">No listings in this marketplace yet.</p>'}
     </section>`;
   list.innerHTML = renderGroup(marketplaceLabels[primary] + " Listings", primaryListings);
 }
 function renderSellerListing(p) {
     const image = p.image_url || (Array.isArray(p.images) ? p.images[0] : "");
     const status = p.status || "pending";
-    const statusColors = {pending:"#d18a24",approved:"#16a36a",rejected:"#d64c59",hidden:"#6579dc"};
-    if (propertyCategories.includes(p.category)) {
-      return `
-        <article class="seller-property-card">
-          ${image ? `<img loading="lazy" decoding="async" src="${escapeHTML(image)}" alt="${escapeHTML(p.name || "Property listing")}">` : '<div class="property-card-image-empty">Property photo</div>'}
-          <div class="property-card-name">${escapeHTML(p.name)}</div>
-          <div class="property-card-price">R${Number(p.price || 0).toLocaleString("en-ZA",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-          <div class="property-card-meta">${escapeHTML(p.category || "")}</div>
-          <div class="property-card-status" style="color:${statusColors[status] || "#aaa"}">STATUS: ${escapeHTML(status.toUpperCase())}</div>
-          ${status === "rejected" && p.rejection_reason ? `<div class="property-card-meta" style="color:#d64c59">${escapeHTML(p.rejection_reason)}</div>` : ""}
-          <div class="property-card-actions">
-            <button class="btn outline" type="button" onclick="editProduct(${Number(p.id)})">Edit</button>
-            <button class="btn outline" type="button" style="color:#b52828" onclick="deleteProduct(${Number(p.id)})">Delete</button>
-          </div>
-        </article>`;
-    }
+    const statusColors = {pending:"#b7791f",approved:"#16845b",rejected:"#c43d4b",hidden:"#64748b"};
+    const statusHelp = {
+      pending:"Awaiting administrator review.",
+      approved:"Approved and eligible to appear in the public marketplace.",
+      rejected:"Please review the administrator feedback.",
+      hidden:"Currently hidden by marketplace moderation."
+    };
     return `
-      <div style="padding:12px;border-bottom:1px solid var(--line);">
-        <div style="display:flex;gap:10px;align-items:center;">
-          ${image ? `<img loading="lazy" decoding="async" src="${escapeHTML(image)}" alt="" style="width:65px;height:65px;object-fit:cover;border-radius:8px;">` : ""}
-          <div><b>${escapeHTML(p.name)}</b><div>R${Number(p.price || 0).toFixed(2)}</div><small>${escapeHTML(p.category || "")}</small></div>
+      <article class="seller-property-card">
+        ${image ? `<img loading="lazy" decoding="async" src="${escapeHTML(image)}" alt="${escapeHTML(p.name || "Seller listing")}">` : '<div class="property-card-image-empty">Listing photo</div>'}
+        <div class="property-card-name">${escapeHTML(p.name || "Untitled listing")}</div>
+        <div class="property-card-price">R${Number(p.price || 0).toLocaleString("en-ZA",{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+        <div class="property-card-meta">${escapeHTML(p.category || "")}</div>
+        <div class="property-card-status" style="color:${statusColors[status] || "#64748b"}">STATUS: ${escapeHTML(status.toUpperCase())}</div>
+        <div class="property-card-meta">${escapeHTML(statusHelp[status] || "Listing status is being checked.")}</div>
+        ${status === "rejected" && p.rejection_reason ? `<div class="property-card-meta" style="color:#c43d4b">${escapeHTML(p.rejection_reason)}</div>` : ""}
+        <div class="property-card-actions">
+          <button class="btn outline" type="button" onclick="editProduct(${Number(p.id)})">Edit</button>
+          <button class="btn outline" type="button" style="color:#b52828" onclick="deleteProduct(${Number(p.id)})">Delete</button>
         </div>
-        <p>Approval Status: <strong style="color:${statusColors[status] || "#aaa"}">${escapeHTML(status.toUpperCase())}</strong></p>
-        ${status === "rejected" && p.rejection_reason ? `<p style="color:#d64c59">Rejection reason: ${escapeHTML(p.rejection_reason)}</p>` : ""}
-        ${status === "pending" ? "<small>Awaiting administrator review.</small>" : ""}
-        ${status === "approved" ? "<small>Approved and eligible to appear in the public marketplace.</small>" : ""}
-        ${status === "hidden" ? "<small>Currently hidden by marketplace moderation.</small>" : ""}
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
-          <button class="btn outline" type="button" onclick="editProduct(${Number(p.id)})">Edit listing</button>
-          <button class="btn outline" type="button" style="color:#b52828" onclick="deleteProduct(${Number(p.id)})">Delete listing</button>
-        </div>
-      </div>`;
+      </article>`;
 }
 // Edit a seller-owned listing; changes are returned to pending moderation.
 
@@ -1186,7 +1234,7 @@ const orderLocationMap = new Map(
 
   msgEl.textContent =
     `${(items || []).length} customer order item(s) found. ` +
-    `${groupedOrders.size} order(s). Seller ID: ${targetUser.id}`;
+    `${groupedOrders.size} order(s).`;
 
   if (groupedOrders.size === 0) {
     list.innerHTML = "<p>No customer orders found for your store yet.</p>";
