@@ -59,11 +59,23 @@ async function auditVersion(browser, version, viewport) {
       await route.fulfill({ status: 200, contentType: 'image/svg+xml', body: svg });
     });
     await page.addInitScript(() => {
-      const saveRect = el => { if(!el || window.__wishlistInitialRect)return; const r=el.getBoundingClientRect(); if(r.width>0&&r.height>0)window.__wishlistInitialRect={x:r.x,y:r.y,width:r.width,height:r.height}; };
+      const saveRect = el => {
+        if(!el || window.__wishlistInitialRect)return;
+        const section=document.getElementById('wishlist');
+        const oldDisplay=section?.style.display;
+        if(section)section.style.display='block';
+        const r=el.getBoundingClientRect();
+        if(r.width>0&&r.height>0)window.__wishlistInitialRect={x:r.x,y:r.y,width:r.width,height:r.height};
+        if(section)section.style.display=oldDisplay||'';
+      };
       const inner=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');
-      Object.defineProperty(Element.prototype,'innerHTML',{get:inner.get,set(value){if(this.id==='wishlist')saveRect(this.querySelector('#wishlistAdSlot'));return inner.set.call(this,value);}});
+      Object.defineProperty(Element.prototype,'innerHTML',{get:inner.get,set(value){saveRect(this.querySelector?.('#wishlistAdSlot'));return inner.set.call(this,value);}});
       const remove=Element.prototype.remove;
       Element.prototype.remove=function(){if(this.id==='wishlistAdSlot')saveRect(this);return remove.call(this);};
+      const removeChild=Node.prototype.removeChild;
+      Node.prototype.removeChild=function(child){if(child?.id==='wishlistAdSlot')saveRect(child);return removeChild.call(this,child);};
+      const replaceChildren=Element.prototype.replaceChildren;
+      Element.prototype.replaceChildren=function(...children){saveRect(this.querySelector?.('#wishlistAdSlot'));return replaceChildren.apply(this,children);};
       new MutationObserver(()=>saveRect(document.querySelector('#wishlistAdSlot'))).observe(document,{childList:true,subtree:true});
     });
     page.on('pageerror', error => console.error('[PAGE ERROR]', version, pageSpec.file, error.message));
@@ -71,6 +83,11 @@ async function auditVersion(browser, version, viewport) {
     const fullUrl = url + (pageSpec.file.includes('?') ? '&' : '?') + (pageSpec.file.includes('?') ? '' : 'audit=1');
     await page.goto(fullUrl, { waitUntil: 'commit', timeout: 15000 });
     await page.waitForLoadState('domcontentloaded', { timeout: 12000 }).catch(() => {});
+    await page.evaluate(async () => {
+      if(document.fonts?.ready)await document.fonts.ready.catch(()=>{});
+      await Promise.all(Array.from(document.images).map(img=>img.decode?img.decode().catch(()=>{}):Promise.resolve()));
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    });
     await page.waitForTimeout(1300);
     let wishlistBeforeRefresh = null;
     if (pageSpec.refreshWishlist) {
@@ -86,10 +103,11 @@ async function auditVersion(browser, version, viewport) {
           const r = el.getBoundingClientRect();
           return { x: +r.x.toFixed(2), y: +r.y.toFixed(2), width: +r.width.toFixed(2), height: +r.height.toFixed(2), right: +r.right.toFixed(2), bottom: +r.bottom.toFixed(2) };
         };
-        const outer = document.querySelector(outerSel) || document.querySelector('[data-nova-ad-slot="' + slot + '"]');
+        const visible = el => !!el && !!(el.getClientRects().length) && getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden';
+        const slotNodes=[...document.querySelectorAll('[data-nova-ad-slot="' + slot + '"]')];
+        const outer = slotNodes.find(visible) || document.querySelector(outerSel) || slotNodes[0] || null;
         const photo = outer?.querySelector(photoSel) || (photoSel ? document.querySelector(photoSel) : null);
         const copy = copySel ? (outer?.querySelector(copySel) || document.querySelector(copySel)) : null;
-        const visible = el => !!el && !!(el.getClientRects().length) && getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden';
         const textNodes = copy ? [copy, ...copy.querySelectorAll('h1,h2,h3,p,strong,small,span,a,button')].filter((el,i,a)=>a.indexOf(el)===i && visible(el) && (el.children.length===0 || /^(H1|H2|H3|P|STRONG|SMALL|SPAN|A|BUTTON)$/.test(el.tagName))) : (outer ? [...outer.querySelectorAll('strong,span,h1,h2,p,a,button')].filter(visible) : []);
         const text = textNodes.map(el => ({ tag: el.tagName, text: (el.innerText || '').trim().slice(0,100), fontSize: parseFloat(getComputedStyle(el).fontSize), lineHeight: getComputedStyle(el).lineHeight, rect: rect(el) }));
         const cta = outer ? [...outer.querySelectorAll('a,button')].filter(visible).map(el=>({text:(el.innerText||el.getAttribute('aria-label')||'').trim().slice(0,80),rect:rect(el),fontSize:parseFloat(getComputedStyle(el).fontSize),href:el.getAttribute('href')})) : [];
@@ -103,8 +121,23 @@ async function auditVersion(browser, version, viewport) {
         const mediaLoaded = image ? (image.tagName==='VIDEO' ? image.readyState>=1 : image.complete && image.naturalWidth>0) : !!photo;
         const copyMeasure=copyRect||(slot==='cart_banner'?rightCopy:null);
         const overlap = !!(photoRect&&copyMeasure&&photoRect.x<copyMeasure.right&&photoRect.right>copyMeasure.x&&photoRect.y<copyMeasure.bottom&&photoRect.bottom>copyMeasure.y);
-        const textOverflow = textNodes.some(el => el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 2);
-        return {slot, found:!!outer, outer:outerRect, photo:photoRect, copy:copyMeasure, expectedRightCopy:rightCopy, photoRatio:mediaRatio, text, cta, mediaLoaded, overlap, textOverflow, hasManagedCampaign:!!outer?.dataset.novaManagedCampaign};
+        const copyRatio=copyMeasure&&innerWidth?+(copyMeasure.width/innerWidth).toFixed(4):null;
+        const textOverflow = textNodes.some(el => {
+          const cs=getComputedStyle(el);
+          return el.scrollWidth > el.clientWidth + 1 && ['hidden','clip'].includes(cs.overflowX)
+            || el.scrollHeight > el.clientHeight + 2 && ['hidden','clip'].includes(cs.overflowY)
+            || cs.textOverflow==='ellipsis'
+            || (cs.webkitLineClamp&&cs.webkitLineClamp!=='none'&&cs.webkitLineClamp!=='0');
+        });
+        const textOutsideCopy = !!copyMeasure && textNodes.some(el => {
+          const r=el.getBoundingClientRect();
+          return r.width>0&&(r.left<copyMeasure.x-1||r.right>copyMeasure.right+1);
+        });
+        const awkwardBreak = textNodes.some(el => {
+          const cs=getComputedStyle(el);
+          return cs.wordBreak==='break-all'||cs.overflowWrap==='anywhere';
+        });
+        return {slot, found:!!outer, outer:outerRect, photo:photoRect, copy:copyMeasure, expectedRightCopy:rightCopy, photoRatio:mediaRatio, copyRatio, text, cta, mediaLoaded, overlap, textOverflow, textOutsideCopy, awkwardBreak, hasManagedCampaign:!!outer?.dataset.novaManagedCampaign};
       }, { slot, outerSel, photoSel, copySel });
       if (slot === 'wishlist_banner') measurement.wishlistBeforeRefresh = wishlistBeforeRefresh;
       results[slot] = measurement;
@@ -138,7 +171,10 @@ for (const viewport of viewports) {
     if (!b.mediaLoaded) failures.push(viewport.name + ' ' + slot + ': creative media did not load');
     if (b.overlap) failures.push(viewport.name + ' ' + slot + ': photo and copy containers overlap');
     if (b.textOverflow) failures.push(viewport.name + ' ' + slot + ': text overflow/clipping detected');
+    if (b.textOutsideCopy) failures.push(viewport.name + ' ' + slot + ': text extends outside copy area');
+    if (b.awkwardBreak) failures.push(viewport.name + ' ' + slot + ': CSS forces mid-word wrapping');
     if (b.text.some(t => (/^(H1|H2|H3|STRONG)$/.test(t.tag) && t.fontSize < 14) || (/^(P|SMALL)$/.test(t.tag) && t.fontSize < 12) || (/^SPAN$/.test(t.tag) && t.fontSize < 9))) failures.push(viewport.name + ' ' + slot + ': headline/body/kicker readability threshold failed');
+    if (b.copyRatio!==null && Math.abs(b.copyRatio-.25)>.03) failures.push(viewport.name + ' ' + slot + ': measured copy width is not 25%');
     if (b.cta.some(c => c.text && c.fontSize < 12 && !/^(‹|›|Advertisement )/.test(c.text))) failures.push(viewport.name + ' ' + slot + ': CTA below 12px');
     if (slot !== 'cart_banner' && b.cta.length===0) failures.push(viewport.name + ' ' + slot + ': no visible CTA');
     if (slot !== 'cart_banner' && b.copy && b.cta.length) {
