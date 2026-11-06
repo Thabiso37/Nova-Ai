@@ -570,6 +570,13 @@ button {
 .ad-campaign-record-actions button{padding:7px 9px;border:1px solid #dce3ee;border-radius:8px;background:#fff;color:#174ea6;font-size:11px;font-weight:700}
 .ad-status{display:inline-block;margin-top:5px;padding:4px 7px;border-radius:20px;background:#eaf1ff;color:#174ea6;font-size:10px;font-weight:700}
 @media(max-width:600px){.ad-campaign-grid{grid-template-columns:1fr}.ad-campaign-record{align-items:flex-start;flex-wrap:wrap}.ad-campaign-record-actions{width:100%}}
+@media(max-width:850px){
+  .sidebar nav a{min-height:44px}
+  #dashboard button{min-height:44px}
+  #dashboard .actions button{min-height:44px;padding:10px 13px}
+  #dashboard .ad-campaign-record-actions button{min-height:44px;padding:10px 12px;font-size:12px}
+  #dashboard .ad-campaign-actions button{min-height:44px;padding:10px 13px}
+}
 
 /* Professional NOVAAI administration control-centre */
 :root{--blue:#174ea6;--blue-dark:#10284b;--yellow:#f5b900;--page:#f5f7fb;--line:#e7ebf2;--text:#17243b;--muted:#718096;--radius:16px;--shadow:0 8px 28px rgba(16,40,75,.055)}
@@ -585,7 +592,7 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
 .section-title{font-size:15px;font-weight:750;letter-spacing:.1px;margin:25px 0 12px}.stats{gap:14px}.stat,.panel,.module{border:1px solid #e8edf5;box-shadow:0 5px 22px rgba(16,40,75,.04);border-radius:16px}.stat{padding:18px;min-height:112px}.stat strong{font-size:25px;letter-spacing:-.5px}.module{padding:17px;min-height:126px;transition:transform .18s,border-color .18s,box-shadow .18s}.module:hover{transform:translateY(-2px);border-color:#b9cafa;box-shadow:0 10px 24px rgba(16,40,75,.08)}.module-icon{background:#edf3ff;color:var(--blue);border-radius:12px}
 .panel{padding:clamp(16px,2vw,25px);margin-bottom:18px;scroll-margin-top:94px}.panel h2{font-size:18px;letter-spacing:-.2px}.notice{border-radius:11px}.record{border-color:#e8edf5;border-radius:12px}button{transition:filter .15s,transform .15s}button:hover{filter:brightness(.98)}button:active{transform:translateY(1px)}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid rgba(245,185,0,.5);outline-offset:2px}.primary{background:var(--blue)}input,select{border-color:#dfe6f0;border-radius:10px}#loginPanel{margin:7vh auto;border-radius:18px}
 .mobile-menu-toggle{display:none;background:#edf3ff;color:var(--blue);padding:10px 12px;border-radius:10px}.sidebar-backdrop{display:none}.capability-note{padding:15px;border:1px dashed #d8e1ef;border-radius:12px;background:#fbfcfe;color:#66758b;font-size:12px;line-height:1.6}.capability-note strong{display:block;color:#243650;margin-bottom:4px}.overview-kicker{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:#d8e5ff;font-weight:800;margin-bottom:8px}
-@media(max-width:850px){.topbar{height:66px}.mobile-menu-toggle{display:inline-flex;align-items:center;gap:7px}.app-shell{display:block;padding:15px 13px 32px}.sidebar{display:block;position:fixed;z-index:150;left:0;top:0;bottom:0;width:min(290px,86vw);border-radius:0 18px 18px 0;overflow-y:auto;transform:translateX(-105%);transition:transform .22s ease;padding:22px 15px;box-shadow:15px 0 35px rgba(12,30,60,.15)}.sidebar.mobile-open{transform:translateX(0)}.sidebar-backdrop.open{display:block;position:fixed;inset:0;background:rgba(12,26,48,.42);z-index:140}.mobile-nav{display:none!important}.welcome-panel{padding:21px 18px}.welcome-panel .date-label{display:block}}
+@media(max-width:850px){.topbar{height:66px}.mobile-menu-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;min-width:44px}.app-shell{display:block;padding:15px 13px 32px}.sidebar{display:block;position:fixed;z-index:150;left:0;top:0;bottom:0;width:min(290px,86vw);border-radius:0 18px 18px 0;overflow-y:auto;transform:translateX(-105%);transition:transform .22s ease;padding:22px 15px;box-shadow:15px 0 35px rgba(12,30,60,.15)}.sidebar.mobile-open{transform:translateX(0)}.sidebar-backdrop.open{display:block;position:fixed;inset:0;background:rgba(12,26,48,.42);z-index:140}.mobile-nav{display:none!important}.sidebar nav a{min-height:44px;padding:11px 12px}.welcome-panel{padding:21px 18px}.welcome-panel .date-label{display:block}}
 @media(max-width:520px){.header-actions{gap:7px}.header-pill{font-size:10px;padding:8px}.brand{gap:9px}.brand h1{font-size:16px}.brand p{font-size:9px}.brand-mark{width:36px;height:36px}.welcome-panel{display:block}.welcome-panel h2{font-size:22px}.welcome-panel .date-label{display:inline-block;margin-top:13px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.financial-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 </style>
@@ -602,6 +609,10 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
     </div>
   </div>
 
+  <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button"
+          aria-controls="adminSidebar" aria-expanded="false" aria-label="Open administration menu">
+    <span aria-hidden="true">☰</span><span>Menu</span>
+  </button>
   <div class="header-actions">
     <span class="header-pill">🛡️ ADMIN</span>
   </div>
@@ -631,7 +642,7 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <div class="app-shell">
 
-  <aside class="sidebar">
+  <aside class="sidebar" id="adminSidebar">
     <h2>NOVAAI</h2>
     <p class="sidebar-label">CONTROL CENTRE</p>
 
@@ -643,8 +654,9 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
 <a href="#motorsManagement"><span class="nav-icon">▰</span>Motors Management</a>
 <a href="#propertyManagement"><span class="nav-icon">⌂</span>Property Management</a>
 <a href="#advertisementManagement"><span class="nav-icon">▣</span>Advertising Management</a>
-<a href="#paymentCentre"><span class="nav-icon">▤</span>Orders & Fulfilment</a>
+<a href="#ordersFulfilment"><span class="nav-icon">▤</span>Orders & Fulfilment</a>
 <a href="#paymentCentre"><span class="nav-icon">◈</span>Payments & Settlements</a>
+<a href="#sellerFinancialRecords"><span class="nav-icon">◉</span>Seller Financial Records</a>
 <a href="#reportsAnalytics"><span class="nav-icon">▥</span>Reports & Analytics</a>
 <a href="#adminSettings"><span class="nav-icon">⚙</span>Settings</a></nav>
 
@@ -668,19 +680,19 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
       <div class="stats">
         <div class="stat amber">
           <div class="stat-label">Pending Products</div>
-          <strong id="pendingCount">0</strong>
+          <strong id="pendingCount">Loading…</strong>
         </div>
         <div class="stat green">
           <div class="stat-label">Approved Products</div>
-          <strong id="approvedCount">0</strong>
+          <strong id="approvedCount">Loading…</strong>
         </div>
         <div class="stat red">
           <div class="stat-label">Rejected Products</div>
-          <strong id="rejectedCount">0</strong>
+          <strong id="rejectedCount">Loading…</strong>
         </div>
         <div class="stat">
           <div class="stat-label">Hidden Products</div>
-          <strong id="hiddenCount">0</strong>
+          <strong id="hiddenCount">Loading…</strong>
         </div>
       </div>
 
@@ -790,6 +802,21 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
 
 <section class="panel" id="reportsAnalytics"><h2>Reports & Analytics</h2><p class="muted">Live read-only totals calculated from records already retrieved by this dashboard.</p><div class="financial-grid"><div class="stat"><div class="stat-label">Products loaded</div><strong id="reportProductCount">—</strong></div><div class="stat"><div class="stat-label">Orders loaded</div><strong id="reportOrderCount">—</strong></div><div class="stat"><div class="stat-label">Fulfilment records</div><strong id="reportFulfilmentCount">—</strong></div><div class="stat"><div class="stat-label">Ad clicks recorded</div><strong id="reportAdClicks">—</strong></div></div><div class="capability-note"><strong>Reporting scope</strong>These figures reflect the rows returned by existing admin queries. This dashboard does not claim to provide a complete accounting ledger, verified cash receipts, fraud-resistant ad analytics, or historical exports.</div></section>
 <section class="panel" id="adminSettings"><h2>Administrator Settings</h2><p class="muted">Session and access information for the currently authenticated administrator.</p><div class="record"><strong>Administrator account</strong><p id="settingsAdminEmail">Not signed in</p><p>Authorization: <strong>Supabase Auth + is_novaai_admin() + existing administrator ID check</strong></p><p>Security configuration changes are not exposed here.</p></div><button class="logout" type="button" id="settingsLogoutBtn">Sign Out</button></section>
+    <section class="panel" id="ordersFulfilment">
+      <h2>Orders & Fulfilment</h2>
+      <p class="muted">Existing order records and their recorded order statuses. Seller fulfilment and calculated entitlement records are shown separately under Seller Financial Records.</p>
+      <label for="paymentFilter" class="muted">Filter payment records</label>
+      <select id="paymentFilter">
+        <option value="all">All Payments</option>
+        <option value="pending">Pending Payments</option>
+        <option value="paid">Recorded Paid Payments</option>
+        <option value="failed">Failed Payments</option>
+        <option value="refunded">Refunded Orders</option>
+      </select>
+
+      <p id="paymentMessage" class="muted">Financial data will appear here.</p>
+      <div id="paymentRecords"></div>
+    </section>
     <section class="panel" id="paymentCentre">
       <h2>🛡️ Payment Control Centre</h2>
       <p class="muted">Marketplace financial monitoring and reconciliation.</p>
@@ -837,21 +864,11 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
 
       <button class="primary" id="refreshFinancialBtn">Refresh Financial Data</button>
 
-      <label for="paymentFilter" class="muted">Filter payment records</label>
-      <select id="paymentFilter">
-        <option value="all">All Payments</option>
-        <option value="pending">Pending Payments</option>
-        <option value="paid">Recorded Paid Payments</option>
-        <option value="failed">Failed Payments</option>
-        <option value="refunded">Refunded Orders</option>
-      </select>
 
-      <p id="paymentMessage" class="muted">Financial data will appear here.</p>
-      <div id="paymentRecords"></div>
 
-      <hr style="border:0;border-top:1px solid #e5eaf2;margin:25px 0">
-
-      <h2 id="sellerFinancialRecords">Seller Commissions & Financial Records</h2>
+    </section>
+    <section class="panel" id="sellerFinancialRecords">
+      <h2>Seller Commissions & Financial Records</h2>
       <p class="muted">Calculated seller entitlements and settlement records.</p>
       <div id="sellerFinancialRecordsList"></div>
     </section>
@@ -1450,34 +1467,50 @@ window.reviewSellerPublicLocation = reviewSellerPublicLocation;
 async function loadProducts() {
   if (!currentAdmin) return;
 
+  const productStatIds = ["pendingCount", "approvedCount", "rejectedCount", "hiddenCount"];
+  const setProductStatState = (state) => {
+    productStatIds.forEach(id => {
+      const element = document.getElementById(id);
+      if (element) element.textContent = state;
+    });
+  };
+
+  setProductStatState("Loading…");
   message("Loading products...");
 
-  const { data, error } = await sb
-    .from("Products")
-    .select("id,name,description,price,category,image_url,images,seller_name,seller_id,status,rejection_reason,created_at")
-    .order("created_at", { ascending: false });
+  try {
+    const { data, error } = await sb
+      .from("Products")
+      .select("id,name,description,price,category,image_url,images,seller_name,seller_id,status,rejection_reason,created_at")
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    message("Could not load products: " + error.message);
-    return;
+    if (error) {
+      setProductStatState("Unavailable");
+      message("Could not load products: " + error.message);
+      return;
+    }
+
+    allProducts = data || [];
+    updateAdminOverview();
+
+    document.getElementById("pendingCount").textContent =
+      allProducts.filter(p => p.status === "pending").length;
+
+    document.getElementById("approvedCount").textContent =
+      allProducts.filter(p => p.status === "approved").length;
+
+    document.getElementById("rejectedCount").textContent =
+      allProducts.filter(p => p.status === "rejected").length;
+
+    document.getElementById("hiddenCount").textContent =
+      allProducts.filter(p => p.status === "hidden").length;
+
+    renderProducts();
+  } catch (error) {
+    setProductStatState("Unavailable");
+    message("Could not load products: " + (error?.message || "Unexpected error."));
+    console.error("NOVAAI product load error:", error);
   }
-
-  allProducts = data || [];
-  updateAdminOverview();
-
-  document.getElementById("pendingCount").textContent =
-    allProducts.filter(p => p.status === "pending").length;
-
-  document.getElementById("approvedCount").textContent =
-    allProducts.filter(p => p.status === "approved").length;
-
-  document.getElementById("rejectedCount").textContent =
-    allProducts.filter(p => p.status === "rejected").length;
-
-  document.getElementById("hiddenCount").textContent =
-    allProducts.filter(p => p.status === "hidden").length;
-
-  renderProducts();
 }
 
 async function loadPaymentData() {
