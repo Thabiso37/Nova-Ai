@@ -84,13 +84,15 @@ async function auditVersion(browser, version, viewport) {
     let wishlistBeforeRefresh = null;
     if (pageSpec.refreshWishlist) {
       wishlistBeforeRefresh = await page.evaluate(({title,description,cta}) => {
-        const clone=window.__wishlistBaselineClone;
+        // Clone the actual, live baseline board immediately before renderWishlist
+        // rebuilds the section. Do not depend on intercepting innerHTML writes:
+        // that hook can miss frameworks or render paths that replace the node.
+        const original=document.getElementById('wishlistAdSlot');
         const section=document.getElementById('wishlist');
-        if(!clone||!section)return null;
+        if(!original||!section)return null;
+        const clone=original.cloneNode(true);
         clone.removeAttribute('id');
-        clone.setAttribute('data-nova-ad-slot','wishlist_banner');
         clone.setAttribute('data-pr9-baseline-probe','1');
-        clone.dataset.novaManagedCampaign='audit-baseline';
         clone.style.cssText='position:relative!important;left:auto!important;top:auto!important;width:auto!important;height:auto!important;visibility:hidden!important;pointer-events:none!important;z-index:auto!important;box-sizing:border-box!important;display:flex!important;';
         const heading=clone.querySelector('.nova-footer-ad-copy strong');
         const body=clone.querySelector('.nova-footer-ad-copy small');
