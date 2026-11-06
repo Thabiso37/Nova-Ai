@@ -92,6 +92,16 @@
       "https://aaclinic.shop/assets/engine-parts-BlXfXwfD.jpg"
     ]
   };
+  function captureNaturalBoardSize(slot){
+    if(!slot||slot.__novaOriginalBoardSize)return;
+    const rect=slot.getBoundingClientRect();
+    if(rect.width>0&&rect.height>0){
+      const size={width:rect.width,height:rect.height};
+      slot.__novaOriginalBoardSize=size;
+      slot.dataset.novaOriginalWidth=String(rect.width);
+      slot.dataset.novaOriginalHeight=String(rect.height);
+    }
+  }
   function initLiveSlot(slot){
     if(!slot||slot.dataset.novaLiveReady==='1')return;
     const id=slot.getAttribute('data-nova-ad-slot');
@@ -531,6 +541,11 @@
   }
   function bootLiveAds(){
     initHomeCarousel();
+    // Save each currently visible board's real, pre-rotation box before the
+    // legacy live-message carousel can change copy length and intrinsic height.
+    document.querySelectorAll('[data-nova-ad-slot]').forEach(slot=>{
+      if(!slot.closest('[hidden]'))captureNaturalBoardSize(slot);
+    });
     ['cart_banner','property_banner','motors_banner','shop_footer','motors_footer','property_footer'].forEach(id=>initLiveSlot(document.querySelector('[data-nova-ad-slot="'+id+'"]')));
     loadManagedCampaigns().finally(()=>{
       window.__novaManagedCampaignsReady=true;
