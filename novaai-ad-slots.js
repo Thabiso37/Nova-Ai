@@ -576,6 +576,7 @@
     [data-nova-ad-slot$="_footer"][data-nova-managed-campaign] .nova-footer-ad-copy,
     [data-nova-ad-slot="wishlist_banner"][data-nova-managed-campaign] .nova-footer-ad-copy{padding-top:22px!important;gap:5px!important}
   }`;
+  style.textContent += '[data-nova-ad-slot$="_footer"][data-nova-managed-campaign] .nova-live-controls,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-campaign] .nova-live-controls{left:4px!important;right:auto!important;width:calc(25% - 8px)!important;max-width:calc(25% - 8px)!important;justify-content:center!important}';
   document.head.appendChild(style);
   document.querySelectorAll('[data-nova-ad-slot]').forEach(el=>{
     const id=el.getAttribute('data-nova-ad-slot');
