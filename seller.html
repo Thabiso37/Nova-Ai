@@ -58,6 +58,15 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
 #myProductsList .seller-property-card .property-card-actions{display:flex;gap:5px;margin-top:auto;padding-top:7px}
 #myProductsList .seller-property-card .property-card-actions .btn{flex:1;min-width:0;padding:6px 3px;font-size:10px;white-space:nowrap}
 @media(max-width:390px){#myProductsList .seller-property-grid{gap:8px;grid-template-columns:repeat(2,minmax(0,1fr))}#myProductsList .seller-property-card{max-width:none}}
+/* Page-like seller portal cards: visual-only changes */
+.seller-page-nav{display:flex;gap:8px;overflow-x:auto;padding:10px 0 14px;margin:0 0 8px;scrollbar-width:thin}
+.seller-page-nav button{flex:0 0 auto;border:1px solid #dbe3ef;background:#fff;color:var(--dark);border-radius:4px;padding:11px 14px;font-size:12px;font-weight:800;white-space:nowrap}
+.seller-page-nav button:focus,.seller-page-nav button:hover{border-color:var(--p);background:#edf3ff}
+.seller-page-card{display:block;background:#fff;border:1px solid var(--line);border-radius:4px;padding:16px;margin:16px 0;box-shadow:0 3px 12px rgba(16,40,75,.045);min-width:0}
+.seller-page-card h3{margin-top:0;color:var(--dark)}
+.seller-page-description{font-size:12px;line-height:1.5;color:#64748b;margin:0 0 12px}
+#sellerPublicLocationPanel,#marketplaceAccessStatus{border-radius:4px!important;box-shadow:0 3px 12px rgba(16,40,75,.045)}
+@media(max-width:600px){.seller-page-card{padding:13px;margin:12px 0}}
 
 </style>
 </head>
@@ -80,6 +89,14 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
 </section>
 <div id="sellerWorkspace" class="hidden">
   <div class="selected-market-bar"><div><small>Selected seller marketplace</small><strong id="selectedMarketLabel">Retail Seller</strong></div><button class="btn outline" id="changeMarketplaceButton" type="button" onclick="returnToMarketplaceSelection()">← Change marketplace</button></div>
+<nav class="seller-page-nav" aria-label="Seller portal pages">
+<button type="button" onclick="openSellerPage('sellerPublicLocationPanel')">Public Location</button>
+<button type="button" onclick="openSellerPage('marketplaceAccessStatus')">Marketplace Access</button>
+<button type="button" onclick="openSellerPage('portalStd')">Account &amp; Sign-In</button>
+<button type="button" onclick="openSellerPage('sellerListingEditorPage')">Add Listing</button>
+<button type="button" onclick="openSellerPage('sellerModerationPage')">Product Moderation</button>
+<button type="button" onclick="openSellerPage('sellerOrdersPage')">Orders &amp; Fulfilment</button>
+</nav>
 <div class="panel" id="sellerPublicLocationPanel" style="margin:14px 0">
 <h3>Public seller location</h3>
 <p class="muted">Set the province, city and suburb customers may see. Do not enter a street address or private home address. Public GPS coordinates are rounded to about 1 km before shoppers can see them.</p>
@@ -155,7 +172,7 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
       <button class="tab" type="button" id="marketMotorsTab" onclick="setListingMarket('motors')">My Motor Listings</button>
       <button class="tab" type="button" id="marketPropertyTab" onclick="setListingMarket('property')">My Property Listings</button>
     </div>
-    <h3 id="listingFormTitle">My Shop Listings · Publish a retail product</h3>
+    <section class="seller-page-card" id="sellerListingEditorPage"><h3 id="listingFormTitle">My Shop Listings · Publish a retail product</h3>
 
     <form id="sellerForm">
       <div class="field">
@@ -194,19 +211,19 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
       </button>
 
       <div id="sellerMsg" class="msg"></div>
-    </form>
+    </form></section>
 
     <!-- LISTINGS ARE GROUPED BY MARKETPLACE BELOW -->
-    <h3 id="myMarketplaceListingsHeading" style="margin-top:20px;">My Seller Listings</h3>
+    <section class="seller-page-card" id="sellerModerationPage"><h3 id="myMarketplaceListingsHeading" style="margin-top:0;">Product Moderation · My Seller Listings</h3><p class="seller-page-description">Review submitted listings and administrator approval statuses. Existing listing controls are retained.</p>
 
     <div id="myProductsMsg" class="msg">
       Sign in to view items.
     </div>
 
-    <div id="myProductsList"></div>
+    <div id="myProductsList"></div></section>
 
     <!-- CUSTOMER ORDERS -->
-    <h3 style="margin-top:25px;">📦 Customer Orders & Fulfillment</h3>
+    <section class="seller-page-card" id="sellerOrdersPage"><h3 style="margin-top:0;">Customer Orders &amp; Fulfillment</h3>
 
     <button class="btn outline" type="button" id="loadOrdersBtn">
       Refresh Orders
@@ -216,7 +233,7 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
       Sign in to view orders.
     </div>
 
-    <div id="sellerOrdersList"></div>
+    <div id="sellerOrdersList"></div></section>
 </div>
 </div>
 <!-- RETAIL PARTNER PORTAL -->
@@ -297,6 +314,11 @@ function renderMarketplaceChoices(){
   });
 }
 const marketplaceLabels = {retail:"Retail Seller",motors:"Motors Seller",property:"Property Seller"};
+function openSellerPage(id) {
+  const target = document.getElementById(id);
+  if (!target) return;
+  target.scrollIntoView({behavior:"smooth",block:"start"});
+}
 function chooseMarketplace(market) {
   if (!Object.prototype.hasOwnProperty.call(marketplaceLabels, market)) return;
   if (user && storeData && storeData.primary_marketplace!==market) { msg("sellerMsg","Access denied: this seller account is assigned to "+(marketplaceLabels[storeData.primary_marketplace]||"another marketplace")+".",true); return; }
