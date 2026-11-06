@@ -628,7 +628,8 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
 
 <section id="dashboard" class="hidden">
 
-<div class="sidebar-backdrop" id="sidebarBackdrop"></div>\n<div class="app-shell">
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<div class="app-shell">
 
   <aside class="sidebar">
     <h2>NOVAAI</h2>
@@ -683,7 +684,8 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
         </div>
       </div>
 
-      <div class="stats" style="margin-top:-8px"><div class="stat blue"><div class="stat-label">Orders in database</div><strong id="overviewOrderCount">—</strong></div><div class="stat"><div class="stat-label">Seller applications</div><strong id="overviewSellerCount">—</strong></div><div class="stat"><div class="stat-label">Advertising campaigns</div><strong id="overviewCampaignCount">—</strong></div><div class="stat amber"><div class="stat-label">Ad impressions recorded</div><strong id="overviewAdImpressions">—</strong></div></div>\n<h3 class="section-title">Administration modules</h3>
+      <div class="stats" style="margin-top:-8px"><div class="stat blue"><div class="stat-label">Orders in database</div><strong id="overviewOrderCount">—</strong></div><div class="stat"><div class="stat-label">Seller applications</div><strong id="overviewSellerCount">—</strong></div><div class="stat"><div class="stat-label">Advertising campaigns</div><strong id="overviewCampaignCount">—</strong></div><div class="stat amber"><div class="stat-label">Ad impressions recorded</div><strong id="overviewAdImpressions">—</strong></div></div>
+<h3 class="section-title">Administration modules</h3>
 
       <div class="module-grid">
         <a class="module" href="#marketplacePermissions"><div class="module-icon">♙</div><h3>Seller Management</h3><p>Review marketplace applications and public location submissions.</p></a>
@@ -717,7 +719,8 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
 <section class="panel" id="customerManagement"><h2>Customer Management</h2><p class="muted">Customer account management is not connected to this admin dashboard.</p><div class="capability-note"><strong>Not connected</strong>No customer directory, account suspension, profile editing, or customer-support actions have been added. Customer records and authentication remain untouched.</div></section>
 <section class="panel" id="retailManagement"><h2>Retail Management</h2><p class="muted">Retail listings continue to use the existing shared Products moderation queue.</p><div class="actions"><a href="#productsSection">Open Product Moderation</a></div><div class="capability-note"><strong>Current connected function</strong>Search, filter, approve, reject, hide, and return existing product listings to pending review. No separate Retail database or duplicate admin system has been created.</div></section>
 <section class="panel" id="motorsManagement"><h2>Motors Management</h2><p class="muted">Motors listing records remain in the existing marketplace product system.</p><div class="capability-note"><strong>Shared moderation only</strong>Use Product Moderation for the existing listing workflow. A dedicated Motors-only administration query and action set is not currently exposed.</div></section>
-<section class="panel" id="propertyManagement"><h2>Property Management</h2><p class="muted">Property listing records remain in the existing marketplace product system.</p><div class="capability-note"><strong>Shared moderation only</strong>Use Product Moderation for the existing listing workflow. A dedicated Property-only administration query and action set is not currently exposed.</div></section>\n<section class="panel" id="productsSection">
+<section class="panel" id="propertyManagement"><h2>Property Management</h2><p class="muted">Property listing records remain in the existing marketplace product system.</p><div class="capability-note"><strong>Shared moderation only</strong>Use Product Moderation for the existing listing workflow. A dedicated Property-only administration query and action set is not currently exposed.</div></section>
+<section class="panel" id="productsSection">
       <h2>Product Moderation</h2>
       <p class="muted">Review and manage seller product listings.</p>
 
@@ -786,7 +789,8 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
     </section>
 
 <section class="panel" id="reportsAnalytics"><h2>Reports & Analytics</h2><p class="muted">Live read-only totals calculated from records already retrieved by this dashboard.</p><div class="financial-grid"><div class="stat"><div class="stat-label">Products loaded</div><strong id="reportProductCount">—</strong></div><div class="stat"><div class="stat-label">Orders loaded</div><strong id="reportOrderCount">—</strong></div><div class="stat"><div class="stat-label">Fulfilment records</div><strong id="reportFulfilmentCount">—</strong></div><div class="stat"><div class="stat-label">Ad clicks recorded</div><strong id="reportAdClicks">—</strong></div></div><div class="capability-note"><strong>Reporting scope</strong>These figures reflect the rows returned by existing admin queries. This dashboard does not claim to provide a complete accounting ledger, verified cash receipts, fraud-resistant ad analytics, or historical exports.</div></section>
-<section class="panel" id="adminSettings"><h2>Administrator Settings</h2><p class="muted">Session and access information for the currently authenticated administrator.</p><div class="record"><strong>Administrator account</strong><p id="settingsAdminEmail">Not signed in</p><p>Authorization: <strong>Supabase Auth + is_novaai_admin() + existing administrator ID check</strong></p><p>Security configuration changes are not exposed here.</p></div><button class="logout" type="button" id="settingsLogoutBtn">Sign Out</button></section>\n    <section class="panel" id="paymentCentre">
+<section class="panel" id="adminSettings"><h2>Administrator Settings</h2><p class="muted">Session and access information for the currently authenticated administrator.</p><div class="record"><strong>Administrator account</strong><p id="settingsAdminEmail">Not signed in</p><p>Authorization: <strong>Supabase Auth + is_novaai_admin() + existing administrator ID check</strong></p><p>Security configuration changes are not exposed here.</p></div><button class="logout" type="button" id="settingsLogoutBtn">Sign Out</button></section>
+    <section class="panel" id="paymentCentre">
       <h2>🛡️ Payment Control Centre</h2>
       <p class="muted">Marketplace financial monitoring and reconciliation.</p>
 
@@ -1010,7 +1014,8 @@ async function loadAdCampaigns(){
   try{
     const {data,error}=await sb.rpc("admin_list_novaai_ad_campaigns");
     if(error)throw error;
-    adCampaignRows=Array.isArray(data)?data:[];\n    updateAdminOverview();
+    adCampaignRows=Array.isArray(data)?data:[];
+    updateAdminOverview();
     adCampaignMessage(adCampaignRows.length+" campaign(s) saved. Changes publish to the live boards when active and within schedule.");
     const boardLabels={"home_hero":"Home – Main advertising board","shop_tv":"Shop – Main carousel","cart_banner":"Cart advertising board","wishlist_banner":"Wishlist (heart) advertising board","motors_banner":"Motors – Main advertising board","property_banner":"Property – Main advertising board","shop_footer":"Shop – Bottom advertising board","motors_footer":"Motors – Bottom advertising board","property_footer":"Property – Bottom advertising board"};
     const boardOrder=["home_hero","shop_tv","cart_banner","wishlist_banner","motors_banner","property_banner","shop_footer","motors_footer","property_footer"];
@@ -1457,7 +1462,8 @@ async function loadProducts() {
     return;
   }
 
-  allProducts = data || [];\n  updateAdminOverview();
+  allProducts = data || [];
+  updateAdminOverview();
 
   document.getElementById("pendingCount").textContent =
     allProducts.filter(p => p.status === "pending").length;
@@ -1803,7 +1809,8 @@ document.getElementById("sidebarBackdrop")?.addEventListener("click",closeAdminD
 document.querySelectorAll(".sidebar nav a").forEach(a=>a.addEventListener("click",()=>{document.querySelectorAll(".sidebar nav a").forEach(n=>n.classList.toggle("active",n===a));closeAdminDrawer();}));
 document.getElementById("settingsLogoutBtn")?.addEventListener("click",logout);
 function updateAdminOverview(){const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=String(v);};set("overviewOrderCount",allPaymentOrders.length);set("overviewSellerCount",document.querySelectorAll("#marketplacePermissionRecords .record").length);set("overviewCampaignCount",adCampaignRows.length);set("overviewAdImpressions",adCampaignRows.reduce((n,c)=>n+Number(c.impression_count||0),0).toLocaleString());set("reportProductCount",allProducts.length);set("reportOrderCount",allPaymentOrders.length);set("reportFulfilmentCount",allSellerFinancials.length);set("reportAdClicks",adCampaignRows.reduce((n,c)=>n+Number(c.click_count||0),0).toLocaleString());set("settingsAdminEmail",currentAdmin?.email||"Not signed in");}
-\ndocument.getElementById("adminLoginForm").addEventListener("submit", (event) => {
+
+document.getElementById("adminLoginForm").addEventListener("submit", (event) => {
   event.preventDefault();
   event.stopPropagation();
   login().catch((error) => {
