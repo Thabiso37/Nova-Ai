@@ -10,7 +10,8 @@ const viewports = [{ name: 'desktop-1365', width: 1365, height: 900 }, { name: '
 const pages = [
   { file: 'index.html', slots: ['home_hero'] },
   { file: 'retail.html', slots: ['shop_tv', 'cart_banner', 'shop_footer'] },
-  { file: 'retail.html?view=wishlist', slots: ['wishlist_banner'] },
+  { file: 'retail.html?view=wishlist', slots: ['wishlist_banner'], refreshWishlist: true },
+  { file: 'retail.html?view=cart', slots: ['cart_banner'] },
   { file: 'seller-motors-houses.html?market=motors', slots: ['motors_banner', 'motors_footer'] },
   { file: 'seller-motors-houses.html?market=property', slots: ['property_banner', 'property_footer'] }
 ];
@@ -88,11 +89,11 @@ async function auditVersion(browser, version, viewport) {
         const image = outer?.querySelector('img[data-nova-ad-image],video[data-nova-ad-video]') || (photo?.querySelector('img[data-nova-ad-image]') || photo?.querySelector('img'));
         const mediaHost = outer?.querySelector('.nova-ad-media-host') || photo;
         const outerRect=rect(outer), photoRect=rect(mediaHost), copyRect=rect(copy);
-        const rightCopy = outerRect ? {x:+(outerRect.x+outerRect.width*.75).toFixed(2), y:outerRect.y, width:+(outerRect.width*.25).toFixed(2),height:outerRect.height} : null;
+        const rightCopy = outerRect ? {x:+(outerRect.x+outerRect.width*.75).toFixed(2), y:outerRect.y, width:+(outerRect.width*.25).toFixed(2),height:outerRect.height} : null;\n        const style=outer?getComputedStyle(outer):null;\n        const innerWidth=outerRect&&style?outerRect.width-parseFloat(style.paddingLeft||0)-parseFloat(style.paddingRight||0)-parseFloat(style.borderLeftWidth||0)-parseFloat(style.borderRightWidth||0):null;\n        const mediaRatio=innerWidth&&photoRect?+(photoRect.width/innerWidth).toFixed(4):(outerRect&&photoRect?+(photoRect.width/outerRect.width).toFixed(4):null);
         const mediaLoaded = image ? (image.tagName==='VIDEO' ? image.readyState>=1 : image.complete && image.naturalWidth>0) : !!photo;
         const overlap = !!(photoRect&&copyRect&&photoRect.x<copyRect.right&&photoRect.right>copyRect.x&&photoRect.y<copyRect.bottom&&photoRect.bottom>copyRect.y);
         const textOverflow = textNodes.some(el => el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 2);
-        return {slot, found:!!outer, outer:outerRect, photo:photoRect, copy:copyRect, expectedRightCopy:rightCopy, photoRatio:outerRect&&photoRect?+(photoRect.width/outerRect.width).toFixed(4):null, text, cta, mediaLoaded, overlap, textOverflow, hasManagedCampaign:!!outer?.dataset.novaManagedCampaign};
+        return {slot, found:!!outer, outer:outerRect, photo:photoRect, copy:copyRect, expectedRightCopy:rightCopy, photoRatio:mediaRatio, text, cta, mediaLoaded, overlap, textOverflow, hasManagedCampaign:!!outer?.dataset.novaManagedCampaign, wishlistBeforeRefresh: slot==='wishlist_banner' ? wishlistBeforeRefresh : null};
       }, { slot, outerSel, photoSel, copySel });
       results[slot] = measurement;
       await page.screenshot({ path: path.join(outDir, version + '-' + viewport.name + '-' + slot + '.png'), fullPage: false });
@@ -116,8 +117,8 @@ for (const viewport of viewports) {
   const pr = report.versions[viewport.name].pr;
   for (const slot of campaignSlots) {
     const a = base[slot], b = pr[slot];
-    if (!a?.found || !b?.found) { failures.push(viewport.name + ' ' + slot + ': board missing'); continue; }
-    if (!a.outer || !b.outer || Math.abs(a.outer.width-b.outer.width)>1 || Math.abs(a.outer.height-b.outer.height)>1) failures.push(viewport.name + ' ' + slot + ': outer dimensions differ from main');
+    if (slot === 'wishlist_banner') {\n      const original = a?.wishlistBeforeRefresh;\n      if (!original || !b?.found) { failures.push(viewport.name + ' wishlist_banner: original or refreshed board missing'); continue; }\n      if (Math.abs(original.width-b.outer.width)>1 || Math.abs(original.height-b.outer.height)>1) failures.push(viewport.name + ' wishlist_banner: dimensions changed during refresh');\n    } else if (!a?.found || !b?.found) { failures.push(viewport.name + ' ' + slot + ': board missing'); continue; }
+    if (slot !== 'wishlist_banner' && (!a.outer || !b.outer || Math.abs(a.outer.width-b.outer.width)>1 || Math.abs(a.outer.height-b.outer.height)>1)) failures.push(viewport.name + ' ' + slot + ': outer dimensions differ from main');
     if (!b.mediaLoaded) failures.push(viewport.name + ' ' + slot + ': creative media did not load');
     if (b.overlap) failures.push(viewport.name + ' ' + slot + ': photo and copy containers overlap');
     if (b.textOverflow) failures.push(viewport.name + ' ' + slot + ': text overflow/clipping detected');
