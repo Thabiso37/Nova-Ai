@@ -58,7 +58,7 @@ async function auditVersion(browser, version, viewport) {
       const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600"><rect width="1200" height="600" fill="#1763a8"/><circle cx="850" cy="260" r="190" fill="#f5b900"/></svg>';
       await route.fulfill({ status: 200, contentType: 'image/svg+xml', body: svg });
     });
-    page.on('pageerror', error => console.error('[PAGE ERROR]', version, pageSpec.file, error.message));
+    await page.addInitScript(() => {\n      const remember = () => { const el=document.querySelector('#wishlistAdSlot'); if(el && !window.__wishlistInitialRect){ const r=el.getBoundingClientRect(); window.__wishlistInitialRect={x:r.x,y:r.y,width:r.width,height:r.height}; } };\n      new MutationObserver(remember).observe(document,{childList:true,subtree:true});\n      document.addEventListener('DOMContentLoaded',remember,{once:true});\n    });\n    page.on('pageerror', error => console.error('[PAGE ERROR]', version, pageSpec.file, error.message));
     const url = origin + '/' + version + '-snapshot/' + pageSpec.file;
     const fullUrl = url + (pageSpec.file.includes('?') ? '&' : '?') + (pageSpec.file.includes('?') ? '' : 'audit=1');
     await page.goto(fullUrl, { waitUntil: 'commit', timeout: 15000 });
@@ -66,7 +66,7 @@ async function auditVersion(browser, version, viewport) {
     await page.waitForTimeout(1300);
     let wishlistBeforeRefresh = null;
     if (pageSpec.refreshWishlist) {
-      wishlistBeforeRefresh = await page.evaluate(() => { const el=document.querySelector('#wishlistAdSlot'); if(!el)return null; const r=el.getBoundingClientRect(); return {x:r.x,y:r.y,width:r.width,height:r.height}; });
+      wishlistBeforeRefresh = await page.evaluate(() => window.__wishlistInitialRect || (() => { const el=document.querySelector('#wishlistAdSlot'); if(!el)return null; const r=el.getBoundingClientRect(); return {x:r.x,y:r.y,width:r.width,height:r.height}; })());
       await page.evaluate(() => { if (typeof window.renderWishlist === 'function') window.renderWishlist(); });
       await page.waitForTimeout(500);
     }
