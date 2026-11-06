@@ -417,9 +417,10 @@
           linkNode.dataset.novaAdDestination=href;
           bindCampaignClick(linkNode,id);
         }
-        // Activate the legacy managed-campaign styling first. That is the exact
-        // pre-PR layout used by main (including Motors' 54% copy and footer 52% copy).
-        // Measure it before the new 75/25 layout flag and media-host positioning.
+        // Match main's original order: update copy, install campaign media, then
+        // activate the legacy managed-campaign styles. Measure that exact baseline
+        // before enabling the new 75/25 layout flag.
+        if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
         slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
         if(!originalBoardSize){
           const naturalRect=slot.getBoundingClientRect();
@@ -430,7 +431,6 @@
             slot.dataset.novaOriginalHeight=String(naturalRect.height);
           }
         }
-        if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
         slot.dataset.novaManagedLayout='1';
         if(originalBoardSize){
           slot.style.setProperty('box-sizing','border-box','important');
@@ -500,10 +500,14 @@
   }
   function bootLiveAds(){
     initHomeCarousel();
-    ['cart_banner','wishlist_banner','property_banner','motors_banner','shop_footer','motors_footer','property_footer'].forEach(id=>initLiveSlot(document.querySelector('[data-nova-ad-slot="'+id+'"]')));
-    loadManagedCampaigns();
+    ['cart_banner','property_banner','motors_banner','shop_footer','motors_footer','property_footer'].forEach(id=>initLiveSlot(document.querySelector('[data-nova-ad-slot="'+id+'"]')));
+    loadManagedCampaigns().finally(()=>{
+      window.__novaManagedCampaignsReady=true;
+      const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');
+      if(wishlist)initLiveSlot(wishlist);
+    });
     if(!window.__novaAdRefreshTimer)window.__novaAdRefreshTimer=window.setInterval(loadManagedCampaigns,60000);
-    if(!window.__novaAdObserver&&document.body){window.__novaAdObserver=new MutationObserver(()=>{const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');if(wishlist)initLiveSlot(wishlist);});window.__novaAdObserver.observe(document.body,{childList:true,subtree:true});}
+    if(!window.__novaAdObserver&&document.body){window.__novaAdObserver=new MutationObserver(()=>{const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');if(wishlist&&window.__novaManagedCampaignsReady)initLiveSlot(wishlist);});window.__novaAdObserver.observe(document.body,{childList:true,subtree:true});}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootLiveAds,{once:true});else bootLiveAds();
 
