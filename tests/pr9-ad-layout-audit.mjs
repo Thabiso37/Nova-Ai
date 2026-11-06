@@ -131,9 +131,11 @@ async function auditVersion(browser, version, viewport) {
         })[0] || document.querySelector(outerSel) || slotNodes[0] || null;
         const photo = outer?.querySelector(photoSel) || (photoSel ? document.querySelector(photoSel) : null);
         const copy = copySel ? (outer?.querySelector(copySel) || document.querySelector(copySel)) : null;
-        const textNodes = copy ? [copy, ...copy.querySelectorAll('h1,h2,h3,p,strong,small,span,a,button')].filter((el,i,a)=>a.indexOf(el)===i && visible(el) && (el.children.length===0 || /^(H1|H2|H3|P|STRONG|SMALL|SPAN|A|BUTTON)$/.test(el.tagName))) : (outer ? [...outer.querySelectorAll('strong,span,h1,h2,p,a,button')].filter(visible) : []);
+        const isCarouselIndicator = el => !!el.closest('.nova-live-controls,.shop-tv-controls,.nova-hero-controls,[data-carousel-control],[aria-label^="Advertisement "]');
+        const textNodes = copy ? [copy, ...copy.querySelectorAll('h1,h2,h3,p,strong,small,span,a,button')].filter((el,i,a)=>a.indexOf(el)===i && visible(el) && !isCarouselIndicator(el) && (el.children.length===0 || /^(H1|H2|H3|P|STRONG|SMALL|SPAN|A|BUTTON)$/.test(el.tagName))) : (outer ? [...outer.querySelectorAll('strong,span,h1,h2,p,a,button')].filter(el=>visible(el)&&!isCarouselIndicator(el)) : []);
         const text = textNodes.map(el => ({ tag: el.tagName, text: (el.innerText || '').trim().slice(0,100), fontSize: parseFloat(getComputedStyle(el).fontSize), lineHeight: getComputedStyle(el).lineHeight, rect: rect(el) }));
-        const cta = outer ? [...outer.querySelectorAll('a,button')].filter(visible).map(el=>({text:(el.innerText||el.getAttribute('aria-label')||'').trim().slice(0,80),rect:rect(el),fontSize:parseFloat(getComputedStyle(el).fontSize),href:el.getAttribute('href')})) : [];
+        const cta = outer ? [...outer.querySelectorAll('a,button')].filter(el=>visible(el)&&!isCarouselIndicator(el)).map(el=>({text:(el.innerText||el.getAttribute('aria-label')||'').trim().slice(0,80),rect:rect(el),fontSize:parseFloat(getComputedStyle(el).fontSize),href:el.getAttribute('href')})) : [];
+        const carouselIndicators = outer ? [...outer.querySelectorAll('.nova-live-controls,.shop-tv-controls,.nova-hero-controls')].map(group=>({group:rect(group),items:[...group.querySelectorAll('button,a,[role="button"]')].filter(visible).map(el=>({text:(el.innerText||el.getAttribute('aria-label')||'').trim().slice(0,50),rect:rect(el),fontSize:parseFloat(getComputedStyle(el).fontSize),insideGroup:group.contains(el)}))})) : [];
         const image = outer?.querySelector('img[data-nova-ad-image],video[data-nova-ad-video]') || (photo?.querySelector('img[data-nova-ad-image]') || photo?.querySelector('img'));
         const outerRect=rect(outer), photoRect=rect(photo), copyRect=rect(copy);
         const rightCopy = outerRect ? {x:+(outerRect.x+outerRect.width*.75).toFixed(2), y:outerRect.y, width:+(outerRect.width*.25).toFixed(2),height:outerRect.height} : null;
@@ -165,7 +167,7 @@ async function auditVersion(browser, version, viewport) {
           const cs=getComputedStyle(el);
           return {rect:rect(el),position:cs.position,left:cs.left,right:cs.right,width:cs.width,display:cs.display};
         }):[];
-        return {slot, found:!!outer, outer:outerRect, originalSize:outer?{width:Number(outer.dataset.novaOriginalWidth)||null,height:Number(outer.dataset.novaOriginalHeight)||null}:null, photo:photoRect, copy:copyMeasure, expectedRightCopy:rightCopy, photoRatio:mediaRatio, copyRatio, text, cta, controls, mediaLoaded, overlap, textOverflow, textOutsideCopy, awkwardBreak, hasManagedCampaign:!!outer?.dataset.novaManagedCampaign};
+        return {slot, found:!!outer, outer:outerRect, originalSize:outer?{width:Number(outer.dataset.novaOriginalWidth)||null,height:Number(outer.dataset.novaOriginalHeight)||null}:null, photo:photoRect, copy:copyMeasure, expectedRightCopy:rightCopy, photoRatio:mediaRatio, copyRatio, text, cta, carouselIndicators, controls, mediaLoaded, overlap, textOverflow, textOutsideCopy, awkwardBreak, hasManagedCampaign:!!outer?.dataset.novaManagedCampaign};
       }, { slot, outerSel, photoSel, copySel });
       if (slot === 'wishlist_banner') measurement.wishlistBeforeRefresh = wishlistBeforeRefresh;
       results[slot] = measurement;
