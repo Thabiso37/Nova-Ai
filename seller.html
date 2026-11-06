@@ -151,6 +151,15 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
 .head{width:100%;max-width:none!important;margin:0!important;padding-left:14px!important;padding-right:14px!important}
 .picker-wrap{width:100%;max-width:none!important;margin-left:0!important;margin-right:0!important;padding-left:14px!important;padding-right:14px!important}
 
+
+/* Property seller listing cards: extend horizontally to screen edges only */
+#sellerModerationPage{margin-left:-18px!important;margin-right:-18px!important;padding-left:0!important;padding-right:0!important}
+#myProductsList .seller-property-grid{width:100%;margin-left:0!important;margin-right:0!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#myProductsList .seller-property-card{width:100%;min-width:0;min-height:240px}
+#myProductsList .seller-property-gallery{min-height:240px}
+@media(max-width:760px){
+  #sellerModerationPage{margin-left:-12px!important;margin-right:-12px!important}
+}
 </style>
 </head>
 <body>
