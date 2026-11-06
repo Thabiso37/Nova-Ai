@@ -624,7 +624,7 @@
   #cartModal .cart-page-header>button{position:absolute!important;z-index:12!important;top:50%!important;transform:translateY(-50%)!important;padding:8px!important}
   #cartModal .cart-page-header>button:first-child{left:8px!important}
   #cartModal .cart-page-header>button:last-child{right:calc(25% + 8px)!important;top:8px!important;transform:none!important}
-  #cartModal .cart-page-header>#cartAdBoard>strong{top:26px!important;left:75%!important;right:0!important;width:25%!important;padding:2px 4px!important;font-size:14px!important;line-height:1.15!important;overflow-wrap:normal!important;word-break:normal!important;hyphens:none!important}
+  #cartModal .cart-page-header>#cartAdBoard>strong{top:26px!important;left:75%!important;right:0!important;width:25%!important;padding:2px 1px!important;font-size:14px!important;line-height:1.15!important;overflow-wrap:normal!important;word-break:normal!important;hyphens:none!important;letter-spacing:-.2px!important}
   #cartModal .cart-page-header>#cartAdBoard>span:not(.nova-live-controls):not(.nova-live-onair){display:none!important}
   @media(max-width:380px){#cartModal .cart-page-header{height:101px!important;min-height:101px!important}}
   @media(max-width:340px){#cartModal .cart-page-header{height:148.5px!important;min-height:148.5px!important}}
