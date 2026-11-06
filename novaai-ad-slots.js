@@ -217,42 +217,62 @@
       keepalive:true
     }).catch(()=>{});
   }
-  function setCampaignMedia(imageNode,slot,campaign,id,imageUrl){
+  function setCampaignMedia(imageNode,slot,campaign,id,mediaUrl){
     const isVideo=campaign.creative_type==='video';
     let host=imageNode||slot;
-    if(id==='property_banner'&&imageNode&&imageNode.tagName==='IMG')host=imageNode.parentElement;
+    // Existing property artwork is an IMG; use its responsive photo frame as
+    // the media host so the uploaded creative fills the same visible area.
+    if(imageNode&&imageNode.tagName==='IMG')host=imageNode.parentElement||slot;
     if(!host)return;
     host.classList.add('nova-ad-media-host');
-    // Home hero creatives must be real, full-bleed image elements. The legacy
-    // decorative NOVAAI card otherwise sits above and obscures CSS backgrounds.
-    if(id==='home_hero'&&!isVideo){
-      let image=host.querySelector(':scope > img[data-nova-ad-image]');
+    host.style.position='relative';
+    host.style.overflow='hidden';
+
+    // Keep the campaign media as a real HTML element on every board. The
+    // media occupies the host; existing title/description/CTA stay above it.
+    let image=host.querySelector(':scope > img[data-nova-ad-image]');
+    let video=host.querySelector(':scope > video[data-nova-ad-video]');
+    if(isVideo){
+      if(image)image.style.display='none';
+      if(!video){
+        video=document.createElement('video');
+        video.setAttribute('data-nova-ad-video','1');
+        video.setAttribute('aria-label',String(campaign.title||'NOVAAI video advertisement').slice(0,120));
+        video.muted=true;video.defaultMuted=true;video.autoplay=true;video.loop=true;video.playsInline=true;
+        video.setAttribute('autoplay','');video.setAttribute('muted','');video.setAttribute('loop','');video.setAttribute('playsinline','');
+        video.preload='metadata';
+        video.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:0;pointer-events:none';
+        host.insertBefore(video,host.firstChild);
+        video.addEventListener('error',()=>{video.controls=true;video.style.pointerEvents='auto';});
+      }
+      if(video.src!==mediaUrl){video.src=mediaUrl;video.load();}
+      const playAttempt=video.play();
+      if(playAttempt&&typeof playAttempt.catch==='function')playAttempt.catch(()=>{video.controls=true;video.style.pointerEvents='auto';});
+    }else{
+      if(video){video.pause();video.remove();}
       if(!image){
         image=document.createElement('img');
         image.setAttribute('data-nova-ad-image','1');
-        image.alt=String(campaign.title||'NOVAAI featured advertisement').slice(0,120);
-        image.decoding='async';
-        image.loading='eager';
-        image.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;display:block';
+        image.decoding='async';image.loading='eager';
+        image.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:0';
         host.insertBefore(image,host.firstChild);
       }
-      host.dataset.novaManagedImage='1';
-      if(image.src!==imageUrl)image.src=imageUrl;
-      return;
+      image.alt=String(campaign.title||'NOVAAI featured advertisement').slice(0,120);
+      image.style.display='block';
+      if(image.src!==mediaUrl)image.src=mediaUrl;
     }
-    host.style.position=host.style.position||'relative';
-    host.style.overflow=host.style.overflow||'hidden';
-    let video=host.querySelector(':scope > video[data-nova-ad-video]');
-    if(isVideo){
-      if(imageNode&&imageNode.tagName==='IMG')imageNode.style.display='none';
-      if(!video){video=document.createElement('video');video.setAttribute('data-nova-ad-video','1');video.muted=true;video.defaultMuted=true;video.autoplay=true;video.loop=true;video.playsInline=true;video.setAttribute('playsinline','');video.setAttribute('muted','');video.setAttribute('aria-hidden','true');video.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:0';host.insertBefore(video,host.firstChild);}
-      if(video.src!==imageUrl){video.src=imageUrl;video.load();}
-      const play=video.play();if(play&&typeof play.catch==='function')play.catch(()=>{});
-      Array.from(host.children).forEach(child=>{if(child!==video){child.style.position=child.style.position||'relative';child.style.zIndex='1';}});
-    }else{
-      if(video)video.remove();
-      if(id==='property_banner'&&imageNode&&imageNode.tagName==='IMG'){imageNode.style.display='';imageNode.src=imageUrl;}
-      else if(imageNode){imageNode.style.backgroundImage='url("'+imageUrl.replace(/["\\]/g,'')+'")';imageNode.style.backgroundSize='cover';imageNode.style.backgroundPosition='center';}
+    // Raise the existing copy and CTA above the media without moving them
+    // out of their original responsive layout.
+    Array.from(host.children).forEach(child=>{
+      if(child!==image&&child!==video){
+        if(!child.style.position)child.style.position='relative';
+        child.style.zIndex='1';
+      }
+    });
+    // Home's decorative mock-up is not campaign media and would cover it.
+    if(id==='home_hero'){
+      host.dataset.novaManagedImage='1';
+      host.querySelectorAll('.hero-art-circle,.hero-art-card').forEach(el=>el.style.display='none');
     }
   }
   function captureAdFallback(slot,id){
