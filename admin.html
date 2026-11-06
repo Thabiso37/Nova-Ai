@@ -603,6 +603,7 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
 @media(max-width:850px){.topbar{height:66px}.mobile-menu-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;min-width:44px}.app-shell{display:block;padding:15px 13px 32px}.sidebar{display:block;position:fixed;z-index:150;left:0;top:0;bottom:0;width:min(290px,86vw);border-radius:0 18px 18px 0;overflow-y:auto;transform:translateX(-105%);transition:transform .22s ease;padding:22px 15px;box-shadow:15px 0 35px rgba(12,30,60,.15)}.sidebar.mobile-open{transform:translateX(0)}.sidebar-backdrop.open{display:block;position:fixed;inset:0;background:rgba(12,26,48,.42);z-index:140}.mobile-nav{display:none!important}.sidebar nav a{min-height:44px;padding:11px 12px}.welcome-panel{padding:21px 18px}.welcome-panel .date-label{display:block}}
 @media(max-width:520px){.header-actions{gap:7px}.header-pill{font-size:10px;padding:8px}.brand{gap:9px}.brand h1{font-size:16px}.brand p{font-size:9px}.brand-mark{width:36px;height:36px}.welcome-panel{display:block}.welcome-panel h2{font-size:22px}.welcome-panel .date-label{display:inline-block;margin-top:13px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.financial-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
+.phase1-listing-card{display:grid;grid-template-columns:90px minmax(0,1fr);gap:13px;border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0;background:#fff}.phase1-listing-card img{width:90px;height:90px;object-fit:cover;border-radius:10px;background:#f1f4f8}.phase1-listing-card h3{margin:0 0 8px}.phase1-listing-card p{font-size:12px;line-height:1.5;overflow-wrap:anywhere;margin:6px 0}.phase1-eligibility{padding:9px 11px;border-radius:9px;font-size:12px;line-height:1.5;margin:9px 0}.phase1-eligibility.warning{background:#fff5e5;border:1px solid #f0d9a9;color:#79520f}.phase1-eligibility.good{background:#eaf7ef;border:1px solid #c8e9d4;color:#176b45}@media(max-width:600px){.phase1-listing-card{grid-template-columns:68px minmax(0,1fr);gap:9px;padding:10px}.phase1-listing-card img{width:68px;height:68px}.phase1-listing-card .actions{gap:6px;flex-wrap:wrap}.phase1-listing-card .actions button{min-height:40px;flex:1 1 42%;padding:8px 6px;font-size:11px}}
 </style>
 </head>
 
@@ -915,6 +916,9 @@ let adminCheckPromise = null;
 let verifiedAdminId = null;
 let adminAuthVersion = 0;
 let allProducts = [];
+let allSellerStores = [];
+let allMarketplacePermissions = [];
+let sellerEligibilityLoadError = null;
 let allPaymentOrders = [];
 let allSellerFinancials = [];
 
@@ -1474,51 +1478,53 @@ async function reviewSellerPublicLocation(userId, status) {
 window.reviewSellerPublicLocation = reviewSellerPublicLocation;
 
 async function loadProducts() {
-  if (!currentAdmin) return;
-
-  const productStatIds = ["pendingCount", "approvedCount", "rejectedCount", "hiddenCount"];
-  const setProductStatState = (state) => {
-    productStatIds.forEach(id => {
-      const element = document.getElementById(id);
-      if (element) element.textContent = state;
-    });
-  };
-
-  setProductStatState("Loading…");
-  message("Loading products...");
-
+  if (!currentAdmin || currentAdmin.id !== ADMIN_ID) return;
+  const statIds=["pendingCount","approvedCount","rejectedCount","hiddenCount"];
+  statIds.forEach(id=>{const el=document.getElementById(id);if(el)el.textContent="Loading…";});
+  message("Loading marketplace listings…");
+  ["retail","motors","property"].forEach(key=>{
+    const el=document.getElementById(key+"Message");if(el)el.textContent="Loading "+key+" listings…";
+  });
   try {
-    const { data, error } = await sb
-      .from("Products")
+    const {data,error}=await sb.from("Products")
       .select("id,name,description,price,category,image_url,images,seller_name,seller_id,status,rejection_reason,created_at")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      setProductStatState("Unavailable");
-      message("Could not load products: " + error.message);
-      return;
+      .order("created_at",{ascending:false});
+    if(error) throw error;
+    allProducts=data||[];
+    allSellerStores=[];
+    allMarketplacePermissions=[];
+    sellerEligibilityLoadError=null;
+    const sellerIds=[...new Set(allProducts.map(p=>p.seller_id).filter(Boolean))];
+    if(sellerIds.length){
+      try{
+        const [stores,permissions]=await Promise.all([
+          sb.from("seller_stores").select("user_id,store_name,status,primary_marketplace").in("user_id",sellerIds),
+          sb.from("seller_marketplace_permissions").select("user_id,marketplace,status").in("user_id",sellerIds)
+        ]);
+        if(stores.error) throw stores.error;
+        if(permissions.error) throw permissions.error;
+        allSellerStores=stores.data||[];
+        allMarketplacePermissions=permissions.data||[];
+      }catch(eligibilityError){
+        sellerEligibilityLoadError="Seller/store/permission data could not be verified: "+(eligibilityError.message||"query failed");
+        console.error("NOVAAI seller eligibility query error:",eligibilityError);
+      }
     }
-
-    allProducts = data || [];
     updateAdminOverview();
-
-    document.getElementById("pendingCount").textContent =
-      allProducts.filter(p => p.status === "pending").length;
-
-    document.getElementById("approvedCount").textContent =
-      allProducts.filter(p => p.status === "approved").length;
-
-    document.getElementById("rejectedCount").textContent =
-      allProducts.filter(p => p.status === "rejected").length;
-
-    document.getElementById("hiddenCount").textContent =
-      allProducts.filter(p => p.status === "hidden").length;
-
+    document.getElementById("pendingCount").textContent=allProducts.filter(p=>p.status==="pending").length;
+    document.getElementById("approvedCount").textContent=allProducts.filter(p=>p.status==="approved").length;
+    document.getElementById("rejectedCount").textContent=allProducts.filter(p=>p.status==="rejected").length;
+    document.getElementById("hiddenCount").textContent=allProducts.filter(p=>p.status==="hidden").length;
     renderProducts();
-  } catch (error) {
-    setProductStatState("Unavailable");
-    message("Could not load products: " + (error?.message || "Unexpected error."));
-    console.error("NOVAAI product load error:", error);
+    renderMarketplaceWorkspaces();
+  }catch(error){
+    statIds.forEach(id=>{const el=document.getElementById(id);if(el)el.textContent="Unavailable";});
+    message("Could not load products: "+(error.message||"Unexpected error."));
+    ["retail","motors","property"].forEach(key=>{
+      const msg=document.getElementById(key+"Message");if(msg)msg.textContent="Could not load listings: "+(error.message||"Unexpected error.");
+      const box=document.getElementById(key+"Listings");if(box)box.replaceChildren();
+    });
+    console.error("NOVAAI product load error:",error);
   }
 }
 
@@ -1685,99 +1691,88 @@ function renderSellerFinancials() {
   `).join("");
 }
 
-function renderProducts() {
-  const filter = document.getElementById("filter").value;
-  const search = document.getElementById("search").value.toLowerCase();
 
-  const filtered = allProducts.filter(p => {
-    const statusMatch = filter === "all" || p.status === filter;
-
-    const textMatch = [
-      p.name,
-      p.seller_name,
-      p.category,
-      p.description
-    ].join(" ").toLowerCase().includes(search);
-
-    return statusMatch && textMatch;
+function marketplaceForProduct(product) {
+  const category = String(product.category || "");
+  if (category === "Auto" || category === "Motors & Vehicles") return "motors";
+  if (category === "Property For Sale" || category === "Property To Rent") return "property";
+  return "retail";
+}
+function getSellerEligibility(product) {
+  if (sellerEligibilityLoadError) return {ok:false,unknown:true,label:"Eligibility not verified",detail:sellerEligibilityLoadError};
+  if (!product.seller_id) return {ok:false,label:"Missing seller ID",detail:"This listing has no linked seller account ID."};
+  const store = allSellerStores.find(row => row.user_id === product.seller_id);
+  if (!store) return {ok:false,label:"No linked seller store",detail:"No seller store record is linked to this listing."};
+  const market = marketplaceForProduct(product);
+  const storeMarket = String(store.primary_marketplace || "").toLowerCase();
+  const permission = allMarketplacePermissions.find(row => row.user_id === product.seller_id && String(row.marketplace || "").toLowerCase() === market);
+  const issues = [];
+  if (storeMarket !== market) issues.push("Store marketplace is " + (store.primary_marketplace || "not set") + ", not " + market + ".");
+  if (String(store.status || "").toLowerCase() !== "approved") issues.push("Seller store status is " + (store.status || "not recorded") + ".");
+  if (!permission) issues.push("No " + market + " marketplace permission exists.");
+  else if (String(permission.status || "").toLowerCase() !== "approved") issues.push(market + " permission status is " + (permission.status || "not recorded") + ".");
+  return {ok:issues.length===0,label:issues.length ? "Seller / marketplace mismatch" : "Seller eligible for " + market,detail:issues.join(" "),store,permission};
+}
+function productSearchMatches(product, term) {
+  const store = allSellerStores.find(row => row.user_id === product.seller_id);
+  return [product.name,product.seller_name,product.category,product.description,product.seller_id,store && store.store_name]
+    .join(" ").toLowerCase().includes(term);
+}
+function productCardHTML(product) {
+  const image = product.image_url || (Array.isArray(product.images) ? product.images[0] : "");
+  const safeImage = String(image || "").startsWith("https://") ? escapeHTML(image) : "";
+  const market = marketplaceForProduct(product);
+  const eligibility = getSellerEligibility(product);
+  const store = eligibility.store;
+  const permission = eligibility.permission;
+  const actions = [
+    product.status !== "approved" ? '<button class="approve" onclick="changeStatus('+Number(product.id)+',\'approved\')">Approve</button>' : "",
+    product.status !== "rejected" ? '<button class="reject" onclick="changeStatus('+Number(product.id)+',\'rejected\')">Reject</button>' : "",
+    product.status !== "hidden" ? '<button class="hide" onclick="changeStatus('+Number(product.id)+',\'hidden\')">Hide</button>' : "",
+    product.status !== "pending" ? '<button class="restore" onclick="changeStatus('+Number(product.id)+',\'pending\')">Return to Pending</button>' : ""
+  ].join("");
+  return '<article class="product phase1-listing-card"><div>' +
+    (safeImage ? '<img loading="lazy" decoding="async" src="'+safeImage+'" alt="Product image" onclick="openImage(this.src)">' : '<div class="muted">No image</div>') +
+    '</div><div><h3>'+escapeHTML(product.name || "Untitled listing")+'</h3>' +
+    '<p><strong>Marketplace:</strong> '+market.toUpperCase()+' · <strong>Category:</strong> '+escapeHTML(product.category || "Not set")+'</p>' +
+    '<p><strong>Price:</strong> '+money(product.price)+' · <strong>Status:</strong> <span class="status">'+escapeHTML(product.status || "Unknown")+'</span></p>' +
+    '<p><strong>Seller:</strong> '+escapeHTML((store && store.store_name) || product.seller_name || "Not provided")+'</p>' +
+    '<p><strong>Seller ID:</strong> '+escapeHTML(product.seller_id || "MISSING")+'</p>' +
+    '<p><strong>Store:</strong> '+escapeHTML(store ? (store.status || "Unknown")+" · "+(store.primary_marketplace || "Marketplace not set") : "No linked seller store")+'</p>' +
+    '<p><strong>Marketplace permission:</strong> '+escapeHTML(permission ? permission.marketplace+" · "+permission.status : "No matching "+market+" permission")+'</p>' +
+    '<div class="phase1-eligibility '+(eligibility.ok ? "good" : "warning")+'"><strong>'+escapeHTML(eligibility.label)+'</strong><br>'+escapeHTML(eligibility.detail)+'</div>' +
+    '<p>'+escapeHTML(product.description || "No description provided.")+'</p>' +
+    (product.rejection_reason ? '<p><strong>Rejection reason:</strong> '+escapeHTML(product.rejection_reason)+'</p>' : '') +
+    '<div class="actions">'+actions+'</div></div></article>';
+}
+function renderMarketplaceWorkspaces() {
+  ["retail","motors","property"].forEach(key => {
+    const box = document.getElementById(key+"Listings");
+    const msg = document.getElementById(key+"Message");
+    if (!box || !msg) return;
+    const records = allProducts.filter(p => marketplaceForProduct(p) === key);
+    const term = (document.getElementById(key+"Search").value || "").trim().toLowerCase();
+    const status = document.getElementById(key+"Status").value;
+    const filtered = records.filter(p => (status === "all" || p.status === status) && productSearchMatches(p,term));
+    msg.textContent = filtered.length+" shown · "+records.length+" classified "+key+" listing(s).";
+    box.innerHTML = filtered.length ? filtered.map(productCardHTML).join("") : '<p class="muted">No listings match this search and status filter.</p>';
   });
+}
 
-  message(filtered.length + " product(s) found.");
-
-  document.getElementById("products").innerHTML =
-    filtered.map(p => {
-      const image = p.image_url ||
-        (Array.isArray(p.images) ? p.images[0] : "");
-
-      const safeImage = String(image || "").startsWith("https://")
-        ? escapeHTML(image)
-        : "";
-
-      return `
-        <div class="product">
-
-          <div>
-            ${safeImage
-              ? `<img loading="lazy" decoding="async" src="${safeImage}" alt="Product image"
-                  onclick="openImage(this.src)">`
-              : `<div class="muted">No image</div>`}
-          </div>
-
-          <div>
-            <h3>${escapeHTML(p.name)}</h3>
-
-            <p>Price: R${Number(p.price || 0).toFixed(2)}</p>
-            <p>Category: ${escapeHTML(p.category)}</p>
-            <p>Seller: ${escapeHTML(p.seller_name)}</p>
-            <p>Seller ID: <small>${escapeHTML(p.seller_id)}</small></p>
-            <p class="muted">${escapeHTML(p.description)}</p>
-
-            <p>Status:
-              <span class="status">${escapeHTML(p.status)}</span>
-            </p>
-
-            ${p.rejection_reason
-              ? `<p style="color:#c43d4d">
-                  <strong>Rejection reason:</strong>
-                  ${escapeHTML(p.rejection_reason)}
-                </p>`
-              : ""}
-
-            <div class="actions">
-
-              ${p.status !== "approved"
-                ? `<button class="approve"
-                    onclick="changeStatus(${Number(p.id)},'approved')">
-                    Approve
-                  </button>`
-                : ""}
-
-              ${p.status !== "rejected"
-                ? `<button class="reject"
-                    onclick="changeStatus(${Number(p.id)},'rejected')">
-                    Reject
-                  </button>`
-                : ""}
-
-              ${p.status !== "hidden"
-                ? `<button class="hide"
-                    onclick="changeStatus(${Number(p.id)},'hidden')">
-                    Hide
-                  </button>`
-                : ""}
-
-              ${p.status !== "pending"
-                ? `<button class="restore"
-                    onclick="changeStatus(${Number(p.id)},'pending')">
-                    Return to Pending
-                  </button>`
-                : ""}
-
-            </div>
-          </div>
-        </div>
-      `;
-    }).join("");
+function renderProducts() {
+  const status=document.getElementById("filter").value;
+  const term=document.getElementById("search").value.trim().toLowerCase();
+  const market=document.getElementById("globalMarketplaceFilter").value;
+  const filtered=allProducts.filter(p=>
+    (status==="all"||p.status===status) &&
+    (market==="all"||marketplaceForProduct(p)===market) &&
+    productSearchMatches(p,term)
+  );
+  message(filtered.length+" of "+allProducts.length+" product(s) shown.");
+  document.getElementById("products").innerHTML=filtered.length
+    ? filtered.map(productCardHTML).join("")
+    : '<p class="muted">No products match these filters.</p>';
+  renderMarketplaceWorkspaces();
 }
 
 function openImage(url) {
@@ -1791,7 +1786,10 @@ function closeImage() {
 }
 
 async function changeStatus(id, newStatus) {
-  if (!currentAdmin) return;
+  if (!currentAdmin || currentAdmin.id !== ADMIN_ID || verifiedAdminId !== ADMIN_ID) {
+    message("Administrator verification is missing. Please sign in again.");
+    return;
+  }
 
   if (!["pending", "approved", "rejected", "hidden"].includes(newStatus)) {
     return;
@@ -1824,23 +1822,24 @@ async function changeStatus(id, newStatus) {
 
   message("Updating product...");
 
-  const { error } = await sb
+  const { data, error } = await sb
     .from("Products")
     .update({
       status: newStatus,
-      rejection_reason: newStatus === "rejected"
-        ? rejectionReason
-        : null
+      rejection_reason: newStatus === "rejected" ? rejectionReason : null
     })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id,status");
 
   if (error) {
-    message("Update failed: " + error.message);
+    message("Update denied or failed by the existing database security policies: " + error.message);
     return;
   }
-
-  message("Product status updated successfully.");
-
+  if (!data || data.length === 0) {
+    message("No listing was updated. Existing database authorization or row-level security may have denied this action.");
+    return;
+  }
+  message("Listing moderation saved. Refreshing marketplace workspaces…");
   await loadProducts();
 }
 
@@ -1986,6 +1985,11 @@ document.getElementById("adminLoginForm").addEventListener("submit", (event) => 
 document.getElementById("logoutBtn").onclick = logout;
 document.getElementById("filter").onchange = renderProducts;
 document.getElementById("search").oninput = renderProducts;
+document.getElementById("globalMarketplaceFilter").onchange = renderProducts;
+["retail","motors","property"].forEach(key=>{
+  document.getElementById(key+"Search").addEventListener("input",renderMarketplaceWorkspaces);
+  document.getElementById(key+"Status").addEventListener("change",renderMarketplaceWorkspaces);
+});
 document.getElementById("paymentFilter").onchange = renderPaymentRecords;
 document.getElementById("refreshFinancialBtn").onclick = loadPaymentData;
 document.getElementById("refreshMarketplacePermissions").onclick = loadMarketplacePermissions;
