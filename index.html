@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="nova-ads-pending">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -419,6 +419,40 @@ body.product-view-active .nova-hero-carousel{display:none!important}
 .home-live-rating{display:flex;align-items:center;gap:5px;margin:5px 0 2px;font-size:10px;line-height:1.3;color:#e5edff}
 .home-live-rating .home-rating-stars{color:#ffd34f;font-size:15px;letter-spacing:1px;white-space:nowrap}
 .home-live-rating .home-rating-label{color:#cbd5e1;font-weight:650}</style>
+<script>
+(function(){
+  'use strict';
+  var root=document.documentElement;
+  var revealed=false;
+  var fallbackTimer;
+  function revealBoards(){
+    if(revealed)return;
+    revealed=true;
+    root.classList.remove('nova-ads-pending');
+    window.clearTimeout(fallbackTimer);
+    if(typeof window.__novaAdsRefreshImpressions==='function'){
+      window.__novaAdsRefreshImpressions();
+    }
+  }
+  window.__novaAdsRevealBoards=revealBoards;
+  window.addEventListener('error',function(event){
+    var source=event.filename||(event.target&&event.target.src)||'';
+    if(String(source).indexOf('novaai-ad-slots.js')!==-1)revealBoards();
+  },true);
+  window.addEventListener('unhandledrejection',function(event){
+    var reason=event.reason;
+    var stack=reason&&reason.stack?reason.stack:String(reason||'');
+    if(String(stack).indexOf('novaai-ad-slots.js')!==-1)revealBoards();
+  });
+  fallbackTimer=window.setTimeout(revealBoards,30000);
+})();
+</script>
+<style id="nova-ad-first-paint">
+html.nova-ads-pending [data-nova-ad-slot],
+html.nova-ads-pending [data-nova-ad-slot] * {
+  visibility:hidden !important;
+}
+</style>
 </head>
 <body>
 <div class="top">🇿🇦 MADE FOR SOUTH AFRICA · SHOP SMART · SUPPORT INDEPENDENT SELLERS</div>
@@ -903,4 +937,4 @@ body.product-view-active .nova-hero-carousel{display:none!important}
 .home-product-info .home-product-buy-row .home-product-price{color:#F5B900!important;}
 </style>
 
-<script src="./novaai-ad-slots.js"></script>
+<script src="./novaai-ad-slots.js?v=20261107-ads-first-paint-2" onerror="window.__novaAdsRevealBoards&&window.__novaAdsRevealBoards()"></script>

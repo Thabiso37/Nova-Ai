@@ -174,13 +174,18 @@
     if(!slot||!campaignCode)return;
     if(!slot.__novaAdImpressions)slot.__novaAdImpressions=new Set();
     const check=()=>{
-      if(slot.dataset.novaCampaignCode!==campaignCode||slot.__novaAdImpressions.has(campaignCode)||!adSlotIsActuallyVisible(slot))return;
+      const observerConfirmed=!('IntersectionObserver' in window)||slot.__novaAdIntersectionVisible===true;
+      if(slot.dataset.novaCampaignCode!==campaignCode||slot.__novaAdImpressions.has(campaignCode)||!observerConfirmed||!adSlotIsActuallyVisible(slot))return;
       slot.__novaAdImpressions.add(campaignCode);
       recordAdEvent(campaignCode,'impression');
     };
     if(!slot.__novaAdVisibilityObserver&&'IntersectionObserver' in window){
+      slot.__novaAdIntersectionVisible=false;
       slot.__novaAdVisibilityObserver=new IntersectionObserver(entries=>{
-        if(entries.some(entry=>entry.isIntersecting&&entry.intersectionRatio>=0.5)){
+        entries.forEach(entry=>{
+          slot.__novaAdIntersectionVisible=Boolean(entry.isIntersecting&&entry.intersectionRatio>=0.5);
+        });
+        if(slot.__novaAdIntersectionVisible){
           const current=slot.dataset.novaCampaignCode;
           if(current)recordDisplayedImpression(slot,current);
         }
@@ -193,6 +198,12 @@
     }
     if(typeof requestAnimationFrame==='function')requestAnimationFrame(check);else window.setTimeout(check,0);
   }
+  window.__novaAdsRefreshImpressions=function(){
+    document.querySelectorAll('[data-nova-ad-slot][data-nova-campaign-code]').forEach(slot=>{
+      const current=slot.dataset.novaCampaignCode;
+      if(current)recordDisplayedImpression(slot,current);
+    });
+  };
   function bindCampaignClick(target,id){
     if(!target||target.dataset.novaAdClickBound==='1')return;
     target.dataset.novaAdClickBound='1';
@@ -495,38 +506,106 @@
     banner.addEventListener('focusin',stop);banner.addEventListener('focusout',start);
     document.addEventListener('visibilitychange',start);show(0);start();
   }
+  let managedCampaignLoadSequence=0;
   async function loadManagedCampaigns(){
     const apiUrl='https://nxplffvklkopwfjaqexo.supabase.co/rest/v1/rpc/get_live_novaai_ad_campaigns';
     const publishableKey='sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ';
+    const requestId=++managedCampaignLoadSequence;
+    const controller=typeof AbortController==='function'?new AbortController():null;
+    let requestTimeoutId;
+    const requestDeadline=Date.now()+12000;
+    const requestTimeout=new Promise((resolve,reject)=>{
+      requestTimeoutId=window.setTimeout(()=>{
+        if(controller)controller.abort();
+        reject(new Error('Campaign feed timed out after 12 seconds'));
+      },12000);
+    });
+    const waitFor=(promise,milliseconds)=>new Promise(resolve=>{
+      const timer=window.setTimeout(resolve,milliseconds);
+      Promise.resolve(promise).then(()=>{window.clearTimeout(timer);resolve();},()=>{window.clearTimeout(timer);resolve();});
+    });
     try{
-      const response=await fetch(apiUrl,{method:'POST',headers:{'apikey':publishableKey,'Authorization':'Bearer '+publishableKey,'Content-Type':'application/json'},body:'{}'});
-      if(!response.ok)throw new Error('Campaign feed returned HTTP '+response.status);
-      const campaigns=await response.json();
-      // Wait for the real page's initial layout assets before recording its natural
-      // board dimensions. Otherwise an image/font finishing later can change the
-      // "original" height after the managed creative has already frozen it.
-      if(document.readyState!=='complete'){
-        await Promise.race([new Promise(resolve=>window.addEventListener('load',resolve,{once:true})),new Promise(resolve=>setTimeout(resolve,4000))]);
+      let campaigns;
+      try{
+        campaigns=await Promise.race([
+          (async()=>{
+            const response=await fetch(apiUrl,{
+              method:'POST',
+              headers:{'apikey':publishableKey,'Authorization':'Bearer '+publishableKey,'Content-Type':'application/json'},
+              body:'{}',
+              signal:controller?controller.signal:undefined
+            });
+            if(!response.ok)throw new Error('Campaign feed returned HTTP '+response.status);
+            const responseBody=await response.text();
+            if(Date.now()>=requestDeadline)throw new Error('Campaign feed timed out after 12 seconds');
+            const payload=JSON.parse(responseBody);
+            if(Date.now()>=requestDeadline)throw new Error('Campaign feed timed out after 12 seconds');
+            return payload;
+          })(),
+          requestTimeout
+        ]);
+      }finally{
+        window.clearTimeout(requestTimeoutId);
       }
-      if(document.fonts&&document.fonts.ready)await document.fonts.ready.catch(()=>{});
+      if(requestId!==managedCampaignLoadSequence)return;
+      // Wait for the real page's initial layout assets before recording its natural
+      // board dimensions. Every wait is bounded so a broken asset cannot hold up
+      // the first-paint release indefinitely.
+      if(document.readyState!=='complete'){
+        await waitFor(new Promise(resolve=>window.addEventListener('load',resolve,{once:true})),4000);
+      }
+      if(document.fonts&&document.fonts.ready)await waitFor(document.fonts.ready,4000);
       await Promise.all(Array.from(document.images).map(img=>{
-        if(img.complete)return img.decode?img.decode().catch(()=>{}):Promise.resolve();
-        return Promise.race([new Promise(resolve=>{img.addEventListener('load',resolve,{once:true});img.addEventListener('error',resolve,{once:true});}),new Promise(resolve=>setTimeout(resolve,4000))]);
+        if(img.complete){
+          if(!img.decode)return Promise.resolve();
+          try{return waitFor(img.decode(),4000);}catch(error){return Promise.resolve();}
+        }
+        return waitFor(new Promise(resolve=>{
+          img.addEventListener('load',resolve,{once:true});
+          img.addEventListener('error',resolve,{once:true});
+        }),4000);
       }));
-      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-      api.announceCampaigns(Array.isArray(campaigns)?campaigns:[]);
-    }catch(error){console.warn('NOVAAI managed advertisement feed unavailable; managed campaigns cleared.',error);api.announceCampaigns([]);}
+      if(typeof requestAnimationFrame==='function'){
+        await waitFor(new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))),1000);
+      }
+      if(requestId===managedCampaignLoadSequence)api.announceCampaigns(Array.isArray(campaigns)?campaigns:[]);
+    }catch(error){
+      if(requestId===managedCampaignLoadSequence){
+        console.warn('NOVAAI managed advertisement feed unavailable; managed campaigns cleared.',error);
+        api.announceCampaigns([]);
+      }
+    }
   }
   function bootLiveAds(){
-    initHomeCarousel();
-    ['cart_banner','property_banner','motors_banner','shop_footer','motors_footer','property_footer'].forEach(id=>initLiveSlot(document.querySelector('[data-nova-ad-slot="'+id+'"]')));
-    loadManagedCampaigns().finally(()=>{
-      window.__novaManagedCampaignsReady=true;
-      const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');
-      if(wishlist)initLiveSlot(wishlist);
-    });
-    if(!window.__novaAdRefreshTimer)window.__novaAdRefreshTimer=window.setInterval(loadManagedCampaigns,60000);
-    if(!window.__novaAdObserver&&document.body){window.__novaAdObserver=new MutationObserver(()=>{const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');if(wishlist&&window.__novaManagedCampaignsReady)initLiveSlot(wishlist);});window.__novaAdObserver.observe(document.body,{childList:true,subtree:true});}
+    if(window.__novaAdsBooted)return;
+    window.__novaAdsBooted=true;
+    try{
+      initHomeCarousel();
+      ['cart_banner','property_banner','motors_banner','shop_footer','motors_footer','property_footer'].forEach(id=>initLiveSlot(document.querySelector('[data-nova-ad-slot="'+id+'"]')));
+      loadManagedCampaigns().finally(()=>{
+        try{
+          window.__novaManagedCampaignsReady=true;
+          const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');
+          if(wishlist)initLiveSlot(wishlist);
+        }finally{
+          if(typeof window.__novaAdsRevealBoards==='function')window.__novaAdsRevealBoards();
+        }
+      }).catch(error=>{
+        console.error('NOVAAI advertising initialisation failed; showing fallback boards.',error);
+        if(typeof window.__novaAdsRevealBoards==='function')window.__novaAdsRevealBoards();
+      });
+      if(!window.__novaAdRefreshTimer)window.__novaAdRefreshTimer=window.setInterval(loadManagedCampaigns,60000);
+      if(!window.__novaAdObserver&&document.body){
+        window.__novaAdObserver=new MutationObserver(()=>{
+          const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');
+          if(wishlist&&window.__novaManagedCampaignsReady)initLiveSlot(wishlist);
+        });
+        window.__novaAdObserver.observe(document.body,{childList:true,subtree:true});
+      }
+    }catch(error){
+      console.error('NOVAAI advertising initialisation failed; showing fallback boards.',error);
+      if(typeof window.__novaAdsRevealBoards==='function')window.__novaAdsRevealBoards();
+    }
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootLiveAds,{once:true});else bootLiveAds();
 

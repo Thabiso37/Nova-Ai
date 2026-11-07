@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="nova-ads-pending">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -1014,6 +1014,40 @@ body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb;col
 @media(prefers-reduced-motion:reduce){#shopTvAds .shop-tv-slide,#shopTvAds .shop-tv-art,#shopTvAds .shop-tv-kicker:before{transition:none;animation:none}}
 </style>
 
+<script>
+(function(){
+  'use strict';
+  var root=document.documentElement;
+  var revealed=false;
+  var fallbackTimer;
+  function revealBoards(){
+    if(revealed)return;
+    revealed=true;
+    root.classList.remove('nova-ads-pending');
+    window.clearTimeout(fallbackTimer);
+    if(typeof window.__novaAdsRefreshImpressions==='function'){
+      window.__novaAdsRefreshImpressions();
+    }
+  }
+  window.__novaAdsRevealBoards=revealBoards;
+  window.addEventListener('error',function(event){
+    var source=event.filename||(event.target&&event.target.src)||'';
+    if(String(source).indexOf('novaai-ad-slots.js')!==-1)revealBoards();
+  },true);
+  window.addEventListener('unhandledrejection',function(event){
+    var reason=event.reason;
+    var stack=reason&&reason.stack?reason.stack:String(reason||'');
+    if(String(stack).indexOf('novaai-ad-slots.js')!==-1)revealBoards();
+  });
+  fallbackTimer=window.setTimeout(revealBoards,30000);
+})();
+</script>
+<style id="nova-ad-first-paint">
+html.nova-ads-pending [data-nova-ad-slot],
+html.nova-ads-pending [data-nova-ad-slot] * {
+  visibility:hidden !important;
+}
+</style>
 </head>
 <body>
 
@@ -2154,7 +2188,7 @@ function closeCart() {
 
 
 <script src="./nearby-search.js"></script>
-<script src="./novaai-ad-slots.js"></script>
+<script src="./novaai-ad-slots.js?v=20261107-ads-first-paint-2" onerror="window.__novaAdsRevealBoards&&window.__novaAdsRevealBoards()"></script>
 <style>
 /* Wishlist advertisement slot only — reserved for future admin-managed campaigns. */
 #wishlist .wishlist-ad-slot{display:flex;flex-direction:column;align-items:flex-start;gap:5px;margin:0 0 16px;padding:15px 16px;min-height:108px;border:1px solid #dce6f4;border-radius:14px;background:radial-gradient(circle at 90% 20%,#2c65b5 0,#174ea6 30%,#10284b 78%);color:#fff;overflow:hidden}
