@@ -11,7 +11,7 @@ declare
 begin
   if not public.is_novaai_admin() then raise exception 'Administrator access required' using errcode='42501'; end if;
   v_id:=nullif(p_campaign->>'id','')::uuid;
-  v_code:=coalesce(nullif(p_campaign->>'campaign_code',''),'NOVA-'||upper(substr(replace(gen_random_uuid()::text,'-',''),1,10)));
+  v_code:='NOVA-'||upper(substr(replace(gen_random_uuid()::text,'-',''),1,10));
   if jsonb_typeof(p_campaign->'slot_ids')='array' then
     select array_agg(value order by ordinality) into v_slots from jsonb_array_elements_text(p_campaign->'slot_ids') with ordinality as s(value,ordinality);
   else v_slots:=array[coalesce(p_campaign->>'slot_id','')]; end if;
