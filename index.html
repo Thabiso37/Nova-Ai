@@ -534,7 +534,16 @@ body.product-view-active .nova-hero-carousel{display:none!important}
     return viewer;
   }
   function showPhoto(url,alt){if(!url)return;const viewer=ensurePhotoViewer();const img=viewer.querySelector('img');img.src=url;img.alt=alt||'Product photo';viewer.classList.add('open');}
-  function productPhotos(product){const list=Array.isArray(product.images)&&product.images.length?product.images:(product.image_url?[product.image_url]:[]);return list.map(safeImage).filter(Boolean);}
+  function isPropertyProduct(product){return ['Property For Sale','Property To Rent'].includes(String(product&&product.category||''));}
+  function productPhotos(product){
+    if(isPropertyProduct(product)){
+      let list=Array.isArray(product.images)?product.images.map(value=>typeof value==='string'?value:(value&&value.url)||''):[];
+      if(product.image_url)list.unshift(product.image_url);
+      return Array.from(new Set(list.map(value=>{try{const url=new URL(String(value||''),window.location.href);return url.protocol==='https:'?url.href:'';}catch(error){return '';}}).filter(Boolean)));
+    }
+    const list=Array.isArray(product.images)&&product.images.length?product.images:(product.image_url?[product.image_url]:[]);
+    return list.map(safeImage).filter(Boolean);
+  }
   function renderDetail(detail){
     const photos=productPhotos(detail);
     const store=detail.seller_store||{};
@@ -618,7 +627,7 @@ body.product-view-active .nova-hero-carousel{display:none!important}
         </article>`;
       }).join('');
       grid.querySelectorAll('[data-open-home-product]').forEach(card=>{
-        const open=()=>{window.location.href='./index.html?product='+encodeURIComponent(card.dataset.openHomeProduct);};
+        const open=()=>{const product=items.find(item=>String(item.id)===card.dataset.openHomeProduct);const destination=product&&isPropertyProduct(product)?'./property-details.html?id=':'./index.html?product=';window.location.href=destination+encodeURIComponent(card.dataset.openHomeProduct);};
         card.addEventListener('click',e=>{if(e.target.closest('button'))return;open();});
         card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
       });
