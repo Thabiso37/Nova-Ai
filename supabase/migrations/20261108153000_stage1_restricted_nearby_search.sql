@@ -25,7 +25,7 @@ REVOKE ALL PRIVILEGES ON TABLE public.seller_stores FROM novaai_nearby_search_ex
 REVOKE ALL PRIVILEGES ON TABLE public.seller_marketplace_permissions FROM novaai_nearby_search_executor;
 
 GRANT SELECT (
-  id, created_at, name, price, category, image_url, images, seller_id, status
+  id, created_at, name, description, price, category, image_url, images, seller_id, status
 ) ON TABLE public."Products" TO novaai_nearby_search_executor;
 
 GRANT SELECT (
@@ -112,7 +112,7 @@ SET search_path = pg_catalog, public, private
 SET row_security = on
 AS $function$
 BEGIN
-  IF p_marketplace IS NULL OR p_marketplace NOT IN ('retail', 'motors', 'property') THEN
+  IF p_marketplace IS NULL OR p_marketplace NOT IN ('all', 'retail', 'motors', 'property') THEN
     RAISE EXCEPTION 'Invalid marketplace' USING ERRCODE = '22023';
   END IF;
 
@@ -186,14 +186,15 @@ BEGIN
         WHEN p.category = ANY (ARRAY['Auto', 'Motors & Vehicles']::text[]) THEN 'motors'
         WHEN p.category = ANY (ARRAY['Property For Sale', 'Property To Rent']::text[]) THEN 'property'
         ELSE 'retail'
-      END = p_marketplace
+      END = p_marketplace OR p_marketplace = 'all'
       AND l.public_location_enabled IS TRUE
       AND l.approval_status = 'approved'
       AND (nullif(btrim(p_search_text), '') IS NULL
         OR p.name ILIKE '%' || btrim(p_search_text) || '%'
         OR p.category ILIKE '%' || btrim(p_search_text) || '%'
+        OR p.description ILIKE '%' || btrim(p_search_text) || '%'
         OR ss.store_name ILIKE '%' || btrim(p_search_text) || '%')
-      AND (nullif(btrim(p_city), '') IS NULL OR lower(l.city) = lower(btrim(p_city)))
+      AND (nullif(btrim(p_city), '') IS NULL OR lower(concat_ws(' ', l.city, l.suburb, l.province)) LIKE '%' || lower(btrim(p_city)) || '%')
       AND (nullif(btrim(p_suburb), '') IS NULL OR lower(l.suburb) = lower(btrim(p_suburb)))
       AND (nullif(btrim(p_province), '') IS NULL OR lower(l.province) = lower(btrim(p_province)))
   )
