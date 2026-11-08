@@ -227,7 +227,7 @@ END
 $write_capability_test$;
 SESSION_SQL
 )"
-printf '%s\\n' "$SESSION_OUTPUT"
+printf '%s\n' "$SESSION_OUTPUT"
 mapfile -t SESSION_RESULTS <<<"$SESSION_OUTPUT"
 [[ "${SESSION_RESULTS[0]:-}" == "on" ]] || { echo "ERROR: restricted login did not start with default_transaction_read_only=on." >&2; exit 1; }
 [[ "${SESSION_RESULTS[1]:-}" == "off" ]] || { echo "ERROR: restricted login could not change default_transaction_read_only to OFF in-session." >&2; exit 1; }
@@ -248,7 +248,10 @@ AS 'INSERT INTO net.request_queue(payload) VALUES ($1) RETURNING id';
 GRANT EXECUTE ON FUNCTION net.http_post(text) TO PUBLIC;
 NETSQL
 PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT has_function_privilege(current_user,'net.http_post(text)','EXECUTE')" | grep -qx t
-PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -c "SELECT net.http_post('synthetic request')" >/dev/null
+PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -q -v ON_ERROR_STOP=1 <<'NETCALL'
+SET default_transaction_read_only = off;
+SELECT net.http_post('synthetic request');
+NETCALL
 psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT count(*) FROM net.request_queue" | grep -qx 1
 if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -f "$ROOT/scripts/schema-export/assert-read-only-role.sql" >"$TMP/queue-preflight.log" 2>&1; then
   echo "ERROR: preflight accepted PUBLIC-executable SECURITY DEFINER queue function." >&2
