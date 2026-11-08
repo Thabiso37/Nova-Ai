@@ -80,13 +80,13 @@ Deno.test("Edge Function sends the restricted RPC request with the server-only s
 
 Deno.test("forwards each marketplace selector without rewriting it", async () => {
   for (const marketplace of ["all", "retail", "motors", "property"]) {
-    let sent: Record<string, unknown> | null = null;
+    const sent: Record<string, unknown>[] = [];
     const response = await handleNearbySearch(request({ ...BASE_BODY, p_marketplace: marketplace }), ENV, async (_input, init) => {
-      sent = JSON.parse(String(init?.body));
+      sent.push(JSON.parse(String(init?.body)));
       return new Response("[]", { status: 200 });
     });
     assert(response.status === 200, "marketplace request failed: " + marketplace);
-    assert(sent !== null && sent.p_marketplace === marketplace, "marketplace selector changed: " + marketplace);
+    assert(sent[0].p_marketplace === marketplace, "marketplace selector changed: " + marketplace);
   }
 });
 
