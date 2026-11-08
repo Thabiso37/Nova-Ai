@@ -102,7 +102,7 @@ UPLOAD_BLOCK="$(sed -n '/name: Upload ciphertext and ciphertext checksum only/,+
 grep -Fq 'novaai-production-schema.tar.gz.age' <<<"$UPLOAD_BLOCK"
 grep -Fq 'SHA256SUMS' <<<"$UPLOAD_BLOCK"
 ! grep -Eq 'schema\.sql|manifests\.json|export\.tar\.gz' <<<"$UPLOAD_BLOCK"
-UPLOAD_PATHS="$(sed -n '/path: |/,+4p' "$ROOT/.github/workflows/production-schema-export.yml" | grep -E 'novaai-production-schema\\.tar\\.gz\\.age|SHA256SUMS' || true)"
-[[ "$(printf '%s\\n' "$UPLOAD_PATHS" | sed '/^$/d' | wc -l)" -eq 2 ]]
-! grep -Eiq '\\.(sql|json|tar|gz)$' <<<"$UPLOAD_PATHS"
+UPLOAD_PATHS="$(sed -n '/path: |/,+4p' "$ROOT/.github/workflows/production-schema-export.yml" | grep -E 'novaai-production-schema\.tar\.gz\.age|SHA256SUMS' || true)"
+[[ "$(printf '%s\n' "$UPLOAD_PATHS" | sed '/^$/d' | wc -l)" -eq 2 ]]
+! grep -Eiq '\.(sql|json|tar|gz)$' <<<"$UPLOAD_PATHS"
 echo "Isolated schema-export tests passed."
