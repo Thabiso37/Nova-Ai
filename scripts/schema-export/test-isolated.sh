@@ -122,7 +122,7 @@ fi
 echo "RESULT: schema-only dump contains definitions and no fixture row data."
 
 # Run the manifest as the same restricted login, including storage.buckets.
-printf '\\o %s\\n' "$TMP/login-manifests.json" > "$TMP/login-manifests.sql"
+printf '\\o %s\n' "$TMP/login-manifests.json" > "$TMP/login-manifests.sql"
 cat "$ROOT/scripts/schema-export/export-manifests.sql" >> "$TMP/login-manifests.sql"
 PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -f "$TMP/login-manifests.sql"
 jq -e '.storage_buckets | any(.id == "synthetic" and .name == "Synthetic bucket")' "$TMP/login-manifests.json" >/dev/null
@@ -147,6 +147,7 @@ echo "SECURITY FINDING: safe_export passes current preflight but PUBLIC EXECUTE 
 # Synthetic pg_net-style SECURITY DEFINER queue routine; no global PUBLIC revocation.
 psql -X -v ON_ERROR_STOP=1 <<'NETSQL'
 CREATE SCHEMA net;
+GRANT USAGE ON SCHEMA net TO PUBLIC;
 CREATE TABLE net.request_queue(id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY, payload text NOT NULL);
 CREATE FUNCTION net.http_post(text) RETURNS bigint
 LANGUAGE sql SECURITY DEFINER
