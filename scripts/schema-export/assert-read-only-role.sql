@@ -103,6 +103,78 @@ BEGIN
     bad := array_append(bad, 'function ownership or EXECUTE on user-defined routines');
   END IF;
 
+  -- PUBLIC is an implicit grantee (OID 0). Check both its explicit ACL entry and
+  -- PostgreSQL's effective privilege result; do not rely on role defaults.
+  -- Large-object routines are special: they mutate large objects or server files
+  -- without granting table INSERT/UPDATE/DELETE. Match schema + identity arguments
+  -- and verify the actual PUBLIC EXECUTE path, not just routine names.
+  IF EXISTS (
+    WITH dangerous_large_object_routines(schema_name, routine_name, identity_args) AS (
+      VALUES
+        ('pg_catalog','lo_create','loid oid'),
+        ('pg_catalog','lo_from_bytea','loid oid, data bytea'),
+        ('pg_catalog','lo_put','loid oid, offset bigint, data bytea'),
+        ('pg_catalog','lo_unlink','loid oid'),
+        ('pg_catalog','lo_import','filename text'),
+        ('pg_catalog','lo_import','filename text, lobj oid'),
+        ('pg_catalog','lo_export','loid oid, filename text'),
+        ('pg_catalog','lo_open','loid oid, mode integer'),
+        ('pg_catalog','lowrite','fd integer, data bytea')
+    )
+    SELECT 1
+    FROM dangerous_large_object_routines d
+    JOIN pg_namespace n ON n.nspname=d.schema_name
+    JOIN pg_proc p ON p.pronamespace=n.oid
+      AND p.proname=d.routine_name
+      AND pg_get_function_identity_arguments(p.oid)=d.identity_args
+    WHERE has_function_privilege(current_user,p.oid,'EXECUTE')
+      AND EXISTS (
+        SELECT 1
+        FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) acl
+        WHERE acl.grantee=0 AND acl.privilege_type='EXECUTE'
+      )
+  ) THEN
+    bad := array_append(bad, 'PUBLIC EXECUTE on write-capable pg_catalog large-object routines');
+  END IF;
+
+  -- A SECURITY DEFINER routine executes with its owner's privileges. Reject any
+  -- effective PUBLIC-executable SECURITY DEFINER routine, including extension
+  -- schemas such as net; the user-defined routine check above remains in force.
+  IF EXISTS (
+    SELECT 1
+    FROM pg_proc p
+    WHERE p.prosecdef
+      AND has_function_privilege(current_user,p.oid,'EXECUTE')
+      AND EXISTS (
+        SELECT 1
+        FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) acl
+        WHERE acl.grantee=0 AND acl.privilege_type='EXECUTE'
+      )
+  ) THEN
+    bad := array_append(bad, 'PUBLIC EXECUTE on SECURITY DEFINER routines');
+  END IF;
+
+  -- Extension-owned VOLATILE routines can perform database or external side
+  -- effects. PostgreSQL has no catalogue flag proving a function body harmless,
+  -- so fail closed for PUBLIC-executable extension routines in this category.
+  -- Stable/immutable extension helpers remain usable when otherwise permitted.
+  IF EXISTS (
+    SELECT 1
+    FROM pg_proc p
+    JOIN pg_depend dep ON dep.classid='pg_proc'::regclass
+      AND dep.objid=p.oid AND dep.refclassid='pg_extension'::regclass
+      AND dep.deptype='e'
+    WHERE p.provolatile='v'
+      AND has_function_privilege(current_user,p.oid,'EXECUTE')
+      AND EXISTS (
+        SELECT 1
+        FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) acl
+        WHERE acl.grantee=0 AND acl.privilege_type='EXECUTE'
+      )
+  ) THEN
+    bad := array_append(bad, 'PUBLIC EXECUTE on VOLATILE extension routines');
+  END IF;
+
   IF EXISTS (
     SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace
     WHERE n.nspname NOT IN ('pg_catalog','information_schema') AND n.nspname !~ '^pg_' AND t.typowner=role_oid
