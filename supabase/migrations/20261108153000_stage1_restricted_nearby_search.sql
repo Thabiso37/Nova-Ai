@@ -11,6 +11,44 @@ BEGIN
 END
 $role$;
 
+-- Remove any pre-existing membership edges in either direction.
+-- The executor must neither inherit another role nor be assumable by another role.
+DO $memberships$
+DECLARE
+  v_executor_oid oid;
+  v_edge record;
+BEGIN
+  SELECT oid INTO v_executor_oid
+  FROM pg_catalog.pg_roles
+  WHERE rolname = 'novaai_nearby_search_executor';
+
+  FOR v_edge IN
+    SELECT
+      granted.rolname AS granted_role,
+      member_role.rolname AS member_role,
+      m.roleid,
+      m.member
+    FROM pg_catalog.pg_auth_members AS m
+    JOIN pg_catalog.pg_roles AS granted ON granted.oid = m.roleid
+    JOIN pg_catalog.pg_roles AS member_role ON member_role.oid = m.member
+    WHERE m.member = v_executor_oid OR m.roleid = v_executor_oid
+  LOOP
+    IF v_edge.member = v_executor_oid THEN
+      EXECUTE format('REVOKE %I FROM %I', v_edge.granted_role, 'novaai_nearby_search_executor');
+    ELSE
+      EXECUTE format('REVOKE %I FROM %I', 'novaai_nearby_search_executor', v_edge.member_role);
+    END IF;
+  END LOOP;
+
+  IF EXISTS (
+    SELECT 1 FROM pg_catalog.pg_auth_members
+    WHERE member = v_executor_oid OR roleid = v_executor_oid
+  ) THEN
+    RAISE EXCEPTION 'Executor role membership isolation failed';
+  END IF;
+END
+$memberships$;
+
 ALTER ROLE novaai_nearby_search_executor
   WITH NOLOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
 ALTER ROLE novaai_nearby_search_executor SET row_security = on;
