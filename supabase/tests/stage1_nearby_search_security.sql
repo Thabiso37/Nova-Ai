@@ -27,6 +27,7 @@ BEGIN
 
   IF NOT has_column_privilege('novaai_nearby_search_executor', 'public."Products"', 'seller_id', 'SELECT')
      OR NOT has_column_privilege('novaai_nearby_search_executor', 'public."Products"', 'status', 'SELECT')
+     OR NOT has_column_privilege('novaai_nearby_search_executor', 'public."Products"', 'description', 'SELECT')
      OR NOT has_column_privilege('novaai_nearby_search_executor', 'public.seller_public_locations', 'latitude', 'SELECT')
      OR NOT has_column_privilege('novaai_nearby_search_executor', 'public.seller_public_locations', 'approval_status', 'SELECT')
      OR NOT has_column_privilege('novaai_nearby_search_executor', 'public.seller_stores', 'store_name', 'SELECT') THEN
@@ -105,6 +106,30 @@ BEGIN
   v_definition := pg_get_functiondef(v_search_oid) || pg_get_functiondef(v_area_oid);
   IF position('public.products' IN v_definition) > 0 THEN
     RAISE EXCEPTION 'FAIL: an RPC references the legacy lowercase products table';
+  END IF;
+
+  IF EXISTS (
+      SELECT 1 FROM pg_class
+      WHERE oid IN (
+        'public."Products"'::regclass,
+        'public.seller_public_locations'::regclass,
+        'public.seller_stores'::regclass,
+        'public.seller_marketplace_permissions'::regclass
+      )
+      AND relowner = (SELECT oid FROM pg_roles WHERE rolname='novaai_nearby_search_executor')
+    ) THEN
+    RAISE EXCEPTION 'FAIL: restricted executor owns a protected source table';
+  END IF;
+
+  IF NOT (
+      SELECT proconfig @> ARRAY['search_path=pg_catalog, public, private', 'row_security=on']
+      FROM pg_proc WHERE oid=v_search_oid
+    )
+    OR NOT (
+      SELECT proconfig @> ARRAY['search_path=pg_catalog, public, private', 'row_security=on']
+      FROM pg_proc WHERE oid=v_area_oid
+    ) THEN
+    RAISE EXCEPTION 'FAIL: RPC search_path or row_security settings are missing';
   END IF;
 
   IF NOT has_schema_privilege('novaai_nearby_search_executor', 'public', 'USAGE')
