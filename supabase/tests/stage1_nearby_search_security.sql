@@ -58,6 +58,15 @@ BEGIN
     RAISE EXCEPTION 'FAIL: store SELECT allowlist mismatch. expected %, actual %',v_expected,v_actual;
   END IF;
 
+  SELECT array_agg(a.attname ORDER BY a.attname) INTO v_actual
+  FROM pg_catalog.pg_attribute a
+  WHERE a.attrelid='public.seller_marketplace_permissions'::regclass
+    AND a.attnum>0 AND NOT a.attisdropped
+    AND has_column_privilege(v_executor,a.attrelid,a.attname,'SELECT');
+  IF v_actual IS NOT NULL THEN
+    RAISE EXCEPTION 'FAIL: executor has unexpected permission-table column grants: %',v_actual;
+  END IF;
+
   IF has_table_privilege(v_executor,'public.seller_marketplace_permissions','SELECT')
      OR has_column_privilege(v_executor,'public.seller_marketplace_permissions','user_id','SELECT')
      OR has_column_privilege(v_executor,'public.seller_stores','phone','SELECT')
