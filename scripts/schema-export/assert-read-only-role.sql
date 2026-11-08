@@ -119,7 +119,9 @@ BEGIN
         ('pg_catalog','lo_import','text, oid'),
         ('pg_catalog','lo_export','oid, text'),
         ('pg_catalog','lo_open','oid, integer'),
-        ('pg_catalog','lowrite','integer, bytea')
+        ('pg_catalog','lowrite','integer, bytea'),
+        ('pg_catalog','lo_truncate','integer, integer'),
+        ('pg_catalog','lo_truncate64','integer, bigint')
     )
     SELECT 1
     FROM dangerous_large_object_routines d
