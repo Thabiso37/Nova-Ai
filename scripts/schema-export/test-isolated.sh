@@ -32,7 +32,9 @@ REVOKE EXECUTE ON FUNCTION
   pg_catalog.lo_import(text,oid),
   pg_catalog.lo_export(oid,text),
   pg_catalog.lo_open(oid,integer),
-  pg_catalog.lowrite(integer,bytea)
+  pg_catalog.lowrite(integer,bytea),
+  pg_catalog.lo_truncate(integer,integer),
+  pg_catalog.lo_truncate64(integer,bigint)
 FROM PUBLIC;
 GRANT TEMPORARY ON DATABASE postgres TO temp_writer;
 CREATE SCHEMA private;
@@ -199,7 +201,9 @@ WHERE p.oid IN (
   'pg_catalog.lo_import(text,oid)'::regprocedure,
   'pg_catalog.lo_export(oid,text)'::regprocedure,
   'pg_catalog.lo_open(oid,integer)'::regprocedure,
-  'pg_catalog.lowrite(integer,bytea)'::regprocedure
+  'pg_catalog.lowrite(integer,bytea)'::regprocedure,
+  'pg_catalog.lo_truncate(integer,integer)'::regprocedure,
+  'pg_catalog.lo_truncate64(integer,bigint)'::regprocedure
 );
 DO $write_capability_test$
 DECLARE created_oid oid; fd integer;
@@ -208,6 +212,7 @@ BEGIN
   PERFORM pg_catalog.lo_put(created_oid, 0, decode('4e4f56414149','hex'));
   fd := pg_catalog.lo_open(created_oid, 131072); -- INV_WRITE
   PERFORM pg_catalog.lowrite(fd, decode('2d54455354','hex'));
+  PERFORM pg_catalog.lo_truncate64(fd, 2);
   PERFORM pg_catalog.lo_close(fd);
   PERFORM pg_catalog.lo_unlink(created_oid);
   created_oid := pg_catalog.lo_from_bytea(0, decode('4e4f56414149','hex'));
