@@ -59,7 +59,7 @@ if bash "$ROOT/scripts/schema-export/validate-export.sh" "$TMP/valid" >/dev/null
 mv "$TMP/valid/schema.original" "$TMP/valid/schema.sql"
 
 age-keygen -o "$TMP/identity.txt" 2>"$TMP/age-keygen.log"
-RECIPIENT="$(grep '^# public key:' "$TMP/age-keygen.log" | awk '{print $4}')"
+RECIPIENT="$(grep '^# public key:' "$TMP/identity.txt" | awk '{print $4}')"
 [[ "$RECIPIENT" == age1* ]]
 printf 'synthetic-schema-fixture\n' > "$TMP/plain.txt"
 sha256sum "$TMP/plain.txt" > "$TMP/plain.SHA256"
