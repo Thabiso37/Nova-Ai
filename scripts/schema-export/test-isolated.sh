@@ -57,7 +57,9 @@ GRANT CREATE ON SCHEMA public TO schema_writer;
 SQL
 
 if psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT has_table_privilege('safe_export', 'public.no_select_manifest_fixture', 'SELECT')" | grep -qx t; then echo "ERROR: fixture unexpectedly grants SELECT to safe_export" >&2; exit 1; fi
-psql -X -v ON_ERROR_STOP=1 -c "SET ROLE safe_export" -f "$ROOT/scripts/schema-export/export-manifests.sql" -o "$TMP/manifests.json"
+printf 'SET ROLE safe_export;\n\\o %s\n' "$TMP/manifests.json" > "$TMP/export-manifests-as-role.sql"
+cat "$ROOT/scripts/schema-export/export-manifests.sql" >> "$TMP/export-manifests-as-role.sql"
+psql -X -v ON_ERROR_STOP=1 -f "$TMP/export-manifests-as-role.sql"
 jq -e '[.tables_and_columns[] | select(.schema == "public" and .table == "no_select_manifest_fixture") | .column] | sort == ["created_at","id","label"]' "$TMP/manifests.json" >/dev/null || { echo "ERROR: catalog manifest omitted columns from a table without SELECT" >&2; exit 1; }
 jq -e '[.tables_and_columns[] | select(.schema == "public" and (.table == "products" or .table == "Products")) | .table] | unique == ["Products","products"]' "$TMP/manifests.json" >/dev/null
 jq -e '.product_case_check.lower_exists and .product_case_check.upper_exists and .product_case_check.distinct' "$TMP/manifests.json" >/dev/null
