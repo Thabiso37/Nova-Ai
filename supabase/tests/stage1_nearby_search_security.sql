@@ -281,7 +281,9 @@ UPDATE public.seller_marketplace_permissions SET marketplace='property' WHERE us
 );
 SET LOCAL ROLE service_role;
 DO $property$
-DECLARE v_count integer;
+DECLARE
+  v_count integer;
+  v_ids bigint[];
 BEGIN
   SELECT count(*) INTO v_count FROM public.get_property_seller_area(910001);
   IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: eligible consented property area should return one row'; END IF;
