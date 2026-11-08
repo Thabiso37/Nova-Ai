@@ -59,8 +59,16 @@ BEGIN
   END IF;
 
   IF has_table_privilege(v_executor,'public.seller_marketplace_permissions','SELECT')
+     OR has_column_privilege(v_executor,'public.seller_marketplace_permissions','user_id','SELECT')
      OR has_column_privilege(v_executor,'public.seller_stores','phone','SELECT')
      OR has_column_privilege(v_executor,'public.seller_public_locations','user_id','UPDATE')
+     OR has_table_privilege(v_executor,'public."Products"','INSERT')
+     OR has_table_privilege(v_executor,'public."Products"','UPDATE')
+     OR has_table_privilege(v_executor,'public."Products"','DELETE')
+     OR has_table_privilege(v_executor,'public.seller_public_locations','INSERT')
+     OR has_table_privilege(v_executor,'public.seller_public_locations','UPDATE')
+     OR has_table_privilege(v_executor,'public.seller_stores','INSERT')
+     OR has_table_privilege(v_executor,'public.seller_stores','UPDATE')
      OR has_schema_privilege(v_executor,'public','CREATE') THEN
     RAISE EXCEPTION 'FAIL: executor has an explicitly prohibited privilege';
   END IF;
@@ -164,11 +172,11 @@ SET LOCAL ROLE novaai_nearby_search_executor;
 DO $rls$
 DECLARE v_count integer;
 BEGIN
-  SELECT count(*) INTO v_count FROM public."Products";
+  SELECT count(id) INTO v_count FROM public."Products";
   IF v_count <> 2 THEN RAISE EXCEPTION 'FAIL: Products RLS expected 2 approved+eligible rows before location join, got %',v_count; END IF;
-  SELECT count(*) INTO v_count FROM public.seller_public_locations;
+  SELECT count(user_id) INTO v_count FROM public.seller_public_locations;
   IF v_count <> 2 THEN RAISE EXCEPTION 'FAIL: location RLS expected 2 opted-in locations with approved stores, got %',v_count; END IF;
-  SELECT count(*) INTO v_count FROM public.seller_stores;
+  SELECT count(user_id) INTO v_count FROM public.seller_stores;
   IF v_count <> 3 THEN RAISE EXCEPTION 'FAIL: store RLS expected 3 approved stores, got %',v_count; END IF;
   IF has_table_privilege(current_user,'public.seller_marketplace_permissions','SELECT')
      OR has_column_privilege(current_user,'public.seller_stores','phone','SELECT') THEN
