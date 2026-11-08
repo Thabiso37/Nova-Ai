@@ -2,6 +2,7 @@ name: NOVAAI Stage 1 PostgreSQL 17.11 security tests
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened]
     branches: [main]
     paths:
       - 'supabase/migrations/20261108153000_stage1_restricted_nearby_search.sql'
