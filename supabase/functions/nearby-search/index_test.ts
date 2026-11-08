@@ -3,6 +3,7 @@ import { handleNearbySearch } from "./index.ts";
 const ENV = {
   SUPABASE_URL: "https://test-project.supabase.co",
   SUPABASE_SERVICE_ROLE_KEY: "server-only-service-role-secret",
+  SUPABASE_PUBLISHABLE_KEYS: JSON.stringify({ default: "sb_publishable_test_key" }),
 };
 const ORIGIN = "https://thabiso37.github.io";
 const BASE_BODY = {
@@ -131,6 +132,13 @@ Deno.test("requires the public project API key header and only accepts POST", as
     headers: { "origin": ORIGIN, "apikey": "sb_publishable_test_key" },
   }), ENV);
   assert(get.status === 405, "GET was not rejected");
+});
+
+Deno.test("rejects an unrecognized public API key", async () => {
+  const response = await handleNearbySearch(request(BASE_BODY, { apikey: "sb_publishable_wrong_key" }), ENV, async () => {
+    throw new Error("RPC should not run with an invalid public API key");
+  });
+  assert(response.status === 401, "invalid public API key was not rejected");
 });
 
 Deno.test("does not return database error details to the browser", async () => {

@@ -85,7 +85,7 @@ async function search(){
  var searchButton=el("novaNearbySearch");if(searchButton)searchButton.textContent="Searching…";
  try{
   var locality=[city,suburb].filter(Boolean).join(" ");var payload={p_marketplace:market,p_lat:point?point.lat:null,p_lon:point?point.lon:null,p_radius_km:radius,p_search_text:q||null,p_city:locality||null,p_suburb:null,p_province:province||null,p_limit:50};
-  var response=await fetch(SEARCH_ENDPOINT,{method:"POST",headers:{"apikey":KEY,"Authorization":"Bearer "+KEY,"Content-Type":"application/json"},body:JSON.stringify(payload),cache:"no-store",credentials:"omit"});
+  var response=await fetch(SEARCH_ENDPOINT,{method:"POST",headers:{"apikey":KEY,"Content-Type":"application/json"},body:JSON.stringify(payload),cache:"no-store",credentials:"omit"});
   if(!response.ok){var failure=null;try{failure=await response.json()}catch(_e){}throw new Error(failure&&failure.error?failure.error:"Nearby Search is temporarily unavailable (HTTP "+response.status+").")}
   var result=await response.json(),rows=result&&result.listings;if(!Array.isArray(rows))throw new Error("The Nearby Search service returned an invalid response.");
   if(runId!==searchRunId)return;

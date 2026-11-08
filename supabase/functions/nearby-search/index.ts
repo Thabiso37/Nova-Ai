@@ -4,6 +4,8 @@ const ALLOWED_DISTANCE_BANDS = new Set(["0-5 km", "5-15 km", "15-30 km", "30+ km
 type SearchEnvironment = {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
+  SUPABASE_PUBLISHABLE_KEYS?: string;
+  SUPABASE_ANON_KEY?: string;
 };
 
 type RpcRow = Record<string, unknown>;
@@ -88,7 +90,19 @@ export async function handleNearbySearch(
   }
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers });
   if (req.method !== "POST") return jsonResponse(405, { error: "Use POST for Nearby Search." }, headers);
-  if (!req.headers.get("apikey")) return jsonResponse(401, { error: "A valid project API key is required." }, headers);
+  const suppliedApiKey = req.headers.get("apikey") ?? "";
+  let expectedApiKey = env.SUPABASE_ANON_KEY ?? "";
+  if (env.SUPABASE_PUBLISHABLE_KEYS) {
+    try {
+      const publishableKeys = JSON.parse(env.SUPABASE_PUBLISHABLE_KEYS) as Record<string, unknown>;
+      if (typeof publishableKeys.default === "string") expectedApiKey = publishableKeys.default;
+    } catch {
+      return jsonResponse(503, { error: "Nearby Search is temporarily unavailable." }, headers);
+    }
+  }
+  if (!expectedApiKey || !suppliedApiKey || suppliedApiKey !== expectedApiKey) {
+    return jsonResponse(401, { error: "A valid NOVAAI public API key is required." }, headers);
+  }
 
   if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
     return jsonResponse(503, { error: "Nearby Search is temporarily unavailable." }, headers);
@@ -187,5 +201,7 @@ if (import.meta.main) {
   Deno.serve((req: Request) => handleNearbySearch(req, {
     SUPABASE_URL: Deno.env.get("SUPABASE_URL") ?? "",
     SUPABASE_SERVICE_ROLE_KEY: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    SUPABASE_PUBLISHABLE_KEYS: Deno.env.get("SUPABASE_PUBLISHABLE_KEYS") ?? "",
+    SUPABASE_ANON_KEY: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
   }));
 }
