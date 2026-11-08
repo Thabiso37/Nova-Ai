@@ -163,7 +163,9 @@ GRANT EXECUTE ON FUNCTION
   pg_catalog.lo_import(text,oid),
   pg_catalog.lo_export(oid,text),
   pg_catalog.lo_open(oid,integer),
-  pg_catalog.lowrite(integer,bytea)
+  pg_catalog.lowrite(integer,bytea),
+  pg_catalog.lo_truncate(integer,integer),
+  pg_catalog.lo_truncate64(integer,bigint)
 TO PUBLIC;
 LOGRANTS
 if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -f "$ROOT/scripts/schema-export/assert-read-only-role.sql" >"$TMP/lo-preflight.log" 2>&1; then
