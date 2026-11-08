@@ -43,7 +43,7 @@ jobs:
         env:
           PG_CONTAINER: ${{ job.services.postgres.id }}
         run: |
-          docker exec "$PG_CONTAINER" psql -U postgres -d novaai_stage1_test -v ON_ERROR_STOP=1 -c "DO \\$\\$ BEGIN IF current_setting('server_version_num')::int / 10000 <> 17 THEN RAISE EXCEPTION 'Expected PostgreSQL 17'; END IF; END \\$\\$;"
+          docker exec "$PG_CONTAINER" psql -U postgres -d novaai_stage1_test -v ON_ERROR_STOP=1 -c "DO \$\$ BEGIN IF current_setting('server_version_num')::int / 10000 <> 17 THEN RAISE EXCEPTION 'Expected PostgreSQL 17'; END IF; END \$\$;"
       - name: Create isolated Supabase-interface fixtures
         env:
           PG_CONTAINER: ${{ job.services.postgres.id }}
