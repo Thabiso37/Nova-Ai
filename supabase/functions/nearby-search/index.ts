@@ -30,7 +30,7 @@ function jsonResponse(status: number, body: Record<string, unknown>, headers: He
 function cleanText(value: unknown, maxLength: number): string | null {
   if (value == null) return null;
   if (typeof value !== "string") return null;
-  const clean = value.replace(/[\\u0000-\\u001F\\u007F]/g, " ").replace(/\\s+/g, " ").trim();
+  const clean = value.replace(/[\u0000-\u001F\u007F]/g, " ").replace(/\s+/g, " ").trim();
   if (clean.length > maxLength) throw new Error("A search filter is too long.");
   return clean || null;
 }

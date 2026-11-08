@@ -79,15 +79,15 @@ Deno.test("Edge Function sends the restricted RPC request with the server-only s
 });
 
 Deno.test("manual locality search forwards null device coordinates and locality filters", async () => {
-  let sent: Record<string, unknown> | null = null;
+  const sent: Record<string, unknown>[] = [];
   const body = { ...BASE_BODY, p_lat: null, p_lon: null, p_city: "Cape Town", p_suburb: null, p_province: "Western Cape" };
   const response = await handleNearbySearch(request(body), ENV, async (_input, init) => {
-    sent = JSON.parse(String(init?.body));
+    sent.push(JSON.parse(String(init?.body)));
     return new Response("[]", { status: 200 });
   });
   assert(response.status === 200, "manual search failed");
-  assert(sent?.p_lat === null && sent?.p_lon === null, "manual search unexpectedly included device coordinates");
-  assert(sent?.p_city === "Cape Town" && sent?.p_province === "Western Cape", "locality filters were not preserved");
+  assert(sent[0].p_lat === null && sent[0].p_lon === null, "manual search unexpectedly included device coordinates");
+  assert(sent[0].p_city === "Cape Town" && sent[0].p_province === "Western Cape", "locality filters were not preserved");
 });
 
 Deno.test("rejects incomplete or invalid coordinates before contacting the database", async () => {
