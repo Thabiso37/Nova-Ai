@@ -50,6 +50,11 @@ jobs:
           [[ "$SUPABASE_DB_URL" == postgres://* || "$SUPABASE_DB_URL" == postgresql://* ]]
           [[ -n "${AGE_RECIPIENT:-}" ]]
           [[ "$AGE_RECIPIENT" =~ ^age1[023456789acdefghjklmnpqrstuvwxyz]{58}$ ]]
+      - name: Prove connected role is read-only
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f scripts/schema-export/assert-read-only-role.sql
       - name: Export, validate, encrypt, and erase plaintext
         id: pack
         shell: bash
