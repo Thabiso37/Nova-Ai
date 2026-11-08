@@ -34,3 +34,8 @@ test("all existing marketplace pages load the updated Nearby Search script", () 
     assert.match(html, /nearby-search\.js\?v=20261108-server-search-1/);
   }
 });
+
+test("public Nearby Search endpoint is configured for explicit publishable-key validation", () => {
+  const config = readFileSync(new URL("../supabase/config.toml", import.meta.url), "utf8");
+  assert.match(config, /\\[functions\\.nearby-search\\]\\s*verify_jwt\\s*=\\s*false/);
+});
