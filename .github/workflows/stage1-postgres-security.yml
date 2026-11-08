@@ -1,0 +1,55 @@
+name: NOVAAI Stage 1 PostgreSQL 17.11 security tests
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/20261108153000_stage1_restricted_nearby_search.sql'
+      - 'supabase/tests/**'
+      - '.github/workflows/stage1-postgres-security.yml'
+  push:
+    branches: ['security/stage1-restricted-nearby-rpcs']
+    paths:
+      - 'supabase/migrations/20261108153000_stage1_restricted_nearby_search.sql'
+      - 'supabase/tests/**'
+      - '.github/workflows/stage1-postgres-security.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-17-security:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.11
+        env:
+          POSTGRES_DB: novaai_stage1_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d novaai_stage1_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: novaai_stage1_test
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Confirm PostgreSQL server version
+        run: |
+          psql -v ON_ERROR_STOP=1 -c "DO \$\$ BEGIN IF current_setting('server_version_num')::int / 10000 <> 17 THEN RAISE EXCEPTION 'Expected PostgreSQL 17'; END IF; END \$\$;"
+      - name: Create isolated Supabase-interface fixtures
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/stage1_nearby_search_test_bootstrap.sql
+      - name: Apply proposed Stage 1 migration to isolated database
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261108153000_stage1_restricted_nearby_search.sql
+      - name: Run security regression tests
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/stage1_nearby_search_security.sql
