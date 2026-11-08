@@ -36,17 +36,23 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
-    env:
-      PG_CONTAINER: ${{ job.services.postgres.id }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
       - name: Confirm PostgreSQL server version
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
         run: |
-          docker exec "$PG_CONTAINER" psql -U postgres -d novaai_stage1_test -v ON_ERROR_STOP=1 -c "DO \$\$ BEGIN IF current_setting('server_version_num')::int / 10000 <> 17 THEN RAISE EXCEPTION 'Expected PostgreSQL 17'; END IF; END \$\$;"
+          docker exec "$PG_CONTAINER" psql -U postgres -d novaai_stage1_test -v ON_ERROR_STOP=1 -c "DO \\$\\$ BEGIN IF current_setting('server_version_num')::int / 10000 <> 17 THEN RAISE EXCEPTION 'Expected PostgreSQL 17'; END IF; END \\$\\$;"
       - name: Create isolated Supabase-interface fixtures
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
         run: cat supabase/tests/stage1_nearby_search_test_bootstrap.sql | docker exec -i "$PG_CONTAINER" psql -U postgres -d novaai_stage1_test -v ON_ERROR_STOP=1
       - name: Apply proposed Stage 1 migration to isolated database
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
         run: cat supabase/migrations/20261108153000_stage1_restricted_nearby_search.sql | docker exec -i "$PG_CONTAINER" psql -U postgres -d novaai_stage1_test -v ON_ERROR_STOP=1
       - name: Run security regression tests
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
         run: cat supabase/tests/stage1_nearby_search_security.sql | docker exec -i "$PG_CONTAINER" psql -U postgres -d novaai_stage1_test -v ON_ERROR_STOP=1
