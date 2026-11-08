@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-export PGHOST="\${PGHOST:-postgres}" PGPORT="\${PGPORT:-5432}" PGUSER="\${PGUSER:-postgres}" PGPASSWORD="\${PGPASSWORD:-postgres}" PGDATABASE="\${PGDATABASE:-postgres}"
-ROOT="$(cd "$(dirname "\${BASH_SOURCE[0]}")/../.." && pwd)"
+export PGHOST="${PGHOST:-postgres}" PGPORT="${PGPORT:-5432}" PGUSER="${PGUSER:-postgres}" PGPASSWORD="${PGPASSWORD:-postgres}" PGDATABASE="${PGDATABASE:-postgres}"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TMP="$(mktemp -d)"
 cleanup(){ rm -rf "$TMP"; }
 trap cleanup EXIT
@@ -22,7 +22,8 @@ CREATE SEQUENCE public.synthetic_seq;
 CREATE FUNCTION public.safe_constant() RETURNS integer LANGUAGE sql IMMUTABLE AS 'SELECT 7';
 REVOKE ALL ON FUNCTION public.safe_constant() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.safe_constant() TO safe_export;
-CREATE FUNCTION public.unsafe_change() RETURNS void LANGUAGE plpgsql VOLATILE AS $$ BEGIN INSERT INTO public.products(name) VALUES ('forbidden'); END $$;
+CREATE FUNCTION public.unsafe_change() RETURNS void LANGUAGE plpgsql VOLATILE AS $ BEGIN INSERT INTO public.products(name) VALUES ('forbidden'); END $;
+REVOKE ALL ON FUNCTION public.unsafe_change() FROM PUBLIC;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 CREATE POLICY products_read ON public.products FOR SELECT TO safe_export USING (true);
 INSERT INTO storage.buckets(id,name) VALUES ('synthetic','Synthetic bucket');
@@ -66,7 +67,7 @@ age -r "$RECIPIENT" -o "$TMP/plain.txt.age" "$TMP/plain.txt"
 age -d -i "$TMP/identity.txt" -o "$TMP/decrypted.txt" "$TMP/plain.txt.age"
 cmp "$TMP/plain.txt" "$TMP/decrypted.txt"
 (cd "$TMP" && sha256sum -c plain.SHA256)
-if env -u SUPABASE_DB_URL bash -c 'set -u; : "\${SUPABASE_DB_URL:?missing database credential}"' >/dev/null 2>&1; then exit 1; fi
+if env -u SUPABASE_DB_URL bash -c 'set -u; : "${SUPABASE_DB_URL:?missing database credential}"' >/dev/null 2>&1; then exit 1; fi
 if age -r 'not-an-age-recipient' -o "$TMP/invalid.age" "$TMP/plain.txt" >/dev/null 2>&1; then exit 1; fi
 FAILDIR="$TMP/failure-workspace"
 mkdir -m 700 "$FAILDIR/plain"
