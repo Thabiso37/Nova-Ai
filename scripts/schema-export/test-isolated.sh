@@ -27,6 +27,7 @@ CREATE TABLE storage.objects(id uuid PRIMARY KEY, bucket_id text, name text);
 CREATE SEQUENCE public.synthetic_seq;
 CREATE FUNCTION public.safe_constant() RETURNS integer LANGUAGE sql IMMUTABLE AS 'SELECT 7';
 REVOKE ALL ON FUNCTION public.safe_constant() FROM PUBLIC;
+CREATE FUNCTION public.public_callable() RETURNS integer LANGUAGE sql IMMUTABLE AS 'SELECT 9';
 CREATE FUNCTION public.unsafe_change() RETURNS void LANGUAGE plpgsql VOLATILE AS $function$ BEGIN INSERT INTO public.products(name) VALUES ('forbidden'); END $function$;
 REVOKE ALL ON FUNCTION public.unsafe_change() FROM PUBLIC;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
@@ -61,6 +62,10 @@ jq -e '.table_grants | any(.grantee == "anon" and .table == "products" and .priv
 jq -e '.column_grants | any(.grantee == "column_writer" and .table == "products" and .column == "name" and .privilege == "UPDATE")' "$TMP/manifests.json" >/dev/null
 jq -e '.sequence_grants | any(.grantee == "sequence_writer" and .privilege == "UPDATE")' "$TMP/manifests.json" >/dev/null
 jq -e '.function_grants | any(.grantee == "function_writer" and .function == "unsafe_change")' "$TMP/manifests.json" >/dev/null
+jq -e '.function_grants | any(.grantee == "PUBLIC" and .function == "public_callable" and .privilege == "EXECUTE")' "$TMP/manifests.json" >/dev/null
+jq -e '(.database_grants|type)=="array" and (.large_object_grants|type)=="array" and (.tablespace_grants|type)=="array" and (.parameter_grants|type)=="array"' "$TMP/manifests.json" >/dev/null
+jq -e '.role_attributes | any(.role == "anon") and any(.role == "authenticated")' "$TMP/manifests.json" >/dev/null
+psql -X -v ON_ERROR_STOP=1 -c 'REVOKE ALL ON FUNCTION public.public_callable() FROM PUBLIC' >/dev/null
 jq -e '.sequences | any(.name == "synthetic_seq")' "$TMP/manifests.json" >/dev/null
 jq -e '.functions | any(.name == "safe_constant") and any(.name == "unsafe_change")' "$TMP/manifests.json" >/dev/null
 jq -e '.role_memberships | any(.member == "member_export" and .role == "inherited_writer")' "$TMP/manifests.json" >/dev/null
