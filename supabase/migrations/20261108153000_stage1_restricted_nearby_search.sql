@@ -182,10 +182,6 @@ BEGIN
      AND ss.status = 'approved'
     WHERE p.status = 'approved'
       AND private.product_marketplace_access_allowed(p.seller_id, p.category)
-      AND CASE
-        WHEN p.category = ANY (ARRAY['Auto', 'Motors & Vehicles']::text[]) THEN 'motors'
-        WHEN p.category = ANY (ARRAY['Property For Sale', 'Property To Rent']::text[]) THEN 'property'
-        ELSE 'retail'
       AND (p_marketplace = 'all' OR CASE
         WHEN p.category = ANY (ARRAY['Auto', 'Motors & Vehicles']::text[]) THEN 'motors'
         WHEN p.category = ANY (ARRAY['Property For Sale', 'Property To Rent']::text[]) THEN 'property'
