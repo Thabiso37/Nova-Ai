@@ -186,7 +186,11 @@ BEGIN
         WHEN p.category = ANY (ARRAY['Auto', 'Motors & Vehicles']::text[]) THEN 'motors'
         WHEN p.category = ANY (ARRAY['Property For Sale', 'Property To Rent']::text[]) THEN 'property'
         ELSE 'retail'
-      END = p_marketplace OR p_marketplace = 'all'
+      AND (p_marketplace = 'all' OR CASE
+        WHEN p.category = ANY (ARRAY['Auto', 'Motors & Vehicles']::text[]) THEN 'motors'
+        WHEN p.category = ANY (ARRAY['Property For Sale', 'Property To Rent']::text[]) THEN 'property'
+        ELSE 'retail'
+      END = p_marketplace)
       AND l.public_location_enabled IS TRUE
       AND l.approval_status = 'approved'
       AND (nullif(btrim(p_search_text), '') IS NULL
