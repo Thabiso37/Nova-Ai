@@ -165,11 +165,11 @@ DO $rls$
 DECLARE v_count integer;
 BEGIN
   SELECT count(*) INTO v_count FROM public."Products";
-  IF v_count <> 1 THEN RAISE EXCEPTION 'FAIL: Products RLS expected 1 eligible row, got %',v_count; END IF;
+  IF v_count <> 2 THEN RAISE EXCEPTION 'FAIL: Products RLS expected 2 approved+eligible rows before location join, got %',v_count; END IF;
   SELECT count(*) INTO v_count FROM public.seller_public_locations;
-  IF v_count <> 1 THEN RAISE EXCEPTION 'FAIL: location RLS expected 1 consented approved row, got %',v_count; END IF;
+  IF v_count <> 2 THEN RAISE EXCEPTION 'FAIL: location RLS expected 2 opted-in locations with approved stores, got %',v_count; END IF;
   SELECT count(*) INTO v_count FROM public.seller_stores;
-  IF v_count <> 1 THEN RAISE EXCEPTION 'FAIL: store RLS expected 1 approved row, got %',v_count; END IF;
+  IF v_count <> 3 THEN RAISE EXCEPTION 'FAIL: store RLS expected 3 approved stores, got %',v_count; END IF;
   IF has_table_privilege(current_user,'public.seller_marketplace_permissions','SELECT')
      OR has_column_privilege(current_user,'public.seller_stores','phone','SELECT') THEN
     RAISE EXCEPTION 'FAIL: restricted executor can access phone or marketplace permission table';
@@ -199,7 +199,10 @@ $rpc$;
 RESET ROLE;
 
 -- Property area positive/negative cases use Property category and same approved consent boundary.
-UPDATE public."Products" SET category='Property For Sale' WHERE id=910001;
+UPDATE public."Products" SET category='Property For Sale' WHERE id IN (910001,910003,910004,910005);
+UPDATE public.seller_marketplace_permissions SET marketplace='property' WHERE user_id IN (
+ '00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000004'
+);
 SET LOCAL ROLE service_role;
 DO $property$
 DECLARE v_count integer;
