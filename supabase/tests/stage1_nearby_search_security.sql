@@ -215,6 +215,41 @@ END;
 $rpc$;
 RESET ROLE;
 
+-- Explicit negative invocation tests: both untrusted API roles must receive permission denied.
+SET LOCAL ROLE anon;
+DO $anon_denied$
+BEGIN
+  BEGIN
+    PERFORM 1 FROM public.search_nearby_listings('retail',NULL,NULL,50,NULL,NULL,NULL,NULL,1);
+    RAISE EXCEPTION 'FAIL: anon unexpectedly executed search_nearby_listings';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM 1 FROM public.get_property_seller_area(910001);
+    RAISE EXCEPTION 'FAIL: anon unexpectedly executed get_property_seller_area';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$anon_denied$;
+RESET ROLE;
+
+SET LOCAL ROLE authenticated;
+DO $authenticated_denied$
+BEGIN
+  BEGIN
+    PERFORM 1 FROM public.search_nearby_listings('retail',NULL,NULL,50,NULL,NULL,NULL,NULL,1);
+    RAISE EXCEPTION 'FAIL: authenticated unexpectedly executed search_nearby_listings';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    PERFORM 1 FROM public.get_property_seller_area(910001);
+    RAISE EXCEPTION 'FAIL: authenticated unexpectedly executed get_property_seller_area';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$authenticated_denied$;
+RESET ROLE;
+
 -- Property area positive/negative cases use Property category and same approved consent boundary.
 UPDATE public."Products" SET category='Property For Sale' WHERE id IN (910001,910003,910004,910005);
 UPDATE public.seller_marketplace_permissions SET marketplace='property' WHERE user_id IN (
