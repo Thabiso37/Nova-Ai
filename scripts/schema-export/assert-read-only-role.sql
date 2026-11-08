@@ -38,7 +38,8 @@ BEGIN
 
   IF EXISTS (
     SELECT 1 FROM pg_namespace n
-    WHERE n.nspname IN ('public','private','storage')
+    WHERE n.nspname NOT IN ('pg_catalog','information_schema')
+      AND n.nspname !~ '^pg_'
       AND (n.nspowner = role_oid OR has_schema_privilege(current_user,n.oid,'CREATE'))
   ) THEN
     bad := array_append(bad, 'schema ownership or CREATE privilege');
@@ -46,7 +47,8 @@ BEGIN
 
   IF EXISTS (
     SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
-    WHERE n.nspname IN ('public','private','storage')
+    WHERE n.nspname NOT IN ('pg_catalog','information_schema')
+      AND n.nspname !~ '^pg_'
       AND c.relkind IN ('r','p','v','m','f')
       AND (
         c.relowner = role_oid
@@ -68,7 +70,8 @@ BEGIN
     FROM pg_class c
     JOIN pg_namespace n ON n.oid=c.relnamespace
     JOIN pg_attribute a ON a.attrelid=c.oid AND a.attnum > 0 AND NOT a.attisdropped
-    WHERE n.nspname IN ('public','private','storage')
+    WHERE n.nspname NOT IN ('pg_catalog','information_schema')
+      AND n.nspname !~ '^pg_'
       AND c.relkind IN ('r','p','v','m','f')
       AND (
         has_column_privilege(current_user,c.oid,a.attnum,'INSERT')
@@ -81,7 +84,7 @@ BEGIN
 
   IF EXISTS (
     SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
-    WHERE n.nspname IN ('public','private','storage') AND c.relkind='S'
+    WHERE n.nspname NOT IN ('pg_catalog','information_schema') AND n.nspname !~ '^pg_' AND c.relkind='S'
       AND (c.relowner=role_oid
         OR has_sequence_privilege(current_user,c.oid,'USAGE')
         OR has_sequence_privilege(current_user,c.oid,'UPDATE'))
@@ -93,7 +96,8 @@ BEGIN
   -- arbitrary routine bodies and SECURITY DEFINER code cannot be proven harmless here.
   IF EXISTS (
     SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
-    WHERE n.nspname IN ('public','private','storage')
+    WHERE n.nspname NOT IN ('pg_catalog','information_schema')
+      AND n.nspname !~ '^pg_'
       AND (p.proowner=role_oid OR has_function_privilege(current_user,p.oid,'EXECUTE'))
   ) THEN
     bad := array_append(bad, 'function ownership or EXECUTE on user-defined routines');
@@ -101,17 +105,34 @@ BEGIN
 
   IF EXISTS (
     SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace
-    WHERE n.nspname IN ('public','private','storage') AND t.typowner=role_oid
+    WHERE n.nspname NOT IN ('pg_catalog','information_schema') AND n.nspname !~ '^pg_' AND t.typowner=role_oid
   ) THEN
     bad := array_append(bad, 'type ownership in exported schemas');
   END IF;
 
   -- Large-object ACL UPDATE is a write path independent of table ACLs.
   IF EXISTS (
-    SELECT 1 FROM pg_largeobject_metadata lom
-    WHERE has_largeobject_privilege(current_user,lom.oid,'UPDATE')
+    SELECT 1
+    FROM pg_largeobject_metadata lom
+    CROSS JOIN LATERAL aclexplode(coalesce(lom.lomacl,acldefault('L',lom.lomowner))) x
+    WHERE (lom.lomowner=role_oid OR x.grantee IN (role_oid,0))
+      AND x.privilege_type='UPDATE'
   ) THEN
-    bad := array_append(bad, 'effective large-object UPDATE privilege');
+    bad := array_append(bad, 'large-object ownership or effective UPDATE privilege');
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM pg_parameter_acl pa
+    WHERE has_parameter_privilege(current_user,pa.parname,'ALTER SYSTEM')
+  ) THEN
+    bad := array_append(bad, 'ALTER SYSTEM parameter privilege');
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM pg_tablespace t
+    WHERE has_tablespace_privilege(current_user,t.oid,'CREATE')
+  ) THEN
+    bad := array_append(bad, 'tablespace CREATE privilege');
   END IF;
 
   IF cardinality(bad)>0 THEN
