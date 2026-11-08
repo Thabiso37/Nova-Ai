@@ -24,7 +24,6 @@ CREATE TABLE storage.objects(id uuid PRIMARY KEY, bucket_id text, name text);
 CREATE SEQUENCE public.synthetic_seq;
 CREATE FUNCTION public.safe_constant() RETURNS integer LANGUAGE sql IMMUTABLE AS 'SELECT 7';
 REVOKE ALL ON FUNCTION public.safe_constant() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.safe_constant() TO safe_export;
 CREATE FUNCTION public.unsafe_change() RETURNS void LANGUAGE plpgsql VOLATILE AS $function$ BEGIN INSERT INTO public.products(name) VALUES ('forbidden'); END $function$;
 REVOKE ALL ON FUNCTION public.unsafe_change() FROM PUBLIC;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
