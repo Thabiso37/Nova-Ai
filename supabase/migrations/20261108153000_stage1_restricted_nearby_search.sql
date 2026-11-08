@@ -62,6 +62,37 @@ REVOKE ALL PRIVILEGES ON TABLE public.seller_public_locations FROM novaai_nearby
 REVOKE ALL PRIVILEGES ON TABLE public.seller_stores FROM novaai_nearby_search_executor;
 REVOKE ALL PRIVILEGES ON TABLE public.seller_marketplace_permissions FROM novaai_nearby_search_executor;
 
+-- Table-level REVOKE does not necessarily clear prior column-level grants.
+-- Remove every column privilege on these four relations before applying the allowlist.
+DO $column_revoke$
+DECLARE
+  v_table regclass;
+  v_column record;
+  v_privilege text;
+BEGIN
+  FOREACH v_table IN ARRAY ARRAY[
+    'public."Products"'::regclass,
+    'public.seller_public_locations'::regclass,
+    'public.seller_stores'::regclass,
+    'public.seller_marketplace_permissions'::regclass
+  ]
+  LOOP
+    FOR v_column IN
+      SELECT attname FROM pg_catalog.pg_attribute
+      WHERE attrelid=v_table AND attnum>0 AND NOT attisdropped
+    LOOP
+      FOREACH v_privilege IN ARRAY ARRAY['SELECT','INSERT','UPDATE','REFERENCES']
+      LOOP
+        EXECUTE format(
+          'REVOKE %s (%I) ON TABLE %s FROM novaai_nearby_search_executor',
+          v_privilege, v_column.attname, v_table
+        );
+      END LOOP;
+    END LOOP;
+  END LOOP;
+END
+$column_revoke$;
+
 GRANT SELECT (
   id, created_at, name, description, price, category, image_url, images, seller_id, status
 ) ON TABLE public."Products" TO novaai_nearby_search_executor;
