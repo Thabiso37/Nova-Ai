@@ -163,10 +163,13 @@ BEGIN
   IF EXISTS (
     SELECT 1
     FROM pg_proc p
+    JOIN pg_namespace n ON n.oid=p.pronamespace
     JOIN pg_depend dep ON dep.classid='pg_proc'::regclass
       AND dep.objid=p.oid AND dep.refclassid='pg_extension'::regclass
       AND dep.deptype='e'
-    WHERE p.provolatile='v'
+    WHERE n.nspname NOT IN ('pg_catalog','information_schema')
+      AND n.nspname !~ '^pg_'
+      AND p.provolatile='v'
       AND has_function_privilege(current_user,p.oid,'EXECUTE')
       AND EXISTS (
         SELECT 1
