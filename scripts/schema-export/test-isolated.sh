@@ -15,6 +15,7 @@ CREATE ROLE member_export LOGIN;
 CREATE ROLE direct_writer LOGIN;
 CREATE ROLE sequence_writer LOGIN;
 CREATE ROLE function_writer LOGIN;
+CREATE ROLE function_owner LOGIN;
 CREATE ROLE schema_writer LOGIN;
 CREATE ROLE column_writer LOGIN;
 CREATE ROLE temp_writer LOGIN;
@@ -49,6 +50,9 @@ CREATE TABLE storage.buckets(id text PRIMARY KEY, name text NOT NULL, public boo
 CREATE TABLE storage.objects(id uuid PRIMARY KEY, bucket_id text, name text);
 CREATE SEQUENCE public.synthetic_seq;
 CREATE FUNCTION public.safe_constant() RETURNS integer LANGUAGE sql IMMUTABLE AS 'SELECT 7';
+CREATE FUNCTION public.owner_only() RETURNS integer LANGUAGE sql IMMUTABLE AS 'SELECT 1';
+REVOKE ALL ON FUNCTION public.owner_only() FROM PUBLIC;
+ALTER FUNCTION public.owner_only() OWNER TO function_owner;
 REVOKE ALL ON FUNCTION public.safe_constant() FROM PUBLIC;
 CREATE FUNCTION public.public_callable() RETURNS integer LANGUAGE sql IMMUTABLE AS 'SELECT 9';
 CREATE FUNCTION public.unsafe_change() RETURNS void LANGUAGE plpgsql VOLATILE AS $function$ BEGIN INSERT INTO public.products(name) VALUES ('forbidden'); END $function$;
@@ -110,7 +114,7 @@ PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1
 PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -f "$ROOT/scripts/schema-export/assert-read-only-role.sql" >/dev/null
 if psql -X -v ON_ERROR_STOP=1 -c 'SET ROLE direct_writer' -f "$ROOT/scripts/schema-export/assert-read-only-role.sql" >/dev/null 2>&1; then echo "ERROR: direct writer passed" >&2; exit 1; fi
 if psql -X -v ON_ERROR_STOP=1 -c 'SET ROLE member_export' -f "$ROOT/scripts/schema-export/assert-read-only-role.sql" >/dev/null 2>&1; then echo "ERROR: inherited writer passed" >&2; exit 1; fi
-for bad_role in sequence_writer function_writer schema_writer column_writer temp_writer; do
+for bad_role in sequence_writer function_writer function_owner schema_writer column_writer temp_writer; do
   if psql -X -v ON_ERROR_STOP=1 -c "SET ROLE $bad_role" -f "$ROOT/scripts/schema-export/assert-read-only-role.sql" >/dev/null 2>&1; then echo "ERROR: $bad_role passed read-only preflight" >&2; exit 1; fi
 done
 
