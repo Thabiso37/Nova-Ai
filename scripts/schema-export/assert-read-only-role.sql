@@ -27,6 +27,11 @@ BEGIN
     bad := array_append(bad, 'direct or inherited role memberships');
   END IF;
 
+  IF has_database_privilege(current_user,current_database(),'CREATE')
+     OR has_database_privilege(current_user,current_database(),'TEMP') THEN
+    bad := array_append(bad, 'database CREATE or TEMP privilege');
+  END IF;
+
   IF EXISTS (
     SELECT 1 FROM pg_namespace n
     WHERE n.nspname IN ('public','private','storage')
@@ -61,15 +66,15 @@ BEGIN
     bad := array_append(bad, 'effective sequence usage/update privileges');
   END IF;
 
-  -- Function execution is rejected unless the function is catalog-marked
-  -- IMMUTABLE and is not SECURITY DEFINER. Unknown/unsafe functions fail closed.
+  -- No user-defined function execution is accepted. Volatility metadata is
+  -- self-declared and cannot prove that arbitrary function code has no side effects.
   IF EXISTS (
     SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
     WHERE n.nspname IN ('public','private','storage')
       AND has_function_privilege(current_user,p.oid,'EXECUTE')
-      AND (p.provolatile <> 'i' OR p.prosecdef)
+      AND true
   ) THEN
-    bad := array_append(bad, 'EXECUTE on non-immutable or SECURITY DEFINER functions');
+    bad := array_append(bad, 'EXECUTE on user-defined functions');
   END IF;
 
   IF cardinality(bad) > 0 THEN
