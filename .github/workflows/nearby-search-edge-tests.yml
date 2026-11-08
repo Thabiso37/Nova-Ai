@@ -1,0 +1,42 @@
+name: NOVAAI Nearby Search Edge and browser regression tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - 'nearby-search.js'
+      - 'index.html'
+      - 'retail.html'
+      - 'seller-motors-houses.html'
+      - 'supabase/functions/nearby-search/**'
+      - 'tests/nearby-search-frontend.test.mjs'
+      - '.github/workflows/nearby-search-edge-tests.yml'
+  push:
+    branches: ['security/stage1-restricted-nearby-rpcs']
+    paths:
+      - 'nearby-search.js'
+      - 'index.html'
+      - 'retail.html'
+      - 'seller-motors-houses.html'
+      - 'supabase/functions/nearby-search/**'
+      - 'tests/nearby-search-frontend.test.mjs'
+      - '.github/workflows/nearby-search-edge-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  nearby-search-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Test Edge Function request validation and safe response allowlist
+        run: deno test supabase/functions/nearby-search/index_test.ts
+      - name: Test browser integration and contact routing
+        run: node --test tests/nearby-search-frontend.test.mjs
