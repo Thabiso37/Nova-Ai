@@ -53,7 +53,7 @@ jobs:
           set -Eeuo pipefail
           umask 077
           W="$(mktemp -d "$RUNNER_TEMP/novaai-schema.XXXXXXXX")"
-          trap 'find "$W" -type f -exec shred -u -- {} + 2>/dev/null || true; rm -rf -- "$W"' EXIT INT TERM
+          trap 'find "$W/plain" -type f -exec shred -u -- {} + 2>/dev/null || true; rm -rf -- "$W/plain"' EXIT INT TERM
           mkdir -m 700 "$W/plain" "$W/out"
           supabase db dump --db-url "$SUPABASE_DB_URL" --schema public,private --file "$W/plain/schema.sql"
           psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f scripts/schema-export/export-manifests.sql -o "$W/plain/manifests.json"
