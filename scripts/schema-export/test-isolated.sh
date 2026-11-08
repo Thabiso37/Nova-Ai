@@ -3,12 +3,13 @@ set -Eeuo pipefail
 export PGHOST="${PGHOST:-postgres}" PGPORT="${PGPORT:-5432}" PGUSER="${PGUSER:-postgres}" PGPASSWORD="${PGPASSWORD:-postgres}" PGDATABASE="${PGDATABASE:-postgres}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TMP="$(mktemp -d)"
-TEST_EXPORT_PASSWORD="synthetic_export_password_17"
+TEST_EXPORT_PASSWORD="$(od -An -N24 -tx1 /dev/urandom | tr -d ' \n')"
 cleanup(){ rm -rf "$TMP"; }
 trap cleanup EXIT
 
 psql -X -v ON_ERROR_STOP=1 -v export_password="$TEST_EXPORT_PASSWORD" <<'SQL'
 CREATE ROLE safe_export LOGIN PASSWORD :'export_password';
+ALTER ROLE safe_export SET default_transaction_read_only = on;
 CREATE ROLE inherited_writer NOLOGIN;
 CREATE ROLE member_export LOGIN;
 CREATE ROLE direct_writer LOGIN;
@@ -43,6 +44,7 @@ ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 CREATE POLICY storage_objects_read ON storage.objects FOR SELECT TO safe_export USING (true);
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO safe_export;
 INSERT INTO storage.buckets(id,name) VALUES ('synthetic','Synthetic bucket');
+INSERT INTO public.products(name) VALUES ('SYNTHETIC_DATA_MUST_NOT_EXPORT');
 GRANT USAGE ON SCHEMA public,private,storage TO safe_export;
 GRANT SELECT ON public.products,public."Products",private.internal_config,storage.buckets TO safe_export;
 -- safe_export deliberately has no SELECT on no_select_manifest_fixture or storage.objects.
@@ -86,6 +88,10 @@ jq -e '.table_grants | any(.grantee == "direct_writer" and .privilege == "INSERT
 PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT current_user" | grep -qx safe_export
 PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT rolsuper=false AND rolbypassrls=false AND rolcreaterole=false AND rolcreatedb=false AND rolreplication=false AND rolcanlogin FROM pg_roles WHERE rolname=current_user" | grep -qx t
 PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT count(*)=0 FROM pg_auth_members WHERE member=(SELECT oid FROM pg_roles WHERE rolname=current_user) OR roleid=(SELECT oid FROM pg_roles WHERE rolname=current_user)" | grep -qx t
+PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT count(*)=0 FROM pg_class c JOIN pg_roles r ON r.oid=c.relowner WHERE r.rolname=current_user" | grep -qx t
+PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -Atqc "SHOW default_transaction_read_only" | grep -qx on
+PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -c "SET default_transaction_read_only = off" >/dev/null
+PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -Atqc "SHOW default_transaction_read_only" | grep -qx on
 PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT NOT has_table_privilege(current_user,'public.no_select_manifest_fixture','SELECT') AND NOT has_table_privilege(current_user,'storage.objects','SELECT') AND has_table_privilege(current_user,'storage.buckets','SELECT')" | grep -qx t
 PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -f "$ROOT/scripts/schema-export/assert-read-only-role.sql" >/dev/null
 if psql -X -v ON_ERROR_STOP=1 -c 'SET ROLE direct_writer' -f "$ROOT/scripts/schema-export/assert-read-only-role.sql" >/dev/null 2>&1; then echo "ERROR: direct writer passed" >&2; exit 1; fi
@@ -118,7 +124,9 @@ if grep -Eiq '^[[:space:]]*(COPY[[:space:]]|INSERT[[:space:]]+INTO[[:space:]])' 
   echo "ERROR: schema-only pg_dump emitted application table data." >&2
   exit 1
 fi
-! grep -Fq 'Synthetic bucket' "$TMP/schema.sql"
+! grep -Fq 'SYNTHETIC_DATA_MUST_NOT_EXPORT' "$TMP/schema.sql"
+grep -Fq 'CREATE TABLE public.products' "$TMP/schema.sql"
+grep -Fq 'CREATE TABLE public."Products"' "$TMP/schema.sql"
 echo "RESULT: schema-only dump contains definitions and no fixture row data."
 
 # Run the manifest as the same restricted login, including storage.buckets.
@@ -130,7 +138,7 @@ jq -e '.tables_and_columns | any(.schema == "storage" and .table == "objects" an
 jq -e '.policies | any(.name == "no_select_fixture_read")' "$TMP/login-manifests.json" >/dev/null
 
 # PUBLIC grants on pg_catalog large-object functions bypass table ACL checks.
-LO_PRIVS="$(PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT bool_and(has_function_privilege(current_user, p, 'EXECUTE')) FROM unnest(ARRAY['pg_catalog.lo_create(oid)'::regprocedure,'pg_catalog.lo_put(oid,bigint,bytea)'::regprocedure,'pg_catalog.lo_unlink(oid)'::regprocedure]) p")"
+LO_PRIVS="$(PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT bool_and(has_function_privilege(current_user, p, 'EXECUTE')) FROM unnest(ARRAY['pg_catalog.lo_create(oid)'::regprocedure,'pg_catalog.lo_from_bytea(oid,bytea)'::regprocedure,'pg_catalog.lo_put(oid,bigint,bytea)'::regprocedure,'pg_catalog.lo_unlink(oid)'::regprocedure]) p")"
 [[ "$LO_PRIVS" == "t" ]] || { echo "ERROR: expected PUBLIC large-object EXECUTE path was not reproduced." >&2; exit 1; }
 PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 <<'LOSQL'
 DO $lo_test$
@@ -138,6 +146,8 @@ DECLARE created_oid oid;
 BEGIN
   created_oid := pg_catalog.lo_create(0);
   PERFORM pg_catalog.lo_put(created_oid, 0, decode('4e4f56414149','hex'));
+  PERFORM pg_catalog.lo_unlink(created_oid);
+  created_oid := pg_catalog.lo_from_bytea(0, decode('4e4f56414149','hex'));
   PERFORM pg_catalog.lo_unlink(created_oid);
 END
 $lo_test$;
