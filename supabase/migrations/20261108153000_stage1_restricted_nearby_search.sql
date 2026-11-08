@@ -146,9 +146,24 @@ BEGIN
       p.name,
       p.price,
       p.category,
-      p.image_url,
       CASE
-        WHEN jsonb_typeof(p.images) = 'array' THEN p.images
+        WHEN p.image_url ~* '^https?://' THEN p.image_url
+        ELSE NULL
+      END AS safe_image_url,
+      CASE
+        WHEN jsonb_typeof(p.images) = 'array' THEN (
+          SELECT coalesce(jsonb_agg(normalized.image_value), '[]'::jsonb)
+          FROM (
+            SELECT CASE
+              WHEN jsonb_typeof(entry.value) = 'string' THEN entry.value
+              WHEN jsonb_typeof(entry.value) = 'object' THEN entry.value -> 'url'
+              ELSE NULL
+            END AS image_value
+            FROM jsonb_array_elements(p.images) AS entry(value)
+          ) AS normalized
+          WHERE jsonb_typeof(normalized.image_value) = 'string'
+            AND normalized.image_value #>> '{}' ~* '^https?://'
+        )
         ELSE '[]'::jsonb
       END AS listing_images,
       ss.store_name,
@@ -203,7 +218,7 @@ BEGIN
     c.name,
     c.price,
     c.category,
-    c.image_url,
+    c.safe_image_url,
     c.listing_images,
     c.store_name,
     c.suburb,
