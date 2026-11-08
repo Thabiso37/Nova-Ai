@@ -7,8 +7,8 @@ MANIFEST="$DIR/manifests.json"
 fail(){ echo "VALIDATION ERROR: $*" >&2; exit 1; }
 [[ -s "$SCHEMA" && -s "$MANIFEST" ]] || fail 'schema.sql/manifests.json missing or empty'
 command -v jq >/dev/null || fail 'jq is required'
-jq -e '.manifest_version == 1' "$MANIFEST" >/dev/null || fail 'manifest version invalid'
-for key in schemas tables_and_columns constraints indexes rls policies schema_grants sequence_grants function_grants role_attributes role_memberships table_grants column_grants default_privileges extensions functions triggers sequences storage_buckets storage_object_policies; do
+jq -e '.manifest_version == 2' "$MANIFEST" >/dev/null || fail 'manifest version invalid'
+for key in database_grants large_object_grants tablespace_grants parameter_grants schemas tables_and_columns constraints indexes rls policies schema_grants sequence_grants function_grants role_attributes role_memberships table_grants column_grants default_privileges extensions functions triggers sequences storage_buckets storage_object_policies; do
   jq -e --arg k "$key" '.[$k] | type == "array"' "$MANIFEST" >/dev/null || fail "manifest section missing: $key"
 done
 jq -e '.tables_and_columns | length > 0' "$MANIFEST" >/dev/null || fail 'no columns in manifest'
