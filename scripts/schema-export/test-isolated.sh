@@ -150,19 +150,32 @@ NETSQL
 # Use ONE real safe_export login session for the default-setting override and all writes.
 # ALTER ROLE ... SET is a connection default, not an enforced security boundary. SET changes
 # the session default; a subsequent statement starts a writable transaction in this fixture.
-SESSION_OUTPUT="$(PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -At <<'SESSION_SQL'
+SESSION_OUTPUT="$(PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -q -v ON_ERROR_STOP=1 -At <<'SESSION_SQL'
 SHOW default_transaction_read_only;
 SET default_transaction_read_only = off;
 SHOW default_transaction_read_only;
 SELECT current_setting('transaction_read_only') = 'off';
-SELECT bool_and(has_function_privilege(current_user, p, 'EXECUTE'))
-FROM unnest(ARRAY[
+SELECT bool_and(
+  has_function_privilege(current_user, p.oid, 'EXECUTE')
+  AND EXISTS (
+    SELECT 1
+    FROM aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) acl
+    WHERE acl.grantee = 0 AND acl.privilege_type = 'EXECUTE'
+  )
+)
+FROM pg_proc p
+WHERE p.oid IN (
   'pg_catalog.lo_create(oid)'::regprocedure,
   'pg_catalog.lo_from_bytea(oid,bytea)'::regprocedure,
   'pg_catalog.lo_put(oid,bigint,bytea)'::regprocedure,
   'pg_catalog.lo_unlink(oid)'::regprocedure
-]) p;
-SELECT has_function_privilege(current_user,'net.http_post(text)','EXECUTE');
+);
+SELECT has_function_privilege(current_user,p.oid,'EXECUTE')
+  AND EXISTS (
+    SELECT 1 FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) acl
+    WHERE acl.grantee=0 AND acl.privilege_type='EXECUTE'
+  )
+FROM pg_proc p WHERE p.oid='net.http_post(text)'::regprocedure;
 DO $write_capability_test$
 DECLARE created_oid oid;
 BEGIN
