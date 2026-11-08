@@ -109,7 +109,7 @@ BEGIN
   IF EXISTS (
     SELECT 1 FROM pg_proc WHERE oid IN (v_search_oid,v_area_oid)
       AND (proowner<>v_executor OR NOT prosecdef
-        OR NOT (proconfig @> ARRAY['search_path=pg_catalog, public, private','row_security=on']))
+        OR NOT (proconfig @> ARRAY['search_path=pg_catalog, public, private','row_security=on'])))
   THEN RAISE EXCEPTION 'FAIL: RPC owner, SECURITY DEFINER, search_path or row_security mismatch'; END IF;
 
   -- The ACL must contain only the owner implicit grant and explicit service_role grant.
