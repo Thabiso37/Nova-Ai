@@ -90,8 +90,6 @@ PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1
 PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT count(*)=0 FROM pg_auth_members WHERE member=(SELECT oid FROM pg_roles WHERE rolname=current_user) OR roleid=(SELECT oid FROM pg_roles WHERE rolname=current_user)" | grep -qx t
 PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT count(*)=0 FROM pg_class c JOIN pg_roles r ON r.oid=c.relowner WHERE r.rolname=current_user" | grep -qx t
 PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -Atqc "SHOW default_transaction_read_only" | grep -qx on
-PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -c "SET default_transaction_read_only = off" >/dev/null
-PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -Atqc "SHOW default_transaction_read_only" | grep -qx on
 PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT NOT has_table_privilege(current_user,'public.no_select_manifest_fixture','SELECT') AND NOT has_table_privilege(current_user,'storage.objects','SELECT') AND has_table_privilege(current_user,'storage.buckets','SELECT')" | grep -qx t
 PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -f "$ROOT/scripts/schema-export/assert-read-only-role.sql" >/dev/null
 if psql -X -v ON_ERROR_STOP=1 -c 'SET ROLE direct_writer' -f "$ROOT/scripts/schema-export/assert-read-only-role.sql" >/dev/null 2>&1; then echo "ERROR: direct writer passed" >&2; exit 1; fi
@@ -138,23 +136,7 @@ jq -e '.tables_and_columns | any(.schema == "storage" and .table == "objects" an
 jq -e '.policies | any(.name == "no_select_fixture_read")' "$TMP/login-manifests.json" >/dev/null
 
 # PUBLIC grants on pg_catalog large-object functions bypass table ACL checks.
-LO_PRIVS="$(PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT bool_and(has_function_privilege(current_user, p, 'EXECUTE')) FROM unnest(ARRAY['pg_catalog.lo_create(oid)'::regprocedure,'pg_catalog.lo_from_bytea(oid,bytea)'::regprocedure,'pg_catalog.lo_put(oid,bigint,bytea)'::regprocedure,'pg_catalog.lo_unlink(oid)'::regprocedure]) p")"
-[[ "$LO_PRIVS" == "t" ]] || { echo "ERROR: expected PUBLIC large-object EXECUTE path was not reproduced." >&2; exit 1; }
-PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 <<'LOSQL'
-DO $lo_test$
-DECLARE created_oid oid;
-BEGIN
-  created_oid := pg_catalog.lo_create(0);
-  PERFORM pg_catalog.lo_put(created_oid, 0, decode('4e4f56414149','hex'));
-  PERFORM pg_catalog.lo_unlink(created_oid);
-  created_oid := pg_catalog.lo_from_bytea(0, decode('4e4f56414149','hex'));
-  PERFORM pg_catalog.lo_unlink(created_oid);
-END
-$lo_test$;
-LOSQL
-echo "SECURITY FINDING: safe_export passes current preflight but PUBLIC EXECUTE on pg_catalog large-object functions permits writes."
-
-# Synthetic pg_net-style SECURITY DEFINER queue routine; no global PUBLIC revocation.
+# Build the SECURITY DEFINER fixture before connecting as the restricted login.
 psql -X -v ON_ERROR_STOP=1 <<'NETSQL'
 CREATE SCHEMA net;
 GRANT USAGE ON SCHEMA net TO PUBLIC;
@@ -164,14 +146,58 @@ LANGUAGE sql SECURITY DEFINER
 SET search_path = pg_catalog, net
 AS 'INSERT INTO net.request_queue(payload) VALUES ($1) RETURNING id';
 NETSQL
-PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT has_function_privilege(current_user,'net.http_post(text)','EXECUTE')" | grep -qx t
-if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -f "$ROOT/scripts/schema-export/assert-read-only-role.sql" >/dev/null 2>&1; then
+
+# Use ONE real safe_export login session for the default-setting override and all writes.
+# ALTER ROLE ... SET is a connection default, not an enforced security boundary. SET changes
+# the session default; a subsequent statement starts a writable transaction in this fixture.
+SESSION_OUTPUT="$(PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -At <<'SESSION_SQL'
+SHOW default_transaction_read_only;
+SET default_transaction_read_only = off;
+SHOW default_transaction_read_only;
+SELECT current_setting('transaction_read_only') = 'off';
+SELECT bool_and(has_function_privilege(current_user, p, 'EXECUTE'))
+FROM unnest(ARRAY[
+  'pg_catalog.lo_create(oid)'::regprocedure,
+  'pg_catalog.lo_from_bytea(oid,bytea)'::regprocedure,
+  'pg_catalog.lo_put(oid,bigint,bytea)'::regprocedure,
+  'pg_catalog.lo_unlink(oid)'::regprocedure
+]) p;
+SELECT has_function_privilege(current_user,'net.http_post(text)','EXECUTE');
+DO $write_capability_test$
+DECLARE created_oid oid;
+BEGIN
+  created_oid := pg_catalog.lo_create(0);
+  PERFORM pg_catalog.lo_put(created_oid, 0, decode('4e4f56414149','hex'));
+  PERFORM pg_catalog.lo_unlink(created_oid);
+  created_oid := pg_catalog.lo_from_bytea(0, decode('4e4f56414149','hex'));
+  PERFORM pg_catalog.lo_unlink(created_oid);
+  PERFORM net.http_post('synthetic request');
+END
+$write_capability_test$;
+SESSION_SQL
+)"
+printf '%s\n' "$SESSION_OUTPUT"
+mapfile -t SESSION_RESULTS <<<"$SESSION_OUTPUT"
+[[ "${SESSION_RESULTS[0]:-}" == "on" ]] || { echo "ERROR: restricted login did not start with default_transaction_read_only=on." >&2; exit 1; }
+[[ "${SESSION_RESULTS[1]:-}" == "off" ]] || { echo "ERROR: restricted login could not change default_transaction_read_only to OFF in-session." >&2; exit 1; }
+[[ "${SESSION_RESULTS[2]:-}" == "t" ]] || { echo "ERROR: next transaction did not become writable after the session override." >&2; exit 1; }
+[[ "${SESSION_RESULTS[3]:-}" == "t" ]] || { echo "ERROR: expected PUBLIC-inherited EXECUTE on pg_catalog large-object functions was not reproduced." >&2; exit 1; }
+[[ "${SESSION_RESULTS[4]:-}" == "t" ]] || { echo "ERROR: expected PUBLIC-inherited EXECUTE on synthetic SECURITY DEFINER routine was not reproduced." >&2; exit 1; }
+psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT count(*) FROM net.request_queue" | grep -qx 1
+echo "SECURITY FINDING: safe_export can override its role's read-only connection default; PUBLIC large-object routines and a PUBLIC-executable SECURITY DEFINER routine both permit writes."
+
+# Preflight must reject the synthetic user-defined SECURITY DEFINER routine by effective EXECUTE,
+# while the PUBLIC-inherited pg_catalog large-object EXECUTE remains independently observable.
+if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -f "$ROOT/scripts/schema-export/assert-read-only-role.sql" >"$TMP/queue-preflight.log" 2>&1; then
   echo "ERROR: preflight failed to reject synthetic PUBLIC-executable pg_net-style routine." >&2
   exit 1
 fi
-PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -c "SELECT net.http_post('synthetic request')" >/dev/null
-psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT count(*) FROM net.request_queue" | grep -qx 1
-echo "SECURITY FINDING: PUBLIC EXECUTE on a SECURITY DEFINER queue routine is a write path; existing preflight rejects it."
+grep -Fq 'function ownership or EXECUTE on user-defined routines' "$TMP/queue-preflight.log" || {
+  cat "$TMP/queue-preflight.log" >&2
+  echo "ERROR: preflight rejected the queue fixture for an unexpected reason." >&2
+  exit 1
+}
+echo "RESULT: preflight detects and rejects PUBLIC-inherited EXECUTE on the synthetic SECURITY DEFINER queue routine."
 
 mkdir "$TMP/valid"
 cp "$TMP/schema.sql" "$TMP/valid/schema.sql"
