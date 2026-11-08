@@ -109,24 +109,24 @@ BEGIN
   -- without granting table INSERT/UPDATE/DELETE. Match schema + identity arguments
   -- and verify the actual PUBLIC EXECUTE path, not just routine names.
   IF EXISTS (
-    WITH dangerous_large_object_routines(schema_name, routine_name, identity_args) AS (
+    WITH dangerous_large_object_routines(schema_name, routine_name, identity_arg_types) AS (
       VALUES
-        ('pg_catalog','lo_create','loid oid'),
-        ('pg_catalog','lo_from_bytea','loid oid, data bytea'),
-        ('pg_catalog','lo_put','loid oid, offset bigint, data bytea'),
-        ('pg_catalog','lo_unlink','loid oid'),
-        ('pg_catalog','lo_import','filename text'),
-        ('pg_catalog','lo_import','filename text, lobj oid'),
-        ('pg_catalog','lo_export','loid oid, filename text'),
-        ('pg_catalog','lo_open','loid oid, mode integer'),
-        ('pg_catalog','lowrite','fd integer, data bytea')
+        ('pg_catalog','lo_create','oid'),
+        ('pg_catalog','lo_from_bytea','oid, bytea'),
+        ('pg_catalog','lo_put','oid, bigint, bytea'),
+        ('pg_catalog','lo_unlink','oid'),
+        ('pg_catalog','lo_import','text'),
+        ('pg_catalog','lo_import','text, oid'),
+        ('pg_catalog','lo_export','oid, text'),
+        ('pg_catalog','lo_open','oid, integer'),
+        ('pg_catalog','lowrite','integer, bytea')
     )
     SELECT 1
     FROM dangerous_large_object_routines d
     JOIN pg_namespace n ON n.nspname=d.schema_name
     JOIN pg_proc p ON p.pronamespace=n.oid
       AND p.proname=d.routine_name
-      AND pg_get_function_identity_arguments(p.oid)=d.identity_args
+      AND oidvectortypes(p.proargtypes)=d.identity_arg_types
     WHERE has_function_privilege(current_user,p.oid,'EXECUTE')
       AND EXISTS (
         SELECT 1
