@@ -86,7 +86,7 @@ cmp "$TMP/plain.txt" "$TMP/decrypted.txt"
 if env -u SUPABASE_DB_URL bash -c 'set -u; : "${SUPABASE_DB_URL:?missing database credential}"' >/dev/null 2>&1; then exit 1; fi
 if age -r 'not-an-age-recipient' -o "$TMP/invalid.age" "$TMP/plain.txt" >/dev/null 2>&1; then exit 1; fi
 FAILDIR="$TMP/failure-workspace"
-mkdir -m 700 "$FAILDIR/plain"
+mkdir -p -m 700 "$FAILDIR/plain"
 printf 'synthetic plaintext' > "$FAILDIR/plain/plain.sql"
 ( trap 'rm -rf "$FAILDIR/plain"' EXIT; false ) || true
 [[ ! -e "$FAILDIR/plain" ]]
