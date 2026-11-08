@@ -8,6 +8,7 @@ test("Nearby Search does not query seller location/store tables or calculate sel
   assert.doesNotMatch(source, /\.from\s*\(\s*["']seller_public_locations["']/);
   assert.doesNotMatch(source, /\.from\s*\(\s*["']seller_stores["']/);
   assert.doesNotMatch(source, /seller_id|\.phone\b|function\s+km\s*\(/);
+  assert.doesNotMatch(source, /SUPABASE_SERVICE_ROLE_KEY|service_role/i);
   assert.doesNotMatch(source, /p\._distance|l\.latitude|l\.longitude/);
   assert.match(source, /functions\/v1\/nearby-search/);
 });

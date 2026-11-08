@@ -78,6 +78,18 @@ Deno.test("Edge Function sends the restricted RPC request with the server-only s
   assert(row.distance_band === "5-15 km", "distance band was not preserved");
 });
 
+Deno.test("forwards each marketplace selector without rewriting it", async () => {
+  for (const marketplace of ["all", "retail", "motors", "property"]) {
+    let sent: Record<string, unknown> | null = null;
+    const response = await handleNearbySearch(request({ ...BASE_BODY, p_marketplace: marketplace }), ENV, async (_input, init) => {
+      sent = JSON.parse(String(init?.body));
+      return new Response("[]", { status: 200 });
+    });
+    assert(response.status === 200, "marketplace request failed: " + marketplace);
+    assert(sent !== null && sent.p_marketplace === marketplace, "marketplace selector changed: " + marketplace);
+  }
+});
+
 Deno.test("manual locality search forwards null device coordinates and locality filters", async () => {
   const sent: Record<string, unknown>[] = [];
   const body = { ...BASE_BODY, p_lat: null, p_lon: null, p_city: "Cape Town", p_suburb: null, p_province: "Western Cape" };

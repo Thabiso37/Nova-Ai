@@ -155,26 +155,30 @@ INSERT INTO public.seller_stores(user_id,store_name,status,phone) VALUES
  ('00000000-0000-0000-0000-000000000001','Eligible fixture store','approved','do-not-return'),
  ('00000000-0000-0000-0000-000000000002','Unapproved store','pending','do-not-return'),
  ('00000000-0000-0000-0000-000000000003','Non-consenting store','approved','do-not-return'),
- ('00000000-0000-0000-0000-000000000004','Unapproved seller permission','approved','do-not-return');
+ ('00000000-0000-0000-0000-000000000004','Unapproved seller permission','approved','do-not-return'),
+ ('00000000-0000-0000-0000-000000000005','Eligible motors fixture store','approved','do-not-return');
 
 INSERT INTO public.seller_marketplace_permissions(user_id,marketplace,status) VALUES
  ('00000000-0000-0000-0000-000000000001','retail','approved'),
  ('00000000-0000-0000-0000-000000000002','retail','approved'),
  ('00000000-0000-0000-0000-000000000003','retail','approved'),
- ('00000000-0000-0000-0000-000000000004','retail','pending');
+ ('00000000-0000-0000-0000-000000000004','retail','pending'),
+ ('00000000-0000-0000-0000-000000000005','motors','approved');
 
 INSERT INTO public.seller_public_locations(user_id,province,city,suburb,latitude,longitude,public_location_enabled,approval_status) VALUES
  ('00000000-0000-0000-0000-000000000001','Gauteng','Pretoria','Central',-25.75,28.19,true,'approved'),
  ('00000000-0000-0000-0000-000000000002','Gauteng','Pretoria','North',-25.74,28.20,true,'approved'),
  ('00000000-0000-0000-0000-000000000003','Gauteng','Pretoria','East',-25.73,28.21,false,'approved'),
- ('00000000-0000-0000-0000-000000000004','Gauteng','Pretoria','West',-25.72,28.22,true,'approved');
+ ('00000000-0000-0000-0000-000000000004','Gauteng','Pretoria','West',-25.72,28.22,true,'approved'),
+ ('00000000-0000-0000-0000-000000000005','Gauteng','Pretoria','South',-25.76,28.18,true,'approved');
 
 INSERT INTO public."Products"(id,created_at,name,description,price,category,image_url,images,seller_id,status) VALUES
  (910001,now(),'Eligible retail fixture','fixture description',100,'Clothing','https://example.test/eligible.jpg','["https://example.test/gallery.jpg"]','00000000-0000-0000-0000-000000000001','approved'),
  (910002,now(),'Unapproved store fixture','fixture description',200,'Clothing','https://example.test/unapproved-store.jpg','[]','00000000-0000-0000-0000-000000000002','approved'),
  (910003,now(),'Non-consented location fixture','fixture description',300,'Clothing','https://example.test/non-consented.jpg','[]','00000000-0000-0000-0000-000000000003','approved'),
  (910004,now(),'Unapproved permission fixture','fixture description',400,'Clothing','https://example.test/pending-permission.jpg','[]','00000000-0000-0000-0000-000000000004','approved'),
- (910005,now(),'Unapproved listing fixture','fixture description',500,'Clothing','https://example.test/unapproved-listing.jpg','[]','00000000-0000-0000-0000-000000000001','pending');
+ (910005,now(),'Unapproved listing fixture','fixture description',500,'Clothing','https://example.test/unapproved-listing.jpg','[]','00000000-0000-0000-0000-000000000001','pending'),
+ (910006,now(),'Eligible motors fixture','fixture description',600,'Auto','https://example.test/motors.jpg','[]','00000000-0000-0000-0000-000000000005','approved');
 
 -- Direct executor-context checks prove RLS filters source rows; no direct phone or permission table access.
 SET LOCAL ROLE novaai_nearby_search_executor;
@@ -182,11 +186,11 @@ DO $rls$
 DECLARE v_count integer;
 BEGIN
   SELECT count(id) INTO v_count FROM public."Products";
-  IF v_count <> 2 THEN RAISE EXCEPTION 'FAIL: Products RLS expected 2 approved+eligible rows before location join, got %',v_count; END IF;
+  IF v_count <> 3 THEN RAISE EXCEPTION 'FAIL: Products RLS expected 3 approved+eligible Retail/Motors rows before location join, got %',v_count; END IF;
   SELECT count(user_id) INTO v_count FROM public.seller_public_locations;
-  IF v_count <> 2 THEN RAISE EXCEPTION 'FAIL: location RLS expected 2 opted-in locations with approved stores, got %',v_count; END IF;
+  IF v_count <> 3 THEN RAISE EXCEPTION 'FAIL: location RLS expected 3 opted-in locations with approved stores, got %',v_count; END IF;
   SELECT count(user_id) INTO v_count FROM public.seller_stores;
-  IF v_count <> 3 THEN RAISE EXCEPTION 'FAIL: store RLS expected 3 approved stores, got %',v_count; END IF;
+  IF v_count <> 4 THEN RAISE EXCEPTION 'FAIL: store RLS expected 4 approved stores, got %',v_count; END IF;
   IF has_table_privilege(current_user,'public.seller_marketplace_permissions','SELECT')
      OR has_column_privilege(current_user,'public.seller_stores','phone','SELECT') THEN
     RAISE EXCEPTION 'FAIL: restricted executor can access phone or marketplace permission table';
@@ -202,11 +206,31 @@ DECLARE
   v_count integer;
   v_ids bigint[];
   v_area_count integer;
+  v_distance text;
 BEGIN
-  SELECT count(*),array_agg(listing_id) INTO v_count,v_ids
+  SELECT count(*),array_agg(listing_id ORDER BY listing_id) INTO v_count,v_ids
   FROM public.search_nearby_listings('retail',NULL,NULL,50,NULL,NULL,NULL,NULL,100);
   IF v_count<>1 OR v_ids IS DISTINCT FROM ARRAY[910001::bigint] THEN
-    RAISE EXCEPTION 'FAIL: nearby RPC fixture result mismatch; count %, ids %',v_count,v_ids;
+    RAISE EXCEPTION 'FAIL: Retail Nearby Search fixture result mismatch; count %, ids %',v_count,v_ids;
+  END IF;
+
+  SELECT count(*),array_agg(listing_id ORDER BY listing_id) INTO v_count,v_ids
+  FROM public.search_nearby_listings('motors',NULL,NULL,50,NULL,NULL,NULL,NULL,100);
+  IF v_count<>1 OR v_ids IS DISTINCT FROM ARRAY[910006::bigint] THEN
+    RAISE EXCEPTION 'FAIL: Motors Nearby Search fixture result mismatch; count %, ids %',v_count,v_ids;
+  END IF;
+
+  SELECT count(*),array_agg(listing_id ORDER BY listing_id) INTO v_count,v_ids
+  FROM public.search_nearby_listings('all',NULL,NULL,50,NULL,'Pretoria',NULL,'Gauteng',100);
+  IF v_count<>2 OR v_ids IS DISTINCT FROM ARRAY[910001::bigint,910006::bigint] THEN
+    RAISE EXCEPTION 'FAIL: all-market manual locality search mismatch; count %, ids %',v_count,v_ids;
+  END IF;
+
+  SELECT distance_band INTO v_distance
+  FROM public.search_nearby_listings('retail',-25.75,28.19,5,NULL,NULL,NULL,NULL,100)
+  WHERE listing_id=910001;
+  IF v_distance IS DISTINCT FROM '0-5 km' THEN
+    RAISE EXCEPTION 'FAIL: server distance band mismatch; got %',v_distance;
   END IF;
 
   SELECT count(*) INTO v_area_count FROM public.get_property_seller_area(910001);
@@ -267,6 +291,12 @@ BEGIN
   IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: pending seller permission property area leaked'; END IF;
   SELECT count(*) INTO v_count FROM public.get_property_seller_area(910005);
   IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: unapproved listing property area leaked'; END IF;
+
+  SELECT count(*),array_agg(listing_id ORDER BY listing_id) INTO v_count,v_ids
+  FROM public.search_nearby_listings('property',NULL,NULL,50,NULL,'Pretoria',NULL,'Gauteng',100);
+  IF v_count<>1 OR v_ids IS DISTINCT FROM ARRAY[910001::bigint] THEN
+    RAISE EXCEPTION 'FAIL: Property Nearby Search fixture result mismatch; count %, ids %',v_count,v_ids;
+  END IF;
 END;
 $property$;
 RESET ROLE;
