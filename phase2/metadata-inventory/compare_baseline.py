@@ -25,11 +25,12 @@ def add_missing(report, category, baseline, inventory):
     }
 
 def main():
-    if len(sys.argv) not in (3,4):
-        raise SystemExit("usage: compare_baseline.py inventory.json baseline.sql [unsupported.json]")
+    if len(sys.argv) not in (3,4,5):
+        raise SystemExit("usage: compare_baseline.py inventory.json baseline.sql [unsupported.json] [baseline-extensions.sql]")
     inv = json.loads(Path(sys.argv[1]).read_text())
     sql = Path(sys.argv[2]).read_text(errors="replace")
-    unsupported = json.loads(Path(sys.argv[3]).read_text()) if len(sys.argv)==4 else None
+    unsupported = json.loads(Path(sys.argv[3]).read_text()) if len(sys.argv)>=4 else None
+    extension_sql = Path(sys.argv[4]).read_text(errors="replace") if len(sys.argv)==5 else ""
     sections = inv.get("sections",{})
     report = {}
 
@@ -99,6 +100,12 @@ def main():
     }
     inventory_routines = {f'{x["schema"]}.{x["name"]}' for x in sections.get("routines",[])}
     add_missing(report,"functions_and_procedures",baseline_routines,inventory_routines)
+
+    baseline_extensions = {
+        clean(x) for x in re.findall(r'CREATE EXTENSION(?: IF NOT EXISTS)?\\s+"?([A-Za-z_][A-Za-z0-9_]*)"?',extension_sql,re.I)
+    }
+    inventory_extensions = {x["name"] for x in sections.get("extensions",[])}
+    add_missing(report,"extensions",baseline_extensions,inventory_extensions)
 
     baseline_types = {
         clean(x) for x in re.findall(rf'CREATE TYPE\s+({QUALIFIED})\s+AS',sql,re.I)
