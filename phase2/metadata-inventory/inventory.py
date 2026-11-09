@@ -89,7 +89,7 @@ def main():
                      ) AS public_select
               FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
               WHERE n.nspname NOT IN ('pg_catalog','information_schema')
-                AND n.nspname NOT LIKE 'pg_toast%'
+                AND n.nspname NOT LIKE 'pg_toast%%'
                 AND c.relkind IN ('r','p','v','m','f','S')
               ORDER BY 1,2
             """)
