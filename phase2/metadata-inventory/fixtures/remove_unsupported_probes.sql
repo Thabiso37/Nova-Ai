@@ -1,4 +1,15 @@
 -- Remove all disposable unsupported-object probes before clean inventory.
+
+-- Remove synthetic labels without selecting or emitting label values.
+SET allow_system_table_mods = on;
+DELETE FROM pg_catalog.pg_seclabel
+ WHERE provider='phase2_probe' AND classoid='pg_class'::regclass
+   AND objoid='novaai_app.orders'::regclass;
+DELETE FROM pg_catalog.pg_shseclabel
+ WHERE provider='phase2_probe' AND classoid='pg_database'::regclass
+   AND objoid=(SELECT oid FROM pg_catalog.pg_database WHERE datname=current_database());
+RESET allow_system_table_mods;
+
 SELECT lo_unlink(424242) WHERE EXISTS (SELECT 1 FROM pg_largeobject_metadata WHERE oid=424242);
 DROP SUBSCRIPTION IF EXISTS phase2_probe_subscription;
 DROP PUBLICATION IF EXISTS phase2_probe_publication;

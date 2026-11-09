@@ -45,4 +45,16 @@ CREATE PUBLICATION phase2_probe_publication FOR TABLE novaai_app.orders;
 CREATE SUBSCRIPTION phase2_probe_subscription
  CONNECTION 'host=127.0.0.1 port=1 dbname=synthetic user=synthetic'
  PUBLICATION phase2_probe_publication WITH (connect=false,enabled=false,create_slot=false,slot_name=NONE);
+
+-- Synthetic labels exercise both object and shared-object label catalogues.
+SET allow_system_table_mods = on;
+INSERT INTO pg_catalog.pg_seclabel (objoid,classoid,objsubid,provider,label)
+SELECT c.oid,'pg_class'::regclass,0,'phase2_probe','synthetic-label'
+FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
+WHERE n.nspname='novaai_app' AND c.relname='orders';
+INSERT INTO pg_catalog.pg_shseclabel (objoid,classoid,provider,label)
+SELECT oid,'pg_database'::regclass,'phase2_probe','synthetic-shared-label'
+FROM pg_catalog.pg_database WHERE datname=current_database();
+RESET allow_system_table_mods;
+
 SELECT lo_create(424242);

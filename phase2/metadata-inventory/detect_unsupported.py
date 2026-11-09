@@ -105,7 +105,7 @@ registered_access_methods = {
 unsupported = []
 visibility_failures = []
 visibility_checks = []
-positive_probe_families = {"rule","extended_statistics","unsupported_type_family","conversion","user_defined_language","text_search_parser","text_search_template","foreign_table","foreign_data_wrapper","foreign_server","user_mapping","publication","subscription","operator","operator_class","operator_family","aggregate","event_trigger","collation","text_search_configuration","text_search_dictionary","custom_cast","large_object_metadata"}
+positive_probe_families = {"rule","extended_statistics","unsupported_type_family","conversion","security_label","shared_security_label","user_defined_language","text_search_parser","text_search_template","foreign_table","foreign_data_wrapper","foreign_server","user_mapping","publication","subscription","operator","operator_class","operator_family","aggregate","event_trigger","collation","text_search_configuration","text_search_dictionary","custom_cast","large_object_metadata"}
 unverified_probe_families = sorted({q[0] for q in queries} - positive_probe_families)
 catalogue_relations = {
  "aggregate":"pg_proc","rule":"pg_rewrite","operator":"pg_operator","operator_class":"pg_opclass",
