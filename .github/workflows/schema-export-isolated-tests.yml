@@ -11,7 +11,7 @@ permissions:
 jobs:
   postgres-17-isolated:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     container:
       image: postgres:17.11-bookworm
     services:
@@ -45,6 +45,34 @@ jobs:
           pg_dump --version | grep -F '17.11'
           psql --version | grep -F '17.11'
           age --version | grep -F '1.1.1'
-      - name: Run synthetic database, privilege, validator and encryption tests
+      - name: Run existing writable-primary synthetic suite
         shell: bash
         run: bash scripts/schema-export/test-isolated.sh
+
+  postgres-17-hot-standby:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    container:
+      image: postgres:17.11-bookworm
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install exact production toolchain
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22.16.0
+      - name: Install isolated test utilities and pinned Supabase CLI
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          apt-get update
+          apt-get install -y --no-install-recommends age=1.1.1-1+b3 jq
+          npm install --global supabase@2.122.1
+          pg_dump --version | grep -F '17.11'
+          psql --version | grep -F '17.11'
+          supabase --version | grep -F '2.122.1'
+      - name: Build and verify genuine hot standby, security boundary and exports
+        shell: bash
+        run: bash scripts/schema-export/test-hot-standby.sh
