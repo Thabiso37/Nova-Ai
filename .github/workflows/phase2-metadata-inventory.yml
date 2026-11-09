@@ -33,7 +33,6 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
-    env:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -52,7 +51,7 @@ jobs:
         run: python -m unittest discover -s phase2/metadata-inventory/tests -v
       - name: Run restricted inventory
         env:
-          INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector "
+          INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector"
         run: python phase2/metadata-inventory/inventory.py --output inventory.json
       - name: Discover unsupported object families as restricted inspector
         env:
