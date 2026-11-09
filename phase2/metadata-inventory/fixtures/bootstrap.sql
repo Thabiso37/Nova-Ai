@@ -85,11 +85,25 @@ VALUES ('0000000000','CANARY_SELLER_8b1d4e62');
 
 RESET ROLE;
 
--- Remove default PUBLIC routine execution and all application data privileges.
 REVOKE ALL ON ALL TABLES IN SCHEMA novaai_app, novaai_private FROM PUBLIC, novaai_inventory_inspector;
 REVOKE ALL ON ALL SEQUENCES IN SCHEMA novaai_app, novaai_private FROM PUBLIC, novaai_inventory_inspector;
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA novaai_app, novaai_private FROM PUBLIC, novaai_inventory_inspector;
 REVOKE ALL ON ALL TYPES IN SCHEMA novaai_app, novaai_private FROM PUBLIC, novaai_inventory_inspector;
+REVOKE TEMPORARY, CREATE ON DATABASE inventory_test FROM PUBLIC;
+REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
--- The inspector can see schema names but cannot read relations or execute app routines.
-GRANT USAGE ON SCHEMA novaai_app, novaai_private TO novaai_inventory_inspector;
+-- Deny all large-object APIs to PUBLIC and the inspector.
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_get(oid) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_get(oid, integer, integer) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_from_bytea(oid, bytea) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_put(oid, bigint, bytea) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_unlink(oid) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_create(oid) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_creat(integer) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_import(text) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_import(text, oid) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_export(oid, text) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lowrite(integer, bytea) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.loread(integer, integer) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_open(oid, integer) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_truncate(integer, integer) FROM PUBLIC, novaai_inventory_inspector;
