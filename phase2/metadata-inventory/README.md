@@ -1,47 +1,65 @@
 # Phase 2 — Catalogue-only metadata inventory prototype
 
-**Status:** incomplete experimental prototype; not production-authoritative.  
-**Target:** disposable PostgreSQL 17.11 only. No DDL reconstruction is implemented.
+**Status:** experimental Phase 2 implementation; not production-authoritative.  
+**Target:** disposable PostgreSQL 17.11 only. No DDL reconstruction or restore test is implemented.
 
 ## Safety boundary
 
-The workflow provisions a local disposable PostgreSQL service and synthetic fixtures. The inspector uses a dedicated login intended to have no application-table or column SELECT, no app-function EXECUTE, no role memberships, no ownership, no TEMP/CREATE and no sequence access. The runtime negative tests execute using that login and record only test names and SQLSTATEs; exception text and synthetic values are not emitted.
+The workflow provisions a disposable PostgreSQL 17.11 service with synthetic records. The inventory and unsupported-object detector connect as `novaai_inventory_inspector`, use read-only transactions, and do not intentionally query application table rows. Runtime negative tests execute with the same restricted login.
 
-The inventory engine uses PostgreSQL catalogues and definition functions. It does not intentionally query fixture table rows. It uses a read-only repeatable-read transaction. Never set `INVENTORY_DSN` to a production or Supabase connection.
+Never set `INVENTORY_DSN` to a production or Supabase connection. No production credentials or project access are required.
 
 ## Files
 
-- `fixtures/bootstrap.sql`: synthetic schema, canaries, role probes and restricted inspector.
-- `inventory.py`: security preflight and initial catalogue inventory.
-- `scope.json`: explicit synthetic scope and owner-provenance registry.
-- `runtime_security.py`: runtime negative tests.
+- `fixtures/bootstrap.sql`: synthetic schemas, canaries, role probes and restricted inspector.
+- `inventory.py`: read-only catalogue inventory, preflight, exact provenance classification, dependency resolution and cycle detection.
+- `scope.json`: synthetic schema scope.
+- `provenance_registry.json`: exact object provenance entries, fixture migration evidence, extension prerequisites and built-in access-method provenance.
+- `runtime_security.py`: runtime negative security tests.
+- `detect_unsupported.py`: fail-closed discovery of unsupported object families and catalogue visibility gaps.
 - `tests/test_static_safety.py`: static regression tests only.
-- `validate_artifacts.py`: generated-artifact canary and pattern scan.
-- `compare_baseline.py`: limited identity-only comparison against disposable administrative pg_dump.
-- `.github/workflows/phase2-metadata-inventory.yml`: PostgreSQL 17.11 disposable CI workflow.
+- `validate_artifacts.py`: generated-artifact canary and secret-pattern scan.
+- `compare_baseline.py`: comparison of catalogue inventory categories with independent disposable `pg_dump --schema-only` outputs.
+- `.github/workflows/phase2-metadata-inventory.yml`: PostgreSQL 17.11 CI workflow.
 
-## Current implemented checks
+## Runtime security suite
 
-The runtime suite attempts to verify denial of protected table/column reads, view and materialized-view access, invoker and SECURITY DEFINER routine execution, privileged-role inheritance, sequence read/mutation, large-object read/write/create/unlink, temporary-object creation, schema/table creation, and protected data reads from a table with RLS disabled.
+The runtime suite checks denial of protected table and column SELECT, views and materialized views, invoker and SECURITY DEFINER function execution, privileged-role membership and `SET ROLE` escalation, sequence reads and mutation, large-object creation/read/write/unlink, temporary-object creation, schema/table creation and protected data reads with RLS disabled.
 
-The workflow scans the generated inventory, schema-only baseline and runtime result for the known synthetic canaries and selected secret patterns. A successful static test run is not runtime security evidence. Only a successful PostgreSQL 17.11 workflow run with inspectable logs and artifacts can establish that the current checks executed.
+A passing run is evidence only for the synthetic fixture and tested operations. It is not proof of security in a managed Supabase environment or every PostgreSQL permission path.
 
-## Known acceptance gaps — do not treat as complete
+## Provenance and dependencies
 
-- The object inventory is not a complete PostgreSQL catalogue exporter.
-- Provenance currently maps an exact owner role to a class for relation objects. It does not yet classify every schema, routine, type, dependency, Supabase-managed object, extension-owned object, cluster-global object or environment-specific object. Unknown object families are not comprehensively discovered.
-- Dependency rows are currently raw catalogue OID records. They are not resolved to inventory identities, explicit external prerequisites, extension-owned dependencies or approved exclusions; cycles and unsupported dependency kinds are not classified.
-- Unsupported-object discovery is incomplete. Aggregates, rules, operators/casts, access methods/opclasses, foreign-data objects, event triggers, publications/subscriptions, text-search objects, extended statistics, security labels and all user-defined type families are not comprehensively inventoried and failed closed.
-- The baseline comparator checks relation identities only. It does not compare columns, constraints, indexes, routines, types/domains, triggers, partitions, extensions, ownership, ACLs, RLS configuration or dependencies.
-- Secret detection is pattern-based and is not proof of secret absence. Workflow logs are not separately scanned or downloaded by the workflow. The artifact scan is limited to generated files passed to it.
-- Runtime assertions and SQL fixtures still require a successful PostgreSQL 17.11 run and independent review. A workflow that has merely been configured is not evidence of passing tests.
-- No restoration equivalence is claimed. No DDL reconstruction is implemented.
-- Supabase-managed Read Replica compatibility is untested.
+Object classification requires an exact entry in `provenance_registry.json` and matching migration evidence; owner and parent-owner checks are corroboration, not the sole source. Unknown in-scope objects fail closed. Generated array types are represented by explicit registry entries when they occur as dependency endpoints.
 
-## Local execution
+Dependencies are resolved through PostgreSQL `pg_identify_object` identities against the provenance registry, approved external prerequisites and approved cluster-global exclusions. Unresolved dependencies and unsupported dependency types fail closed. Strongly connected components are reported as dependency cycles requiring special handling; Phase 2 does not compute a restore order.
 
-Requires Docker, Python 3.11+, and psql. Use only a disposable local database. See the workflow for the canonical PostgreSQL 17.11 sequence.
+The registry describes only the synthetic fixture. It does not establish provenance for NOVAAI production migrations, Supabase-managed schemas or environment-specific objects.
+
+## Unsupported-object discovery
+
+The detector checks aggregates, rules, operators, operator classes/families, foreign tables, FDWs, foreign servers and user mappings, event triggers, publications/subscriptions, text-search objects, extended statistics, casts, collations, conversions, transforms, user-defined type families, security labels and large-object metadata. It also checks access methods against the explicit PostgreSQL 17.11 built-in registry.
+
+A catalogue family that cannot be inspected produces a visibility failure. It is not silently treated as empty.
+
+## Baseline comparison
+
+The workflow generates a schema-only baseline for the two synthetic application schemas and a separate extension-only baseline. The comparator covers relation/sequence identities, table columns, constraints, indexes, functions/procedures, types/domains, triggers, policies, partitions, RLS configuration, extensions, ownership-record presence, ACL metadata presence and resolved dependency nodes.
+
+The comparator does not establish exact privilege-by-privilege ACL equivalence or an independent pg_dump dependency graph. It does not reconstruct DDL, execute a restore, or establish restoration equivalence.
+
+## Artifact and log handling
+
+Generated inventory, baseline and test-result artifacts are scanned for known synthetic canaries and selected sensitive-metadata patterns. Pattern scanning is not proof that all secrets are absent. Workflow logs require separate retrieval and review; the log scan is not inferred from the artifact scan.
+
+## Known acceptance limits
+
+- The registry is synthetic fixture evidence, not a production migration-history registry.
+- Supabase-managed and environment-specific provenance classes have no actual objects in this fixture and remain unverified.
+- PostgreSQL 17.11 standalone testing does not prove Supabase managed Read Replica compatibility.
+- Baseline ownership and ACL comparisons remain coverage checks, not full semantic equivalence.
+- Cycles are reported for manual review; no restore ordering or DDL reconstruction is provided.
 
 ## Production restriction
 
-No production connection, credential, secret, workflow, permission or artifact is used or authorized by this prototype. PR #23 and production export workflows must remain untouched.
+No production connection, credential, secret, workflow, permission or artifact is used or authorized. PR #23 and production export workflows remain untouched.
