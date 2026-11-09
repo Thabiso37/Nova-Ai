@@ -193,6 +193,14 @@ PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1
 jq -e '.storage_buckets | any(.id == "synthetic" and .name == "Synthetic bucket")' "$TMP/login-manifests.json" >/dev/null
 jq -e '.tables_and_columns | any(.schema == "storage" and .table == "objects" and .column == "name")' "$TMP/login-manifests.json" >/dev/null
 jq -e '.policies | any(.name == "no_select_fixture_read")' "$TMP/login-manifests.json" >/dev/null
+# A required manifest relation becoming unreadable must fail before JSON output.
+psql -X -v ON_ERROR_STOP=1 -c 'REVOKE SELECT ON storage.buckets FROM safe_export' >/dev/null
+if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -f "$ROOT/scripts/schema-export/export-manifests.sql" >"$TMP/no-bucket-select.json" 2>"$TMP/no-bucket-select.log"; then
+  echo "ERROR: manifest accepted inaccessible storage.buckets metadata." >&2; exit 1
+fi
+grep -Fq 'Manifest requires SELECT on storage.buckets' "$TMP/no-bucket-select.log"
+psql -X -v ON_ERROR_STOP=1 -c 'GRANT SELECT ON storage.buckets TO safe_export' >/dev/null
+
 
 # Restore PUBLIC execution for the write-capable large-object routines in this
 # disposable PostgreSQL instance, then prove the preflight rejects the exact path.
