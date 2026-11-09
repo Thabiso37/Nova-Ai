@@ -11,6 +11,7 @@ DSN = os.environ.get("INVENTORY_DSN")
 if not DSN:
     raise SystemExit("INVENTORY_DSN is required")
 scope = json.load(open("phase2/metadata-inventory/scope.json", encoding="utf-8"))
+registry = json.load(open("phase2/metadata-inventory/provenance_registry.json", encoding="utf-8"))
 schemas = scope["schemas"]
 queries = [
     ("aggregate", """SELECT n.nspname schema,p.proname identity
@@ -75,7 +76,11 @@ queries = [
          AS x(type,schema_name,name,identity)
        WHERE x.schema_name=ANY(%s)""", (schemas,))
 ]
-built_in_access_methods = {"heap","btree","hash","gist","gin","spgist","brin"}
+built_in_access_methods = {
+    x["identity"] for x in registry.get("external_prerequisites",[])
+    if x.get("family")=="access_method" and x.get("classification")=="CLUSTER_GLOBAL"
+       and x.get("approved") is True
+}
 unsupported = []
 visibility_failures = []
 cluster_global_access_methods = []
