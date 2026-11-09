@@ -26,16 +26,16 @@ def add_missing(report, category, baseline, inventory):
 
 def main():
     if len(sys.argv) not in (3,4,5):
-        raise SystemExit("usage: compare_baseline.py inventory.json baseline.sql [unsupported.json] [baseline-extensions.sql]")
+        raise SystemExit("usage: compare_baseline.py inventory.json baseline.sql [unsupported.json] [provenance_registry.json]")
     inv = json.loads(Path(sys.argv[1]).read_text())
     sql = Path(sys.argv[2]).read_text(errors="replace")
     unsupported = json.loads(Path(sys.argv[3]).read_text()) if len(sys.argv)>=4 else None
-    extension_sql = Path(sys.argv[4]).read_text(errors="replace") if len(sys.argv)==5 else ""
+    registry = json.loads(Path(sys.argv[4]).read_text()) if len(sys.argv)==5 else {"external_prerequisites":[]}
     sections = inv.get("sections",{})
     report = {}
 
     table_blocks = {}
-    table_pattern = re.compile(rf'CREATE TABLE\s+({QUALIFIED})\s*\((.*?)\n\);',re.I|re.S)
+    table_pattern = re.compile(rf'CREATE TABLE\s+({QUALIFIED})\s*\((.*?)\n\)(?:\s*PARTITION BY[^;]+)?;',re.I|re.S)
     for match in table_pattern.finditer(sql):
         name = clean(match.group(1))
         table_blocks[name] = match.group(2)
@@ -86,6 +86,12 @@ def main():
     add_missing(report,"constraints",baseline_constraints,inventory_constraints)
 
     baseline_indexes = set()
+    for table,name in re.findall(
+        rf'ALTER TABLE ONLY\s+({QUALIFIED})\s+ADD CONSTRAINT\s+"?([A-Za-z_][A-Za-z0-9_]*)"?\s+(?:PRIMARY KEY|UNIQUE)\b',
+        sql,re.I
+    ):
+        schema = clean(table).split(".")[0]
+        baseline_indexes.add(f"{schema}.{name}")
     for name,table in re.findall(
         rf'CREATE\s+(?:UNIQUE\s+)?INDEX\s+"?([A-Za-z_][A-Za-z0-9_]*)"?\s+ON\s+(?:ONLY\s+)?({QUALIFIED})',
         sql,re.I
@@ -101,11 +107,19 @@ def main():
     inventory_routines = {f'{x["schema"]}.{x["name"]}' for x in sections.get("routines",[])}
     add_missing(report,"functions_and_procedures",baseline_routines,inventory_routines)
 
-    baseline_extensions = {
-        clean(x) for x in re.findall(r'CREATE EXTENSION(?: IF NOT EXISTS)?\s+"?([A-Za-z_][A-Za-z0-9_]*)"?',extension_sql,re.I)
-    }
     inventory_extensions = {x["name"] for x in sections.get("extensions",[])}
-    add_missing(report,"extensions",baseline_extensions,inventory_extensions)
+    approved_extensions = {
+        x["identity"] for x in registry.get("external_prerequisites",[])
+        if x.get("family")=="extension" and x.get("classification")=="EXTENSION_OWNED"
+           and x.get("approved") is True
+    }
+    report["extensions"] = {
+        "inventory_count":len(inventory_extensions),
+        "approved_external_prerequisites":sorted(approved_extensions),
+        "unapproved_inventory_extensions":sorted(inventory_extensions-approved_extensions),
+        "status":"PASS" if inventory_extensions <= approved_extensions else "FAIL",
+        "limitation":"The selected application-schema pg_dump omits the built-in pg_catalog plpgsql extension; its provenance is checked against the explicit external-prerequisite registry, not falsely treated as a DDL dump match."
+    }
 
     baseline_types = {
         clean(x) for x in re.findall(rf'CREATE TYPE\s+({QUALIFIED})\s+AS',sql,re.I)
