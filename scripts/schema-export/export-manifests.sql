@@ -1,6 +1,38 @@
 \pset tuples_only on
 \pset format unaligned
 \pset pager off
+DO $manifest_visibility$
+DECLARE n integer;
+BEGIN
+  SELECT count(*) INTO n FROM pg_namespace
+  WHERE nspname IN ('public','private','storage')
+    AND has_schema_privilege(current_user, oid, 'USAGE');
+  IF n <> 3 THEN
+    RAISE EXCEPTION 'Manifest cannot see all required schemas with USAGE (found % of 3)', n;
+  END IF;
+  IF to_regclass('public.products') IS NULL
+     OR to_regclass('public."Products"') IS NULL
+     OR to_regclass('storage.buckets') IS NULL THEN
+    RAISE EXCEPTION 'Manifest required-object invariant failed';
+  END IF;
+  IF NOT has_table_privilege(current_user, 'storage.buckets', 'SELECT') THEN
+    RAISE EXCEPTION 'Manifest requires SELECT on storage.buckets';
+  END IF;
+  -- Touch each catalogue source independently so permission/query errors abort.
+  PERFORM count(*) FROM pg_roles;
+  PERFORM count(*) FROM pg_auth_members;
+  PERFORM count(*) FROM pg_extension;
+  PERFORM count(*) FROM pg_proc;
+  PERFORM count(*) FROM pg_policy;
+  PERFORM count(*) FROM pg_trigger;
+  PERFORM count(*) FROM pg_default_acl;
+  PERFORM count(*) FROM pg_largeobject_metadata;
+  PERFORM count(*) FROM pg_parameter_acl;
+  PERFORM count(*) FROM pg_tablespace;
+  PERFORM count(*) FROM pg_sequences WHERE schemaname IN ('public','private','storage');
+  PERFORM count(*) FROM storage.buckets;
+END
+$manifest_visibility$;
 SELECT jsonb_pretty(jsonb_build_object(
  'manifest_version',2,
  'server_version',current_setting('server_version'),
@@ -28,5 +60,31 @@ SELECT jsonb_pretty(jsonb_build_object(
  'sequences',(SELECT coalesce(jsonb_agg(jsonb_build_object('schema',schemaname,'name',sequencename,'type',data_type,'start',start_value,'min',min_value,'max',max_value,'increment',increment_by,'cycle',cycle) ORDER BY schemaname,sequencename),'[]'::jsonb) FROM pg_sequences WHERE schemaname IN ('public','private','storage')),
  'storage_buckets',(SELECT coalesce(jsonb_agg(jsonb_build_object('id',id,'name',name,'public',public,'file_size_limit',file_size_limit,'allowed_mime_types',allowed_mime_types) ORDER BY id),'[]'::jsonb) FROM storage.buckets),
  'storage_object_policies',(SELECT coalesce(jsonb_agg(jsonb_build_object('name',policyname,'command',cmd,'roles',roles,'using',qual,'with_check',with_check) ORDER BY policyname),'[]'::jsonb) FROM pg_policies WHERE schemaname='storage' AND tablename='objects'),
+ 'manifest_source_counts',jsonb_build_object(
+  'schemas',(SELECT count(*) FROM pg_namespace WHERE nspname IN ('public','private','storage')),
+  'tables_and_columns',(SELECT count(*) FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid JOIN pg_namespace n ON n.oid=c.relnamespace JOIN pg_type t ON t.oid=a.atttypid LEFT JOIN pg_attrdef d ON d.adrelid=a.attrelid AND d.adnum=a.attnum WHERE n.nspname IN ('public','private','storage') AND c.relkind IN ('r','p','v','m','f') AND a.attnum>0 AND NOT a.attisdropped),
+  'constraints',(SELECT count(*) FROM pg_constraint k JOIN pg_class c ON c.oid=k.conrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','private','storage')),
+  'indexes',(SELECT count(*) FROM pg_indexes WHERE schemaname IN ('public','private','storage')),
+  'rls',(SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','private','storage') AND c.relkind IN ('r','p')),
+  'policies',(SELECT count(*) FROM pg_policies WHERE schemaname IN ('public','private','storage')),
+  'database_grants',(SELECT count(*) FROM pg_database d CROSS JOIN LATERAL aclexplode(coalesce(d.datacl,acldefault('d',d.datdba))) x),
+  'large_object_grants',(SELECT count(*) FROM pg_largeobject_metadata lom CROSS JOIN LATERAL aclexplode(coalesce(lom.lomacl,acldefault('L',lom.lomowner))) x),
+  'tablespace_grants',(SELECT count(*) FROM pg_tablespace t CROSS JOIN LATERAL aclexplode(coalesce(t.spcacl,acldefault('t',t.spcowner))) x),
+  'parameter_grants',(SELECT count(*) FROM pg_parameter_acl pa CROSS JOIN LATERAL aclexplode(coalesce(pa.paracl,ARRAY[]::aclitem[])) x),
+  'schema_grants',(SELECT count(*) FROM pg_namespace n CROSS JOIN LATERAL aclexplode(coalesce(n.nspacl,acldefault('n',n.nspowner))) x WHERE n.nspname IN ('public','private','storage')),
+  'table_grants',(SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace CROSS JOIN LATERAL aclexplode(coalesce(c.relacl,acldefault('r',c.relowner))) x WHERE n.nspname IN ('public','private','storage') AND c.relkind IN ('r','p','v','m','f')),
+  'column_grants',(SELECT count(*) FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid JOIN pg_namespace n ON n.oid=c.relnamespace CROSS JOIN LATERAL aclexplode(coalesce(a.attacl,acldefault('c',c.relowner))) x WHERE n.nspname IN ('public','private','storage') AND c.relkind IN ('r','p','v','m','f') AND a.attnum>0 AND NOT a.attisdropped),
+  'sequence_grants',(SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace CROSS JOIN LATERAL aclexplode(coalesce(c.relacl,acldefault('s',c.relowner))) x WHERE c.relkind='S' AND n.nspname IN ('public','private','storage')),
+  'function_grants',(SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace CROSS JOIN LATERAL aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) x WHERE n.nspname IN ('public','private','storage')),
+  'default_privileges',(SELECT count(*) FROM pg_default_acl d JOIN pg_roles r ON r.oid=d.defaclrole LEFT JOIN pg_namespace n ON n.oid=d.defaclnamespace CROSS JOIN LATERAL aclexplode(d.defaclacl) x WHERE n.nspname IN ('public','private','storage') OR d.defaclnamespace=0),
+  'role_attributes',(SELECT count(*) FROM pg_roles),
+  'role_memberships',(SELECT count(*) FROM pg_auth_members m JOIN pg_roles parent ON parent.oid=m.roleid JOIN pg_roles child ON child.oid=m.member),
+  'extensions',(SELECT count(*) FROM pg_extension e JOIN pg_namespace n ON n.oid=e.extnamespace),
+  'functions',(SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace JOIN pg_language l ON l.oid=p.prolang WHERE n.nspname IN ('public','private','storage')),
+  'triggers',(SELECT count(*) FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','private','storage') AND NOT t.tgisinternal),
+  'sequences',(SELECT count(*) FROM pg_sequences WHERE schemaname IN ('public','private','storage')),
+  'storage_buckets',(SELECT count(*) FROM storage.buckets),
+  'storage_object_policies',(SELECT count(*) FROM pg_policies WHERE schemaname='storage' AND tablename='objects')
+ ),
  'product_case_check',jsonb_build_object('lower_exists',to_regclass('public.products') IS NOT NULL,'upper_exists',to_regclass('public."Products"') IS NOT NULL,'distinct',CASE WHEN to_regclass('public.products') IS NOT NULL AND to_regclass('public."Products"') IS NOT NULL THEN to_regclass('public.products')::oid<>to_regclass('public."Products"')::oid ELSE false END)
 ))::text;
