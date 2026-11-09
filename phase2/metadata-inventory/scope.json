@@ -1,6 +1,9 @@
 {
   "format_version": 1,
-  "schemas": ["novaai_app", "novaai_private"],
+  "schemas": [
+    "novaai_app",
+    "novaai_private"
+  ],
   "classifications": {
     "novaai_app": "A_NOVAAI_OWNED",
     "novaai_private": "A_NOVAAI_OWNED"
@@ -13,5 +16,8 @@
     "realtime",
     "vault"
   ],
-  "note": "Synthetic fixture scope only. Schema ownership is explicit configuration, not inferred from names. Real NOVAAI scope requires separate approval."
+  "note": "Synthetic fixture scope only. Schema ownership is explicit configuration, not inferred from names. Real NOVAAI scope requires separate approval.",
+  "owner_registry": {
+    "novaai_inventory_owner": "A_NOVAAI_OWNED"
+  }
 }
