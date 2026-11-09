@@ -22,6 +22,8 @@ END $$;
 
 REVOKE ALL ON DATABASE inventory_test FROM PUBLIC;
 GRANT CONNECT ON DATABASE inventory_test TO novaai_inventory_inspector;
+-- Allow identity-only discovery of mappings; never grant access to umoptions.
+GRANT SELECT (umuser, umserver) ON TABLE pg_catalog.pg_user_mapping TO novaai_inventory_inspector;
 REVOKE TEMPORARY, CREATE ON DATABASE inventory_test FROM novaai_inventory_inspector;
 
 CREATE SCHEMA IF NOT EXISTS novaai_app AUTHORIZATION novaai_inventory_owner;
