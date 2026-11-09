@@ -130,11 +130,6 @@ BEGIN
       AND p.proname=d.routine_name
       AND oidvectortypes(p.proargtypes)=d.identity_arg_types
     WHERE has_function_privilege(current_user,p.oid,'EXECUTE')
-      AND EXISTS (
-        SELECT 1
-        FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) acl
-        WHERE acl.grantee=0 AND acl.privilege_type='EXECUTE'
-      )
   ) THEN
     bad := array_append(bad, 'PUBLIC EXECUTE on write-capable pg_catalog large-object routines');
   END IF;
@@ -147,11 +142,7 @@ BEGIN
     FROM pg_proc p
     WHERE p.prosecdef
       AND has_function_privilege(current_user,p.oid,'EXECUTE')
-      AND EXISTS (
-        SELECT 1
-        FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) acl
-        WHERE acl.grantee=0 AND acl.privilege_type='EXECUTE'
-      )
+
   ) THEN
     bad := array_append(bad, 'PUBLIC EXECUTE on SECURITY DEFINER routines');
   END IF;
@@ -212,16 +203,63 @@ BEGIN
     bad := array_append(bad, 'tablespace CREATE privilege');
   END IF;
 
+  -- Membership in predefined server-side capability roles is prohibited. The
+  -- general membership check above is intentionally broader and catches future roles.
+  IF EXISTS (
+    SELECT 1 FROM pg_roles
+    WHERE rolname IN ('pg_read_server_files','pg_write_server_files',
+                      'pg_execute_server_program','pg_signal_backend',
+                      'pg_write_all_data')
+      AND pg_has_role(current_user, oid, 'MEMBER')
+  ) THEN
+    bad := array_append(bad, 'membership in privileged server-operation roles');
+  END IF;
+
   IF cardinality(bad)>0 THEN
     RAISE EXCEPTION 'Read-only preflight rejected role %: %',current_user,array_to_string(bad,', ');
   END IF;
 END
 $preflight$;
 
--- Required schema visibility is mandatory; no partial metadata snapshot is accepted.
+-- Required schemas and metadata access are assertions, not zero-row SELECTs.
+-- A missing schema or missing USAGE must make psql exit nonzero under ON_ERROR_STOP.
+DO $visibility$
+DECLARE visible_count integer;
+BEGIN
+  SELECT count(*) INTO visible_count
+  FROM pg_namespace n
+  WHERE n.nspname IN ('public','private','storage')
+    AND has_schema_privilege(current_user, n.oid, 'USAGE');
+
+  IF visible_count <> 3 THEN
+    RAISE EXCEPTION 'Required schema visibility failed: expected public, private, storage with USAGE; found %', visible_count;
+  END IF;
+
+  IF to_regclass('public.products') IS NULL
+     OR to_regclass('public."Products"') IS NULL
+     OR to_regclass('storage.buckets') IS NULL THEN
+    RAISE EXCEPTION 'Required relation visibility failed (public.products, public."Products", storage.buckets)';
+  END IF;
+
+  -- Explicitly exercise the catalogue sources used by the manifest. These queries
+  -- must execute successfully even when their legitimate result is empty.
+  PERFORM count(*) FROM pg_auth_members;
+  PERFORM count(*) FROM pg_roles;
+  PERFORM count(*) FROM pg_extension;
+  PERFORM count(*) FROM pg_policy;
+  PERFORM count(*) FROM pg_default_acl;
+  PERFORM count(*) FROM pg_largeobject_metadata;
+  PERFORM count(*) FROM pg_parameter_acl;
+  PERFORM count(*) FROM pg_tablespace;
+  PERFORM count(*) FROM pg_proc;
+  PERFORM count(*) FROM pg_trigger;
+  PERFORM count(*) FROM pg_sequences WHERE schemaname IN ('public','private','storage');
+
+  -- The manifest reads bucket metadata, not Storage object rows.
+  PERFORM count(*) FROM storage.buckets;
+END
+$visibility$;
+
 SELECT current_user AS verified_role,
        current_setting('server_version_num')::integer AS server_version_num,
-       count(*) FILTER (WHERE nspname IN ('public','private','storage')) AS visible_required_schemas
-FROM pg_namespace
-WHERE nspname IN ('public','private','storage')
-HAVING count(*) FILTER (WHERE nspname IN ('public','private','storage'))=3;
+       3 AS visible_required_schemas;
