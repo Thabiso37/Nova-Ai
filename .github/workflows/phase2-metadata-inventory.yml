@@ -57,6 +57,10 @@ jobs:
         env:
           INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector "
         run: set -o pipefail; python phase2/metadata-inventory/detect_unsupported.py | tee unsupported.json
+      - name: Generate independent administrative dependency baseline
+        env:
+          BASELINE_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=postgres"
+        run: python phase2/metadata-inventory/baseline_dependencies.py | tee baseline-dependencies.json
       - name: Run runtime negative security tests as restricted inspector
         env:
           INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector "
@@ -64,9 +68,9 @@ jobs:
       - name: Generate independent disposable schema-only baseline
         run: pg_dump -h 127.0.0.1 -U postgres -d inventory_test --schema-only --schema=novaai_app --schema=novaai_private --file=baseline.sql
       - name: Scan generated outputs for canaries and secret patterns
-        run: python phase2/metadata-inventory/validate_artifacts.py inventory.json baseline.sql runtime-security.json unsupported.json
+        run: python phase2/metadata-inventory/validate_artifacts.py inventory.json baseline.sql baseline-dependencies.json runtime-security.json unsupported.json
       - name: Compare baseline object identities
-        run: python phase2/metadata-inventory/compare_baseline.py inventory.json baseline.sql unsupported.json phase2/metadata-inventory/provenance_registry.json
+        run: python phase2/metadata-inventory/compare_baseline.py inventory.json baseline.sql unsupported.json phase2/metadata-inventory/provenance_registry.json baseline-dependencies.json
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v4
@@ -75,6 +79,7 @@ jobs:
           path: |
             inventory.json
             baseline.sql
+            baseline-dependencies.json
             runtime-security.json
             unsupported.json
           if-no-files-found: warn
