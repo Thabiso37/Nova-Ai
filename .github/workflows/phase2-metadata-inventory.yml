@@ -1,6 +1,7 @@
 name: Phase 2 Metadata Inventory Prototype
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - feature/metadata-only-inventory-prototype
@@ -40,8 +41,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
           python -m pip install -r phase2/metadata-inventory/requirements.txt
+      - name: Verify disposable server version
+        run: psql -X -h 127.0.0.1 -U postgres -d inventory_test -v ON_ERROR_STOP=1 -Atc "SHOW server_version" | grep -E '^17\.11([ -]|$)'
       - name: Create synthetic database fixtures
-        run: psql -h 127.0.0.1 -U postgres -d inventory_test -v ON_ERROR_STOP=1 -f phase2/metadata-inventory/fixtures/bootstrap.sql
+        run: psql -X -h 127.0.0.1 -U postgres -d inventory_test -v ON_ERROR_STOP=1 -f phase2/metadata-inventory/fixtures/bootstrap.sql
       - name: Run static tests
         run: python -m unittest discover -s phase2/metadata-inventory/tests -v
       - name: Run restricted inventory
