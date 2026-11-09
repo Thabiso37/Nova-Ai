@@ -63,8 +63,17 @@ CREATE FUNCTION public.standby_secdef_write() RETURNS void LANGUAGE plpgsql SECU
 GRANT EXECUTE ON FUNCTION public.standby_secdef_write() TO safe_export;
 CREATE TABLE public.export_marker(id int PRIMARY KEY,payload text);
 INSERT INTO public.export_marker VALUES(1,'HOT_STANDBY_APPLICATION_ROW_MUST_NOT_EXPORT');
-GRANT USAGE ON SCHEMA public,private,storage,supabase_migrations TO safe_export;
-GRANT SELECT ON ALL TABLES IN SCHEMA public,private TO safe_export;
+GRANT USAGE ON SCHEMA public,private,storage TO safe_export;
+GRANT SELECT ON
+  private.export_private_config,
+  public.products,
+  public."Products",
+  public.partitioned_parent,
+  public.partitioned_child,
+  public.export_view,
+  public.export_matview,
+  public.export_marker
+TO safe_export;
 GRANT SELECT ON storage.buckets TO safe_export;
 REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;
 SQL
