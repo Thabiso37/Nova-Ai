@@ -507,6 +507,24 @@ def main():
                             "schema":d[side+"_schema"],"identity":d[side+"_identity"],
                             "resolution":result["status"]
                         })
+            # Include registry-backed generated catalogue objects (for example
+            # implicit array types) that appear only as dependency endpoints.
+            known_catalogue_keys = {f'{x["family"]}|{x["identity"]}' for x in catalogue_objects}
+            for edge in dependency_edges:
+                for side in ("dependent","referenced"):
+                    resolution = edge[side+"_resolution"]
+                    key = resolution.get("key")
+                    if resolution.get("status")=="RESOLVED_INVENTORY" and key and key not in known_catalogue_keys:
+                        entry = registry_entries.get(key)
+                        if entry and entry.get("migration_id") in migration_ids:
+                            catalogue_objects.append({
+                                "family":entry["family"],"identity":entry["identity"],
+                                "classification":entry["classification"],
+                                "evidence":entry["migration_id"],
+                                "generated_by":entry.get("generated_by","catalogue dependency")
+                            })
+                            known_catalogue_keys.add(key)
+            inventory["catalogue_objects"] = catalogue_objects
             # Tarjan strongly-connected components identify dependency cycles.
             graph = {}
             for edge in dependency_edges:
