@@ -210,8 +210,10 @@ def main():
                  pg_get_function_identity_arguments(p.oid) identity_arguments,
                  pg_get_function_result(p.oid) result_type,p.provolatile volatility,
                  p.prosecdef security_definer,p.proleakproof leakproof,
-                 pg_get_functiondef(p.oid) definition,pg_get_userbyid(p.proowner) owner
+                 pg_get_functiondef(p.oid) definition,pg_get_userbyid(p.proowner) owner,
+                 l.lanname language
                  FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+                 JOIN pg_language l ON l.oid=p.prolang
                  WHERE n.nspname=ANY(%s) ORDER BY 1,2,4""",
               "triggers": """SELECT n.nspname schema,c.relname relation,t.tgname name,
                  pg_get_triggerdef(t.oid,true) definition,t.tgenabled enabled,
