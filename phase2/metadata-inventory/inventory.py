@@ -20,10 +20,7 @@ SUPPORTED = {
     "sequence", "index", "function", "procedure", "trigger", "type", "domain", "enum",
     "constraint", "policy", "extension"
 }
-CLASSIFICATION = {
-    "novaai_app": "A_NOVAAI_OWNED",
-    "novaai_private": "A_NOVAAI_OWNED"
-}
+PROVENANCE_OWNERS = None  # Loaded from the explicit owner registry in scope.json.
 
 def rows(cur, sql, args=None):
     cur.execute(sql, args or ())
@@ -46,6 +43,8 @@ def main():
     if not dsn:
         raise SystemExit("INVENTORY_DSN is required; production DSNs are prohibited.")
     scope = json.load(open(args.scope, encoding="utf-8"))
+    global PROVENANCE_OWNERS
+    PROVENANCE_OWNERS = scope.get("owner_registry", {})
     secret_findings = []
     inventory = {"format_version": 1, "exporter_version": VERSION,
                   "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -177,7 +176,7 @@ def main():
               WHERE n.nspname = ANY(%s) ORDER BY 1,2
             """, (list(allowed),))
             for obj in rels:
-                obj["classification"] = CLASSIFICATION.get(obj["schema"], "UNCLASSIFIED")
+                obj["classification"] = PROVENANCE_OWNERS.get(obj.get("owner"), "UNCLASSIFIED")
                 obj["support"] = obj["object_type"] if obj["object_type"] in SUPPORTED else "UNSUPPORTED"
                 scrub_scan(obj.get("view_definition"), f'{obj["schema"]}.{obj["name"]}', secret_findings)
                 inventory["objects"].append(obj)
