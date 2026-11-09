@@ -173,39 +173,127 @@ def main():
     }
     add_missing(report,"rls_configuration",baseline_rls,inventory_rls)
 
-    baseline_owners = {
-        (clean(kind),clean(obj),owner)
-        for kind,obj,owner in re.findall(
-            rf'ALTER\s+(TABLE|SEQUENCE|VIEW|MATERIALIZED VIEW|INDEX|FUNCTION|PROCEDURE|TYPE|SCHEMA)\s+({QUALIFIED})\s+OWNER TO\s+("?[\w]+"?)',
-            sql,re.I
-        )
-    }
-    owner_records = []
-    for x in sections.get("relation_acl",[]):
-        owner_records.append(("relation",f'{x["schema"]}.{x["relation"]}',x.get("owner")))
+    baseline_owner_map = {}
+    owner_pattern = re.compile(
+        rf'ALTER\s+(MATERIALIZED VIEW|TABLE|SEQUENCE|VIEW|INDEX|FUNCTION|PROCEDURE|TYPE|DOMAIN|SCHEMA)\s+({QUALIFIED}(?:\([^;]*?\))?)\s+OWNER TO\s+("?[\w]+"?)\s*;',
+        re.I
+    )
+    for kind,obj,owner in owner_pattern.findall(sql):
+        baseline_owner_map[clean(obj)] = clean(owner)
+
+    inventory_owner_map = {}
     for x in sections.get("schema_acl",[]):
-        owner_records.append(("schema",x["schema"],x.get("owner")))
-    for x in sections.get("routine_acl",[]):
-        owner_records.append(("routine",f'{x["schema"]}.{x["name"]}',x.get("owner")))
-    for x in sections.get("type_acl",[]):
-        owner_records.append(("type",f'{x["schema"]}.{x["name"]}',x.get("owner")))
+        inventory_owner_map[x["schema"]] = x.get("owner")
+    for x in inv.get("objects",[]):
+        if x.get("object_type") in ("table","partitioned_table","view","materialized_view"):
+            inventory_owner_map[f'{x["schema"]}.{x["name"]}'] = x.get("owner")
+    for x in sections.get("routines",[]):
+        inventory_owner_map[f'{x["schema"]}.{x["name"]}({x["identity_arguments"]})'] = x.get("owner")
+    for x in sections.get("types",[]):
+        inventory_owner_map[f'{x["schema"]}.{x["name"]}'] = x.get("owner")
+    owner_missing = sorted(set(inventory_owner_map)-set(baseline_owner_map))
+    owner_extra = sorted(set(baseline_owner_map)-set(inventory_owner_map))
+    owner_mismatches = sorted(
+        (key,inventory_owner_map[key],baseline_owner_map[key])
+        for key in set(inventory_owner_map)&set(baseline_owner_map)
+        if inventory_owner_map[key] != baseline_owner_map[key]
+    )
     report["ownership"] = {
-        "baseline_owner_statements": len(baseline_owners),
-        "inventory_owner_records": len(owner_records),
-        "inventory_owner_records_with_owner": sum(1 for x in owner_records if x[2]),
-        "status": "PASS" if baseline_owners and owner_records else "FAIL",
-        "limitation": "Owner records are compared for presence and coverage; exact ACL/owner semantic equivalence is not asserted."
+        "baseline_owner_records":len(baseline_owner_map),
+        "inventory_owner_records":len(inventory_owner_map),
+        "missing_from_baseline":owner_missing,
+        "missing_from_inventory":owner_extra,
+        "mismatched_owners":owner_mismatches,
+        "status":"PASS" if not owner_missing and not owner_extra and not owner_mismatches else "FAIL",
+        "limitation":"Exact owners are compared for schemas, top-level relations, routines and explicit user-defined types; generated index/sequence/row-type ownership follows the owning relation or type and is validated by the provenance/owner preflight."
     }
 
-    grant_statements = [x.strip() for x in re.findall(r'^(?:GRANT|REVOKE)\b[^;]+;',sql,re.I|re.M)]
-    acl_records = []
-    for section in ("relation_acl","schema_acl","routine_acl","type_acl","column_acl","default_privileges"):
-        acl_records.extend(sections.get(section,[]))
+    acl_inventory = {}
+    def collect_acl(kind,identity,acl,owner):
+        if not acl:
+            return
+        for item in acl.strip("{}").split(","):
+            match = re.match(r"([^=]*)=([^/]*)/(.*)$",item)
+            if not match:
+                continue
+            grantee = match.group(1) or "PUBLIC"
+            if grantee == owner:
+                continue
+            privileges = set(match.group(2).replace("*",""))
+            acl_inventory[(kind,identity,grantee)] = privileges
+
+    for x in sections.get("schema_acl",[]):
+        collect_acl("SCHEMA",x["schema"],x.get("acl"),x.get("owner"))
+    relation_type = {
+        (x["schema"],x["name"]):x.get("object_type")
+        for x in inv.get("objects",[])
+    }
+    for x in sections.get("relation_acl",[]):
+        typ = relation_type.get((x["schema"],x["relation"]))
+        kind = {"table":"TABLE","partitioned_table":"TABLE","view":"TABLE",
+                "materialized_view":"TABLE","sequence":"SEQUENCE","index":"INDEX"}.get(typ)
+        if kind:
+            collect_acl(kind,f'{x["schema"]}.{x["relation"]}',x.get("acl"),x.get("owner"))
+    for x in sections.get("routine_acl",[]):
+        collect_acl("FUNCTION",f'{x["schema"]}.{x["name"]}({x["identity_arguments"]})',x.get("acl"),x.get("owner"))
+    for x in sections.get("type_acl",[]):
+        collect_acl("TYPE",f'{x["schema"]}.{x["name"]}',x.get("acl"),x.get("owner"))
+    for x in sections.get("column_acl",[]):
+        collect_acl("COLUMN",f'{x["schema"]}.{x["relation"]}.{x["column_name"]}',x.get("acl"),None)
+
+    privilege_letters = {
+        "SELECT":"r","INSERT":"a","UPDATE":"w","DELETE":"d","TRUNCATE":"D",
+        "REFERENCES":"x","TRIGGER":"t","EXECUTE":"X","USAGE":"U","CREATE":"C",
+        "MAINTAIN":"m"
+    }
+    baseline_acl = {}
+    baseline_revokes = []
+    acl_pattern = re.compile(
+        r'^(GRANT|REVOKE)\s+(.+?)\s+ON\s+(SCHEMA|TABLE|SEQUENCE|FUNCTION|PROCEDURE|TYPE)\s+(.+?)\s+(TO|FROM)\s+([^;]+);',
+        re.I|re.M
+    )
+    for action,priv_text,kind,obj,connector,grantees in acl_pattern.findall(sql):
+        identity = clean(obj.strip())
+        for grantee in (x.strip().replace('"',"") for x in grantees.split(",")):
+            key = (kind.upper(),identity,grantee or "PUBLIC")
+            if action.upper()=="REVOKE":
+                baseline_revokes.append((key,priv_text.upper()))
+                continue
+            letters = set()
+            for privilege in (x.strip().upper() for x in priv_text.split(",")):
+                if privilege=="ALL":
+                    letters.update("r a w d D x t m".split())
+                    if kind.upper()=="SCHEMA":
+                        letters.update(("U","C"))
+                    elif kind.upper() in ("FUNCTION","PROCEDURE"):
+                        letters.add("X")
+                    elif kind.upper()=="TYPE":
+                        letters.add("U")
+                elif privilege in privilege_letters:
+                    letters.add(privilege_letters[privilege])
+            baseline_acl[key] = letters
+
+    acl_missing = sorted(
+        (key,sorted(value)) for key,value in acl_inventory.items()
+        if baseline_acl.get(key,set()) != value
+    )
+    acl_extra = sorted(
+        (key,sorted(value)) for key,value in baseline_acl.items()
+        if acl_inventory.get(key,set()) != value
+    )
+    revoke_violations = sorted(
+        (key,sorted(acl_inventory.get(key,set())))
+        for key,_ in baseline_revokes if acl_inventory.get(key,set())
+    )
     report["acl_metadata"] = {
-        "baseline_grant_revoke_statements": len(grant_statements),
-        "inventory_acl_records": len(acl_records),
-        "status": "PASS" if acl_records else "FAIL",
-        "limitation": "ACL metadata is inventoried and baseline GRANT/REVOKE statements are counted; normalized privilege-by-privilege equivalence is not yet asserted."
+        "baseline_grant_statements":len(baseline_acl),
+        "baseline_revoke_statements":len(baseline_revokes),
+        "inventory_non_owner_acl_entries":len(acl_inventory),
+        "grant_mismatches":acl_missing,
+        "unexpected_baseline_grants":acl_extra,
+        "revoke_violations":revoke_violations,
+        "status":"PASS" if not acl_missing and not acl_extra and not revoke_violations else "FAIL",
+        "limitation":"Compares explicit non-owner grants and PUBLIC revocations for the disposable fixture. Default privilege semantics outside these statements remain separately inventoried."
     }
 
     inventory_dependency_keys = {
