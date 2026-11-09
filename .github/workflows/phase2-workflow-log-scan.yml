@@ -92,7 +92,13 @@ jobs:
             '.[] | select(.id == $id and .name == "disposable-postgres-17" and .status == "completed" and .conclusion == "success")' \
             scan-evidence/source-run-jobs.json > /dev/null
 
-          gh run view "$target_run_id" --repo "$GITHUB_REPOSITORY" --job "$job_id" --log > phase2-job-logs.txt
+          if gh run view "$target_run_id" --repo "$GITHUB_REPOSITORY" --job "$job_id" --log > scan-evidence/phase2-job-logs.txt; then
+            retrieval_exit_status=0
+          else
+            retrieval_exit_status=$?
+          fi
+          printf '%s\n' "$retrieval_exit_status" > scan-evidence/log-download-exit-status.txt
+          [[ "$retrieval_exit_status" -eq 0 ]]
           test -s scan-evidence/phase2-job-logs.txt
 
           printf '%s\n' "$target_run_id" > scan-evidence/scanned-run-id.txt
@@ -127,7 +133,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: phase2-complete-workflow-log-scan
-          path: scan-evidence/
+          path: |
+            scan-evidence/
+            !scan-evidence/phase2-job-logs.txt
           if-no-files-found: error
           retention-days: 90
 
