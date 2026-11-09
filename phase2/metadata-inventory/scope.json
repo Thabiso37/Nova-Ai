@@ -2,11 +2,15 @@
   "format_version": 1,
   "schemas": [
     "novaai_app",
-    "novaai_private"
+    "novaai_private",
+    "supabase_managed_fixture",
+    "environment_specific_fixture"
   ],
   "classifications": {
     "novaai_app": "A_NOVAAI_OWNED",
-    "novaai_private": "A_NOVAAI_OWNED"
+    "novaai_private": "A_NOVAAI_OWNED",
+    "supabase_managed_fixture": "SUPABASE_MANAGED",
+    "environment_specific_fixture": "ENVIRONMENT_SPECIFIC"
   },
   "excluded_schemas": [
     "pg_catalog",
@@ -16,7 +20,7 @@
     "realtime",
     "vault"
   ],
-  "note": "Synthetic fixture scope only. Schema ownership is explicit configuration, not inferred from names. Real NOVAAI scope requires separate approval.",
+  "note": "All schemas and objects are disposable synthetic fixtures. The Supabase-managed and environment-specific labels exercise explicit provenance classification only; they are not claims about actual Supabase or NOVAAI production objects.",
   "owner_registry": {
     "novaai_inventory_owner": "A_NOVAAI_OWNED"
   }
