@@ -73,7 +73,7 @@ jobs:
             --arg sha "$APPROVED_SOURCE_SHA" \
             --arg path "$APPROVED_WORKFLOW_PATH" \
             --argjson id "$APPROVED_RUN_ID" \
-            '.id == $id and .name == $name and .path == $path and .head_branch == $branch and .head_sha == $sha and .status == "completed" and .conclusion == "success"' \
+            '.id == $id and .name == $name and (.path == $path or .path == ($path + "@refs/heads/" + $branch)) and .head_branch == $branch and .head_sha == $sha and .status == "completed" and .conclusion == "success"' \
             scan-evidence/source-run-metadata.json > /dev/null
 
           gh api --paginate --jq '.jobs[]' \
@@ -92,7 +92,7 @@ jobs:
             '.[] | select(.id == $id and .name == "disposable-postgres-17" and .status == "completed" and .conclusion == "success")' \
             scan-evidence/source-run-jobs.json > /dev/null
 
-          gh run view "$target_run_id" --repo "$GITHUB_REPOSITORY" --job "$job_id" --log > scan-evidence/phase2-job-logs.txt
+          gh run view "$target_run_id" --repo "$GITHUB_REPOSITORY" --job "$job_id" --log > phase2-job-logs.txt
           test -s scan-evidence/phase2-job-logs.txt
 
           printf '%s\n' "$target_run_id" > scan-evidence/scanned-run-id.txt
