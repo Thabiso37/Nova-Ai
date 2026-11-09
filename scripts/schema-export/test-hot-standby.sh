@@ -174,3 +174,14 @@ if cmp -s "$WORK/watermark.before" <(psql -X -Atqc "SELECT max(version) FROM sup
 ! grep -q watermark_probe "$WORK/schema.sql"
 echo "PASS: advancing WAL changes watermark; separate schema/manifest drift is detectable."
 echo "Genuine PostgreSQL 17.11 hot-standby tests passed."
+
+# Shared-snapshot export using the genuine PostgreSQL 17.11 hot standby and restricted login.
+COORDINATED="$WORK/coordinated"
+bash scripts/schema-export/export-consistent.sh "$URL" "$COORDINATED"
+bash scripts/schema-export/validate-export.sh "$COORDINATED"
+grep -Eq 'CREATE TABLE public\.products' "$COORDINATED/schema.sql"
+jq -e '.manifest_version == 2 and (.tables_and_columns | length > 0)' "$COORDINATED/manifests.json" >/dev/null
+echo "PASS: restricted login exported and imported one shared snapshot on PostgreSQL 17.11 hot standby."
+PGUSER=postgres PGPASSWORD= PGPORT="$SP" psql -X -Atqc "SELECT count(*)=0 FROM pg_auth_members WHERE member=(SELECT oid FROM pg_roles WHERE rolname='safe_export') OR roleid=(SELECT oid FROM pg_roles WHERE rolname='safe_export')" | grep -qx t
+PGUSER=postgres PGPASSWORD= PGPORT="$SP" psql -X -Atqc "SELECT NOT rolsuper AND NOT rolbypassrls AND NOT rolcreaterole AND NOT rolcreatedb AND NOT rolreplication FROM pg_roles WHERE rolname='safe_export'" | grep -qx t
+echo "PASS: snapshot coordination required no extra grants or role escalation."
