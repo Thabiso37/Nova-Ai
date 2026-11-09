@@ -38,13 +38,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--output", default="inventory.json")
     ap.add_argument("--scope", default="phase2/metadata-inventory/scope.json")
+    ap.add_argument("--registry", default="phase2/metadata-inventory/provenance_registry.json")
     args = ap.parse_args()
     dsn = os.environ.get("INVENTORY_DSN")
     if not dsn:
         raise SystemExit("INVENTORY_DSN is required; production DSNs are prohibited.")
     scope = json.load(open(args.scope, encoding="utf-8"))
-    global PROVENANCE_OWNERS
-    PROVENANCE_OWNERS = scope.get("owner_registry", {})
+    registry = json.load(open(args.registry, encoding="utf-8"))
+    registry_entries = {f"{x['family']}|{x['identity']}": x for x in registry.get("objects", [])}
+    migration_ids = {x["migration_id"] for x in registry.get("migration_history", [])}
     secret_findings = []
     inventory = {"format_version": 1, "exporter_version": VERSION,
                   "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -189,18 +191,19 @@ def main():
                  FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid
                  JOIN pg_namespace n ON n.oid=c.relnamespace
                  LEFT JOIN pg_attrdef d ON d.adrelid=c.oid AND d.adnum=a.attnum
-                 WHERE a.attnum>0 AND NOT a.attisdropped AND n.nspname=ANY(%s) ORDER BY 1,2,3""",
+                 WHERE a.attnum>0 AND NOT a.attisdropped AND c.relkind IN ('r','p','v','m','f') AND n.nspname=ANY(%s) ORDER BY 1,2,3""",
               "constraints": """SELECT n.nspname schema,c.relname relation,con.conname name,
                  con.contype kind,con.convalidated validated,con.condeferrable deferrable,
                  con.condeferred initially_deferred,pg_get_constraintdef(con.oid,true) definition,
-                 t.typname domain_name
+                 t.typname domain_name,pg_get_userbyid(COALESCE(c.relowner,t.typowner)) owner
                  FROM pg_constraint con
                  LEFT JOIN pg_class c ON c.oid=con.conrelid
                  LEFT JOIN pg_namespace n ON n.oid=COALESCE(c.relnamespace,(SELECT typnamespace FROM pg_type WHERE oid=con.contypid))
                  LEFT JOIN pg_type t ON t.oid=con.contypid
                  WHERE n.nspname=ANY(%s) ORDER BY 1,2,3""",
               "indexes": """SELECT n.nspname schema,t.relname table_name,i.relname index_name,
-                 pg_get_indexdef(i.oid) definition,ix.indisunique is_unique,ix.indisvalid is_valid
+                 pg_get_indexdef(i.oid) definition,ix.indisunique is_unique,ix.indisvalid is_valid,
+                 pg_get_userbyid(i.relowner) owner
                  FROM pg_index ix JOIN pg_class t ON t.oid=ix.indrelid JOIN pg_class i ON i.oid=ix.indexrelid
                  JOIN pg_namespace n ON n.oid=t.relnamespace WHERE n.nspname=ANY(%s) ORDER BY 1,2,3""",
               "routines": """SELECT n.nspname schema,p.proname name,p.prokind kind,
@@ -211,7 +214,8 @@ def main():
                  FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
                  WHERE n.nspname=ANY(%s) ORDER BY 1,2,4""",
               "triggers": """SELECT n.nspname schema,c.relname relation,t.tgname name,
-                 pg_get_triggerdef(t.oid,true) definition,t.tgenabled enabled
+                 pg_get_triggerdef(t.oid,true) definition,t.tgenabled enabled,
+                 pg_get_userbyid(c.relowner) owner
                  FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid
                  JOIN pg_namespace n ON n.oid=c.relnamespace
                  WHERE NOT t.tgisinternal AND n.nspname=ANY(%s) ORDER BY 1,2,3""",
@@ -219,13 +223,14 @@ def main():
                  format_type(t.typbasetype,t.typtypmod) base_type,
                  pg_get_userbyid(t.typowner) owner
                  FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace
-                 WHERE n.nspname=ANY(%s) AND t.typrelid=0 ORDER BY 1,2""",
+                 WHERE n.nspname=ANY(%s) AND t.typrelid=0 AND t.typelem=0 ORDER BY 1,2""",
               "enums": """SELECT n.nspname schema,t.typname type_name,e.enumlabel label,e.enumsortorder sort_order
                  FROM pg_enum e JOIN pg_type t ON t.oid=e.enumtypid
                  JOIN pg_namespace n ON n.oid=t.typnamespace WHERE n.nspname=ANY(%s) ORDER BY 1,2,4""",
               "policies": """SELECT n.nspname schema,c.relname relation,p.polname name,p.polcmd command,
                  p.polpermissive permissive,p.polroles roles,pg_get_expr(p.polqual,p.polrelid) using_expression,
-                 pg_get_expr(p.polwithcheck,p.polrelid) check_expression
+                 pg_get_expr(p.polwithcheck,p.polrelid) check_expression,
+                 pg_get_userbyid(c.relowner) owner
                  FROM pg_policy p JOIN pg_class c ON c.oid=p.polrelid
                  JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=ANY(%s) ORDER BY 1,2,3""",
               "partitions": """SELECT pn.nspname parent_schema,pc.relname parent_name,
@@ -267,13 +272,83 @@ def main():
               WHERE d.defaclnamespace=0 OR n.nspname=ANY(%s)
             """, (list(allowed),))
 
-            # Any schema in scope without an explicit owner classification is a hard failure.
-            unclassified = [x for x in inventory["objects"] if x["classification"] == "UNCLASSIFIED"]
+
+            # Provenance is assigned only by exact registry entries backed by
+            # the synthetic migration-history manifest. Owner values are corroboration,
+            # never the sole source of classification.
+            catalogue_objects = []
+            def register_object(family, identity, owner=None, parent_owner=None):
+                entry = registry_entries.get(f"{family}|{identity}")
+                classification = "UNCLASSIFIED"
+                evidence = None
+                if entry and entry.get("migration_id") in migration_ids:
+                    expected = entry.get("expected_owner")
+                    expected_parent = entry.get("parent_owner")
+                    owner_ok = (expected is None or owner == expected)
+                    parent_ok = (expected_parent is None or parent_owner == expected_parent)
+                    if owner_ok and parent_ok:
+                        classification = entry["classification"]
+                        evidence = entry["migration_id"]
+                item = {"family": family, "identity": identity,
+                        "classification": classification, "evidence": evidence}
+                catalogue_objects.append(item)
+                return classification
+
+            schema_rows = rows(cur, """
+              SELECT n.nspname name, pg_get_userbyid(n.nspowner) owner
+              FROM pg_namespace n WHERE n.nspname=ANY(%s) ORDER BY 1
+            """, (list(allowed),))
+            for x in schema_rows:
+                register_object("schema", x["name"], owner=x["owner"])
+
+            for obj in inventory["objects"]:
+                family = obj["object_type"]
+                obj["classification"] = register_object(family, f'{obj["schema"]}.{obj["name"]}', owner=obj["owner"])
+
+            relation_owners = {(x["schema"],x["name"]):x["owner"] for x in inventory["objects"]
+                               if x["object_type"] in ("table","partitioned_table","view","materialized_view")}
+            for x in sections["columns"]:
+                if (x["schema"],x["relation"]) not in relation_owners:
+                    continue
+                register_object("column", f'{x["schema"]}.{x["relation"]}.{x["name"]}',
+                                parent_owner=relation_owners[(x["schema"],x["relation"])])
+
+            for x in sections["constraints"]:
+                parent = x.get("relation") or x.get("domain_name")
+                identity = f'{x["schema"]}.{parent}.{x["name"]}'
+                register_object("constraint", identity, parent_owner=x.get("owner"))
+
+            for x in sections["indexes"]:
+                register_object("index", f'{x["schema"]}.{x["index_name"]}', owner=x.get("owner"))
+
+            for x in sections["routines"]:
+                register_object("routine", f'{x["schema"]}.{x["name"]}({x["identity_arguments"]})',
+                                owner=x.get("owner"))
+
+            for x in sections["triggers"]:
+                register_object("trigger", f'{x["schema"]}.{x["relation"]}.{x["name"]}',
+                                parent_owner=x.get("owner"))
+
+            for x in sections["types"]:
+                register_object("type", f'{x["schema"]}.{x["name"]}', owner=x.get("owner"))
+
+            for x in sections["policies"]:
+                register_object("policy", f'{x["schema"]}.{x["relation"]}.{x["name"]}',
+                                parent_owner=x.get("owner"))
+
+            for x in sections["extensions"]:
+                register_object("extension", x["name"])
+
+            inventory["catalogue_objects"] = catalogue_objects
+
+            # Any schema/object without exact migration-backed provenance is a hard failure.
+            unclassified = [x for x in catalogue_objects if x["classification"] == "UNCLASSIFIED"]
             unsupported = [x for x in inventory["objects"] if x["support"] == "UNSUPPORTED"]
             unresolved = []
             inventory["completeness"] = {
               "discovered_objects": len(inventory["objects"]),
-              "classified_objects": len(inventory["objects"])-len(unclassified),
+              "classified_objects": len(catalogue_objects)-len(unclassified),
+              "catalogue_object_count": len(catalogue_objects),
               "unclassified_objects": unclassified,
               "unsupported_objects": unsupported,
               "unresolved_dependencies": unresolved,
@@ -281,7 +356,7 @@ def main():
               "secret_findings": secret_findings,
               "status": "PASS"
             }
-            if unclassified or unsupported or secret_findings:
+            if unclassified or unsupported or unresolved or secret_findings:
                 inventory["completeness"]["status"] = "FAIL"
                 raise RuntimeError("Inventory failed closed: unclassified, unsupported, or sensitive metadata found.")
             if any(canary in json.dumps(inventory, default=str) for canary in CANARIES):
