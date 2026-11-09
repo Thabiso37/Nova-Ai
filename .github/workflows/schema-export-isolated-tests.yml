@@ -68,7 +68,8 @@ jobs:
         run: |
           set -Eeuo pipefail
           apt-get update
-          apt-get install -y --no-install-recommends age=1.1.1-1+b3 jq
+          apt-get install -y --no-install-recommends age=1.1.1-1+b3 jq docker.io
+          docker version
           npm install --global supabase@2.122.1
           pg_dump --version | grep -F '17.11'
           psql --version | grep -F '17.11'
