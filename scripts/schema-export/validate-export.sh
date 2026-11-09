@@ -25,7 +25,7 @@ done
 jq -e '.schemas | sort == ["private","public","storage"]' "$MANIFEST" >/dev/null || fail 'required schema inventory incomplete'
 jq -e '.tables_and_columns | length > 0' "$MANIFEST" >/dev/null || fail 'no columns in manifest'
 jq -e '. as $m | ($m.role_attributes | length > 0) and ($m.role_attributes | any(.role == $m.export_role))' "$MANIFEST" >/dev/null || fail 'connected role missing from role_attributes'
-jq -e '.tables_and_columns | any(.schema == "public" and .table == "products" and .column == "id") and any(.schema == "public" and .table == "Products" and .column == "id")' "$MANIFEST" >/dev/null || fail 'required product columns missing from manifest'
+jq -e '(.tables_and_columns | any(.schema == "public" and .table == "products" and .column == "id")) and (.tables_and_columns | any(.schema == "public" and .table == "Products" and .column == "id"))' "$MANIFEST" >/dev/null || fail 'required product columns missing from manifest'
 jq -e '.product_case_check.lower_exists == true and .product_case_check.upper_exists == true and .product_case_check.distinct == true' "$MANIFEST" >/dev/null || fail 'public.products and public."Products" are not both present as distinct relations'
 grep -Eq 'CREATE TABLE[[:space:]]+public\.products([[:space:]]|\()' "$SCHEMA" || fail 'public.products missing from dump'
 grep -Eq 'CREATE TABLE[[:space:]]+public\."Products"([[:space:]]|\()' "$SCHEMA" || fail 'public."Products" missing from dump'
