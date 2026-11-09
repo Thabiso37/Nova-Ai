@@ -11,7 +11,7 @@ class StaticSafetyTests(unittest.TestCase):
  def test_canaries_are_synthetic(self):self.assertIn("CANARY_CUSTOMER_7f3c2a91",FIXTURE);self.assertIn("CANARY_SELLER_8b1d4e62",FIXTURE)
  def test_no_ddl_output(self):self.assertNotIn("CREATE TABLE",SCRIPT);self.assertNotIn("ALTER TABLE",SCRIPT)
  def test_runtime_denial_requires_permission_sqlstate(self):
-  runtime=(ROOT/"runtime_security.py").read_text();self.assertIn('state=="42501"',runtime);self.assertNotIn('"25006"',runtime)
+  runtime=(ROOT/"runtime_security.py").read_text();self.assertIn('state == "42501"',runtime);self.assertNotIn('"25006"',runtime)
  def test_security_audit_search_path_and_large_object_api(self):
   audit=(ROOT/"security_audit.py").read_text()
   for term in ("current_setting('search_path')","pg_db_role_setting","p.prosecdef","lo_truncate64","pg_shseclabel"):self.assertIn(term,audit)
