@@ -18,7 +18,7 @@ SYSTEM_SCHEMAS = {"pg_catalog", "information_schema", "pg_toast"}
 SUPPORTED = {
     "schema", "table", "partitioned_table", "partition", "view", "materialized_view",
     "sequence", "index", "function", "procedure", "trigger", "type", "domain", "enum",
-    "constraint", "policy", "extension"
+    "constraint", "policy", "extension", "default"
 }
 PROVENANCE_OWNERS = None  # Loaded from the explicit owner registry in scope.json.
 PROVENANCE_CLASSES = {
@@ -382,6 +382,10 @@ def main():
                 register_object("column", f'{x["schema"]}.{x["relation"]}.{x["name"]}',
                                 parent_owner=relation_owners[(x["schema"],x["relation"])])
 
+                if x.get("default_expression") is not None:
+                    register_object("default", f'{x["schema"]}.{x["relation"]}.{x["name"]}',
+                                    parent_owner=relation_owners[(x["schema"],x["relation"])])
+
             for x in sections["constraints"]:
                 parent = x.get("relation") or x.get("domain_name")
                 identity = f'{x["schema"]}.{parent}.{x["name"]}'
@@ -431,7 +435,7 @@ def main():
                 "enum":"type", "table column":"column", "materialized view column":"column",
                 "schema":"schema", "extension":"extension", "constraint":"constraint",
                 "table constraint":"constraint", "domain constraint":"constraint",
-                "trigger":"trigger", "policy":"policy", "language":"language"
+                "trigger":"trigger", "policy":"policy", "language":"language", "default value":"default"
             }
             external_prerequisites = {
                 (x["family"],x["identity"]):x
@@ -465,7 +469,7 @@ def main():
                         parts = match.group(1).strip('"').split(".")
                         if len(parts)==3:
                             schema_name = parts[0].strip('"')
-                            family = "column"
+                            family = "default"
                             resolved_identity = ".".join(x.strip('"') for x in parts)
                         else:
                             family = None
@@ -531,7 +535,13 @@ def main():
             for d in dependency_rows:
                 left = endpoint_resolution("dependent",d)
                 right = endpoint_resolution("referenced",d)
+                internal_view_rewrite = (
+                    d["deptype"]=="i" and d["dependent_type"]=="rule"
+                    and d["referenced_type"] in ("view","materialized view")
+                    and "_RETURN" in d["dependent_identity"]
+                )
                 dependency_edges.append({
+                    "cycle_handling":"INTERNAL_VIEW_REWRITE" if internal_view_rewrite else "DEPENDENCY",
                     "dependency_type":d["deptype"],
                     "dependent_type":d["dependent_type"],
                     "dependent_schema":d["dependent_schema"],
@@ -572,6 +582,8 @@ def main():
             for edge in dependency_edges:
                 left = edge["dependent_resolution"]
                 right = edge["referenced_resolution"]
+                if edge.get("cycle_handling")=="INTERNAL_VIEW_REWRITE":
+                    continue
                 if left["status"] in ("RESOLVED_INVENTORY","RESOLVED_DERIVED_INTERNAL") and right["status"] in ("RESOLVED_INVENTORY","RESOLVED_DERIVED_INTERNAL"):
                     graph.setdefault(left["key"],set()).add(right["key"])
                     graph.setdefault(right["key"],set())
@@ -624,7 +636,7 @@ def main():
               "unresolved_dependencies": unresolved,
               "unsupported_dependency_types": unsupported_dependencies,
               "dependency_cycles": dependency_cycles,
-              "cycle_handling": "Cycles are enumerated for independent ordering review; Phase 2 does not emit DDL or impose a restore order.",
+              "cycle_handling": "PostgreSQL internal view-rewrite self-dependencies remain in the dependency evidence but are excluded from the ordering graph; remaining strongly connected components are reported for independent review. Phase 2 does not emit DDL or impose a restore order.",
               "catalogue_visibility_failures": [],
               "secret_findings": secret_findings,
               "status": "PASS"
