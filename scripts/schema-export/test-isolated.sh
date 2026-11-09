@@ -61,7 +61,7 @@ ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 CREATE POLICY products_read ON public.products FOR SELECT TO safe_export USING (true);
 ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 CREATE POLICY storage_objects_read ON storage.objects FOR SELECT TO safe_export USING (true);
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO safe_export;
+-- No default SELECT privileges: every exported relation is granted explicitly.
 INSERT INTO storage.buckets(id,name) VALUES ('synthetic','Synthetic bucket');
 INSERT INTO public.products(name) VALUES ('SYNTHETIC_DATA_MUST_NOT_EXPORT');
 GRANT USAGE ON SCHEMA public,private,storage TO safe_export;
@@ -82,6 +82,35 @@ GRANT CREATE ON SCHEMA public TO schema_writer;
 SQL
 
 if psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT has_table_privilege('safe_export', 'public.no_select_manifest_fixture', 'SELECT')" | grep -qx t; then echo "ERROR: fixture unexpectedly grants SELECT to safe_export" >&2; exit 1; fi
+# Future relations must not inherit SELECT from a default privilege.
+psql -X -v ON_ERROR_STOP=1 -c 'CREATE TABLE public.future_ungranted_fixture(id integer)' >/dev/null
+if psql -X -Atqc "SELECT has_table_privilege('safe_export','public.future_ungranted_fixture','SELECT')" | grep -qx t; then
+  echo "ERROR: safe_export received implicit SELECT on a future relation." >&2; exit 1
+fi
+
+# Prove the login has no write authority even after overriding the accidental-write
+# default. Each attempted write is expected to fail for lack of authorization.
+for sql in \
+  "INSERT INTO public.products(name) VALUES ('must-not-write')" \
+  "UPDATE public.products SET name='must-not-write' WHERE id=1" \
+  "DELETE FROM public.products WHERE id=1" \
+  "TRUNCATE public.products" \
+  "CREATE TABLE public.must_not_create(id integer)" \
+  "CREATE TEMP TABLE must_not_create_temp(id integer)" \
+  "SELECT nextval('public.synthetic_seq')" \
+  "SELECT setval('public.synthetic_seq', 99)"; do
+  if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -c "SET default_transaction_read_only=off; $sql" >/dev/null 2>&1; then
+    echo "ERROR: prohibited operation succeeded after read-only override: $sql" >&2; exit 1
+  fi
+done
+# Large-object mutation must also remain unavailable after the session override.
+if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -c "SET default_transaction_read_only=off; SELECT lo_create(0)" >/dev/null 2>&1; then
+  echo "ERROR: restricted login created a large object after read-only override." >&2; exit 1
+fi
+psql -X -Atqc "SELECT count(*) FROM public.products WHERE name='must-not-write'" | grep -qx 0
+psql -X -Atqc "SELECT count(*) FROM pg_class WHERE relname IN ('must_not_create','must_not_create_temp')" | grep -qx 0
+echo "PASS: table, sequence, DDL, temporary-table and large-object writes are denied after overriding the read-only default."
+
 printf 'SET ROLE safe_export;\n\\o %s\n' "$TMP/manifests.json" > "$TMP/export-manifests-as-role.sql"
 cat "$ROOT/scripts/schema-export/export-manifests.sql" >> "$TMP/export-manifests-as-role.sql"
 psql -X -v ON_ERROR_STOP=1 -f "$TMP/export-manifests-as-role.sql"
@@ -182,6 +211,17 @@ grep -Fq 'PUBLIC EXECUTE on write-capable pg_catalog large-object routines' "$TM
   exit 1
 }
 echo "RESULT: preflight detects PUBLIC-inherited EXECUTE on write-capable large-object routines."
+# Direct grants must be rejected even when PUBLIC has no EXECUTE entry.
+psql -X -v ON_ERROR_STOP=1 <<'DIRECT_LO'
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_create(oid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION pg_catalog.lo_create(oid) TO safe_export;
+DIRECT_LO
+if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -f "$ROOT/scripts/schema-export/assert-read-only-role.sql" >"$TMP/direct-lo-preflight.log" 2>&1; then
+  echo "ERROR: preflight accepted direct EXECUTE on pg_catalog.lo_create(oid)." >&2; exit 1
+fi
+grep -Fq 'write-capable pg_catalog large-object routines' "$TMP/direct-lo-preflight.log"
+psql -X -v ON_ERROR_STOP=1 -c 'REVOKE EXECUTE ON FUNCTION pg_catalog.lo_create(oid) FROM safe_export' >/dev/null
+
 
 # Use ONE actual safe_export login session to demonstrate that the connection default
 # is overridable and that the granted routines really permit large-object writes.
@@ -269,6 +309,17 @@ mkdir "$TMP/valid"
 cp "$TMP/schema.sql" "$TMP/valid/schema.sql"
 cp "$TMP/manifests.json" "$TMP/valid/manifests.json"
 bash "$ROOT/scripts/schema-export/validate-export.sh" "$TMP/valid"
+# Valid zero-count sections are accepted, while missing/incomplete metadata is rejected.
+jq -e '.large_object_grants == [] and .manifest_source_counts.large_object_grants == 0' "$TMP/valid/manifests.json" >/dev/null
+cp "$TMP/valid/manifests.json" "$TMP/valid/manifests.original"
+jq 'del(.policies)' "$TMP/valid/manifests.original" > "$TMP/valid/manifests.json"
+if bash "$ROOT/scripts/schema-export/validate-export.sh" "$TMP/valid" >/dev/null 2>&1; then echo "ERROR: missing manifest section passed validation" >&2; exit 1; fi
+jq '.policies = []' "$TMP/valid/manifests.original" > "$TMP/valid/manifests.json"
+if bash "$ROOT/scripts/schema-export/validate-export.sh" "$TMP/valid" >/dev/null 2>&1; then echo "ERROR: empty policy array with nonzero source count passed validation" >&2; exit 1; fi
+jq '.manifest_source_counts.policies = 999' "$TMP/valid/manifests.original" > "$TMP/valid/manifests.json"
+if bash "$ROOT/scripts/schema-export/validate-export.sh" "$TMP/valid" >/dev/null 2>&1; then echo "ERROR: mismatched manifest source count passed validation" >&2; exit 1; fi
+mv "$TMP/valid/manifests.original" "$TMP/valid/manifests.json"
+
 cp "$TMP/valid/schema.sql" "$TMP/valid/schema.original"
 printf '
 COPY public.products FROM stdin;
