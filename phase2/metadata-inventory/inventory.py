@@ -341,10 +341,116 @@ def main():
 
             inventory["catalogue_objects"] = catalogue_objects
 
+            # Resolve pg_depend endpoints to PostgreSQL's stable object identities.
+            dependency_rows = rows(cur, """
+              SELECT d.deptype,
+                     dep.type dependent_type, dep.schema dependent_schema,
+                     dep.name dependent_name, dep.identity dependent_identity,
+                     ref.type referenced_type, ref.schema referenced_schema,
+                     ref.name referenced_name, ref.identity referenced_identity
+              FROM pg_depend d
+              CROSS JOIN LATERAL pg_identify_object(d.classid,d.objid,d.objsubid)
+                AS dep(type,schema,name,identity)
+              CROSS JOIN LATERAL pg_identify_object(d.refclassid,d.refobjid,d.refobjsubid)
+                AS ref(type,schema,name,identity)
+              WHERE dep.schema=ANY(%s) OR ref.schema=ANY(%s)
+              ORDER BY 1,2,3,4,5
+            """, (list(allowed),list(allowed)))
+
+            supported_dependency_types = {
+                "table":"table", "partitioned table":"partitioned_table",
+                "view":"view", "materialized view":"materialized_view",
+                "sequence":"sequence", "index":"index", "function":"routine",
+                "procedure":"routine", "domain":"type", "type":"type",
+                "enum":"type", "table column":"column", "schema":"schema",
+                "extension":"extension", "constraint":"constraint",
+                "trigger":"trigger", "policy":"policy"
+            }
+            external_prerequisites = {
+                (x["family"],x["identity"]):x
+                for x in registry.get("external_prerequisites",[])
+                if x.get("approved") is True
+            }
+            approved_exclusions = registry.get("approved_exclusions",[])
+            dependency_edges = []
+            unresolved_dependencies = []
+            unsupported_dependencies = []
+            def endpoint_resolution(prefix, row):
+                typ = row[prefix+"_type"]
+                schema_name = row[prefix+"_schema"]
+                name = row[prefix+"_name"]
+                identity = row[prefix+"_identity"]
+                family = supported_dependency_types.get(typ)
+                resolved_identity = identity
+                if typ in ("constraint","trigger","policy"):
+                    bits = identity.rsplit(" ",1)
+                    if len(bits)==2:
+                        resolved_identity = f"{schema_name}.{bits[0]}.{bits[1]}"
+                elif typ=="default value":
+                    match = re.search(r"for table (.+) column (.+)$", identity)
+                    if match:
+                        family = "column"
+                        resolved_identity = f"{match.group(1)}.{match.group(2)}"
+                    else:
+                        family = None
+                elif typ=="extension":
+                    resolved_identity = name
+                elif typ=="schema":
+                    resolved_identity = name
+                elif typ=="table column":
+                    family = "column"
+                if schema_name in allowed:
+                    key = f"{family}|{resolved_identity}" if family else None
+                    entry = registry_entries.get(key) if key else None
+                    if entry and entry.get("migration_id") in migration_ids:
+                        return {"status":"RESOLVED_INVENTORY","key":key}
+                    if family is None:
+                        unsupported_dependencies.append({"type":typ,"schema":schema_name,"identity":identity})
+                        return {"status":"UNRESOLVED_UNSUPPORTED","key":None}
+                    return {"status":"UNRESOLVED_MISSING_INVENTORY","key":key}
+                external_key = (family,resolved_identity) if family else None
+                if external_key and external_key in external_prerequisites:
+                    return {"status":"RESOLVED_EXTERNAL_PREREQUISITE","key":f"{family}|{resolved_identity}"}
+                qualified = f"{schema_name}.{identity}" if schema_name else identity
+                for exclusion in approved_exclusions:
+                    prefix_value = exclusion.get("identity_prefix","")
+                    if prefix_value and qualified.startswith(prefix_value):
+                        return {"status":"RESOLVED_APPROVED_EXCLUSION","key":qualified}
+                    if schema_name and schema_name == exclusion.get("schema"):
+                        return {"status":"RESOLVED_APPROVED_EXCLUSION","key":qualified}
+                if schema_name in SYSTEM_SCHEMAS or (schema_name and schema_name.startswith("pg_toast")):
+                    return {"status":"RESOLVED_CLUSTER_GLOBAL","key":qualified}
+                return {"status":"UNRESOLVED_EXTERNAL_APPROVAL_REQUIRED","key":qualified}
+
+            for d in dependency_rows:
+                left = endpoint_resolution("dependent",d)
+                right = endpoint_resolution("referenced",d)
+                dependency_edges.append({
+                    "dependency_type":d["deptype"],
+                    "dependent_type":d["dependent_type"],
+                    "dependent_schema":d["dependent_schema"],
+                    "dependent_identity":d["dependent_identity"],
+                    "dependent_resolution":left,
+                    "referenced_type":d["referenced_type"],
+                    "referenced_schema":d["referenced_schema"],
+                    "referenced_identity":d["referenced_identity"],
+                    "referenced_resolution":right
+                })
+                for side, result in (("dependent",left),("referenced",right)):
+                    if result["status"].startswith("UNRESOLVED"):
+                        unresolved_dependencies.append({
+                            "side":side,"object_type":d[side+"_type"],
+                            "schema":d[side+"_schema"],"identity":d[side+"_identity"],
+                            "resolution":result["status"]
+                        })
+            inventory["sections"]["dependencies"] = dependency_edges
+            inventory["sections"]["unsupported_dependencies"] = unsupported_dependencies
+
+
             # Any schema/object without exact migration-backed provenance is a hard failure.
             unclassified = [x for x in catalogue_objects if x["classification"] == "UNCLASSIFIED"]
             unsupported = [x for x in inventory["objects"] if x["support"] == "UNSUPPORTED"]
-            unresolved = []
+            unresolved = unresolved_dependencies
             inventory["completeness"] = {
               "discovered_objects": len(inventory["objects"]),
               "classified_objects": len(catalogue_objects)-len(unclassified),
@@ -352,11 +458,12 @@ def main():
               "unclassified_objects": unclassified,
               "unsupported_objects": unsupported,
               "unresolved_dependencies": unresolved,
+              "unsupported_dependency_types": unsupported_dependencies,
               "catalogue_visibility_failures": [],
               "secret_findings": secret_findings,
               "status": "PASS"
             }
-            if unclassified or unsupported or unresolved or secret_findings:
+            if unclassified or unsupported or unresolved or unsupported_dependencies or secret_findings:
                 inventory["completeness"]["status"] = "FAIL"
                 raise RuntimeError("Inventory failed closed: unclassified, unsupported, or sensitive metadata found.")
             if any(canary in json.dumps(inventory, default=str) for canary in CANARIES):
