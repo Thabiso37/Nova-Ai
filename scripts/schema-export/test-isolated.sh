@@ -384,8 +384,8 @@ for arg in "$@"; do
   fi
 done
 set +e
-"$REAL_PSQL" "$@" | awk -v log="$RETRY_DIR/snapshot-ids" '
-  /^[0-9A-Fa-f]+-[0-9A-Fa-f]+-[0-9A-Fa-f]+$/ { print >> log; fflush(log) }
+"$REAL_PSQL" "$@" | awk -v outfile="$RETRY_DIR/snapshot-ids" '
+  /^[0-9A-Fa-f]+-[0-9A-Fa-f]+-[0-9A-Fa-f]+$/ { print >> outfile; fflush(outfile) }
   { print; fflush() }
 '
 status=$?
