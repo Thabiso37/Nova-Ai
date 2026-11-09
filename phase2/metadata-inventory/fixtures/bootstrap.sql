@@ -22,8 +22,18 @@ END $$;
 
 REVOKE ALL ON DATABASE inventory_test FROM PUBLIC;
 GRANT CONNECT ON DATABASE inventory_test TO novaai_inventory_inspector;
--- Allow identity-only discovery of mappings; never grant access to umoptions.
+-- Deny sensitive system-catalog values and grant only identity metadata required by discovery.
+REVOKE SELECT ON TABLE pg_catalog.pg_user_mapping, pg_catalog.pg_subscription,
+  pg_catalog.pg_seclabel, pg_catalog.pg_shseclabel, pg_catalog.pg_largeobject_metadata,
+  pg_catalog.pg_largeobject, pg_catalog.pg_foreign_data_wrapper, pg_catalog.pg_foreign_server,
+  pg_catalog.pg_foreign_table FROM PUBLIC, novaai_inventory_inspector;
 GRANT SELECT (umuser, umserver) ON TABLE pg_catalog.pg_user_mapping TO novaai_inventory_inspector;
+GRANT SELECT (subname) ON TABLE pg_catalog.pg_subscription TO novaai_inventory_inspector;
+GRANT SELECT (classoid, objoid, objsubid) ON TABLE pg_catalog.pg_seclabel TO novaai_inventory_inspector;
+GRANT SELECT (classoid, objoid) ON TABLE pg_catalog.pg_shseclabel TO novaai_inventory_inspector;
+GRANT SELECT (oid) ON TABLE pg_catalog.pg_largeobject_metadata TO novaai_inventory_inspector;
+GRANT SELECT (fdwname) ON TABLE pg_catalog.pg_foreign_data_wrapper TO novaai_inventory_inspector;
+GRANT SELECT (srvname) ON TABLE pg_catalog.pg_foreign_server TO novaai_inventory_inspector;
 REVOKE TEMPORARY, CREATE ON DATABASE inventory_test FROM novaai_inventory_inspector;
 
 CREATE SCHEMA IF NOT EXISTS novaai_app AUTHORIZATION novaai_inventory_owner;
@@ -138,7 +148,7 @@ END $phase2_type_acl$;
 REVOKE TEMPORARY, CREATE ON DATABASE inventory_test FROM PUBLIC;
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
--- Deny all large-object APIs to PUBLIC and the inspector.
+-- Deny every PostgreSQL 17 large-object API to PUBLIC and the inspector.
 REVOKE EXECUTE ON FUNCTION pg_catalog.lo_get(oid) FROM PUBLIC, novaai_inventory_inspector;
 REVOKE EXECUTE ON FUNCTION pg_catalog.lo_get(oid, bigint, integer) FROM PUBLIC, novaai_inventory_inspector;
 REVOKE EXECUTE ON FUNCTION pg_catalog.lo_from_bytea(oid, bytea) FROM PUBLIC, novaai_inventory_inspector;
@@ -154,3 +164,8 @@ REVOKE EXECUTE ON FUNCTION pg_catalog.loread(integer, integer) FROM PUBLIC, nova
 REVOKE EXECUTE ON FUNCTION pg_catalog.lo_open(oid, integer) FROM PUBLIC, novaai_inventory_inspector;
 REVOKE EXECUTE ON FUNCTION pg_catalog.lo_truncate(integer, integer) FROM PUBLIC, novaai_inventory_inspector;
 REVOKE EXECUTE ON FUNCTION pg_catalog.lo_truncate64(integer, bigint) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_close(integer) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_lseek(integer, integer, integer) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_lseek64(integer, bigint, integer) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_tell(integer) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_tell64(integer) FROM PUBLIC, novaai_inventory_inspector;

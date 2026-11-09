@@ -72,8 +72,8 @@ queries = [
     ("user_defined_language", """SELECT NULL::text schema,lanname identity
        FROM pg_language WHERE lanname NOT IN ('internal','c','sql','plpgsql')""", ()),
     ("large_object_metadata", """SELECT NULL::text schema,
-       count(*)::text||' large objects present' identity
-       FROM pg_largeobject_metadata HAVING count(*)>0""", ()),
+       count(oid)::text||' large objects present' identity
+       FROM pg_largeobject_metadata HAVING count(oid)>0""", ()),
     ("custom_cast", """SELECT COALESCE(ns.nspname,nt.nspname) schema,
        format_type(c.castsource,NULL)||' -> '||format_type(c.casttarget,NULL) identity
        FROM pg_cast c
@@ -92,7 +92,11 @@ queries = [
        FROM pg_seclabel l
        CROSS JOIN LATERAL pg_identify_object(l.classoid,l.objoid,l.objsubid)
          AS x(type,schema_name,name,identity)
-       WHERE x.schema_name=ANY(%s)""", (schemas,))
+       WHERE x.schema_name=ANY(%s)""", (schemas,)),
+    ("shared_security_label", """SELECT x.schema_name schema,x.identity
+       FROM pg_shseclabel l
+       CROSS JOIN LATERAL pg_identify_object(l.classoid,l.objoid,0)
+         AS x(type,schema_name,name,identity)""", ())
 ]
 registered_access_methods = {
     x["identity"]: x["classification"] for x in registry.get("external_prerequisites",[])
@@ -101,45 +105,108 @@ registered_access_methods = {
 }
 unsupported = []
 visibility_failures = []
+visibility_checks = []
+positive_probe_families = {"rule","extended_statistics","unsupported_type_family","foreign_table","foreign_data_wrapper","foreign_server","user_mapping","publication","subscription","operator","operator_class","operator_family","aggregate","event_trigger","collation","text_search_configuration","text_search_dictionary","custom_cast","large_object_metadata"}
+unverified_probe_families = sorted({q[0] for q in queries} - positive_probe_families)
+catalogue_relations = {
+ "aggregate":"pg_proc","rule":"pg_rewrite","operator":"pg_operator","operator_class":"pg_opclass",
+ "operator_family":"pg_opfamily","foreign_table":"pg_class","foreign_data_wrapper":"pg_foreign_data_wrapper",
+ "foreign_server":"pg_foreign_server","user_mapping":"pg_user_mapping","event_trigger":"pg_event_trigger",
+ "publication":"pg_publication","subscription":"pg_subscription","text_search_configuration":"pg_ts_config",
+ "text_search_dictionary":"pg_ts_dict","text_search_parser":"pg_ts_parser","text_search_template":"pg_ts_template",
+ "extended_statistics":"pg_statistic_ext","collation":"pg_collation","conversion":"pg_conversion",
+ "transform":"pg_transform","user_defined_language":"pg_language","large_object_metadata":"pg_largeobject_metadata",
+ "custom_cast":"pg_cast","unsupported_type_family":"pg_type","security_label":"pg_seclabel",
+ "shared_security_label":"pg_shseclabel"
+}
 classified_access_methods = []
-conn = psycopg2.connect(DSN)
 try:
-    conn.set_session(readonly=True, autocommit=False)
-    with conn.cursor() as cur:
-        cur.execute("SHOW server_version_num")
-        version = cur.fetchone()[0]
-        if not str(version).startswith("170"):
-            raise SystemExit("Only PostgreSQL 17 is supported")
-        for family, sql, params in queries:
-            cur.execute("SAVEPOINT unsupported_scan")
-            try:
-                cur.execute(sql, params)
-                for row in cur.fetchall():
-                    schema_name, identity = row[0], row[1]
-                    unsupported.append({"family":family,"schema":schema_name,"identity":identity})
-                cur.execute("RELEASE SAVEPOINT unsupported_scan")
-            except psycopg2.Error as exc:
-                cur.execute("ROLLBACK TO SAVEPOINT unsupported_scan")
-                visibility_failures.append({"catalogue_family":family,"sqlstate":exc.pgcode or "UNKNOWN"})
-                cur.execute("RELEASE SAVEPOINT unsupported_scan")
-        cur.execute("SELECT amname FROM pg_am ORDER BY amname")
-        for (name,) in cur.fetchall():
-            if name in registered_access_methods:
-                classified_access_methods.append({"family":"access_method","identity":name,
-                                                   "classification":registered_access_methods[name]})
-            else:
-                unsupported.append({"family":"access_method","schema":None,"identity":name})
-    conn.commit()
-finally:
-    conn.close()
+    conn = psycopg2.connect(DSN)
+    try:
+        conn.set_session(readonly=True, autocommit=False)
+        with conn.cursor() as cur:
+            cur.execute("SHOW server_version_num")
+            version = cur.fetchone()[0]
+            if not str(version).startswith("170"):
+                raise SystemExit("Only PostgreSQL 17 is supported")
+            for family, sql, params in queries:
+                cur.execute("SAVEPOINT unsupported_scan")
+                try:
+                    cur.execute(sql, params)
+                    found_rows = cur.fetchall()
+                    for row in found_rows:
+                        schema_name, identity = row[0], row[1]
+                        unsupported.append({"family":family,"schema":schema_name,"identity":identity})
+                    catalogue = catalogue_relations[family]
+                    cur.execute("SELECT to_regclass(%s) IS NOT NULL, has_table_privilege(current_user,%s,'SELECT')",
+                                ("pg_catalog."+catalogue, "pg_catalog."+catalogue))
+                    relation_exists, relation_select = cur.fetchone()
+                    if family == "user_mapping":
+                        cur.execute("SELECT has_column_privilege(current_user,'pg_catalog.pg_user_mapping','umuser','SELECT') AND has_column_privilege(current_user,'pg_catalog.pg_user_mapping','umserver','SELECT')")
+                        relation_select = cur.fetchone()[0]
+                    if family == "foreign_data_wrapper":
+                        cur.execute("SELECT has_column_privilege(current_user,'pg_catalog.pg_foreign_data_wrapper','fdwname','SELECT')")
+                        relation_select = cur.fetchone()[0]
+                    if family == "foreign_server":
+                        cur.execute("SELECT has_column_privilege(current_user,'pg_catalog.pg_foreign_server','srvname','SELECT')")
+                        relation_select = cur.fetchone()[0]
+                    if family == "subscription":
+                        cur.execute("SELECT has_column_privilege(current_user,'pg_catalog.pg_subscription','subname','SELECT')")
+                        relation_select = cur.fetchone()[0]
+                    if family == "security_label":
+                        cur.execute("SELECT has_column_privilege(current_user,'pg_catalog.pg_seclabel','classoid','SELECT') AND has_column_privilege(current_user,'pg_catalog.pg_seclabel','objoid','SELECT') AND has_column_privilege(current_user,'pg_catalog.pg_seclabel','objsubid','SELECT')")
+                        relation_select = cur.fetchone()[0]
+                    if family == "shared_security_label":
+                        cur.execute("SELECT has_column_privilege(current_user,'pg_catalog.pg_shseclabel','classoid','SELECT') AND has_column_privilege(current_user,'pg_catalog.pg_shseclabel','objoid','SELECT')")
+                        relation_select = cur.fetchone()[0]
+                    if family == "large_object_metadata":
+                        cur.execute("SELECT has_column_privilege(current_user,'pg_catalog.pg_largeobject_metadata','oid','SELECT')")
+                        relation_select = cur.fetchone()[0]
+                    visible = bool(relation_exists and relation_select)
+                    visibility_checks.append({"catalogue_family":family,"query_executed":True,
+                        "catalogue_relation":catalogue,"catalogue_relation_visible":bool(relation_exists),
+                        "required_select_permission":bool(relation_select),"objects_discovered":len(found_rows),
+                        "expected_object_discoverability":"NOT_POSITIVELY_PROBED" if family in unverified_probe_families else "POSITIVE_PROBE_TESTED_IN_SEPARATE_STEP",
+                        "status":"PASS" if visible else "FAIL"})
+                    if not visible:
+                        visibility_failures.append({"catalogue_family":family,"reason":"catalogue relation or required SELECT permission not visible"})
+                    cur.execute("RELEASE SAVEPOINT unsupported_scan")
+                except psycopg2.Error as exc:
+                    cur.execute("ROLLBACK TO SAVEPOINT unsupported_scan")
+                    visibility_failures.append({"catalogue_family":family,"sqlstate":exc.pgcode or "UNKNOWN"})
+                    cur.execute("RELEASE SAVEPOINT unsupported_scan")
+            cur.execute("SELECT amname FROM pg_am ORDER BY amname")
+            for (name,) in cur.fetchall():
+                if name in registered_access_methods:
+                    classified_access_methods.append({"family":"access_method","identity":name,
+                                                       "classification":registered_access_methods[name]})
+                else:
+                    unsupported.append({"family":"access_method","schema":None,"identity":name})
+            cur.execute("SELECT to_regclass('pg_catalog.pg_am') IS NOT NULL,has_table_privilege(current_user,'pg_catalog.pg_am','SELECT')")
+            am_exists,am_select=cur.fetchone()
+            visibility_checks.append({"catalogue_family":"access_method","query_executed":True,
+                "catalogue_relation":"pg_am","catalogue_relation_visible":bool(am_exists),
+                "required_select_permission":bool(am_select),"objects_discovered":len(classified_access_methods),
+                "expected_object_discoverability":"VERSION_PINNED_BUILTIN_REGISTRY","status":"PASS" if am_exists and am_select else "FAIL"})
+            if not am_exists or not am_select:
+                visibility_failures.append({"catalogue_family":"access_method","reason":"pg_am visibility or SELECT permission absent"})
+        conn.commit()
+    finally:
+        conn.close()
+    
+except Exception as exc:
+    print("UNSUPPORTED DETECTOR FAILED CLOSED: " + type(exc).__name__, file=sys.stderr)
+    sys.exit(1)
 result = {
     "postgres_version_num":version,
     "unsupported_objects":unsupported,
     "catalogue_visibility_failures":visibility_failures,
+    "catalogue_visibility_checks":visibility_checks,
+    "unverified_probe_families":unverified_probe_families,
     "classified_access_methods":classified_access_methods,
-    "status":"FAIL" if unsupported or visibility_failures else "PASS",
-    "limitations":"A clean scan establishes only visibility for the listed catalogue families in this disposable fixture."
+    "status":"FAIL" if unsupported or visibility_failures else ("PARTIAL" if unverified_probe_families else "PASS"),
+    "limitations":"Query execution and catalogue SELECT visibility are recorded separately. Security-label object discovery remains unverified until a label provider is installed and positively exercised."
 }
 print(json.dumps(result,sort_keys=True))
-if result["status"]!="PASS":
+if result["status"]=="FAIL":
     sys.exit(1)

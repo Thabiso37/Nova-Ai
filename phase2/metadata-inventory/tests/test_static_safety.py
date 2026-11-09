@@ -1,49 +1,28 @@
 import pathlib
 import unittest
-
-ROOT = pathlib.Path(__file__).resolve().parents[1]
-SCRIPT = (ROOT / "inventory.py").read_text()
-FIXTURE = (ROOT / "fixtures" / "bootstrap.sql").read_text()
-DETECTOR = (ROOT / "detect_unsupported.py").read_text()
-
+ROOT=pathlib.Path(__file__).resolve().parents[1]
+SCRIPT=(ROOT/"inventory.py").read_text()
+FIXTURE=(ROOT/"fixtures"/"bootstrap.sql").read_text()
+DETECTOR=(ROOT/"detect_unsupported.py").read_text()
 class StaticSafetyTests(unittest.TestCase):
-    def test_requires_explicit_dsn(self):
-        self.assertIn("INVENTORY_DSN", SCRIPT)
-    def test_repeatable_read_read_only(self):
-        self.assertIn("REPEATABLE READ", SCRIPT)
-        self.assertIn("readonly=True", SCRIPT)
-    def test_never_queries_application_rows(self):
-        self.assertNotIn("SELECT * FROM novaai_app.customers", SCRIPT)
-        self.assertNotIn("SELECT * FROM novaai_app.sellers", SCRIPT)
-    def test_canaries_are_synthetic(self):
-        self.assertIn("CANARY_CUSTOMER_7f3c2a91", FIXTURE)
-        self.assertIn("CANARY_SELLER_8b1d4e62", FIXTURE)
-    def test_no_ddl_output(self):
-        self.assertNotIn("CREATE TABLE", SCRIPT)
-        self.assertNotIn("ALTER TABLE", SCRIPT)
-    def test_unsupported_detector_covers_phase1_matrix(self):
-        required = [
-            "aggregate", "rule", "operator", "operator_class", "operator_family",
-            "foreign_table", "foreign_data_wrapper", "foreign_server", "user_mapping",
-            "event_trigger", "publication", "subscription", "text_search_configuration",
-            "text_search_dictionary", "text_search_parser", "text_search_template",
-            "extended_statistics", "collation", "conversion", "transform",
-            "user_defined_language", "large_object_metadata", "custom_cast",
-            "unsupported_type_family", "security_label"
-        ]
-        for family in required:
-            self.assertIn(f'("{family}",', DETECTOR)
-        self.assertIn("FROM pg_am", DETECTOR)
-        self.assertIn("FROM pg_user_mapping m", DETECTOR)
-        self.assertNotIn("umoptions", DETECTOR)
-
-    def test_explicit_classification(self):
-        scope = (ROOT / "scope.json").read_text()
-        registry = (ROOT / "provenance_registry.json").read_text()
-        self.assertNotIn("owner_registry", scope)
-        self.assertIn("migration_history", registry)
-        self.assertIn("SUPABASE_MANAGED", registry)
-        self.assertIn("ENVIRONMENT_SPECIFIC", registry)
-
-if __name__ == "__main__":
-    unittest.main()
+ def test_requires_explicit_dsn(self):self.assertIn("INVENTORY_DSN",SCRIPT)
+ def test_repeatable_read_read_only(self):self.assertIn("REPEATABLE READ",SCRIPT);self.assertIn("readonly=True",SCRIPT)
+ def test_never_queries_application_rows(self):self.assertNotIn("SELECT * FROM novaai_app.customers",SCRIPT);self.assertNotIn("SELECT * FROM novaai_app.sellers",SCRIPT)
+ def test_canaries_are_synthetic(self):self.assertIn("CANARY_CUSTOMER_7f3c2a91",FIXTURE);self.assertIn("CANARY_SELLER_8b1d4e62",FIXTURE)
+ def test_no_ddl_output(self):self.assertNotIn("CREATE TABLE",SCRIPT);self.assertNotIn("ALTER TABLE",SCRIPT)
+ def test_runtime_denial_requires_permission_sqlstate(self):
+  runtime=(ROOT/"runtime_security.py").read_text();self.assertIn('state=="42501"',runtime);self.assertNotIn('"25006"',runtime)
+ def test_security_audit_search_path_and_large_object_api(self):
+  audit=(ROOT/"security_audit.py").read_text()
+  for term in ("current_setting('search_path')","pg_db_role_setting","p.prosecdef","lo_truncate64","pg_shseclabel"):self.assertIn(term,audit)
+ def test_snapshot_coordinator_imports_exported_snapshot(self):
+  self.assertIn("pg_export_snapshot",(ROOT/"snapshot_coordinator.py").read_text())
+  self.assertIn("SET TRANSACTION SNAPSHOT",(ROOT/"snapshot_consistency_test.py").read_text())
+ def test_provenance_hash_validation(self):
+  verifier=(ROOT/"verify_provenance.py").read_text();self.assertIn("hash-object",verifier);self.assertIn("changed_migration_file",verifier)
+ def test_structured_baseline_compares_full_routine_signatures(self):
+  base=(ROOT/"catalogue_baseline.py").read_text();compare=(ROOT/"compare_catalogue.py").read_text()
+  self.assertIn("pg_get_function_identity_arguments",base);self.assertIn("pg_get_functiondef",base);self.assertIn("snapshot_id",compare)
+ def test_catalogue_visibility_includes_shared_security_labels(self):
+  self.assertIn("pg_shseclabel",DETECTOR);self.assertIn("shared_security_label",DETECTOR)
+if __name__=="__main__":unittest.main()

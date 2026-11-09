@@ -586,6 +586,15 @@ def main():
         }
     missing_from_inventory_edges = sorted(baseline_edges-inventory_edges)
     missing_from_baseline_edges = sorted(inventory_edges-baseline_edges)
+    dependency_snapshot_match = (
+        baseline_dependencies is not None
+        and baseline_dependencies.get("snapshot_id") == inv.get("snapshot",{}).get("snapshot_id")
+    )
+    report["dependency_snapshot"] = {
+        "inventory_snapshot_id": inv.get("snapshot",{}).get("snapshot_id"),
+        "administrative_snapshot_id": baseline_dependencies.get("snapshot_id") if baseline_dependencies else None,
+        "status": "PASS" if dependency_snapshot_match else "FAIL"
+    }
     report["dependencies"] = {
         "resolved_edges": len(inventory_edges),
         "administrative_baseline_edges":len(baseline_edges),
@@ -595,8 +604,8 @@ def main():
         "missing_inventory_nodes": missing_dependency_nodes,
         "cycle_count": len(sections.get("dependency_cycles",[])),
         "cycle_review_required": bool(sections.get("dependency_cycles")),
-        "status": "PASS" if baseline_dependencies is not None and not missing_from_inventory_edges and not missing_from_baseline_edges and not missing_dependency_nodes and not inv.get("completeness",{}).get("unresolved_dependencies") else "FAIL",
-        "limitation": "Dependency edges are compared against a separate disposable administrative catalogue snapshot. This remains a metadata graph comparison, not restoration equivalence."
+        "status": "PASS" if dependency_snapshot_match and not missing_from_inventory_edges and not missing_from_baseline_edges and not missing_dependency_nodes and not inv.get("completeness",{}).get("unresolved_dependencies") else "FAIL",
+        "limitation": "Dependency edges are compared against the same imported exported snapshot. This remains a metadata graph comparison, not restoration equivalence."
     }
 
     if unsupported is not None:

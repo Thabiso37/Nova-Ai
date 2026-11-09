@@ -6,7 +6,8 @@
       "migration_id": "fixture-migration-0001",
       "path": "phase2/metadata-inventory/fixtures/bootstrap.sql",
       "evidence_kind": "synthetic fixture DDL",
-      "authoritative_for": "only objects explicitly listed below; not NOVAAI production migration history"
+      "authoritative_for": "only objects explicitly listed below; not NOVAAI production migration history",
+      "git_blob_sha": "ee6d8c54656380278877de692d58a7bffe5c2203"
     },
     {
       "migration_id": "postgresql-bootstrap-extension",
@@ -24,13 +25,15 @@
       "migration_id": "fixture-supabase-managed-0001",
       "path": "phase2/metadata-inventory/fixtures/bootstrap.sql",
       "evidence_kind": "synthetic Supabase-managed provenance fixture",
-      "authoritative_for": "only the explicitly listed synthetic objects; not actual Supabase-managed objects"
+      "authoritative_for": "only the explicitly listed synthetic objects; not actual Supabase-managed objects",
+      "git_blob_sha": "ee6d8c54656380278877de692d58a7bffe5c2203"
     },
     {
       "migration_id": "fixture-environment-specific-0001",
       "path": "phase2/metadata-inventory/fixtures/bootstrap.sql",
       "evidence_kind": "synthetic environment-specific provenance fixture",
-      "authoritative_for": "only the explicitly listed synthetic objects; not NOVAAI deployment configuration"
+      "authoritative_for": "only the explicitly listed synthetic objects; not NOVAAI deployment configuration",
+      "git_blob_sha": "ee6d8c54656380278877de692d58a7bffe5c2203"
     }
   ],
   "objects": [

@@ -86,8 +86,18 @@ def main():
     try:
         conn.set_session(isolation_level="REPEATABLE READ", readonly=True, autocommit=False)
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("SELECT pg_export_snapshot() AS snapshot_id, current_database() AS db, current_user AS role, current_setting('server_version_num') AS version")
+            imported_snapshot = os.environ.get("CATALOGUE_SNAPSHOT_ID")
+            if imported_snapshot:
+                if not re.fullmatch(r"[0-9A-Fa-f-]+", imported_snapshot):
+                    raise RuntimeError("Invalid imported snapshot identifier")
+                cur.execute("SET TRANSACTION SNAPSHOT '" + imported_snapshot + "'")
+                snapshot_id = imported_snapshot
+            else:
+                cur.execute("SELECT pg_export_snapshot()")
+                snapshot_id = cur.fetchone()[0]
+            cur.execute("SELECT current_database() AS db, current_user AS role, current_setting('server_version_num') AS version")
             snap = dict(cur.fetchone())
+            snap["snapshot_id"] = snapshot_id
             inventory["snapshot"] = snap
             if not str(snap["version"]).startswith("170"):
                 raise RuntimeError("Only PostgreSQL 17 is supported by this prototype.")
@@ -178,7 +188,7 @@ def main():
                              WHERE a.grantee=0 AND a.privilege_type='EXECUTE') AS public_execute
               FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
               WHERE n.nspname='pg_catalog'
-                AND p.proname IN ('lo_get','lo_from_bytea','lo_put','lo_unlink','lo_create','lo_creat','lo_import','lo_export','lowrite','loread','lo_open','lo_truncate')
+                AND p.proname IN ('lo_get','lo_from_bytea','lo_put','lo_unlink','lo_create','lo_creat','lo_import','lo_export','lowrite','loread','lo_open','lo_truncate','lo_truncate64','lo_close','lo_lseek','lo_lseek64','lo_tell','lo_tell64')
             """)
             security = {"role": role, "memberships": memberships, "database": dbpriv,
                         "relations": relpriv, "columns": colpriv, "owned_relations": owned,
@@ -213,7 +223,8 @@ def main():
                        WHEN 'v' THEN 'view' WHEN 'm' THEN 'materialized_view'
                        WHEN 'S' THEN 'sequence' WHEN 'i' THEN 'index' WHEN 'I' THEN 'index'
                        ELSE 'relation' END AS object_type,
-                     CASE WHEN c.relkind='v' THEN pg_get_viewdef(c.oid,true) END AS view_definition
+                     CASE WHEN c.relkind IN ('v','m') THEN pg_get_viewdef(c.oid,true) END AS view_definition,
+                     c.reloptions
               FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
               WHERE n.nspname = ANY(%s) ORDER BY 1,2
             """, (list(allowed),))
@@ -227,11 +238,24 @@ def main():
               "columns": """SELECT n.nspname schema,c.relname relation,a.attnum ordinal,a.attname name,
                  format_type(a.atttypid,a.atttypmod) data_type,a.attnotnull not_null,
                  pg_get_expr(d.adbin,d.adrelid) default_expression,a.attidentity identity_kind,
-                 a.attgenerated generated_kind
+                 a.attgenerated generated_kind,COALESCE(coll.collname,'') collation,
+                 a.attstorage storage_kind,a.attcompression compression_kind,a.attstattarget statistics_target,
+                 a.attoptions column_options
                  FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid
                  JOIN pg_namespace n ON n.oid=c.relnamespace
                  LEFT JOIN pg_attrdef d ON d.adrelid=c.oid AND d.adnum=a.attnum
+                 LEFT JOIN pg_collation coll ON coll.oid=a.attcollation
                  WHERE a.attnum>0 AND NOT a.attisdropped AND c.relkind IN ('r','p','v','m','f') AND n.nspname=ANY(%s) ORDER BY 1,2,3""",
+              "sequences": """SELECT n.nspname schema,c.relname name,
+                 format_type(s.seqtypid,NULL) data_type,s.seqstart start_value,s.seqincrement increment_by,
+                 s.seqmax max_value,s.seqmin min_value,s.seqcache cache_size,s.seqcycle cycle,
+                 pg_get_userbyid(c.relowner) owner,dep.refobjid::regclass::text owned_by_relation,
+                 dep.refobjsubid owned_by_attnum
+                 FROM pg_sequence s JOIN pg_class c ON c.oid=s.seqrelid
+                 JOIN pg_namespace n ON n.oid=c.relnamespace
+                 LEFT JOIN pg_depend dep ON dep.classid='pg_class'::regclass AND dep.objid=c.oid
+                   AND dep.refclassid='pg_class'::regclass AND dep.deptype IN ('a','i')
+                 WHERE n.nspname=ANY(%s) ORDER BY 1,2""",
               "constraints": """SELECT n.nspname schema,c.relname relation,con.conname name,
                  con.contype kind,con.convalidated validated,con.condeferrable deferrable,
                  con.condeferred initially_deferred,pg_get_constraintdef(con.oid,true) definition,
@@ -243,14 +267,19 @@ def main():
                  WHERE n.nspname=ANY(%s) ORDER BY 1,2,3""",
               "indexes": """SELECT n.nspname schema,t.relname table_name,i.relname index_name,
                  pg_get_indexdef(i.oid) definition,ix.indisunique is_unique,ix.indisvalid is_valid,
-                 pg_get_userbyid(i.relowner) owner
+                 ix.indisprimary is_primary,ix.indisexclusion is_exclusion,ix.indisready is_ready,
+                 ix.indislive is_live,ix.indisreplident is_replica_identity,ix.indisclustered is_clustered,
+                 ix.indnullsnotdistinct nulls_not_distinct,ix.indnkeyatts key_attribute_count,
+                 ix.indnatts attribute_count,pg_get_expr(ix.indpred,ix.indrelid,true) predicate,
+                 pg_get_expr(ix.indexprs,ix.indrelid,true) expressions,pg_get_userbyid(i.relowner) owner
                  FROM pg_index ix JOIN pg_class t ON t.oid=ix.indrelid JOIN pg_class i ON i.oid=ix.indexrelid
                  JOIN pg_namespace n ON n.oid=t.relnamespace WHERE n.nspname=ANY(%s) ORDER BY 1,2,3""",
               "routines": """SELECT n.nspname schema,p.proname name,p.prokind kind,
                  pg_get_function_identity_arguments(p.oid) identity_arguments,
                  pg_get_function_result(p.oid) result_type,p.provolatile volatility,
-                 p.prosecdef security_definer,p.proleakproof leakproof,
-                 pg_get_functiondef(p.oid) definition,pg_get_userbyid(p.proowner) owner,
+                 p.prosecdef security_definer,p.proleakproof leakproof,p.proparallel parallel,
+                 p.proisstrict strict,p.proretset returns_set,p.proconfig configuration,
+                 p.procost cost,p.prorows estimated_rows,pg_get_functiondef(p.oid) definition,pg_get_userbyid(p.proowner) owner,
                  l.lanname language
                  FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
                  JOIN pg_language l ON l.oid=p.prolang
@@ -262,7 +291,10 @@ def main():
                  JOIN pg_namespace n ON n.oid=c.relnamespace
                  WHERE NOT t.tgisinternal AND n.nspname=ANY(%s) ORDER BY 1,2,3""",
               "types": """SELECT n.nspname schema,t.typname name,t.typtype kind,
-                 format_type(t.typbasetype,t.typtypmod) base_type,
+                 format_type(t.typbasetype,t.typtypmod) base_type,t.typcategory category,t.typisdefined is_defined,
+                 t.typnotnull not_null,t.typlen length,t.typbyval by_value,t.typalign alignment,
+                 t.typstorage storage,t.typdefault default_expression,
+                 CASE WHEN t.typcollation=0 THEN NULL ELSE t.typcollation::regcollation::text END collation,
                  pg_get_userbyid(t.typowner) owner
                  FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace
                  WHERE n.nspname=ANY(%s) AND t.typrelid=0 AND t.typelem=0 ORDER BY 1,2""",
@@ -282,8 +314,8 @@ def main():
                  JOIN pg_namespace pn ON pn.oid=pc.relnamespace
                  JOIN pg_class cc ON cc.oid=h.inhrelid JOIN pg_namespace cn ON cn.oid=cc.relnamespace
                  WHERE pn.nspname=ANY(%s) OR cn.nspname=ANY(%s) ORDER BY 1,2,3,4""",
-              "extensions": """SELECT e.extname name,e.extversion version,n.nspname schema,
-                 pg_get_userbyid(e.extowner) owner
+              "extensions": """SELECT e.extname name,e.extversion version,n.nspname schema,e.extrelocatable relocatable,
+                 e.extconfig config_relations,e.extcondition config_conditions,pg_get_userbyid(e.extowner) owner
                  FROM pg_extension e JOIN pg_namespace n ON n.oid=e.extnamespace ORDER BY 1""",
               "dependencies": """SELECT d.deptype dependency_type,
                  d.classid::regclass::text dependent_catalog,d.objid dependent_oid,
@@ -637,7 +669,7 @@ def main():
               "unsupported_dependency_types": unsupported_dependencies,
               "dependency_cycles": dependency_cycles,
               "cycle_handling": "PostgreSQL internal view-rewrite self-dependencies remain in the dependency evidence but are excluded from the ordering graph; remaining strongly connected components are reported for independent review. Phase 2 does not emit DDL or impose a restore order.",
-              "catalogue_visibility_failures": [],
+              "catalogue_visibility_assessment": "See separate unsupported.json evidence; this exporter does not assert catalogue visibility.",
               "secret_findings": secret_findings,
               "status": "PASS"
             }
@@ -671,6 +703,5 @@ if __name__ == "__main__":
     try: main()
     except Exception as exc:
         # Never echo query values or secret-bearing metadata.
-        print(f"INVENTORY FAILED CLOSED: {type(exc).__name__}: {str(exc)[:300]}", file=sys.stderr)
-        print(traceback.format_exc(), file=sys.stderr)
+        print(f"INVENTORY FAILED CLOSED: {type(exc).__name__}", file=sys.stderr)
         sys.exit(1)

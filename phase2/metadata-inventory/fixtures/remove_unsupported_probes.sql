@@ -1,0 +1,23 @@
+-- Remove all disposable unsupported-object probes before clean inventory.
+DO $$ BEGIN PERFORM lo_unlink(424242); END $$;
+DROP SUBSCRIPTION IF EXISTS phase2_probe_subscription;
+DROP PUBLICATION IF EXISTS phase2_probe_publication;
+DROP EVENT TRIGGER IF EXISTS phase2_probe_event_trigger;
+DROP USER MAPPING IF EXISTS FOR novaai_inventory_inspector SERVER phase2_probe_server;
+DROP FOREIGN TABLE IF EXISTS novaai_app.unsupported_foreign_table_probe;
+DROP SERVER IF EXISTS phase2_probe_server CASCADE;
+DROP EXTENSION IF EXISTS postgres_fdw;
+DROP CAST IF EXISTS (integer AS novaai_app.unsupported_range_probe);
+DROP FUNCTION IF EXISTS novaai_app.phase2_int_to_range(integer);
+DROP OPERATOR CLASS IF EXISTS novaai_app.phase2_probe_int4_ops USING btree;
+DROP OPERATOR FAMILY IF EXISTS novaai_app.phase2_probe_family USING btree;
+DROP OPERATOR IF EXISTS novaai_app.=== (integer,integer);
+DROP FUNCTION IF EXISTS novaai_app.phase2_probe_eq(integer,integer);
+DROP FUNCTION IF EXISTS novaai_app.phase2_event_trigger_fn();
+DROP AGGREGATE IF EXISTS novaai_app.phase2_probe_sum(integer);
+DROP COLLATION IF EXISTS novaai_app.phase2_probe_collation;
+DROP TEXT SEARCH DICTIONARY IF EXISTS novaai_app.phase2_probe_tsd;
+DROP TEXT SEARCH CONFIGURATION IF EXISTS novaai_app.phase2_probe_tsc;
+DROP RULE IF EXISTS unsupported_probe_rule ON novaai_app.orders;
+DROP STATISTICS IF EXISTS novaai_app.unsupported_probe_stats;
+DROP TYPE IF EXISTS novaai_app.unsupported_range_probe CASCADE;
