@@ -6,22 +6,11 @@
     "supabase_managed_fixture",
     "environment_specific_fixture"
   ],
-  "classifications": {
-    "novaai_app": "A_NOVAAI_OWNED",
-    "novaai_private": "A_NOVAAI_OWNED",
-    "supabase_managed_fixture": "SUPABASE_MANAGED",
-    "environment_specific_fixture": "ENVIRONMENT_SPECIFIC"
-  },
-  "excluded_schemas": [
-    "pg_catalog",
-    "information_schema",
+  "note": "The schema list is the explicit synthetic fixture scope. Provenance is determined only by exact entries in provenance_registry.json backed by migration_history; this scope file does not classify objects by schema name or owner role. The Supabase-managed and environment-specific entries are synthetic classification probes, not claims about actual Supabase or NOVAAI production objects.",
+  "not_present_in_fixture_schemas": [
     "auth",
     "storage",
     "realtime",
     "vault"
-  ],
-  "note": "All schemas and objects are disposable synthetic fixtures. The Supabase-managed and environment-specific labels exercise explicit provenance classification only; they are not claims about actual Supabase or NOVAAI production objects.",
-  "owner_registry": {
-    "novaai_inventory_owner": "A_NOVAAI_OWNED"
-  }
+  ]
 }
