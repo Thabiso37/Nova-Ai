@@ -54,6 +54,20 @@ jobs:
         env:
           INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector"
         run: set -o pipefail; python phase2/metadata-inventory/security_audit.py | tee security-audit.json | tee -a workflow-captured.log
+
+      - name: Build disposable SECURITY LABEL provider for positive catalogue probes
+        run: |
+          set -euo pipefail
+          docker run --rm --entrypoint bash -v "$GITHUB_WORKSPACE:/workspace" postgres:17.11 -lc '
+            apt-get update
+            apt-get install -y --no-install-recommends gcc postgresql-server-dev-17=17.11-1.pgdg13+2
+            test "$(pg_config --version)" = "PostgreSQL 17.11 (Debian 17.11-1.pgdg13+2)"
+            gcc -fPIC -shared -I"$(pg_config --includedir-server)" -I"$(pg_config --includedir)" \
+              -o /workspace/phase2/metadata-inventory/fixtures/phase2_dummy_seclabel.so \
+              /workspace/phase2/metadata-inventory/fixtures/phase2_dummy_seclabel.c
+          '
+          docker cp phase2/metadata-inventory/fixtures/phase2_dummy_seclabel.so phase2-postgres:/tmp/phase2_dummy_seclabel.so
+          test -s phase2/metadata-inventory/fixtures/phase2_dummy_seclabel.so
       - name: Create unsupported-object positive probes
         run: set -o pipefail; psql -X -h 127.0.0.1 -U postgres -d inventory_test -v ON_ERROR_STOP=1 -f phase2/metadata-inventory/fixtures/unsupported_probes.sql 2>&1 | tee -a workflow-captured.log
       - name: Verify positive unsupported-object discovery

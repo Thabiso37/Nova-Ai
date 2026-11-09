@@ -66,15 +66,9 @@ WHERE l.lanname='plpgsql'
   AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_transform WHERE oid=4294000000::oid);
 RESET allow_system_table_mods;
 
--- Synthetic labels exercise both object and shared-object label catalogues.
-SET allow_system_table_mods = on;
-INSERT INTO pg_catalog.pg_seclabel (objoid,classoid,objsubid,provider,label)
-SELECT c.oid,'pg_class'::regclass,0,'phase2_probe','synthetic-label'
-FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
-WHERE n.nspname='novaai_app' AND c.relname='orders';
-INSERT INTO pg_catalog.pg_shseclabel (objoid,classoid,provider,label)
-SELECT oid,'pg_database'::regclass,'phase2_probe','synthetic-shared-label'
-FROM pg_catalog.pg_database WHERE datname=current_database();
-RESET allow_system_table_mods;
+-- Exercise the real SECURITY LABEL provider hook for object and shared-object labels.
+LOAD '/tmp/phase2_dummy_seclabel.so';
+SECURITY LABEL FOR phase2_dummy ON TABLE novaai_app.orders IS 'classified';
+SECURITY LABEL FOR phase2_dummy ON DATABASE inventory_test IS 'classified';
 
 SELECT lo_create(424242);

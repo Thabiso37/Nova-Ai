@@ -7,15 +7,10 @@ DELETE FROM pg_catalog.pg_transform
    AND trflang=(SELECT oid FROM pg_catalog.pg_language WHERE lanname='plpgsql');
 RESET allow_system_table_mods;
 
--- Remove synthetic labels without selecting or emitting label values.
-SET allow_system_table_mods = on;
-DELETE FROM pg_catalog.pg_seclabel
- WHERE provider='phase2_probe' AND classoid='pg_class'::regclass
-   AND objoid='novaai_app.orders'::regclass;
-DELETE FROM pg_catalog.pg_shseclabel
- WHERE provider='phase2_probe' AND classoid='pg_database'::regclass
-   AND objoid=(SELECT oid FROM pg_catalog.pg_database WHERE datname=current_database());
-RESET allow_system_table_mods;
+-- Remove labels through the same provider API; no label values are read or emitted.
+LOAD '/tmp/phase2_dummy_seclabel.so';
+SECURITY LABEL FOR phase2_dummy ON TABLE novaai_app.orders IS NULL;
+SECURITY LABEL FOR phase2_dummy ON DATABASE inventory_test IS NULL;
 
 SELECT lo_unlink(424242) WHERE EXISTS (SELECT 1 FROM pg_largeobject_metadata WHERE oid=424242);
 DROP SUBSCRIPTION IF EXISTS phase2_probe_subscription;
