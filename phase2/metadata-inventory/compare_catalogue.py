@@ -33,7 +33,10 @@ if not report["snapshot_match"]:
 inv_sections=set(inv.get("sections",{}))
 base_sections=set(base.get("sections",{}))
 missing_required=sorted(REQUIRED_SECTIONS-base_sections)
-section_set_mismatch=sorted(inv_sections ^ base_sections)
+# Inventory-only dependency edges are compared against baseline-dependencies.json
+# by the supplemental comparator, not duplicated in this catalogue baseline.
+allowed_inventory_only={"dependencies","dependency_cycles"}
+section_set_mismatch=sorted((inv_sections-base_sections)-allowed_inventory_only | (base_sections-inv_sections))
 report["checks"]["required_support_matrix_sections"]={
  "status":"PASS" if not missing_required and not section_set_mismatch else "FAIL",
  "missing_required_from_baseline":missing_required,
