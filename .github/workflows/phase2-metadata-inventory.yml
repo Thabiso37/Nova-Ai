@@ -120,7 +120,7 @@ jobs:
         run: python phase2/metadata-inventory/compare_catalogue.py inventory.json catalogue-baseline.json unsupported.json unsupported-probe.json
       - name: Supplemental pg_dump identity and dependency comparison
         if: always()
-        run: python phase2/metadata-inventory/compare_baseline.py inventory.json baseline.sql unsupported.json phase2/metadata-inventory/provenance_registry.json baseline-dependencies.json
+        run: python phase2/metadata-inventory/compare_baseline.py inventory.json baseline.sql unsupported.json phase2/metadata-inventory/provenance_registry.json baseline-dependencies.json catalogue-baseline.json
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v4

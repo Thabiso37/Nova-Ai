@@ -5,13 +5,38 @@ DROP TRANSFORM IF EXISTS FOR novaai_app.unsupported_range_probe LANGUAGE plpgsql
 DROP FUNCTION IF EXISTS novaai_app.phase2_transform_from_sql(internal);
 DROP FUNCTION IF EXISTS novaai_app.phase2_transform_to_sql(internal);
 
--- Remove labels through the same provider API; no label values are read or emitted.
-SELECT pg_catalog.pg_stat_file('/tmp/phase2_dummy_seclabel.so', true) IS NOT NULL AS phase2_provider_available \gset
-\if :phase2_provider_available
+-- Remove labels through the same provider API; never select label values.
+-- The provider was built and used earlier in this same disposable job. If it is
+-- unavailable, cleanup must fail rather than silently leave label rows behind.
 LOAD '/tmp/phase2_dummy_seclabel.so';
 SECURITY LABEL FOR phase2_dummy ON TABLE novaai_app.orders IS NULL;
 SECURITY LABEL FOR phase2_dummy ON DATABASE inventory_test IS NULL;
-\endif
+
+DO $
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_catalog.pg_seclabel
+             WHERE provider='phase2_dummy'
+               AND classoid='pg_class'::regclass
+               AND objoid='novaai_app.orders'::regclass) THEN
+    RAISE EXCEPTION 'object security-label probe was not removed';
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_catalog.pg_shseclabel
+             WHERE provider='phase2_dummy'
+               AND classoid='pg_database'::regclass
+               AND objoid=(SELECT oid FROM pg_catalog.pg_database WHERE datname=current_database())) THEN
+    RAISE EXCEPTION 'shared security-label probe was not removed';
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_catalog.pg_transform t
+             JOIN pg_catalog.pg_type ty ON ty.oid=t.trftype
+             JOIN pg_catalog.pg_namespace n ON n.oid=ty.typnamespace
+             JOIN pg_catalog.pg_language l ON l.oid=t.trflang
+             WHERE n.nspname='novaai_app'
+               AND ty.typname='unsupported_range_probe'
+               AND l.lanname='plpgsql') THEN
+    RAISE EXCEPTION 'transform probe was not removed';
+  END IF;
+END
+$;
 
 SELECT lo_unlink(424242) WHERE EXISTS (SELECT 1 FROM pg_largeobject_metadata WHERE oid=424242);
 DROP SUBSCRIPTION IF EXISTS phase2_probe_subscription;

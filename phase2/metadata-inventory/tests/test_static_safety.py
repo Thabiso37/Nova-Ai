@@ -1,4 +1,8 @@
+import json
 import pathlib
+import subprocess
+import sys
+import tempfile
 import unittest
 
 ROOT=pathlib.Path(__file__).resolve().parents[1]
@@ -47,6 +51,42 @@ class StaticSafetyTests(unittest.TestCase):
   self.assertIn("allowed_inventory_only",compare)
   self.assertIn("unsupported_dependencies",compare)
   self.assertIn("inventory_completeness",compare)
+ def test_routine_comparison_uses_full_structured_identity(self):
+  compare=(ROOT/"compare_baseline.py").read_text()
+  self.assertIn("catalogue_baseline",compare)
+  self.assertIn("identity_arguments",compare)
+  self.assertIn("structured PostgreSQL catalogue",compare)
+  self.assertNotIn("baseline_routines = {",compare)
+  self.assertNotIn("escaped = re.escape(f'{routine[\"schema\"]}.{routine[\"name\"]}')",compare)
+ def test_comparator_rejects_mismatched_exported_snapshots(self):
+  required={"columns","sequences","constraints","indexes","routines","triggers","types","enums",
+            "policies","partitions","extensions","relation_acl","default_privileges","schema_acl",
+            "routine_acl","type_acl","column_acl"}
+  probes={"aggregate","collation","conversion","custom_cast","event_trigger","extended_statistics",
+          "foreign_data_wrapper","foreign_server","foreign_table","large_object_metadata","operator",
+          "operator_class","operator_family","publication","rule","security_label","shared_security_label",
+          "subscription","text_search_configuration","text_search_dictionary","text_search_parser",
+          "text_search_template","transform","unsupported_type_family","user_defined_language","user_mapping"}
+  inv={"snapshot":{"snapshot_id":"old-exported-snapshot","version":"170011"},
+       "objects":[],"sections":{x:[] for x in required},
+       "completeness":{"status":"PASS","unclassified_objects":[],"unsupported_objects":[],
+                       "unresolved_dependencies":[],"unsupported_dependency_types":[],"secret_findings":[]}}
+  base={"snapshot_id":"different-exported-snapshot","version":"170011","objects":[],
+        "sections":{x:[] for x in required}}
+  unsupported={"status":"PASS","unsupported_objects":[],"catalogue_visibility_failures":[],
+               "unverified_probe_families":[]}
+  probe={"status":"FAIL","unsupported_objects":[{"family":x} for x in probes],
+         "catalogue_visibility_failures":[],
+         "catalogue_visibility_checks":[{"catalogue_family":x,"query_executed":True,"status":"PASS"} for x in probes]}
+  with tempfile.TemporaryDirectory() as tmp:
+   root=pathlib.Path(tmp)
+   files=[root/"inventory.json",root/"baseline.json",root/"unsupported.json",root/"probe.json"]
+   for path,data in zip(files,[inv,base,unsupported,probe]):
+    path.write_text(json.dumps(data))
+   result=subprocess.run([sys.executable,str(ROOT/"compare_catalogue.py"),*[str(x) for x in files]],
+                         capture_output=True,text=True)
+  self.assertNotEqual(result.returncode,0)
+  self.assertIn("snapshot_id_mismatch",result.stdout)
  def test_catalogue_visibility_includes_shared_security_labels(self):
   self.assertIn("pg_shseclabel",DETECTOR)
   self.assertIn("shared_security_label",DETECTOR)

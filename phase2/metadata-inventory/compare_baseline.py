@@ -25,13 +25,14 @@ def add_missing(report, category, baseline, inventory):
     }
 
 def main():
-    if len(sys.argv) not in (3,4,5,6):
-        raise SystemExit("usage: compare_baseline.py inventory.json baseline.sql [unsupported.json] [provenance_registry.json] [baseline-dependencies.json]")
+    if len(sys.argv) not in (3,4,5,6,7):
+        raise SystemExit("usage: compare_baseline.py inventory.json baseline.sql [unsupported.json] [provenance_registry.json] [baseline-dependencies.json] [catalogue-baseline.json]")
     inv = json.loads(Path(sys.argv[1]).read_text())
     sql = Path(sys.argv[2]).read_text(errors="replace")
     unsupported = json.loads(Path(sys.argv[3]).read_text()) if len(sys.argv)>=4 else None
     registry = json.loads(Path(sys.argv[4]).read_text()) if len(sys.argv)>=5 else {"external_prerequisites":[]}
-    baseline_dependencies = json.loads(Path(sys.argv[5]).read_text()) if len(sys.argv)==6 else None
+    baseline_dependencies = json.loads(Path(sys.argv[5]).read_text()) if len(sys.argv)>=6 else None
+    catalogue_baseline = json.loads(Path(sys.argv[6]).read_text()) if len(sys.argv)==7 else None
     sections = inv.get("sections",{})
     report = {}
 
@@ -209,61 +210,53 @@ def main():
         "status":"PASS" if not index_definition_mismatches else "FAIL"
     }
 
-    baseline_routines = {
-        clean(x) for x in re.findall(rf'CREATE\s+(?:OR REPLACE\s+)?(?:FUNCTION|PROCEDURE)\s+({QUALIFIED})\s*\(',sql,re.I)
-    }
-    inventory_routines = {f'{x["schema"]}.{x["name"]}' for x in sections.get("routines",[])}
-    add_missing(report,"functions_and_procedures",baseline_routines,inventory_routines)
-
-    inventory_extension_records = {
-        (x["name"],x["version"],x["schema"],x["owner"])
-        for x in sections.get("extensions",[])
-    }
-    baseline_extension_records = {
-        (x["name"],x["version"],x["schema"],x["owner"])
-        for x in (baseline_dependencies or {}).get("extensions",[])
-    }
-    approved_extensions = {
-        x["identity"] for x in registry.get("external_prerequisites",[])
-        if x.get("family")=="extension" and x.get("classification")=="EXTENSION_OWNED"
-           and x.get("approved") is True
-    }
-    report["extensions"] = {
-        "baseline_count":len(baseline_extension_records),
-        "inventory_count":len(inventory_extension_records),
-        "missing_from_inventory":sorted(baseline_extension_records-inventory_extension_records),
-        "missing_from_baseline":sorted(inventory_extension_records-baseline_extension_records),
-        "unapproved_inventory_extensions":sorted(x[0] for x in inventory_extension_records if x[0] not in approved_extensions),
-        "status":"PASS" if baseline_dependencies is not None and baseline_extension_records==inventory_extension_records and all(x[0] in approved_extensions for x in inventory_extension_records) else "FAIL",
-        "limitation":"Extension name, version, schema and owner are compared against the independent administrative catalogue snapshot; provenance approval is checked separately."
-    }
-
-
-    routine_property_mismatches = []
-    for routine in sections.get("routines",[]):
-        identity = f'{routine["schema"]}.{routine["name"]}({routine["identity_arguments"]})'
-        escaped = re.escape(f'{routine["schema"]}.{routine["name"]}')
-        match = re.search(rf'CREATE\s+(?:OR REPLACE\s+)?(?:FUNCTION|PROCEDURE)\s+{escaped}\s*\([^)]*\)([\s\S]*?)(?=ALTER\s+(?:FUNCTION|PROCEDURE)|-- Name:|$)',sql,re.I)
-        if not match:
-            routine_property_mismatches.append((identity,"missing_definition"))
-            continue
-        body = match.group(1)
-        language_match = re.search(r'\bLANGUAGE\s+([A-Za-z_][A-Za-z0-9_]*)',body,re.I)
-        returns_match = re.search(r'\bRETURNS\s+([^\s]+)',body,re.I)
-        volatility = "i" if re.search(r'\bIMMUTABLE\b',body,re.I) else "s" if re.search(r'\bSTABLE\b',body,re.I) else "v"
-        security_definer = bool(re.search(r'\bSECURITY\s+DEFINER\b',body,re.I))
-        if language_match and language_match.group(1).lower() != str(routine.get("language","")).lower():
-            routine_property_mismatches.append((identity,"language",language_match.group(1),routine.get("language")))
-        if returns_match and norm_sql(returns_match.group(1)) != norm_sql(routine["result_type"]):
-            routine_property_mismatches.append((identity,"result_type",returns_match.group(1),routine["result_type"]))
-        if volatility != routine["volatility"]:
-            routine_property_mismatches.append((identity,"volatility",volatility,routine["volatility"]))
-        if security_definer != bool(routine["security_definer"]):
-            routine_property_mismatches.append((identity,"security_definer",security_definer,routine["security_definer"]))
+    # Routine identities and definitions are compared from structured catalogue
+    # records, never by schema/name-only parsing of pg_dump SQL. The primary
+    # catalogue comparator also checks every routine property and full definition.
+    if catalogue_baseline is None:
+        routine_status = "FAIL"
+        baseline_routines = []
+        routine_mismatches = ["structured_catalogue_baseline_not_supplied"]
+    else:
+        baseline_routines = catalogue_baseline.get("sections",{}).get("routines")
+        if baseline_routines is None:
+            baseline_routines = []
+            routine_mismatches = ["structured_routine_section_missing"]
+        else:
+            inventory_routines = sections.get("routines",[])
+            def routine_key(item):
+                return (item["schema"],item["name"],item["kind"],item["identity_arguments"])
+            baseline_keys = [routine_key(item) for item in baseline_routines]
+            inventory_keys = [routine_key(item) for item in inventory_routines]
+            duplicate_keys = sorted(
+                {key for key in baseline_keys if baseline_keys.count(key)>1}
+                | {key for key in inventory_keys if inventory_keys.count(key)>1}
+            )
+            baseline_map = {routine_key(item):item for item in baseline_routines}
+            inventory_map = {routine_key(item):item for item in inventory_routines}
+            missing_routines = sorted(set(baseline_map)-set(inventory_map))
+            extra_routines = sorted(set(inventory_map)-set(baseline_map))
+            routine_mismatches = [
+                key for key in sorted(set(baseline_map)&set(inventory_map))
+                if baseline_map[key] != inventory_map[key]
+            ]
+            if duplicate_keys:
+                routine_mismatches.append(("duplicate_identities",duplicate_keys))
+            routine_status = "PASS" if not (missing_routines or extra_routines or routine_mismatches) else "FAIL"
+        report["functions_and_procedures"] = {
+            "baseline_count":len(baseline_routines),
+            "inventory_count":len(sections.get("routines",[])),
+            "missing_from_inventory":missing_routines if "missing_routines" in locals() else [],
+            "missing_from_baseline":extra_routines if "extra_routines" in locals() else [],
+            "duplicate_or_ambiguous_identities":duplicate_keys if "duplicate_keys" in locals() else [],
+            "status":routine_status,
+            "identity":"schema + routine name + kind + identity argument signature"
+        }
     report["routine_properties"] = {
         "compared_routines":len(sections.get("routines",[])),
-        "mismatches":routine_property_mismatches,
-        "status":"PASS" if not routine_property_mismatches else "FAIL"
+        "mismatches":routine_mismatches,
+        "status":routine_status,
+        "source":"structured PostgreSQL catalogue definitions and properties"
     }
 
     baseline_types = {
