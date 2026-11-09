@@ -50,11 +50,20 @@ CREATE SUBSCRIPTION phase2_probe_subscription
 -- pg_transform is a system catalogue. Insert a disposable synthetic metadata row
 -- to exercise discovery without invoking the transform functions.
 SET allow_system_table_mods = on;
-INSERT INTO pg_catalog.pg_transform (trftype,trflang,trffromsql,trftosql)
-SELECT 'novaai_app.unsupported_range_probe'::regtype,l.oid,
+INSERT INTO pg_catalog.pg_transform (oid,trftype,trflang,trffromsql,trftosql)
+SELECT 4294000000::oid,'novaai_app.unsupported_range_probe'::regtype,l.oid,
        'pg_catalog.textin(cstring)'::regprocedure,
        'pg_catalog.textout(text)'::regprocedure
-FROM pg_catalog.pg_language l WHERE l.lanname='plpgsql';
+FROM pg_catalog.pg_language l
+WHERE l.lanname='plpgsql'
+  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_class WHERE oid=4294000000::oid)
+  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_proc WHERE oid=4294000000::oid)
+  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_type WHERE oid=4294000000::oid)
+  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_namespace WHERE oid=4294000000::oid)
+  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_database WHERE oid=4294000000::oid)
+  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE oid=4294000000::oid)
+  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_language WHERE oid=4294000000::oid)
+  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_transform WHERE oid=4294000000::oid);
 RESET allow_system_table_mods;
 
 -- Synthetic labels exercise both object and shared-object label catalogues.
