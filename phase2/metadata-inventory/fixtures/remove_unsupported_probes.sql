@@ -6,9 +6,12 @@ DROP FUNCTION IF EXISTS novaai_app.phase2_transform_from_sql(internal);
 DROP FUNCTION IF EXISTS novaai_app.phase2_transform_to_sql(internal);
 
 -- Remove labels through the same provider API; no label values are read or emitted.
+SELECT pg_catalog.pg_stat_file('/tmp/phase2_dummy_seclabel.so', true) IS NOT NULL AS phase2_provider_available \gset
+\if :phase2_provider_available
 LOAD '/tmp/phase2_dummy_seclabel.so';
 SECURITY LABEL FOR phase2_dummy ON TABLE novaai_app.orders IS NULL;
 SECURITY LABEL FOR phase2_dummy ON DATABASE inventory_test IS NULL;
+\endif
 
 SELECT lo_unlink(424242) WHERE EXISTS (SELECT 1 FROM pg_largeobject_metadata WHERE oid=424242);
 DROP SUBSCRIPTION IF EXISTS phase2_probe_subscription;

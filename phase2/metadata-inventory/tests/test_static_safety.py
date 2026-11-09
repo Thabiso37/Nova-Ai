@@ -52,7 +52,8 @@ class StaticSafetyTests(unittest.TestCase):
   self.assertIn("shared_security_label",DETECTOR)
  def test_transform_and_security_label_positive_probe_families(self):
   probes=(ROOT/"fixtures"/"unsupported_probes.sql").read_text()
-  self.assertIn("pg_transform",probes);self.assertIn("SECURITY LABEL FOR phase2_dummy",probes)
+  self.assertIn("CREATE TRANSFORM FOR",probes);self.assertIn("SECURITY LABEL FOR phase2_dummy",probes)
+  self.assertNotIn("INSERT INTO pg_catalog.pg_transform",probes)
   self.assertIn('"transform"',DETECTOR)
   provider=(ROOT/"fixtures"/"phase2_dummy_seclabel.c").read_text()
   workflow=(ROOT.parents[1]/".github"/"workflows"/"phase2-metadata-inventory.yml").read_text()
