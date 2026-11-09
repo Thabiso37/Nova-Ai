@@ -51,6 +51,10 @@ jobs:
         env:
           INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector password=local-test-only"
         run: python phase2/metadata-inventory/inventory.py --output inventory.json
+      - name: Discover unsupported object families as restricted inspector
+        env:
+          INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector password=local-test-only"
+        run: python phase2/metadata-inventory/detect_unsupported.py | tee unsupported.json
       - name: Run runtime negative security tests as restricted inspector
         env:
           INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector password=local-test-only"
@@ -58,7 +62,7 @@ jobs:
       - name: Generate independent disposable schema-only baseline
         run: pg_dump -h 127.0.0.1 -U postgres -d inventory_test --schema-only --schema=novaai_app --schema=novaai_private --no-owner --no-privileges --file=baseline.sql
       - name: Scan generated outputs for canaries and secret patterns
-        run: python phase2/metadata-inventory/validate_artifacts.py inventory.json baseline.sql runtime-security.json
+        run: python phase2/metadata-inventory/validate_artifacts.py inventory.json baseline.sql runtime-security.json unsupported.json
       - name: Compare baseline object identities
         run: python phase2/metadata-inventory/compare_baseline.py inventory.json baseline.sql
       - name: Upload test report
@@ -70,4 +74,5 @@ jobs:
             inventory.json
             baseline.sql
             runtime-security.json
+            unsupported.json
           if-no-files-found: warn
