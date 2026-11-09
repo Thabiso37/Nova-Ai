@@ -13,6 +13,12 @@
       "path": "PostgreSQL 17.11 initdb",
       "evidence_kind": "cluster bootstrap",
       "authoritative_for": "plpgsql extension prerequisite"
+    },
+    {
+      "migration_id": "postgresql-builtin-access-methods-pg17",
+      "path": "PostgreSQL 17.11 built-in catalogue baseline",
+      "evidence_kind": "version-pinned PostgreSQL built-in registry",
+      "authoritative_for": "only the listed built-in access methods"
     }
   ],
   "objects": [
@@ -738,6 +744,55 @@
       "extension_name": "plpgsql",
       "approved": true,
       "evidence_migration_id": "postgresql-bootstrap-extension"
+    },
+    {
+      "family": "access_method",
+      "identity": "heap",
+      "classification": "CLUSTER_GLOBAL",
+      "approved": true,
+      "evidence_migration_id": "postgresql-builtin-access-methods-pg17"
+    },
+    {
+      "family": "access_method",
+      "identity": "btree",
+      "classification": "CLUSTER_GLOBAL",
+      "approved": true,
+      "evidence_migration_id": "postgresql-builtin-access-methods-pg17"
+    },
+    {
+      "family": "access_method",
+      "identity": "hash",
+      "classification": "CLUSTER_GLOBAL",
+      "approved": true,
+      "evidence_migration_id": "postgresql-builtin-access-methods-pg17"
+    },
+    {
+      "family": "access_method",
+      "identity": "gist",
+      "classification": "CLUSTER_GLOBAL",
+      "approved": true,
+      "evidence_migration_id": "postgresql-builtin-access-methods-pg17"
+    },
+    {
+      "family": "access_method",
+      "identity": "gin",
+      "classification": "CLUSTER_GLOBAL",
+      "approved": true,
+      "evidence_migration_id": "postgresql-builtin-access-methods-pg17"
+    },
+    {
+      "family": "access_method",
+      "identity": "spgist",
+      "classification": "CLUSTER_GLOBAL",
+      "approved": true,
+      "evidence_migration_id": "postgresql-builtin-access-methods-pg17"
+    },
+    {
+      "family": "access_method",
+      "identity": "brin",
+      "classification": "CLUSTER_GLOBAL",
+      "approved": true,
+      "evidence_migration_id": "postgresql-builtin-access-methods-pg17"
     }
   ],
   "approved_exclusions": [
