@@ -380,22 +380,57 @@ def main():
                 identity = row[prefix+"_identity"]
                 family = supported_dependency_types.get(typ)
                 resolved_identity = identity
+
                 if typ in ("constraint","table constraint","domain constraint","trigger","policy"):
-                    match = re.match(r'(.+?) on (.+)
-                elif typ=="extension":
-                    resolved_identity = name
+                    match = re.match(r'(.+?) on (.+)$', identity)
+                    if match:
+                        object_name = match.group(1).strip('"')
+                        target_parts = match.group(2).strip('"').split(".")
+                        if len(target_parts)==2:
+                            schema_name = target_parts[0].strip('"')
+                            family = "constraint" if "constraint" in typ else typ
+                            resolved_identity = f"{schema_name}.{target_parts[1].strip(chr(34))}.{object_name}"
+                elif typ=="default value":
+                    match = re.match(r"for (.+)$", identity)
+                    if match:
+                        parts = match.group(1).strip('"').split(".")
+                        if len(parts)==3:
+                            schema_name = parts[0].strip('"')
+                            family = "column"
+                            resolved_identity = ".".join(x.strip('"') for x in parts)
+                        else:
+                            family = None
+                elif typ in ("table column","materialized view column"):
+                    parts = identity.strip('"').split(".")
+                    if len(parts)==3:
+                        schema_name = parts[0].strip('"')
+                        family = "column"
+                        resolved_identity = ".".join(x.strip('"') for x in parts)
+                elif typ=="rule":
+                    match = re.match(r'(.+?) on (.+)$', identity)
+                    if match:
+                        target_parts = match.group(2).strip('"').split(".")
+                        if len(target_parts)==2:
+                            schema_name = target_parts[0].strip('"')
+                            target_identity = f"{schema_name}.{target_parts[1].strip(chr(34))}"
+                            family = ("view" if registry_entries.get(f"view|{target_identity}") else
+                                      "materialized_view" if registry_entries.get(f"materialized_view|{target_identity}") else None)
+                            resolved_identity = target_identity
                 elif typ=="schema":
+                    schema_name = name
                     resolved_identity = name
-                elif typ=="table column":
-                    family = "column"
-                if typ=="trigger" and name and name.startswith("RI_ConstraintTrigger_") and schema_name in allowed:
-                    relation_match = re.search(r" on (.+)$", identity)
-                    if relation_match:
-                        target = relation_match.group(1).strip('"').split(".")
-                        if len(target)==2:
-                            rel_identity = f"{target[0].strip(chr(34))}.{target[1].strip(chr(34))}"
+                elif typ in ("extension","language"):
+                    resolved_identity = name
+
+                if typ=="trigger" and name and name.strip('"').startswith("RI_ConstraintTrigger_"):
+                    match = re.search(r" on (.+)$", identity)
+                    if match:
+                        parts = match.group(1).strip('"').split(".")
+                        if len(parts)==2:
+                            rel_identity = f"{parts[0].strip(chr(34))}.{parts[1].strip(chr(34))}"
                             if any(registry_entries.get(f"{fam}|{rel_identity}") for fam in ("table","partitioned_table")):
                                 return {"status":"RESOLVED_DERIVED_INTERNAL","key":f"relation|{rel_identity}"}
+
                 if schema_name in allowed:
                     key = f"{family}|{resolved_identity}" if family else None
                     entry = registry_entries.get(key) if key else None
@@ -409,6 +444,7 @@ def main():
                         unsupported_dependencies.append({"type":typ,"schema":schema_name,"identity":identity})
                         return {"status":"UNRESOLVED_UNSUPPORTED","key":None}
                     return {"status":"UNRESOLVED_MISSING_INVENTORY","key":key}
+
                 external_key = (family,resolved_identity) if family else None
                 if external_key and external_key in external_prerequisites:
                     return {"status":"RESOLVED_EXTERNAL_PREREQUISITE","key":f"{family}|{resolved_identity}"}
