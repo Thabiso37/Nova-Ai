@@ -147,6 +147,9 @@ psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" >
 psql -X -Atqc "SELECT pg_last_wal_replay_lsn()" >"$WORK/replay.after"
 cmp "$WORK/watermark.before" "$WORK/watermark.after"
 grep -q '202611090001' "$WORK/manifests.json"
+! grep -Fq 'HOT_STANDBY_LO_DATA_MUST_NOT_EXPORT' "$WORK/manifests.json"
+printf 'Migration watermark: before=%s after=%s\\n' "$(cat "$WORK/watermark.before")" "$(cat "$WORK/watermark.after")"
+printf 'WAL replay freshness: primary_lsn=%s standby_replay_start=%s standby_replay_end=%s\\n' "$SOURCE_LSN" "$(cat "$WORK/replay.before")" "$(cat "$WORK/replay.after")"
 echo "PASS: stable watermark bracket and replay LSN captured."
 PGUSER=postgres PGPASSWORD= PGPORT="$PP" psql -X -v ON_ERROR_STOP=1 -c "ALTER TABLE public.products ADD COLUMN watermark_probe text; UPDATE supabase_migrations.schema_migrations SET version='202611090002'"
 for _ in $(seq 1 60); do psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" 2>/dev/null | grep -qx 202611090002 && break; sleep 1; done
