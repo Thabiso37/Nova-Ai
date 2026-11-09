@@ -188,9 +188,10 @@ PGUSER=postgres PGPASSWORD= PGPORT="$SP" psql -X -Atqc "SELECT NOT rolsuper AND 
 echo "PASS: snapshot coordination required no extra grants or role escalation."
 
 # WAL replay conflict must not leave or publish a partial snapshot pair.
+PGUSER=postgres PGPASSWORD= PGPORT="$PP" psql -X -v ON_ERROR_STOP=1 -c "INSERT INTO public.products(name) VALUES('wal-conflict-fixture')" >/dev/null
 cat > "$WORK/wal-conflict-manifest.sql" <<EOF
 \\! touch "$WORK/wal-conflict-started"
-SELECT pg_sleep(20) FROM pg_class WHERE relname='products';
+SELECT pg_sleep(20) FROM public.products LIMIT 1;
 SELECT jsonb_build_object('done',true)::text;
 EOF
 SCHEMA_EXPORT_MAX_ATTEMPTS=1 bash scripts/schema-export/export-consistent.sh "$URL" "$WORK/wal-conflict-output" "$WORK/wal-conflict-manifest.sql" >"$WORK/wal-conflict.log" 2>&1 &
