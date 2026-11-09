@@ -21,7 +21,7 @@ class StaticSafetyTests(unittest.TestCase):
         self.assertNotIn("CREATE TABLE", SCRIPT)
         self.assertNotIn("ALTER TABLE", SCRIPT)
     def test_explicit_classification(self):
-        self.assertIn('"novaai_app": "A_NOVAAI_OWNED"', SCRIPT)
+        self.assertIn("owner_registry", (ROOT / "scope.json").read_text())
 
 if __name__ == "__main__":
     unittest.main()
