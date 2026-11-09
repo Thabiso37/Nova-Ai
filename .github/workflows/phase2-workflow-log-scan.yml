@@ -47,13 +47,13 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p scan-evidence
-          printf '%s\\n' "NOT_STARTED" > scan-evidence/retrieval-status.txt
-          printf '%s\\n' "$APPROVED_RUN_ID" > scan-evidence/approved-source-run-id.txt
-          printf '%s\\n' "$APPROVED_SOURCE_SHA" > scan-evidence/approved-source-commit.txt
-          printf '%s\\n' "$APPROVED_BRANCH" > scan-evidence/approved-source-branch.txt
-          printf '%s\\n' "$APPROVED_WORKFLOW_NAME" > scan-evidence/approved-source-workflow.txt
-          printf '%s\\n' "$GITHUB_SHA" > scan-evidence/scanner-workflow-event-commit.txt
-          trap 'rc=$?; printf "FAIL (exit %s)\\n" "$rc" > scan-evidence/retrieval-status.txt; exit "$rc"' ERR
+          printf '%s\n' "NOT_STARTED" > scan-evidence/retrieval-status.txt
+          printf '%s\n' "$APPROVED_RUN_ID" > scan-evidence/approved-source-run-id.txt
+          printf '%s\n' "$APPROVED_SOURCE_SHA" > scan-evidence/approved-source-commit.txt
+          printf '%s\n' "$APPROVED_BRANCH" > scan-evidence/approved-source-branch.txt
+          printf '%s\n' "$APPROVED_WORKFLOW_NAME" > scan-evidence/approved-source-workflow.txt
+          printf '%s\n' "$GITHUB_SHA" > scan-evidence/scanner-workflow-event-commit.txt
+          trap 'rc=$?; printf "FAIL (exit %s)\n" "$rc" > scan-evidence/retrieval-status.txt; exit "$rc"' ERR
 
           if [[ "$EVENT_NAME" == "push" ]]; then
             target_run_id="$APPROVED_RUN_ID"
@@ -95,13 +95,13 @@ jobs:
           gh run view "$target_run_id" --repo "$GITHUB_REPOSITORY" --job "$job_id" --log > scan-evidence/phase2-job-logs.txt
           test -s scan-evidence/phase2-job-logs.txt
 
-          printf '%s\\n' "$target_run_id" > scan-evidence/scanned-run-id.txt
-          printf '%s\\n' "$job_id" > scan-evidence/scanned-job-id.txt
-          printf '%s\\n' "$APPROVED_SOURCE_SHA" > scan-evidence/scanner-source-commit.txt
+          printf '%s\n' "$target_run_id" > scan-evidence/scanned-run-id.txt
+          printf '%s\n' "$job_id" > scan-evidence/scanned-job-id.txt
+          printf '%s\n' "$APPROVED_SOURCE_SHA" > scan-evidence/scanner-source-commit.txt
           sha256sum scan-evidence/phase2-job-logs.txt | awk '{print $1}' > scan-evidence/source-job-log-sha256.txt
           sha256sum phase2/metadata-inventory/scan_sensitive.py phase2/metadata-inventory/secret_patterns.py > scan-evidence/scanner-files-sha256.txt
           git rev-parse HEAD > scan-evidence/checked-out-scanner-commit.txt
-          printf '%s\\n' "PASS" > scan-evidence/retrieval-status.txt
+          printf '%s\n' "PASS" > scan-evidence/retrieval-status.txt
 
       - name: Scan complete workflow job logs with pinned scanner
         id: scan
@@ -115,11 +115,11 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "${{ steps.retrieve.outcome }}" != "success" ]]; then
-            printf 'NOT_RUN: retrieval/identity verification outcome=%s\\n' "${{ steps.retrieve.outcome }}" > scan-evidence/scan-status.txt
+            printf 'NOT_RUN: retrieval/identity verification outcome=%s\n' "${{ steps.retrieve.outcome }}" > scan-evidence/scan-status.txt
           elif [[ "${{ steps.scan.outcome }}" == "success" ]]; then
-            printf '%s\\n' "PASS" > scan-evidence/scan-status.txt
+            printf '%s\n' "PASS" > scan-evidence/scan-status.txt
           else
-            printf 'FAIL: scanner outcome=%s\\n' "${{ steps.scan.outcome }}" > scan-evidence/scan-status.txt
+            printf 'FAIL: scanner outcome=%s\n' "${{ steps.scan.outcome }}" > scan-evidence/scan-status.txt
           fi
 
       - name: Upload scan and failure evidence
