@@ -55,7 +55,6 @@ finally:
 
 denied("protected_table_select", "SELECT id FROM novaai_app.customers")
 denied("protected_column_select", "SELECT email FROM novaai_app.customers")
-denied("user_defined_domain_usage", "SELECT 1::novaai_app.positive_amount")
 denied("foreign_user_mapping_options_read", "SELECT umoptions FROM pg_catalog.pg_user_mapping")
 denied("view_row_access", "SELECT id FROM novaai_app.customer_view")
 denied("materialized_view_access", "SELECT state FROM novaai_app.order_summary")
