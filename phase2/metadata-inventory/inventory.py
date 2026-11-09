@@ -156,6 +156,15 @@ def main():
               FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
               WHERE c.relkind='S' AND n.nspname NOT IN ('pg_catalog','information_schema')
             """)
+            typepriv = rows(cur, """
+              SELECT n.nspname AS schema,t.typname AS name,
+                     has_type_privilege(current_user,t.oid,'USAGE') AS can_usage
+              FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace
+              WHERE n.nspname NOT IN ('pg_catalog','information_schema')
+                AND t.typelem=0
+                AND t.typtype IN ('b','c','d','e','r','m')
+              ORDER BY 1,2
+            """)
             schema_priv = rows(cur, """
               SELECT n.nspname, has_schema_privilege(current_user,n.oid,'CREATE') AS can_create,
                      has_schema_privilege(current_user,n.oid,'USAGE') AS can_usage,
@@ -173,7 +182,7 @@ def main():
             """)
             security = {"role": role, "memberships": memberships, "database": dbpriv,
                         "relations": relpriv, "columns": colpriv, "owned_relations": owned,
-                        "routines": funcs, "sequences": seqpriv, "schemas": schema_priv,
+                        "routines": funcs, "sequences": seqpriv, "types": typepriv, "schemas": schema_priv,
                         "large_object_routines": lo_exec}
             inventory["security"] = security
             violations = []
@@ -187,6 +196,7 @@ def main():
             if owned: violations.append("inspection role owns application relation")
             if any(x["can_create"] for x in schema_priv): violations.append("schema CREATE privilege present")
             if any(x["can_usage"] or x["can_update"] for x in seqpriv): violations.append("sequence privileges present")
+            if any(x["can_usage"] for x in typepriv): violations.append("user-defined type USAGE privilege present")
             if any(x["can_execute"] and (x["security_definer"] or x["schema"] not in ("pg_catalog","information_schema")) for x in funcs):
                 violations.append("unapproved non-system or SECURITY DEFINER function EXECUTE present")
             if any(x["can_execute"] for x in lo_exec): violations.append("large-object routine EXECUTE privilege present")
