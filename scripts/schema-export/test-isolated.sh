@@ -328,13 +328,36 @@ psql -X -qAt -v ON_ERROR_STOP=1 -c "SELECT jsonb_build_object('columns',(SELECT 
 jq -e '.columns | index("independent_later") != null' "$TMP/independent-manifest.json" >/dev/null
 echo "PASS: negative control proves independent snapshots can disagree."
 
-# Failed schema dump and failed manifest both discard the entire pair.
-if SCHEMA_EXPORT_MAX_ATTEMPTS=1 bash scripts/schema-export/export-consistent.sh "postgresql://safe_export:invalid@127.0.0.1:1/postgres?connect_timeout=1" "$TMP/failed-dump" >/dev/null 2>&1; then exit 1; fi
+# Fail pg_dump after the coordinator has exported a snapshot; then fail manifest generation
+# after a complete staged schema dump. Both cases must discard the entire output pair.
+REAL_PG_DUMP="$(command -v pg_dump)"
+FAIL_PG_DUMP_BIN="$TMP/fail-pg-dump-bin"
+mkdir -p "$FAIL_PG_DUMP_BIN"
+export REAL_PG_DUMP FAIL_PG_DUMP_DIR="$TMP/fail-pg-dump-state"
+mkdir -p "$FAIL_PG_DUMP_DIR"
+cat > "$FAIL_PG_DUMP_BIN/pg_dump" <<'PGDUMP_WRAPPER'
+#!/usr/bin/env bash
+set -Eeuo pipefail
+for arg in "$@"; do
+  if [[ "$arg" == "--schema-only" ]]; then
+    count=0
+    [[ ! -f "$FAIL_PG_DUMP_DIR/count" ]] || count="$(cat "$FAIL_PG_DUMP_DIR/count")"
+    printf '%s\n' "$((count + 1))" > "$FAIL_PG_DUMP_DIR/count"
+    echo "Injected pg_dump failure after snapshot coordinator startup." >&2
+    exit 73
+  fi
+done
+exec "$REAL_PG_DUMP" "$@"
+PGDUMP_WRAPPER
+chmod 700 "$FAIL_PG_DUMP_BIN/pg_dump"
+if PATH="$FAIL_PG_DUMP_BIN:$PATH" SCHEMA_EXPORT_MAX_ATTEMPTS=1 \
+  bash "$ROOT/scripts/schema-export/export-consistent.sh" "$SNAPSHOT_URL" "$TMP/failed-dump" >/dev/null 2>&1; then exit 1; fi
+[[ "$(cat "$FAIL_PG_DUMP_DIR/count")" -eq 1 ]]
 [[ ! -e "$TMP/failed-dump/schema.sql" && ! -e "$TMP/failed-dump/manifests.json" ]]
 printf 'SELECT 1/0;\n' > "$TMP/manifest-fails.sql"
-if SCHEMA_EXPORT_MAX_ATTEMPTS=1 bash scripts/schema-export/export-consistent.sh "$SNAPSHOT_URL" "$TMP/failed-manifest" "$TMP/manifest-fails.sql" >/dev/null 2>&1; then exit 1; fi
+if SCHEMA_EXPORT_MAX_ATTEMPTS=1 bash "$ROOT/scripts/schema-export/export-consistent.sh" "$SNAPSHOT_URL" "$TMP/failed-manifest" "$TMP/manifest-fails.sql" >/dev/null 2>&1; then exit 1; fi
 [[ ! -e "$TMP/failed-manifest/schema.sql" && ! -e "$TMP/failed-manifest/manifests.json" ]]
-echo "PASS: failed pg_dump and manifest generation discard both outputs."
+echo "PASS: pg_dump failure after snapshot export and manifest failure both discard both outputs."
 
 # Snapshot IDs expire after COMMIT and after coordinator termination.
 snapshot_import_must_fail() {
