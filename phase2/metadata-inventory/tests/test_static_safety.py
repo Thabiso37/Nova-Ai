@@ -59,8 +59,8 @@ class StaticSafetyTests(unittest.TestCase):
   self.assertIn("private_key",policy)
   self.assertIn("from secret_patterns import CANARIES, PATTERNS",scanner)
  def test_complete_workflow_job_logs_are_scanned(self):
-  workflow=(ROOT.parents[1]/".github"/"workflows"/"phase2-metadata-inventory.yml").read_text()
-  self.assertIn("workflow-log-scan",workflow)
+  workflow=(ROOT.parents[1]/".github"/"workflows"/"phase2-workflow-log-scan.yml").read_text()
+  self.assertIn("workflow_dispatch",workflow)
   self.assertIn("gh run view",workflow)
   self.assertIn("scan_sensitive.py",workflow)
 

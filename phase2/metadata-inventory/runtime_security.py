@@ -123,7 +123,7 @@ def main():
         ("sequence_setval", "SELECT setval('novaai_app.customers_id_seq'::regclass,10)"),
         ("large_object_create", "SELECT lo_create(0)"),
         ("large_object_read", "SELECT lo_get(1::oid)"),
-        ("large_object_read_range", "SELECT lo_get(1::oid,0::bigint,1::bigint)"),
+        ("large_object_read_range", "SELECT lo_get(1::oid,0::bigint,1::integer)"),
         ("large_object_from_bytea", "SELECT lo_from_bytea(0::oid,decode('00','hex'))"),
         ("large_object_write", "SELECT lo_put(0::oid,0,decode('00','hex'))"),
         ("large_object_unlink", "SELECT lo_unlink(0::oid)"),

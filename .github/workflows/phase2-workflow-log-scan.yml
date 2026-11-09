@@ -1,0 +1,46 @@
+name: Phase 2 Complete Workflow Log Scan
+on:
+  workflow_dispatch:
+    inputs:
+      target_run_id:
+        description: Completed Phase 2 metadata inventory workflow run ID
+        required: true
+        type: string
+permissions:
+  actions: read
+  contents: read
+jobs:
+  scan-completed-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Retrieve complete completed-job log stream
+        env:
+          GH_TOKEN: \${{ github.token }}
+          TARGET_RUN_ID: \${{ inputs.target_run_id }}
+        run: |
+          set -euo pipefail
+          [[ "\${TARGET_RUN_ID}" =~ ^[0-9]+$ ]]
+          jobs_json="$(gh api "repos/\${GITHUB_REPOSITORY}/actions/runs/\${TARGET_RUN_ID}/jobs?per_page=100")"
+          job_id="$(printf '%s' "\${jobs_json}" | jq -r '.jobs[] | select(.name == "disposable-postgres-17") | .id' | head -n1)"
+          test -n "\${job_id}" && test "\${job_id}" != "null"
+          gh run view "\${TARGET_RUN_ID}" --job "\${job_id}" --log > phase2-job-logs.txt
+          test -s phase2-job-logs.txt
+          printf '%s\\n' "\${TARGET_RUN_ID}" > scanned-run-id.txt
+          printf '%s\\n' "\${job_id}" > scanned-job-id.txt
+      - name: Scan complete workflow job logs
+        run: |
+          set -euo pipefail
+          python phase2/metadata-inventory/scan_sensitive.py phase2-job-logs.txt | tee workflow-log-scan.txt
+      - name: Upload complete workflow log scan evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2-complete-workflow-log-scan
+          path: |
+            workflow-log-scan.txt
+            scanned-run-id.txt
+            scanned-job-id.txt
+          if-no-files-found: error

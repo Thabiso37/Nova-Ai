@@ -5,7 +5,7 @@ import psycopg2
 DSN = os.environ.get("INVENTORY_DSN")
 if not DSN: raise SystemExit("INVENTORY_DSN is required")
 LO_REQUIRED = {
- ("lo_get","oid"),("lo_get","oid, bigint, bigint"),
+ ("lo_get","oid"),("lo_get","oid, bigint, integer"),
  ("lo_from_bytea","oid, bytea"),("lo_put","oid, bigint, bytea"),
  ("lo_unlink","oid"),("lo_create","oid"),("lo_creat","integer"),
  ("lo_import","text"),("lo_import","text, oid"),("lo_export","oid, text"),
@@ -68,7 +68,7 @@ try:
    c.execute("""SELECT p.proname,pg_get_function_identity_arguments(p.oid),
      has_function_privilege(current_user,p.oid,'EXECUTE')
      FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
-     WHERE n.nspname='pg_catalog' AND (p.proname LIKE 'lo_%' OR p.proname IN ('lowrite','loread'))
+     WHERE n.nspname='pg_catalog' AND (left(p.proname,3)='lo_' OR p.proname IN ('lowrite','loread'))
      ORDER BY 1,2""")
    found=set()
    for name,args,execute in c.fetchall():
