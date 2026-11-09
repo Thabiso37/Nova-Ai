@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 umask 077
 
-if [[ "$#" -ne 2 ]]; then
+if [[ "$#" -lt 2 || "$#" -gt 3 ]]; then
   echo "Usage: dump-schema.sh <connection-string> <output-file>" >&2
   exit 2
 fi
