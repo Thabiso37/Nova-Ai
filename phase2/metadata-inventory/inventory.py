@@ -21,6 +21,11 @@ SUPPORTED = {
     "constraint", "policy", "extension"
 }
 PROVENANCE_OWNERS = None  # Loaded from the explicit owner registry in scope.json.
+PROVENANCE_CLASSES = {
+    "NOVAAI_OWNED", "SUPABASE_MANAGED", "EXTENSION_OWNED",
+    "CLUSTER_GLOBAL", "ENVIRONMENT_SPECIFIC"
+}
+
 
 def rows(cur, sql, args=None):
     cur.execute(sql, args or ())
@@ -45,8 +50,33 @@ def main():
         raise SystemExit("INVENTORY_DSN is required; production DSNs are prohibited.")
     scope = json.load(open(args.scope, encoding="utf-8"))
     registry = json.load(open(args.registry, encoding="utf-8"))
-    registry_entries = {f"{x['family']}|{x['identity']}": x for x in registry.get("objects", [])}
+    registry_objects = registry.get("objects", [])
     migration_ids = {x["migration_id"] for x in registry.get("migration_history", [])}
+    registry_keys = [f"{x.get('family','')}|{x.get('identity','')}" for x in registry_objects]
+    registry_violations = []
+    if len(registry_keys) != len(set(registry_keys)):
+        registry_violations.append("duplicate_object_identity")
+    for entry in registry_objects:
+        if entry.get("classification") not in PROVENANCE_CLASSES:
+            registry_violations.append("unknown_object_classification")
+        if entry.get("migration_id") not in migration_ids:
+            registry_violations.append("missing_migration_evidence")
+        if not entry.get("family") or not entry.get("identity"):
+            registry_violations.append("incomplete_object_identity")
+    for entry in registry.get("external_prerequisites", []):
+        if entry.get("classification") not in PROVENANCE_CLASSES:
+            registry_violations.append("unknown_external_classification")
+        if entry.get("approved") is True and entry.get("evidence_migration_id") not in migration_ids:
+            registry_violations.append("missing_external_migration_evidence")
+    for entry in registry.get("approved_exclusions", []):
+        if entry.get("classification") not in PROVENANCE_CLASSES:
+            registry_violations.append("unknown_exclusion_classification")
+    if registry_violations:
+        print(json.dumps({"diagnostic":"provenance_registry_rejected",
+                          "violation_count":len(registry_violations),
+                          "violation_types":sorted(set(registry_violations))}), file=sys.stderr)
+        raise RuntimeError("Provenance registry failed closed.")
+    registry_entries = {f"{x['family']}|{x['identity']}": x for x in registry_objects}
     secret_findings = []
     inventory = {"format_version": 1, "exporter_version": VERSION,
                   "generated_at_utc": datetime.now(timezone.utc).isoformat(),
