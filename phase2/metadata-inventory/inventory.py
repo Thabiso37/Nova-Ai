@@ -168,7 +168,7 @@ def main():
             # Inventory relations, columns, constraints, indexes, routines, triggers, types, policies, extensions.
             rels = rows(cur, """
               SELECT n.nspname AS schema,c.relname AS name,c.relkind,c.relpersistence,
-                     pg_get_userbyid(c.relowner) AS owner,c.relispartition,
+                     pg_get_userbyid(c.relowner) AS owner,c.relispartition,c.relrowsecurity,c.relforcerowsecurity,
                      CASE c.relkind WHEN 'r' THEN 'table' WHEN 'p' THEN 'partitioned_table'
                        WHEN 'v' THEN 'view' WHEN 'm' THEN 'materialized_view'
                        WHEN 'S' THEN 'sequence' WHEN 'i' THEN 'index' WHEN 'I' THEN 'index'
@@ -272,6 +272,33 @@ def main():
               WHERE d.defaclnamespace=0 OR n.nspname=ANY(%s)
             """, (list(allowed),))
 
+
+
+            inventory["sections"]["schema_acl"] = rows(cur, """
+              SELECT n.nspname schema,pg_get_userbyid(n.nspowner) owner,n.nspacl::text acl
+              FROM pg_namespace n WHERE n.nspname=ANY(%s) ORDER BY 1
+            """, (list(allowed),))
+            inventory["sections"]["routine_acl"] = rows(cur, """
+              SELECT n.nspname schema,p.proname name,
+                     pg_get_function_identity_arguments(p.oid) identity_arguments,
+                     pg_get_userbyid(p.proowner) owner,p.proacl::text acl
+              FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+              WHERE n.nspname=ANY(%s) ORDER BY 1,2,3
+            """, (list(allowed),))
+            inventory["sections"]["type_acl"] = rows(cur, """
+              SELECT n.nspname schema,t.typname name,pg_get_userbyid(t.typowner) owner,
+                     t.typacl::text acl
+              FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace
+              WHERE n.nspname=ANY(%s) AND t.typelem=0 ORDER BY 1,2
+            """, (list(allowed),))
+            inventory["sections"]["column_acl"] = rows(cur, """
+              SELECT n.nspname schema,c.relname relation,a.attname column_name,
+                     a.attacl::text acl
+              FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid
+              JOIN pg_namespace n ON n.oid=c.relnamespace
+              WHERE a.attnum>0 AND NOT a.attisdropped AND a.attacl IS NOT NULL
+                AND n.nspname=ANY(%s) ORDER BY 1,2,3
+            """, (list(allowed),))
 
             # Provenance is assigned only by exact registry entries backed by
             # the synthetic migration-history manifest. Owner values are corroboration,
