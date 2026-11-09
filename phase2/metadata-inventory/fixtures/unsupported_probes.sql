@@ -21,7 +21,7 @@ CREATE FUNCTION novaai_app.phase2_int_to_range(integer) RETURNS novaai_app.unsup
 CREATE CAST (integer AS novaai_app.unsupported_range_probe)
  WITH FUNCTION novaai_app.phase2_int_to_range(integer) AS ASSIGNMENT;
 CREATE FUNCTION novaai_app.phase2_event_trigger_fn() RETURNS event_trigger
- LANGUAGE plpgsql AS $$ BEGIN RETURN; END $$;
+ LANGUAGE plpgsql AS 'BEGIN RETURN; END';
 RESET ROLE;
 CREATE OPERATOR FAMILY novaai_app.phase2_probe_family USING btree;
 CREATE OPERATOR CLASS novaai_app.phase2_probe_int4_ops FOR TYPE integer USING btree
@@ -33,4 +33,4 @@ CREATE PUBLICATION phase2_probe_publication FOR TABLE novaai_app.orders;
 CREATE SUBSCRIPTION phase2_probe_subscription
  CONNECTION 'host=127.0.0.1 port=1 dbname=synthetic user=synthetic'
  PUBLICATION phase2_probe_publication WITH (connect=false,enabled=false,create_slot=false);
-DO $$ BEGIN PERFORM lo_create(424242); END $$;
+SELECT lo_create(424242);
