@@ -41,7 +41,13 @@ try:
                 "referenced_type":row[4],"referenced_schema":row[5],
                 "referenced_identity":row[6]
             })
+        cur.execute("""
+          SELECT e.extname,e.extversion,n.nspname,pg_get_userbyid(e.extowner)
+          FROM pg_extension e JOIN pg_namespace n ON n.oid=e.extnamespace
+          ORDER BY e.extname
+        """)
+        extensions=[{"name":r[0],"version":r[1],"schema":r[2],"owner":r[3]} for r in cur.fetchall()]
     conn.commit()
 finally:
     conn.close()
-print(json.dumps({"postgres_version_num":version,"edge_count":len(edges),"edges":edges},sort_keys=True))
+print(json.dumps({"postgres_version_num":version,"edge_count":len(edges),"edges":edges,"extensions":extensions},sort_keys=True))
