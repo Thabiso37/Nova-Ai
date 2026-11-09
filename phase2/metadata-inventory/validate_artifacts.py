@@ -5,8 +5,8 @@ from pathlib import Path
 
 CANARIES = ("CANARY_CUSTOMER_7f3c2a91", "CANARY_SELLER_8b1d4e62", "CANARY_RLS_DISABLED_91aa73")
 PATTERNS = [
-    re.compile(r"""(?i)(password|passwd|secret|api[_-]?key|access[_-]?token)\\s*[:=]\\s*['"][^'"]+"""),
-    re.compile(r"""(?i)(postgres|postgresql|mysql)://[^\\s'"]+"""),
+    re.compile(r"""(?i)(password|passwd|secret|api[_-]?key|access[_-]?token)\s*[:=]\s*['"][^'"]+"""),
+    re.compile(r"""(?i)(postgres|postgresql|mysql)://[^\s'"]+"""),
     re.compile(r"-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----"),
     re.compile(r"(?i)sb_secret_[A-Za-z0-9_-]{12,}"),
 ]
