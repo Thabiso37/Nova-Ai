@@ -70,6 +70,11 @@ jobs:
           test -s phase2/metadata-inventory/fixtures/phase2_dummy_seclabel.so
       - name: Create unsupported-object positive probes
         run: set -o pipefail; psql -X -h 127.0.0.1 -U postgres -d inventory_test -v ON_ERROR_STOP=1 -f phase2/metadata-inventory/fixtures/unsupported_probes.sql 2>&1 | tee -a workflow-captured.log
+      - name: Verify SECURITY LABEL provider DDL without reading label values
+        run: |
+          set -o pipefail
+          psql -X -h 127.0.0.1 -U postgres -d inventory_test -Atc "SELECT jsonb_build_object('provider_ddl_executed',true,'object_label_rows',(SELECT count(*) FROM pg_catalog.pg_seclabel WHERE provider='phase2_dummy' AND classoid='pg_class'::regclass AND objoid='novaai_app.orders'::regclass),'shared_label_rows',(SELECT count(*) FROM pg_catalog.pg_shseclabel WHERE provider='phase2_dummy' AND classoid='pg_database'::regclass AND objoid=(SELECT oid FROM pg_catalog.pg_database WHERE datname=current_database())),'label_values_read',false)::text" | tee security-label-provider-probe.json
+          python phase2/metadata-inventory/tests/assert_security_label_probe.py security-label-provider-probe.json
       - name: Verify positive unsupported-object discovery
         env:
           INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector"
@@ -108,7 +113,7 @@ jobs:
       - name: Scan evidence and captured command output
         if: always()
         run: |
-          python phase2/metadata-inventory/scan_sensitive.py inventory.json baseline.sql baseline-dependencies.json runtime-security.json unsupported.json unsupported-probe.json security-audit.json provenance-verification.json snapshot-consistency.json catalogue-baseline.json baseline-client-version.txt server-version.txt workflow-captured.log
+          python phase2/metadata-inventory/scan_sensitive.py inventory.json baseline.sql baseline-dependencies.json runtime-security.json unsupported.json unsupported-probe.json security-label-provider-probe.json security-audit.json provenance-verification.json snapshot-consistency.json catalogue-baseline.json baseline-client-version.txt server-version.txt workflow-captured.log
       - name: Compare structured catalogue metadata
         if: always()
         run: python phase2/metadata-inventory/compare_catalogue.py inventory.json catalogue-baseline.json unsupported.json unsupported-probe.json
@@ -127,6 +132,7 @@ jobs:
             runtime-security.json
             unsupported.json
             unsupported-probe.json
+            security-label-provider-probe.json
             security-audit.json
             provenance-verification.json
             snapshot-consistency.json

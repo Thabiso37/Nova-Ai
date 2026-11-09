@@ -204,7 +204,7 @@ result = {
     "unverified_probe_families":unverified_probe_families,
     "classified_access_methods":classified_access_methods,
     "status":"FAIL" if unsupported or visibility_failures else ("PARTIAL" if unverified_probe_families else "PASS"),
-    "limitations":"Query execution and catalogue SELECT visibility are recorded separately. Security-label catalogues are positively exercised with synthetic catalogue rows; provider-specific SECURITY LABEL DDL is not exercised."
+    "limitations":"Query execution and catalogue SELECT visibility are recorded separately. Security-label catalogues are positively exercised through a disposable C label provider and actual SECURITY LABEL DDL for both ordinary and shared objects; the probe verifies row counts without selecting label contents. The transform family is exercised with a synthetic pg_transform catalogue row."
 }
 print(json.dumps(result,sort_keys=True))
 if result["status"]=="FAIL":
