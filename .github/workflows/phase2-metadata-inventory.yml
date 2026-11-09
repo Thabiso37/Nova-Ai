@@ -7,7 +7,7 @@ on:
       - feature/metadata-only-inventory-prototype
   pull_request:
     branches:
-      - feature/metadata-only-inventory-prototype
+      - main
 
 concurrency:
   group: phase2-metadata-inventory-${{ github.ref }}
