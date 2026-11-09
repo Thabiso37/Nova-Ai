@@ -65,8 +65,8 @@ jobs:
           set -Eeuo pipefail
           apt-get update
           apt-get install -y --no-install-recommends age=1.1.1-1+b3 jq
-          [[ "$(pg_dump --version)" == "pg_dump (PostgreSQL) 17.11" ]]
-          [[ "$(psql --version)" == "psql (PostgreSQL) 17.11" ]]
+          pg_dump --version | grep -Eq '^pg_dump \\(PostgreSQL\\) 17\\.11([[:space:]]|$)'
+          psql --version | grep -Eq '^psql \\(PostgreSQL\\) 17\\.11([[:space:]]|$)'
       - name: Build and verify genuine hot standby, security boundary and exports
         shell: bash
         run: bash scripts/schema-export/test-hot-standby.sh
