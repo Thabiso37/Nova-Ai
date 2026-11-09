@@ -130,7 +130,7 @@ echo "PASS: ACCESS SHARE locks on relation kinds used by pg_dump."
 URL="postgresql://safe_export:$EP@127.0.0.1:$SP/postgres?sslmode=disable"
 psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" >"$WORK/watermark.before"
 psql -X -Atqc "SELECT pg_last_wal_replay_lsn()" >"$WORK/replay.before"
-[[ "$(pg_dump --version)" == "pg_dump (PostgreSQL) 17.11" ]]
+pg_dump --version | grep -Eq '^pg_dump \(PostgreSQL\) 17\.11([[:space:]]|$)'
 bash scripts/schema-export/dump-schema.sh "$URL" "$WORK/schema.sql"
 for pat in 'CREATE TABLE public\.products' 'CREATE TABLE public\."Products"' 'CREATE VIEW public\.export_view' 'CREATE MATERIALIZED VIEW public\.export_matview' 'CREATE FUNCTION public\.export_helper' 'CREATE TRIGGER export_products_trigger' 'CREATE SEQUENCE public\.export_sequence' 'CREATE FOREIGN TABLE public\.export_foreign_table'; do grep -Eq "$pat" "$WORK/schema.sql" || { echo "missing schema object: $pat" >&2; exit 1; }; done
 grep -Eq 'ALTER TABLE public\.products OWNER TO postgres' "$WORK/schema.sql"
