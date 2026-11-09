@@ -131,7 +131,7 @@ URL="postgresql://safe_export:$EP@127.0.0.1:$SP/postgres?sslmode=disable"
 psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" >"$WORK/watermark.before"
 psql -X -Atqc "SELECT pg_last_wal_replay_lsn()" >"$WORK/replay.before"
 pg_dump --version | grep -F '17.11'
-pg_dump --schema-only --no-owner --no-privileges --schema=public --schema=private --file="$WORK/direct.sql" "$URL"
+pg_dump --schema-only --schema=public --schema=private --file="$WORK/direct.sql" "$URL"
 for pat in 'CREATE TABLE public\.products' 'CREATE TABLE public\."Products"' 'CREATE VIEW public\.export_view' 'CREATE MATERIALIZED VIEW public\.export_matview' 'CREATE FUNCTION public\.export_helper' 'CREATE TRIGGER export_products_trigger' 'CREATE SEQUENCE public\.export_sequence' 'CREATE FOREIGN TABLE public\.export_foreign_table'; do grep -Eq "$pat" "$WORK/direct.sql" || { echo "missing schema object: $pat" >&2; exit 1; }; done
 ! grep -Eiq 'HOT_STANDBY_APPLICATION_ROW_MUST_NOT_EXPORT|HOT_STANDBY_LO_DATA_MUST_NOT_EXPORT|^[[:space:]]*(COPY[[:space:]]|INSERT[[:space:]]+INTO)' "$WORK/direct.sql"
 echo "PASS: PostgreSQL 17.11 pg_dump schema-only and schema object/data checks."
