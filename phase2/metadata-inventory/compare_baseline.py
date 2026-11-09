@@ -102,7 +102,7 @@ def main():
     add_missing(report,"functions_and_procedures",baseline_routines,inventory_routines)
 
     baseline_extensions = {
-        clean(x) for x in re.findall(r'CREATE EXTENSION(?: IF NOT EXISTS)?\\s+"?([A-Za-z_][A-Za-z0-9_]*)"?',extension_sql,re.I)
+        clean(x) for x in re.findall(r'CREATE EXTENSION(?: IF NOT EXISTS)?\s+"?([A-Za-z_][A-Za-z0-9_]*)"?',extension_sql,re.I)
     }
     inventory_extensions = {x["name"] for x in sections.get("extensions",[])}
     add_missing(report,"extensions",baseline_extensions,inventory_extensions)
