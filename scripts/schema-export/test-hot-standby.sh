@@ -6,7 +6,7 @@ PRIMARY="$WORK/primary"; STANDBY="$WORK/standby"
 PP=55432; SP=55433
 RP="$(od -An -N24 -tx1 /dev/urandom | tr -d ' \n')"
 EP="$(od -An -N24 -tx1 /dev/urandom | tr -d ' \n')"
-export PGUSER=postgres PGHOST=127.0.0.1 PGDATABASE=postgres
+export PGUSER=postgres PGHOST=127.0.0.1 PGDATABASE=postgres PGPORT="$PP"
 cleanup(){ pg_ctl -D "$STANDBY" -m immediate stop >/dev/null 2>&1 || true; pg_ctl -D "$PRIMARY" -m immediate stop >/dev/null 2>&1 || true; rm -rf "$WORK"; }
 trap cleanup EXIT INT TERM
 if [[ "$(id -u)" -eq 0 ]]; then chown postgres:postgres "$WORK"; aspg(){ runuser -u postgres -- "$@"; }; else aspg(){ "$@"; }; fi
