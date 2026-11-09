@@ -166,7 +166,7 @@ class StaticSafetyTests(unittest.TestCase):
 
  def test_dispatch_input_is_explicitly_captured(self):
   workflow=self.scanner_workflow()
-  self.assertRegex(workflow,r"DISPATCH_RUN_ID:\\s*\\$\\{\\{\\s*inputs\\.target_run_id\\s*\\}\\}")
+  self.assertRegex(workflow,r"DISPATCH_RUN_ID:\s*\$\{\{\s*inputs\.target_run_id\s*\}\}")
 
  def test_push_selects_only_the_approved_run(self):
   result=self.run_shell(self.target_selection_block()+"printf '%s' \"$target_run_id\"",
@@ -195,38 +195,38 @@ class StaticSafetyTests(unittest.TestCase):
 
  def test_source_workflow_name_and_path_are_validated(self):
   workflow=self.scanner_workflow()
-  self.assertRegex(workflow,r'--arg name "\\$APPROVED_WORKFLOW_NAME"')
-  self.assertRegex(workflow,r'--arg path "\\$APPROVED_WORKFLOW_PATH"')
-  self.assertRegex(workflow,r'\\.name == \\$name')
-  self.assertRegex(workflow,r'\\.path == \\$path')
+  self.assertRegex(workflow,r'--arg name "\$APPROVED_WORKFLOW_NAME"')
+  self.assertRegex(workflow,r'--arg path "\$APPROVED_WORKFLOW_PATH"')
+  self.assertRegex(workflow,r'\.name == \$name')
+  self.assertRegex(workflow,r'\.path == \$path')
 
  def test_source_branch_and_exact_commit_are_validated(self):
   workflow=self.scanner_workflow()
-  self.assertRegex(workflow,r'--arg branch "\\$APPROVED_BRANCH"')
-  self.assertRegex(workflow,r'--arg sha "\\$APPROVED_SOURCE_SHA"')
-  self.assertRegex(workflow,r'\\.head_branch == \\$branch')
-  self.assertRegex(workflow,r'\\.head_sha == \\$sha')
+  self.assertRegex(workflow,r'--arg branch "\$APPROVED_BRANCH"')
+  self.assertRegex(workflow,r'--arg sha "\$APPROVED_SOURCE_SHA"')
+  self.assertRegex(workflow,r'\.head_branch == \$branch')
+  self.assertRegex(workflow,r'\.head_sha == \$sha')
 
  def test_source_run_must_be_completed_successfully(self):
   workflow=self.scanner_workflow()
-  self.assertRegex(workflow,r'\\.status == "completed"')
-  self.assertRegex(workflow,r'\\.conclusion == "success"')
+  self.assertRegex(workflow,r'\.status == "completed"')
+  self.assertRegex(workflow,r'\.conclusion == "success"')
 
  def test_job_pagination_is_exhaustive_and_count_checked(self):
   workflow=self.scanner_workflow()
   self.assertRegex(workflow,r"gh api --paginate")
   self.assertRegex(workflow,r"actual_total=.*jq 'length'")
-  self.assertRegex(workflow,r'\\[\\[ "\\$actual_total" -eq "\\$expected_total" \\]\\]')
+  self.assertRegex(workflow,r'\[\[ "\$actual_total" -eq "\$expected_total" \]\]')
 
  def test_exactly_one_expected_job_is_required(self):
   workflow=self.scanner_workflow()
-  self.assertRegex(workflow,r'\\.name == "disposable-postgres-17"')
-  self.assertRegex(workflow,r'\\[\\[ "\\$matching_count" -eq 1 \\]\\]')
+  self.assertRegex(workflow,r'\.name == "disposable-postgres-17"')
+  self.assertRegex(workflow,r'\[\[ "\$matching_count" -eq 1 \]\]')
 
  def test_selected_job_must_be_completed_successfully(self):
   workflow=self.scanner_workflow()
-  self.assertRegex(workflow,r'\\.status == "completed"')
-  self.assertRegex(workflow,r'\\.conclusion == "success"')
+  self.assertRegex(workflow,r'\.status == "completed"')
+  self.assertRegex(workflow,r'\.conclusion == "success"')
   self.assertIn('job_id="$(jq -r',workflow)
 
  def test_log_retrieval_uses_validated_source_run_and_job_identifiers(self):
@@ -259,7 +259,7 @@ class StaticSafetyTests(unittest.TestCase):
 
  def test_retrieval_or_identity_failure_skips_scanner_and_fails_gate(self):
   workflow=self.scanner_workflow()
-  self.assertRegex(workflow,r"if: steps\\.retrieve\\.outcome == 'success'")
+  self.assertRegex(workflow,r"if: steps\.retrieve\.outcome == 'success'")
   self.assertIn('if [[ "$RETRIEVAL_OUTCOME" != "success" ]]',workflow)
   start=workflow.index('          [[ "$RETRIEVAL_OUTCOME" == "success" ]]')
   gate=workflow[start:workflow.index("\n",workflow.index('          [[ "$SCAN_OUTCOME" == "success" ]]',start))+1]
