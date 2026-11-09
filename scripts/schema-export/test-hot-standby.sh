@@ -19,6 +19,7 @@ wal_level=replica
 max_wal_senders=8
 max_replication_slots=4
 hot_standby=on
+max_standby_streaming_delay=0
 EOF
 cat >> "$PRIMARY/pg_hba.conf" <<'EOF'
 host all all 127.0.0.1/32 trust
@@ -185,3 +186,36 @@ echo "PASS: restricted login exported and imported one shared snapshot on Postgr
 PGUSER=postgres PGPASSWORD= PGPORT="$SP" psql -X -Atqc "SELECT count(*)=0 FROM pg_auth_members WHERE member=(SELECT oid FROM pg_roles WHERE rolname='safe_export') OR roleid=(SELECT oid FROM pg_roles WHERE rolname='safe_export')" | grep -qx t
 PGUSER=postgres PGPASSWORD= PGPORT="$SP" psql -X -Atqc "SELECT NOT rolsuper AND NOT rolbypassrls AND NOT rolcreaterole AND NOT rolcreatedb AND NOT rolreplication FROM pg_roles WHERE rolname='safe_export'" | grep -qx t
 echo "PASS: snapshot coordination required no extra grants or role escalation."
+
+# WAL replay conflict must not leave or publish a partial snapshot pair.
+cat > "$WORK/wal-conflict-manifest.sql" <<EOF
+\\! touch "$WORK/wal-conflict-started"
+SELECT pg_sleep(20) FROM pg_class WHERE relname='products';
+SELECT jsonb_build_object('done',true)::text;
+EOF
+SCHEMA_EXPORT_MAX_ATTEMPTS=1 bash scripts/schema-export/export-consistent.sh "$URL" "$WORK/wal-conflict-output" "$WORK/wal-conflict-manifest.sql" >"$WORK/wal-conflict.log" 2>&1 &
+EXPORT_PID=$!
+for _ in $(seq 1 100); do
+  [[ -e "$WORK/wal-conflict-started" ]] && break
+  kill -0 "$EXPORT_PID" 2>/dev/null || break
+  sleep 0.1
+done
+if [[ ! -e "$WORK/wal-conflict-started" ]]; then
+  cat "$WORK/wal-conflict.log" >&2
+  echo "ERROR: WAL conflict fixture did not reach the manifest snapshot." >&2
+  kill "$EXPORT_PID" 2>/dev/null || true
+  wait "$EXPORT_PID" 2>/dev/null || true
+  exit 1
+fi
+PGUSER=postgres PGPASSWORD= PGPORT="$PP" psql -X -v ON_ERROR_STOP=1 -c "ALTER TABLE public.products ADD COLUMN wal_replay_conflict_probe text" >/dev/null
+if wait "$EXPORT_PID"; then
+  echo "ERROR: export unexpectedly succeeded across a forced standby replay conflict." >&2
+  exit 1
+fi
+[[ ! -e "$WORK/wal-conflict-output/schema.sql" && ! -e "$WORK/wal-conflict-output/manifests.json" ]]
+grep -Eiq 'conflict with recovery|canceling statement|invalid snapshot|snapshot.*(expired|invalid)' "$WORK/wal-conflict.log" || {
+  cat "$WORK/wal-conflict.log" >&2
+  echo "ERROR: WAL conflict did not produce an identifiable fail-closed error." >&2
+  exit 1
+}
+echo "PASS: WAL replay cancellation cannot publish either partial output."
