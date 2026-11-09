@@ -120,7 +120,7 @@ done
 
 # First attempt deliberately includes an RLS-enabled table for which safe_export has no SELECT.
 set +e
-PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export pg_dump -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" --no-password --schema-only --schema=public --schema=private --strict-names --file="$TMP/schema-no-select.sql" 2>"$TMP/pg_dump-no-select.log"
+PGPASSWORD="$TEST_EXPORT_PASSWORD" bash "$ROOT/scripts/schema-export/dump-schema.sh" "postgresql://safe_export:$TEST_EXPORT_PASSWORD@$PGHOST:$PGPORT/$PGDATABASE" "$TMP/schema-no-select.sql" 2>"$TMP/pg_dump-no-select.log"
 NO_SELECT_DUMP_STATUS=$?
 set -e
 if [[ "$NO_SELECT_DUMP_STATUS" -eq 0 ]]; then
@@ -135,7 +135,7 @@ else
   echo "RESULT: pg_dump requires SELECT on the no-SELECT fixture; retrying with the minimum relation grant."
   cat "$TMP/pg_dump-no-select.log" >&2
   psql -X -v ON_ERROR_STOP=1 -c 'GRANT SELECT ON public.no_select_manifest_fixture TO safe_export' >/dev/null
-  PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export pg_dump -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" --no-password --schema-only --schema=public --schema=private --strict-names --file="$TMP/schema.sql"
+  PGPASSWORD="$TEST_EXPORT_PASSWORD" bash "$ROOT/scripts/schema-export/dump-schema.sh" "postgresql://safe_export:$TEST_EXPORT_PASSWORD@$PGHOST:$PGPORT/$PGDATABASE" "$TMP/schema.sql"
 fi
 [[ -s "$TMP/schema.sql" ]]
 if grep -Eiq '^[[:space:]]*(COPY[[:space:]]|INSERT[[:space:]]+INTO[[:space:]])' "$TMP/schema.sql"; then
