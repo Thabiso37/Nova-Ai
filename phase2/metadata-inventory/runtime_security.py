@@ -46,12 +46,17 @@ try:
         assertion("effective_column_select_denied", cur.fetchone()[0])
         cur.execute("SELECT NOT has_type_privilege(current_user,'novaai_app.positive_amount','USAGE')")
         assertion("effective_user_defined_type_usage_denied", cur.fetchone()[0])
+        cur.execute("SELECT NOT has_column_privilege(current_user,'pg_catalog.pg_user_mapping','umoptions','SELECT')")
+        assertion("foreign_user_mapping_options_not_visible", cur.fetchone()[0])
+        cur.execute("SELECT has_column_privilege(current_user,'pg_catalog.pg_user_mapping','umuser','SELECT') AND has_column_privilege(current_user,'pg_catalog.pg_user_mapping','umserver','SELECT')")
+        assertion("foreign_user_mapping_identity_columns_visible", cur.fetchone()[0])
 finally:
     conn.close()
 
 denied("protected_table_select", "SELECT id FROM novaai_app.customers")
 denied("protected_column_select", "SELECT email FROM novaai_app.customers")
 denied("user_defined_domain_usage", "SELECT 1::novaai_app.positive_amount")
+denied("foreign_user_mapping_options_read", "SELECT umoptions FROM pg_catalog.pg_user_mapping")
 denied("view_row_access", "SELECT id FROM novaai_app.customer_view")
 denied("materialized_view_access", "SELECT state FROM novaai_app.order_summary")
 denied("invoker_function_execution", "SELECT novaai_app.customer_count()")
