@@ -30,6 +30,14 @@ class StaticSafetyTests(unittest.TestCase):
   self.assertIn('state == "42501"',runtime)
   self.assertNotIn('"25006"',runtime)
   self.assertIn("autocommit = True",runtime)
+ def test_runtime_denials_verify_the_expected_privilege_boundary(self):
+  runtime=(ROOT/"runtime_security.py").read_text()
+  self.assertIn("def denied(name, sql, precondition_sql)",runtime)
+  self.assertIn("intended privilege boundary was not independently confirmed",runtime)
+  self.assertIn("function_signatures",runtime)
+  self.assertIn("Missing explicit privilege precondition",runtime)
+  self.assertIn("autocommit = True",runtime)
+  self.assertIn('state == "42501"',runtime)
  def test_security_audit_search_path_and_large_object_api(self):
   audit=(ROOT/"security_audit.py").read_text()
   for term in ("current_setting('search_path')","pg_db_role_setting","p.prosecdef",
