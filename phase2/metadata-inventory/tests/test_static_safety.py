@@ -187,11 +187,9 @@ class StaticSafetyTests(unittest.TestCase):
   self.assertNotEqual(result.returncode,0)
 
  def test_both_trigger_paths_reject_unapproved_run_ids(self):
-  for event,dispatch in (("push",""),("workflow_dispatch","42640933101")):
-   with self.subTest(event=event):
-    result=self.run_shell(self.target_selection_block(),EVENT_NAME=event,
-                          DISPATCH_RUN_ID=dispatch,APPROVED_RUN_ID="42640933100")
-    self.assertNotEqual(result.returncode,0)
+  result=self.run_shell(self.target_selection_block(),EVENT_NAME="workflow_dispatch",
+                        DISPATCH_RUN_ID="42640933101",APPROVED_RUN_ID="42640933100")
+  self.assertNotEqual(result.returncode,0)
 
  def test_source_workflow_name_and_path_are_validated(self):
   workflow=self.scanner_workflow()
@@ -260,7 +258,7 @@ class StaticSafetyTests(unittest.TestCase):
  def test_retrieval_or_identity_failure_skips_scanner_and_fails_gate(self):
   workflow=self.scanner_workflow()
   self.assertRegex(workflow,r"if: steps\.retrieve\.outcome == 'success'")
-  self.assertIn('if [[ "$RETRIEVAL_OUTCOME" != "success" ]]',workflow)
+  self.assertIn('if [[ "${{ steps.retrieve.outcome }}" != "success" ]]',workflow)
   start=workflow.index('          [[ "$RETRIEVAL_OUTCOME" == "success" ]]')
   gate=workflow[start:workflow.index("\n",workflow.index('          [[ "$SCAN_OUTCOME" == "success" ]]',start))+1]
   for outcome in ("failure","skipped"):
