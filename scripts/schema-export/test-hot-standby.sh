@@ -64,9 +64,9 @@ GRANT EXECUTE ON FUNCTION public.standby_secdef_write() TO safe_export;
 CREATE TABLE public.export_marker(id int PRIMARY KEY,payload text);
 INSERT INTO public.export_marker VALUES(1,'HOT_STANDBY_APPLICATION_ROW_MUST_NOT_EXPORT');
 GRANT USAGE ON SCHEMA public,private,storage,supabase_migrations TO safe_export;
-GRANT SELECT ON ALL TABLES IN SCHEMA public,private,storage,supabase_migrations TO safe_export;
+GRANT SELECT ON ALL TABLES IN SCHEMA public,private TO safe_export;
+GRANT SELECT ON storage.buckets TO safe_export;
 REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO safe_export;
 SQL
 psql -X -v ON_ERROR_STOP=1 <<'SQL'
 CREATE EXTENSION file_fdw;
