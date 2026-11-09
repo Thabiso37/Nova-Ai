@@ -19,8 +19,8 @@ jobs:
           python-version: "3.11"
       - name: Retrieve complete completed-job log stream
         env:
-          GH_TOKEN: \${{ github.token }}
-          TARGET_RUN_ID: \${{ inputs.target_run_id }}
+          GH_TOKEN: ${{ github.token }}
+          TARGET_RUN_ID: ${{ inputs.target_run_id }}
         run: |
           set -euo pipefail
           [[ "\${TARGET_RUN_ID}" =~ ^[0-9]+$ ]]
