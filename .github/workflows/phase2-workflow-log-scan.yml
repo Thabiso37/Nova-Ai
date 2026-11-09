@@ -23,14 +23,14 @@ jobs:
           TARGET_RUN_ID: ${{ inputs.target_run_id }}
         run: |
           set -euo pipefail
-          [[ "\${TARGET_RUN_ID}" =~ ^[0-9]+$ ]]
-          jobs_json="$(gh api "repos/\${GITHUB_REPOSITORY}/actions/runs/\${TARGET_RUN_ID}/jobs?per_page=100")"
-          job_id="$(printf '%s' "\${jobs_json}" | jq -r '.jobs[] | select(.name == "disposable-postgres-17") | .id' | head -n1)"
-          test -n "\${job_id}" && test "\${job_id}" != "null"
-          gh run view "\${TARGET_RUN_ID}" --job "\${job_id}" --log > phase2-job-logs.txt
+          [[ "${TARGET_RUN_ID}" =~ ^[0-9]+$ ]]
+          jobs_json="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${TARGET_RUN_ID}/jobs?per_page=100")"
+          job_id="$(printf '%s' "${jobs_json}" | jq -r '.jobs[] | select(.name == "disposable-postgres-17") | .id' | head -n1)"
+          test -n "${job_id}" && test "${job_id}" != "null"
+          gh run view "${TARGET_RUN_ID}" --job "${job_id}" --log > phase2-job-logs.txt
           test -s phase2-job-logs.txt
-          printf '%s\\n' "\${TARGET_RUN_ID}" > scanned-run-id.txt
-          printf '%s\\n' "\${job_id}" > scanned-job-id.txt
+          printf '%s\n' "${TARGET_RUN_ID}" > scanned-run-id.txt
+          printf '%s\n' "${job_id}" > scanned-job-id.txt
       - name: Scan complete workflow job logs
         run: |
           set -euo pipefail
