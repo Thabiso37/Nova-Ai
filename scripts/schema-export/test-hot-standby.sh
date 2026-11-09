@@ -183,7 +183,7 @@ printf 'Migration watermark: before=%s after=%s\\n' "$(cat "$WORK/watermark.befo
 printf 'WAL replay freshness: primary_lsn=%s standby_replay_start=%s standby_replay_end=%s\\n' "$SOURCE_LSN" "$(cat "$WORK/replay.before")" "$(cat "$WORK/replay.after")"
 echo "PASS: stable watermark bracket and replay LSN captured."
 PGUSER=postgres PGPASSWORD= PGPORT="$PP" psql -X -v ON_ERROR_STOP=1 -c "ALTER TABLE public.products ADD COLUMN watermark_probe text; UPDATE supabase_migrations.schema_migrations SET version='202611090002'"
-for _ in $(seq 1 60); do psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" 2>/dev/null | grep -qx 202611090002 && break; sleep 1; done
+for _ in $(seq 1 60); do PGUSER=postgres PGPASSWORD= PGPORT="$SP" psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" 2>/dev/null | grep -qx 202611090002 && break; sleep 1; done
 PGUSER=postgres PGPASSWORD= PGPORT="$SP" psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" | grep -qx 202611090002
 if cmp -s "$WORK/watermark.before" <(PGUSER=postgres PGPASSWORD= PGPORT="$SP" psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations"); then echo "ERROR: watermark drift was not detected" >&2; exit 1; fi
 ! grep -q watermark_probe "$WORK/schema.sql"
