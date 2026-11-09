@@ -68,7 +68,7 @@ jobs:
       - name: Scan generated outputs for canaries and secret patterns
         run: python phase2/metadata-inventory/validate_artifacts.py inventory.json baseline.sql runtime-security.json unsupported.json
       - name: Compare baseline object identities
-        run: python phase2/metadata-inventory/compare_baseline.py inventory.json baseline.sql
+        run: python phase2/metadata-inventory/compare_baseline.py inventory.json baseline.sql unsupported.json
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v4
