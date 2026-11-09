@@ -25,12 +25,13 @@ def add_missing(report, category, baseline, inventory):
     }
 
 def main():
-    if len(sys.argv) not in (3,4,5):
-        raise SystemExit("usage: compare_baseline.py inventory.json baseline.sql [unsupported.json] [provenance_registry.json]")
+    if len(sys.argv) not in (3,4,5,6):
+        raise SystemExit("usage: compare_baseline.py inventory.json baseline.sql [unsupported.json] [provenance_registry.json] [baseline-dependencies.json]")
     inv = json.loads(Path(sys.argv[1]).read_text())
     sql = Path(sys.argv[2]).read_text(errors="replace")
     unsupported = json.loads(Path(sys.argv[3]).read_text()) if len(sys.argv)>=4 else None
-    registry = json.loads(Path(sys.argv[4]).read_text()) if len(sys.argv)==5 else {"external_prerequisites":[]}
+    registry = json.loads(Path(sys.argv[4]).read_text()) if len(sys.argv)>=5 else {"external_prerequisites":[]}
+    baseline_dependencies = json.loads(Path(sys.argv[5]).read_text()) if len(sys.argv)==6 else None
     sections = inv.get("sections",{})
     report = {}
 
@@ -377,14 +378,31 @@ def main():
     }
     registry_keys = {f'{x["family"]}|{x["identity"]}' for x in inv.get("catalogue_objects",[])}
     missing_dependency_nodes = sorted(x for x in inventory_dependency_keys if x not in registry_keys)
+    inventory_edges = {
+        (x["dependency_type"],x["dependent_type"],x.get("dependent_schema") or "",x["dependent_identity"],
+         x["referenced_type"],x.get("referenced_schema") or "",x["referenced_identity"])
+        for x in sections.get("dependencies",[])
+    }
+    baseline_edges = set()
+    if baseline_dependencies is not None:
+        baseline_edges = {
+            (x["dependency_type"],x["dependent_type"],x.get("dependent_schema") or "",x["dependent_identity"],
+             x["referenced_type"],x.get("referenced_schema") or "",x["referenced_identity"])
+            for x in baseline_dependencies.get("edges",[])
+        }
+    missing_from_inventory_edges = sorted(baseline_edges-inventory_edges)
+    missing_from_baseline_edges = sorted(inventory_edges-baseline_edges)
     report["dependencies"] = {
-        "resolved_edges": len(sections.get("dependencies",[])),
+        "resolved_edges": len(inventory_edges),
+        "administrative_baseline_edges":len(baseline_edges),
+        "missing_from_inventory_edges":missing_from_inventory_edges,
+        "missing_from_baseline_edges":missing_from_baseline_edges,
         "inventory_dependency_nodes": len(inventory_dependency_keys),
         "missing_inventory_nodes": missing_dependency_nodes,
         "cycle_count": len(sections.get("dependency_cycles",[])),
         "cycle_review_required": bool(sections.get("dependency_cycles")),
-        "status": "PASS" if not missing_dependency_nodes and not inv.get("completeness",{}).get("unresolved_dependencies") else "FAIL",
-        "limitation": "Dependency nodes are checked against the provenance-backed inventory; pg_dump text is not a second independent dependency graph."
+        "status": "PASS" if baseline_dependencies is not None and not missing_from_inventory_edges and not missing_from_baseline_edges and not missing_dependency_nodes and not inv.get("completeness",{}).get("unresolved_dependencies") else "FAIL",
+        "limitation": "Dependency edges are compared against a separate disposable administrative catalogue snapshot. This remains a metadata graph comparison, not restoration equivalence."
     }
 
     if unsupported is not None:
