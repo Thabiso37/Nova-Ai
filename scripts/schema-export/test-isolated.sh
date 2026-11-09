@@ -99,12 +99,12 @@ for sql in \
   "CREATE TEMP TABLE must_not_create_temp(id integer)" \
   "SELECT nextval('public.synthetic_seq')" \
   "SELECT setval('public.synthetic_seq', 99)"; do
-  if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -c "SET default_transaction_read_only=off; $sql" >/dev/null 2>&1; then
+  if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -c "SET default_transaction_read_only=off" -c "$sql" >/dev/null 2>&1; then
     echo "ERROR: prohibited operation succeeded after read-only override: $sql" >&2; exit 1
   fi
 done
 # Large-object mutation must also remain unavailable after the session override.
-if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -c "SET default_transaction_read_only=off; SELECT lo_create(0)" >/dev/null 2>&1; then
+if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -c "SET default_transaction_read_only=off" -c "SELECT lo_create(0)" >/dev/null 2>&1; then
   echo "ERROR: restricted login created a large object after read-only override." >&2; exit 1
 fi
 psql -X -Atqc "SELECT count(*) FROM public.products WHERE name='must-not-write'" | grep -qx 0
@@ -297,7 +297,7 @@ if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STO
   echo "ERROR: preflight accepted PUBLIC-executable SECURITY DEFINER queue function." >&2
   exit 1
 fi
-grep -Fq 'PUBLIC EXECUTE on SECURITY DEFINER routines' "$TMP/queue-preflight.log" || {
+grep -Fq 'effective EXECUTE on SECURITY DEFINER routines' "$TMP/queue-preflight.log" || {
   cat "$TMP/queue-preflight.log" >&2
   echo "ERROR: SECURITY DEFINER routine was not identified explicitly." >&2
   exit 1
