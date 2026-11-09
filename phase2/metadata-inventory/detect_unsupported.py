@@ -55,6 +55,22 @@ queries = [
     ("extended_statistics", """SELECT n.nspname schema,s.stxname identity
        FROM pg_statistic_ext s JOIN pg_namespace n ON n.oid=s.stxnamespace
        WHERE n.nspname=ANY(%s)""", (schemas,)),
+    ("collation", """SELECT n.nspname schema,c.collname identity
+       FROM pg_collation c JOIN pg_namespace n ON n.oid=c.collnamespace
+       WHERE n.nspname=ANY(%s)""", (schemas,)),
+    ("conversion", """SELECT n.nspname schema,c.conname identity
+       FROM pg_conversion c JOIN pg_namespace n ON n.oid=c.connamespace
+       WHERE n.nspname=ANY(%s)""", (schemas,)),
+    ("transform", """SELECT n.nspname schema,format_type(t.oid,NULL)||'@'||l.lanname identity
+       FROM pg_transform x JOIN pg_type t ON t.oid=x.trftype
+       JOIN pg_language l ON l.oid=x.trflang
+       JOIN pg_namespace n ON n.oid=t.typnamespace
+       WHERE n.nspname=ANY(%s)""", (schemas,)),
+    ("user_defined_language", """SELECT NULL::text schema,lanname identity
+       FROM pg_language WHERE lanname NOT IN ('internal','c','sql','plpgsql')""", ()),
+    ("large_object_metadata", """SELECT NULL::text schema,
+       count(*)::text||' large objects present' identity
+       FROM pg_largeobject_metadata HAVING count(*)>0""", ()),
     ("custom_cast", """SELECT COALESCE(ns.nspname,nt.nspname) schema,
        format_type(c.castsource,NULL)||' -> '||format_type(c.casttarget,NULL) identity
        FROM pg_cast c
