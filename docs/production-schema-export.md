@@ -8,19 +8,18 @@ Before any dispatch, configure that Environment with required reviewer approval 
 
 ## Export contents
 
-`supabase db dump` is restricted to `public,private` and schema-only output. `export-manifests.sql` reads catalog and metadata views for columns/defaults/types, constraints, indexes, RLS state/policies, grants/default privileges, extensions, function definitions/security mode, triggers, sequences, Storage bucket configuration and Storage object policies. It reads no Storage objects and never queries `auth.users` or application/customer rows.
+`scripts/schema-export/dump-schema.sh` invokes PostgreSQL 17.11 `pg_dump` directly with `--no-password --schema-only --schema=public --schema=private --strict-names`. Strict-name matching makes a missing requested schema fail instead of silently producing a partial export. The command is limited to `public` and `private`; it does not include unrelated schemas. PostgreSQL's default ownership and ACL output is retained (no `--no-owner` or `--no-privileges` flags). The restricted login is never granted membership in, or permission to `SET ROLE`, `postgres`. `export-manifests.sql` reads catalog and metadata views for columns/defaults/types, constraints, indexes, RLS state/policies, grants/default privileges, extensions, function definitions/security mode, triggers, sequences, Storage bucket configuration and Storage object policies. It reads no Storage objects and never queries `auth.users` or application/customer rows.
 
 The manifest explicitly checks that `public.products` and `public."Products"` both exist and have different relation OIDs. The validator also requires both definitions in the schema dump. A missing table or case-folding/collision issue fails the run.
 
 ## Toolchain and checks
 
 - Runner: `ubuntu-24.04`.
-- PostgreSQL client: `postgres:17.11-bookworm`; `pg_dump --version` must report 17.11.
-- Supabase CLI: npm `2.122.1`; exact version asserted.
+- PostgreSQL client: `postgres:17.11-bookworm`; both `pg_dump` and `psql` must report exactly 17.11. Production and isolated tests use the same `dump-schema.sh` helper.
 - age: Debian package `1.1.1-1+b3`; version asserted.
 - GitHub checkout and upload-artifact actions are pinned to full commit SHAs.
 
-These are version pins, not proof of a completed end-to-end test. Before first production use, verify container image digest provenance and Debian package availability, then run the workflow against a disposable Supabase-compatible PostgreSQL 17.11 database. The workflow must not be used until that isolated test passes.
+The production command is exercised against a genuine isolated PostgreSQL 17.11 physical hot standby using the same restricted login and shared helper. Tests verify strict schema scope, ownership/grant output, absence of application rows and large-object contents, plus manifest generation, validation, encryption, checksums and cleanup. This does not constitute a test against a Supabase-managed replica or the production database. Before first production use, verify the pinned container image digest provenance and GitHub Environment protection settings.
 
 `validate-export.sh` checks required JSON sections, both case-sensitive product relations, schema-only output, absence of Auth/Storage table definitions, and common secret patterns. Plaintext files are placed under a private runner temp directory, checksummed, archived and encrypted to the public recipient. Only the `.age` ciphertext and its SHA-256 file are named as artifact upload paths. The private key is never available to the workflow.
 
