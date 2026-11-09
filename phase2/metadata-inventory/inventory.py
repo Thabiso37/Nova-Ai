@@ -8,8 +8,8 @@ from psycopg2.extras import RealDictCursor
 VERSION = "0.1.0"
 CANARIES = ("CANARY_CUSTOMER_7f3c2a91", "CANARY_SELLER_8b1d4e62", "CANARY_RLS_DISABLED_91aa73")
 SECRET_PATTERNS = [
-    re.compile(r"""(?i)(password|passwd|secret|api[_-]?key|access[_-]?token)\\s*[:=]\\s*['"][^'"]+"""),
-    re.compile(r"""(?i)(postgres|postgresql|mysql)://[^\\s'"]+"""),
+    re.compile(r"""(?i)(password|passwd|secret|api[_-]?key|access[_-]?token)\s*[:=]\s*['"][^'"]+"""),
+    re.compile(r"""(?i)(postgres|postgresql|mysql)://[^\s'"]+"""),
     re.compile(r"-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----"),
     re.compile(r"(?i)sb_secret_[A-Za-z0-9_-]{12,}"),
     re.compile(r"(?i)supabase.{0,20}(service_role|secret).{0,20}[A-Za-z0-9_-]{12,}"),
