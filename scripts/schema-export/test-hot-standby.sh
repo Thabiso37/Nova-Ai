@@ -116,6 +116,20 @@ if psql -X -v ON_ERROR_STOP=1 -c "SELECT public.standby_secdef_write()" >"$WORK/
 grep -Eqi 'read.only transaction|recovery mode' "$WORK/secdef"
 echo "PASS: SECURITY DEFINER local write rejected."
 PGUSER=postgres PGPASSWORD= PGPORT="$PP" psql -X -v ON_ERROR_STOP=1 -c "REVOKE EXECUTE ON FUNCTION public.standby_secdef_write() FROM safe_export"
+PGUSER=postgres PGPASSWORD= PGPORT="$PP" psql -X -v ON_ERROR_STOP=1 <<'REVOKE_LO'
+REVOKE EXECUTE ON FUNCTION
+  pg_catalog.lo_create(oid),
+  pg_catalog.lo_from_bytea(oid,bytea),
+  pg_catalog.lo_put(oid,bigint,bytea),
+  pg_catalog.lo_unlink(oid)
+FROM safe_export;
+REVOKE EXECUTE ON FUNCTION
+  pg_catalog.lo_create(oid),
+  pg_catalog.lo_from_bytea(oid,bytea),
+  pg_catalog.lo_put(oid,bigint,bytea),
+  pg_catalog.lo_unlink(oid)
+FROM PUBLIC;
+REVOKE_LO
 for _ in $(seq 1 60); do psql -X -Atqc "SELECT has_function_privilege(current_user,'public.standby_secdef_write()','EXECUTE')" 2>/dev/null | grep -qx f && break; sleep 1; done
 psql -X -v ON_ERROR_STOP=1 -f scripts/schema-export/assert-read-only-role.sql
 echo "PASS: production read-only preflight accepted the restricted login on standby."
@@ -146,7 +160,7 @@ grep -Eq 'GRANT SELECT ON TABLE public\.products TO safe_export' "$WORK/schema.s
 ! grep -Eiq 'CREATE SCHEMA (storage|supabase_migrations)|CREATE TABLE (storage|supabase_migrations)\.' "$WORK/schema.sql"
 ! grep -Eiq 'HOT_STANDBY_APPLICATION_ROW_MUST_NOT_EXPORT|HOT_STANDBY_LO_DATA_MUST_NOT_EXPORT|^[[:space:]]*(COPY[[:space:]]|INSERT[[:space:]]+INTO)' "$WORK/schema.sql"
 echo "PASS: exact production helper uses PostgreSQL 17.11 strict public/private schema-only pg_dump; ownership/grants retained; no rows or large-object contents."
-psql -X -f scripts/schema-export/export-manifests.sql -o "$WORK/manifests.json"
+psql -X -q -f scripts/schema-export/export-manifests.sql -o "$WORK/manifests.json"
 jq -e '.manifest_version == 2 and (.policies | any(.name == "export_storage_objects_read")) and (.functions | any(.name == "export_helper")) and (.triggers | any(.name == "export_products_trigger")) and (.indexes | length > 0) and (.constraints | length > 0)' "$WORK/manifests.json" >/dev/null
 bash scripts/schema-export/validate-export.sh "$WORK"
 tar -czf "$WORK/standby-export.tar.gz" -C "$WORK" schema.sql manifests.json
