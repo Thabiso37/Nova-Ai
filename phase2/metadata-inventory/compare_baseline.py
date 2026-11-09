@@ -73,13 +73,77 @@ def main():
     def norm_sql(value):
         return re.sub(r'\s+',' ',value.replace('"','').strip()).lower()
 
+    def parse_column_definition(definition):
+        type_match = re.match(
+            r'(.+?)(?=\s+(?:NOT NULL|NULL|DEFAULT|GENERATED|COLLATE|CONSTRAINT)\b|$)',
+            definition, re.I
+        )
+        data_type = norm_sql(type_match.group(1)) if type_match else ""
+        not_null = bool(re.search(r'\bNOT NULL\b', definition, re.I))
+        identity_kind = ""
+        if re.search(r'\bGENERATED\s+BY\s+DEFAULT\s+AS\s+IDENTITY\b', definition, re.I):
+            identity_kind = "d"
+        elif re.search(r'\bGENERATED\s+ALWAYS\s+AS\s+IDENTITY\b', definition, re.I):
+            identity_kind = "a"
+        generated_kind = "s" if re.search(r'\bGENERATED\s+ALWAYS\s+AS\s*\(', definition, re.I) else ""
+        default_match = re.search(
+            r'\bDEFAULT\s+(.+?)(?=\s+(?:NOT NULL|NULL|GENERATED|COLLATE|CONSTRAINT)\b|$)',
+            definition, re.I
+        )
+        default_value = norm_sql(default_match.group(1)) if default_match else None
+        return (data_type, not_null, default_value, identity_kind, generated_kind)
+
     baseline_column_properties = {}
     for table, body in table_blocks.items():
         for line in body.splitlines():
             stripped = line.strip().rstrip(",")
             if not stripped or stripped.upper().startswith("CONSTRAINT "):
                 continue
-            m = re.match(r'"?([A-Za-z_][A-Za-z0-9_]*)"?\s+(.+)
+            match = re.match(r'"?([A-Za-z_][A-Za-z0-9_]*)"?\s+(.+)$', stripped)
+            if match:
+                baseline_column_properties[f"{table}.{match.group(1)}"] = parse_column_definition(match.group(2))
+
+    for table, column, mode in re.findall(
+        rf'ALTER TABLE\s+({QUALIFIED})\s+ALTER COLUMN\s+"?([A-Za-z_][A-Za-z0-9_]*)"?\s+ADD GENERATED\s+(ALWAYS|BY DEFAULT)\s+AS IDENTITY',
+        sql, re.I
+    ):
+        key = f"{clean(table)}.{column}"
+        if key in baseline_column_properties:
+            current = list(baseline_column_properties[key])
+            current[3] = "a" if mode.upper()=="ALWAYS" else "d"
+            baseline_column_properties[key] = tuple(current)
+
+    inventory_column_properties = {}
+    for column in sections.get("columns", []):
+        relation_key = f'{column["schema"]}.{column["relation"]}'
+        if relation_key not in tables:
+            continue
+        key = f'{relation_key}.{column["name"]}'
+        inventory_column_properties[key] = (
+            norm_sql(column["data_type"]),
+            bool(column["not_null"]),
+            norm_sql(column["default_expression"]) if column["default_expression"] is not None else None,
+            column["identity_kind"] or "",
+            column["generated_kind"] or ""
+        )
+    column_property_mismatches = []
+    for key in sorted(set(baseline_column_properties) | set(inventory_column_properties)):
+        baseline_value = baseline_column_properties.get(key)
+        inventory_value = inventory_column_properties.get(key)
+        if baseline_value != inventory_value:
+            column_property_mismatches.append({
+                "column": key,
+                "baseline": baseline_value,
+                "inventory": inventory_value
+            })
+    report["column_properties"] = {
+        "baseline_count": len(baseline_column_properties),
+        "inventory_count": len(inventory_column_properties),
+        "mismatches": column_property_mismatches,
+        "status": "PASS" if not column_property_mismatches else "FAIL"
+    }
+
+    baseline_constraints = set()
     for table,name in re.findall(
         rf'ALTER TABLE ONLY\s+({QUALIFIED})\s+ADD CONSTRAINT\s+"?([A-Za-z_][A-Za-z0-9_]*)"?',
         sql,re.I
