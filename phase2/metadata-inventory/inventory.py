@@ -270,7 +270,7 @@ def main():
                  FROM pg_enum e JOIN pg_type t ON t.oid=e.enumtypid
                  JOIN pg_namespace n ON n.oid=t.typnamespace WHERE n.nspname=ANY(%s) ORDER BY 1,2,4""",
               "policies": """SELECT n.nspname schema,c.relname relation,p.polname name,p.polcmd command,
-                 p.polpermissive permissive,p.polroles roles,pg_get_expr(p.polqual,p.polrelid) using_expression,
+                 p.polpermissive permissive,ARRAY(SELECT CASE WHEN role_oid=0 THEN 'PUBLIC' ELSE r.rolname END FROM unnest(p.polroles) AS u(role_oid) LEFT JOIN pg_roles r ON r.oid=u.role_oid ORDER BY 1) roles,pg_get_expr(p.polqual,p.polrelid) using_expression,
                  pg_get_expr(p.polwithcheck,p.polrelid) check_expression,
                  pg_get_userbyid(c.relowner) owner
                  FROM pg_policy p JOIN pg_class c ON c.oid=p.polrelid
