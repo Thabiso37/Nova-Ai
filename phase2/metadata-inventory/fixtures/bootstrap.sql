@@ -98,7 +98,7 @@ REVOKE ALL ON ALL FUNCTIONS IN SCHEMA novaai_app, novaai_private FROM PUBLIC, no
 -- PostgreSQL has no "REVOKE ALL ON ALL TYPES" form. Revoke USAGE
 -- from PUBLIC and the inspector on every synthetic user-defined type,
 -- including table row types, domains, enums and standalone composites.
-DO $
+DO $phase2_type_acl$
 DECLARE t record;
 BEGIN
   FOR t IN
@@ -112,7 +112,7 @@ BEGIN
     EXECUTE format('REVOKE USAGE ON TYPE %I.%I FROM PUBLIC, novaai_inventory_inspector',
                    t.nspname,t.typname);
   END LOOP;
-END $;
+END $phase2_type_acl$;
 REVOKE TEMPORARY, CREATE ON DATABASE inventory_test FROM PUBLIC;
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
