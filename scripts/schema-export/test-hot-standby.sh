@@ -132,8 +132,8 @@ URL="postgresql://safe_export:$EP@127.0.0.1:$SP/postgres?sslmode=disable"
 psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" >"$WORK/watermark.before"
 psql -X -Atqc "SELECT pg_last_wal_replay_lsn()" >"$WORK/replay.before"
 pg_dump --version | grep -Eq '^pg_dump \(PostgreSQL\) 17\.11([[:space:]]|$)'
-if bash scripts/schema-export/dump-schema.sh "postgresql://safe_export:invalid-password@127.0.0.1:$SP/postgres?sslmode=disable" "$WORK/failed.sql" >"$WORK/failed-export.log" 2>&1; then
-  echo "ERROR: invalid-credential export unexpectedly succeeded." >&2
+if bash scripts/schema-export/dump-schema.sh "postgresql://safe_export:$EP@127.0.0.1:$((SP + 100))/postgres?sslmode=disable" "$WORK/failed.sql" >"$WORK/failed-export.log" 2>&1; then
+  echo "ERROR: unreachable-endpoint export unexpectedly succeeded." >&2
   exit 1
 fi
 [[ ! -e "$WORK/failed.sql" ]]
