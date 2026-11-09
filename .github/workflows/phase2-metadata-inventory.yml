@@ -24,7 +24,7 @@ jobs:
       postgres:
         image: postgres:17.11
         env:
-          POSTGRES_PASSWORD: admin-test-only
+          POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: inventory_test
         ports:
           - 5432:5432
@@ -34,7 +34,6 @@ jobs:
           --health-timeout 5s
           --health-retries 20
     env:
-      PGPASSWORD: admin-test-only
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -53,15 +52,15 @@ jobs:
         run: python -m unittest discover -s phase2/metadata-inventory/tests -v
       - name: Run restricted inventory
         env:
-          INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector password=local-test-only"
+          INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector "
         run: python phase2/metadata-inventory/inventory.py --output inventory.json
       - name: Discover unsupported object families as restricted inspector
         env:
-          INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector password=local-test-only"
+          INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector "
         run: set -o pipefail; python phase2/metadata-inventory/detect_unsupported.py | tee unsupported.json
       - name: Run runtime negative security tests as restricted inspector
         env:
-          INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector password=local-test-only"
+          INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector "
         run: set -o pipefail; python phase2/metadata-inventory/runtime_security.py | tee runtime-security.json
       - name: Generate independent disposable schema-only baseline
         run: pg_dump -h 127.0.0.1 -U postgres -d inventory_test --schema-only --schema=novaai_app --schema=novaai_private --file=baseline.sql
