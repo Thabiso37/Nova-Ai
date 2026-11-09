@@ -11,7 +11,7 @@ fi
 CONNECTION_STRING="$1"
 OUTPUT_FILE="$2"
 [[ -n "$CONNECTION_STRING" && -n "$OUTPUT_FILE" ]]
-[[ "$(pg_dump --version)" == "pg_dump (PostgreSQL) 17.11" ]]
+pg_dump --version | grep -Eq '^pg_dump \(PostgreSQL\) 17\.11([[:space:]]|$)'
 
 # Never leave a partial dump behind if pg_dump or its postcondition fails.
 rm -f -- "$OUTPUT_FILE"
