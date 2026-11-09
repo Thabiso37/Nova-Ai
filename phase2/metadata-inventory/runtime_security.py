@@ -14,11 +14,17 @@ results = []
 def assertion(name, ok):
     results.append({"test": name, "status": "PASS" if bool(ok) else "FAIL"})
 
-def denied(name, sql):
+def denied(name, sql, precondition_sql):
     conn = psycopg2.connect(DSN)
     conn.autocommit = True
     try:
         with conn.cursor() as cur:
+            cur.execute(precondition_sql)
+            boundary = cur.fetchone()
+            if not boundary or boundary[0] is not True:
+                results.append({"test": name, "status": "FAIL",
+                                "reason": "intended privilege boundary was not independently confirmed"})
+                return
             try:
                 cur.execute(sql)
             except psycopg2.Error as exc:
@@ -148,8 +154,63 @@ def main():
         ("privileged_role_inheritance_probe", "SELECT protected_value FROM novaai_app.inheritance_probe"),
         ("set_role_privilege_escalation", "SET ROLE novaai_privileged_probe")
     ]
+    function_signatures = {
+        "large_object_create":"lo_create(oid)",
+        "large_object_read":"lo_get(oid)",
+        "large_object_read_range":"lo_get(oid,bigint,integer)",
+        "large_object_from_bytea":"lo_from_bytea(oid,bytea)",
+        "large_object_write":"lo_put(oid,bigint,bytea)",
+        "large_object_unlink":"lo_unlink(oid)",
+        "large_object_creat":"lo_creat(integer)",
+        "large_object_import":"lo_import(text)",
+        "large_object_import_with_oid":"lo_import(text,oid)",
+        "large_object_export":"lo_export(oid,text)",
+        "large_object_lowrite":"lowrite(integer,bytea)",
+        "large_object_loread":"loread(integer,integer)",
+        "large_object_open":"lo_open(oid,integer)",
+        "large_object_truncate":"lo_truncate(integer,integer)",
+        "large_object_truncate64":"lo_truncate64(integer,bigint)",
+        "large_object_close":"lo_close(integer)",
+        "large_object_lseek":"lo_lseek(integer,integer,integer)",
+        "large_object_lseek64":"lo_lseek64(integer,bigint,integer)",
+        "large_object_tell":"lo_tell(integer)",
+        "large_object_tell64":"lo_tell64(integer)"
+    }
+    preconditions = {
+        "protected_table_select":"SELECT NOT has_table_privilege(current_user,'novaai_app.customers','SELECT')",
+        "protected_column_select":"SELECT NOT has_column_privilege(current_user,'novaai_app.customers','email','SELECT')",
+        "foreign_user_mapping_options_read":"SELECT NOT has_column_privilege(current_user,'pg_catalog.pg_user_mapping','umoptions','SELECT')",
+        "foreign_server_options_read":"SELECT NOT has_column_privilege(current_user,'pg_catalog.pg_foreign_server','srvoptions','SELECT')",
+        "foreign_data_wrapper_options_read":"SELECT NOT has_column_privilege(current_user,'pg_catalog.pg_foreign_data_wrapper','fdwoptions','SELECT')",
+        "foreign_table_options_read":"SELECT NOT has_column_privilege(current_user,'pg_catalog.pg_foreign_table','ftoptions','SELECT')",
+        "subscription_connection_read":"SELECT NOT has_column_privilege(current_user,'pg_catalog.pg_subscription','subconninfo','SELECT')",
+        "security_label_value_read":"SELECT NOT has_column_privilege(current_user,'pg_catalog.pg_seclabel','label','SELECT')",
+        "shared_security_label_value_read":"SELECT NOT has_column_privilege(current_user,'pg_catalog.pg_shseclabel','label','SELECT')",
+        "large_object_owner_read":"SELECT NOT has_column_privilege(current_user,'pg_catalog.pg_largeobject_metadata','lomowner','SELECT')",
+        "large_object_content_read":"SELECT NOT has_table_privilege(current_user,'pg_catalog.pg_largeobject','SELECT')",
+        "view_row_access":"SELECT NOT has_table_privilege(current_user,'novaai_app.customer_view','SELECT')",
+        "materialized_view_access":"SELECT NOT has_table_privilege(current_user,'novaai_app.order_summary','SELECT')",
+        "invoker_function_execution":"SELECT NOT has_function_privilege(current_user,'novaai_app.customer_count()','EXECUTE')",
+        "security_definer_function_execution":"SELECT NOT has_function_privilege(current_user,'novaai_app.definer_probe()','EXECUTE')",
+        "sequence_nextval":"SELECT NOT has_sequence_privilege(current_user,'novaai_app.customers_id_seq','USAGE') AND NOT has_sequence_privilege(current_user,'novaai_app.customers_id_seq','UPDATE')",
+        "sequence_currval":"SELECT NOT has_sequence_privilege(current_user,'novaai_app.customers_id_seq','USAGE') AND NOT has_sequence_privilege(current_user,'novaai_app.customers_id_seq','SELECT')",
+        "sequence_setval":"SELECT NOT has_sequence_privilege(current_user,'novaai_app.customers_id_seq','UPDATE') AND NOT has_sequence_privilege(current_user,'novaai_app.customers_id_seq','USAGE')",
+        "temporary_table_creation":"SELECT NOT has_database_privilege(current_user,current_database(),'TEMP')",
+        "schema_creation":"SELECT NOT has_database_privilege(current_user,current_database(),'CREATE')",
+        "table_creation_in_scoped_schema":"SELECT NOT has_schema_privilege(current_user,'novaai_app','CREATE')",
+        "protected_data_with_rls_disabled":"SELECT NOT has_table_privilege(current_user,'novaai_app.rls_disabled_probe','SELECT')",
+        "privileged_role_inheritance_probe":"SELECT NOT has_table_privilege(current_user,'novaai_app.inheritance_probe','SELECT')",
+        "set_role_privilege_escalation":"SELECT NOT pg_has_role(current_user,'novaai_privileged_probe','MEMBER') AND NOT (SELECT rolsuper FROM pg_roles WHERE rolname=current_user)"
+    }
     for name, sql in operations:
-        denied(name, sql)
+        if name in function_signatures:
+            signature = function_signatures[name].replace("'", "''")
+            precondition = "SELECT NOT has_function_privilege(current_user,'pg_catalog." + signature + "'::regprocedure,'EXECUTE')"
+        else:
+            precondition = preconditions.get(name)
+        if not precondition:
+            raise RuntimeError("Missing explicit privilege precondition for " + name)
+        denied(name, sql, precondition)
 
     failed = [item for item in results if item["status"] != "PASS"]
     print(json.dumps({"status": "FAIL" if failed else "PASS",
