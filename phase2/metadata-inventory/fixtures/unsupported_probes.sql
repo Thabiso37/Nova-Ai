@@ -16,6 +16,8 @@ CREATE AGGREGATE novaai_app.phase2_probe_sum(integer)
 CREATE COLLATION novaai_app.phase2_probe_collation (provider=libc,locale='C');
 CREATE TEXT SEARCH CONFIGURATION novaai_app.phase2_probe_tsc (COPY=pg_catalog.simple);
 CREATE TEXT SEARCH DICTIONARY novaai_app.phase2_probe_tsd (TEMPLATE=pg_catalog.simple);
+CREATE CONVERSION novaai_app.phase2_probe_conversion FOR 'LATIN1' TO 'UTF8'
+ FROM pg_catalog.iso_8859_1_to_utf8;
 CREATE FUNCTION novaai_app.phase2_int_to_range(integer) RETURNS novaai_app.unsupported_range_probe
  LANGUAGE sql IMMUTABLE AS 'SELECT novaai_app.unsupported_range_probe($1,$1+1)';
 CREATE FUNCTION novaai_app.phase2_event_trigger_fn() RETURNS event_trigger
@@ -26,6 +28,12 @@ CREATE CAST (integer AS novaai_app.unsupported_range_probe)
 CREATE OPERATOR FAMILY novaai_app.phase2_probe_family USING btree;
 CREATE OPERATOR CLASS novaai_app.phase2_probe_int4_ops FOR TYPE integer USING btree
  FAMILY novaai_app.phase2_probe_family AS OPERATOR 1 pg_catalog.<, FUNCTION 1 pg_catalog.btint4cmp(integer,integer);
+CREATE TRUSTED PROCEDURAL LANGUAGE phase2_probe_plpgsql HANDLER pg_catalog.plpgsql_call_handler;
+CREATE TEXT SEARCH PARSER novaai_app.phase2_probe_parser (
+ START=pg_catalog.prsd_start,GETTOKEN=pg_catalog.prsd_nexttoken,
+ END=pg_catalog.prsd_end,LEXTYPES=pg_catalog.prsd_lextype);
+CREATE TEXT SEARCH TEMPLATE novaai_app.phase2_probe_template (
+ INIT=pg_catalog.dsimple_init,LEXIZE=pg_catalog.dsimple_lexize);
 CREATE EVENT TRIGGER phase2_probe_event_trigger ON ddl_command_start
  EXECUTE FUNCTION novaai_app.phase2_event_trigger_fn();
 CREATE USER MAPPING FOR novaai_inventory_inspector SERVER phase2_probe_server OPTIONS (user 'synthetic');
