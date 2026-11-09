@@ -480,6 +480,46 @@ def main():
                             "schema":d[side+"_schema"],"identity":d[side+"_identity"],
                             "resolution":result["status"]
                         })
+            # Tarjan strongly-connected components identify dependency cycles.
+            graph = {}
+            for edge in dependency_edges:
+                left = edge["dependent_resolution"]
+                right = edge["referenced_resolution"]
+                if left["status"] in ("RESOLVED_INVENTORY","RESOLVED_DERIVED_INTERNAL") and right["status"] in ("RESOLVED_INVENTORY","RESOLVED_DERIVED_INTERNAL"):
+                    graph.setdefault(left["key"],set()).add(right["key"])
+                    graph.setdefault(right["key"],set())
+            index_counter = [0]
+            stack = []
+            on_stack = set()
+            indices = {}
+            lowlinks = {}
+            dependency_cycles = []
+            def strongconnect(node):
+                indices[node] = index_counter[0]
+                lowlinks[node] = index_counter[0]
+                index_counter[0] += 1
+                stack.append(node)
+                on_stack.add(node)
+                for target in graph.get(node,()):
+                    if target not in indices:
+                        strongconnect(target)
+                        lowlinks[node] = min(lowlinks[node],lowlinks[target])
+                    elif target in on_stack:
+                        lowlinks[node] = min(lowlinks[node],indices[target])
+                if lowlinks[node] == indices[node]:
+                    component = []
+                    while True:
+                        target = stack.pop()
+                        on_stack.remove(target)
+                        component.append(target)
+                        if target == node:
+                            break
+                    if len(component)>1 or (len(component)==1 and component[0] in graph.get(component[0],set())):
+                        dependency_cycles.append({"members":sorted(component),"requires_special_handling":True})
+            for node in graph:
+                if node not in indices:
+                    strongconnect(node)
+            inventory["sections"]["dependency_cycles"] = dependency_cycles
             inventory["sections"]["dependencies"] = dependency_edges
             inventory["sections"]["unsupported_dependencies"] = unsupported_dependencies
 
@@ -496,6 +536,8 @@ def main():
               "unsupported_objects": unsupported,
               "unresolved_dependencies": unresolved,
               "unsupported_dependency_types": unsupported_dependencies,
+              "dependency_cycles": dependency_cycles,
+              "cycle_handling": "Cycles are enumerated for independent ordering review; Phase 2 does not emit DDL or impose a restore order.",
               "catalogue_visibility_failures": [],
               "secret_findings": secret_findings,
               "status": "PASS"
