@@ -103,11 +103,10 @@ BEGIN
     bad := array_append(bad, 'function ownership or EXECUTE on user-defined routines');
   END IF;
 
-  -- PUBLIC is an implicit grantee (OID 0). Check both its explicit ACL entry and
-  -- PostgreSQL's effective privilege result; do not rely on role defaults.
-  -- Large-object routines are special: they mutate large objects or server files
-  -- without granting table INSERT/UPDATE/DELETE. Match schema + identity arguments
-  -- and verify the actual PUBLIC EXECUTE path, not just routine names.
+  -- has_function_privilege checks the connected role's effective EXECUTE privilege,
+  -- including direct ACL grants and PUBLIC-inherited grants. Large-object routines
+  -- can mutate objects or access server files without table write privileges.
+  -- Match exact schema + identity argument types rather than names alone.
   IF EXISTS (
     WITH dangerous_large_object_routines(schema_name, routine_name, identity_arg_types) AS (
       VALUES
@@ -135,8 +134,8 @@ BEGIN
   END IF;
 
   -- A SECURITY DEFINER routine executes with its owner's privileges. Reject any
-  -- effective PUBLIC-executable SECURITY DEFINER routine, including extension
-  -- schemas such as net; the user-defined routine check above remains in force.
+  -- effective EXECUTE privilege, whether direct or inherited from PUBLIC, including
+  -- routines in extension schemas such as net.
   IF EXISTS (
     SELECT 1
     FROM pg_proc p
@@ -198,8 +197,8 @@ BEGIN
     bad := array_append(bad, 'tablespace CREATE privilege');
   END IF;
 
-  -- Membership in predefined server-side capability roles is prohibited. The
-  -- general membership check above is intentionally broader and catches future roles.
+  -- Membership in predefined server-side capability or broad visibility roles is
+  -- prohibited. The general membership check above also catches future role names.
   IF EXISTS (
     SELECT 1 FROM pg_roles
     WHERE rolname IN ('pg_read_server_files','pg_write_server_files',
@@ -209,7 +208,7 @@ BEGIN
                       'pg_monitor','pg_stat_scan_tables')
       AND pg_has_role(current_user, oid, 'MEMBER')
   ) THEN
-    bad := array_append(bad, 'membership in privileged server-operation roles');
+    bad := array_append(bad, 'membership in privileged server-operation or visibility roles');
   END IF;
 
   IF cardinality(bad)>0 THEN
