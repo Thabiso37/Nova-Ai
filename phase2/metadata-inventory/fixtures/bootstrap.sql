@@ -6,6 +6,12 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'novaai_inventory_owner') THEN
     CREATE ROLE novaai_inventory_owner NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_fixture_owner') THEN
+    CREATE ROLE supabase_fixture_owner NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'environment_fixture_owner') THEN
+    CREATE ROLE environment_fixture_owner NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
+  END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'novaai_privileged_probe') THEN
     CREATE ROLE novaai_privileged_probe NOLOGIN;
   END IF;
@@ -20,8 +26,10 @@ REVOKE TEMPORARY, CREATE ON DATABASE inventory_test FROM novaai_inventory_inspec
 
 CREATE SCHEMA IF NOT EXISTS novaai_app AUTHORIZATION novaai_inventory_owner;
 CREATE SCHEMA IF NOT EXISTS novaai_private AUTHORIZATION novaai_inventory_owner;
-GRANT USAGE ON SCHEMA novaai_app, novaai_private TO novaai_inventory_inspector;
-REVOKE CREATE ON SCHEMA novaai_app, novaai_private FROM novaai_inventory_inspector;
+CREATE SCHEMA supabase_managed_fixture AUTHORIZATION supabase_fixture_owner;
+CREATE SCHEMA environment_specific_fixture AUTHORIZATION environment_fixture_owner;
+GRANT USAGE ON SCHEMA novaai_app, novaai_private, supabase_managed_fixture, environment_specific_fixture TO novaai_inventory_inspector;
+REVOKE CREATE ON SCHEMA novaai_app, novaai_private, supabase_managed_fixture, environment_specific_fixture FROM novaai_inventory_inspector;
 
 SET ROLE novaai_inventory_owner;
 
@@ -90,11 +98,23 @@ VALUES ('0000000000','CANARY_SELLER_8b1d4e62');
 INSERT INTO novaai_app.rls_disabled_probe(payload) VALUES ('CANARY_RLS_DISABLED_91aa73');
 
 RESET ROLE;
+SET ROLE supabase_fixture_owner;
+CREATE TABLE supabase_managed_fixture.platform_metadata_probe (
+  record_key text NOT NULL,
+  record_kind text NOT NULL
+);
+RESET ROLE;
+SET ROLE environment_fixture_owner;
+CREATE TABLE environment_specific_fixture.runtime_profile (
+  parameter_name text NOT NULL,
+  parameter_value text
+);
+RESET ROLE;
 GRANT SELECT ON novaai_app.inheritance_probe TO novaai_privileged_probe;
 
-REVOKE ALL ON ALL TABLES IN SCHEMA novaai_app, novaai_private FROM PUBLIC, novaai_inventory_inspector;
-REVOKE ALL ON ALL SEQUENCES IN SCHEMA novaai_app, novaai_private FROM PUBLIC, novaai_inventory_inspector;
-REVOKE ALL ON ALL FUNCTIONS IN SCHEMA novaai_app, novaai_private FROM PUBLIC, novaai_inventory_inspector;
+REVOKE ALL ON ALL TABLES IN SCHEMA novaai_app, novaai_private, supabase_managed_fixture, environment_specific_fixture FROM PUBLIC, novaai_inventory_inspector;
+REVOKE ALL ON ALL SEQUENCES IN SCHEMA novaai_app, novaai_private, supabase_managed_fixture, environment_specific_fixture FROM PUBLIC, novaai_inventory_inspector;
+REVOKE ALL ON ALL FUNCTIONS IN SCHEMA novaai_app, novaai_private, supabase_managed_fixture, environment_specific_fixture FROM PUBLIC, novaai_inventory_inspector;
 -- PostgreSQL has no "REVOKE ALL ON ALL TYPES" form. Revoke USAGE
 -- from PUBLIC and the inspector on every synthetic user-defined type,
 -- including table row types, domains, enums and standalone composites.
@@ -105,7 +125,7 @@ BEGIN
     SELECT n.nspname, typ.typname
     FROM pg_type typ
     JOIN pg_namespace n ON n.oid=typ.typnamespace
-    WHERE n.nspname IN ('novaai_app','novaai_private')
+    WHERE n.nspname IN ('novaai_app','novaai_private','supabase_managed_fixture','environment_specific_fixture')
       AND typ.typtype IN ('b','c','d','e','r','m')
       AND typ.typelem=0
       AND typ.typowner=(SELECT oid FROM pg_roles WHERE rolname='novaai_inventory_owner')
