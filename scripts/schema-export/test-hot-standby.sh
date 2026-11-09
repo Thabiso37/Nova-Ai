@@ -80,9 +80,11 @@ for _ in $(seq 1 60); do psql -X -Atqc 'SELECT pg_is_in_recovery()' 2>/dev/null 
 psql -X -Atqc "SELECT pg_is_in_recovery() AND current_setting('transaction_read_only')='on' AND current_setting('in_hot_standby')='on'" | grep -qx t
 echo "PASS: genuine recovery mode and independent read-only settings."
 export PGUSER=safe_export PGPASSWORD="$EP"
-psql -X -Atqc "SELECT current_user" | grep -qx safe_export
-if psql -X -v ON_ERROR_STOP=1 -c 'SET transaction_read_only=off' >"$WORK/setoff" 2>&1; then exit 1; fi
-grep -Eqi 'read.only transaction|cannot set transaction_read_only' "$WORK/setoff"
+IDENTITY="$(psql -X -Atqc "SELECT current_user || ':' || current_setting('transaction_read_only')")"
+[[ "$IDENTITY" == "safe_export:on" ]] || { echo "Unexpected restricted-login identity/settings: $IDENTITY" >&2; exit 1; }
+if psql -X -v ON_ERROR_STOP=1 -c 'SET transaction_read_only=off' >"$WORK/setoff" 2>&1; then echo "ERROR: standby allowed transaction_read_only=off" >&2; exit 1; fi
+if ! grep -Eqi 'read.only transaction|cannot set transaction_read_only|during recovery' "$WORK/setoff"; then cat "$WORK/setoff" >&2; exit 1; fi
+echo "PASS: standby rejected SET transaction_read_only=off."
 expect_ro(){ label="$1"; shift; if "$@" >"$WORK/attempt" 2>&1; then echo "unexpected write success: $label" >&2; exit 1; fi; grep -Eqi 'read.only transaction|recovery mode|cannot execute' "$WORK/attempt"; echo "PASS: $label rejected"; }
 expect_ro INSERT psql -X -v ON_ERROR_STOP=1 -c "INSERT INTO public.products(name) VALUES('blocked')"
 expect_ro UPDATE psql -X -v ON_ERROR_STOP=1 -c "UPDATE public.products SET name='blocked' WHERE id=1"
