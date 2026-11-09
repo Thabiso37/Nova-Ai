@@ -28,20 +28,15 @@ jobs:
         with:
           ref: main
           persist-credentials: false
-      - name: Install pinned Node.js runtime
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: 22.16.0
       - name: Install and verify pinned tools
         shell: bash
         run: |
           set -Eeuo pipefail
           apt-get update
           apt-get install -y --no-install-recommends age=1.1.1-1+b3 jq
-          npm install --global supabase@2.122.1
-          pg_dump --version | grep -F '17.11'
-          supabase --version | grep -F '2.122.1'
-          age --version | grep -F '1.1.1'
+          [[ "$(pg_dump --version)" == "pg_dump (PostgreSQL) 17.11" ]]
+          [[ "$(psql --version)" == "psql (PostgreSQL) 17.11" ]]
+          age --version | grep -Fx '1.1.1'
       - name: Fail closed on missing credentials
         shell: bash
         run: |
@@ -64,7 +59,7 @@ jobs:
           W="$(mktemp -d "$RUNNER_TEMP/novaai-schema.XXXXXXXX")"
           trap 'find "$W/plain" -type f -exec shred -u -- {} + 2>/dev/null || true; rm -rf -- "$W/plain"' EXIT INT TERM
           mkdir -m 700 "$W/plain" "$W/out"
-          supabase db dump --db-url "$SUPABASE_DB_URL" --schema public,private --file "$W/plain/schema.sql"
+          bash scripts/schema-export/dump-schema.sh "$SUPABASE_DB_URL" "$W/plain/schema.sql"
           psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f scripts/schema-export/export-manifests.sql -o "$W/plain/manifests.json"
           bash scripts/schema-export/validate-export.sh "$W/plain"
           (cd "$W/plain" && sha256sum schema.sql manifests.json > SHA256SUMS)
