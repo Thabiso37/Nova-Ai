@@ -70,10 +70,10 @@ jobs:
           test -s phase2/metadata-inventory/fixtures/phase2_dummy_seclabel.so
       - name: Create unsupported-object positive probes
         run: set -o pipefail; psql -X -h 127.0.0.1 -U postgres -d inventory_test -v ON_ERROR_STOP=1 -f phase2/metadata-inventory/fixtures/unsupported_probes.sql 2>&1 | tee -a workflow-captured.log
-      - name: Verify SECURITY LABEL provider DDL without reading label values
+      - name: Verify SECURITY LABEL and CREATE TRANSFORM DDL without reading label values
         run: |
           set -o pipefail
-          psql -X -h 127.0.0.1 -U postgres -d inventory_test -Atc "SELECT jsonb_build_object('provider_ddl_executed',true,'object_label_rows',(SELECT count(*) FROM pg_catalog.pg_seclabel WHERE provider='phase2_dummy' AND classoid='pg_class'::regclass AND objoid='novaai_app.orders'::regclass),'shared_label_rows',(SELECT count(*) FROM pg_catalog.pg_shseclabel WHERE provider='phase2_dummy' AND classoid='pg_database'::regclass AND objoid=(SELECT oid FROM pg_catalog.pg_database WHERE datname=current_database())),'label_values_read',false)::text" | tee security-label-provider-probe.json
+          psql -X -h 127.0.0.1 -U postgres -d inventory_test -Atc "SELECT jsonb_build_object('provider_ddl_executed',true,'object_label_rows',(SELECT count(*) FROM pg_catalog.pg_seclabel WHERE provider='phase2_dummy' AND classoid='pg_class'::regclass AND objoid='novaai_app.orders'::regclass),'shared_label_rows',(SELECT count(*) FROM pg_catalog.pg_shseclabel WHERE provider='phase2_dummy' AND classoid='pg_database'::regclass AND objoid=(SELECT oid FROM pg_catalog.pg_database WHERE datname=current_database())),'label_values_read',false,'transform_ddl_executed',true,'transform_rows',(SELECT count(*) FROM pg_catalog.pg_transform t JOIN pg_catalog.pg_type ty ON ty.oid=t.trftype JOIN pg_catalog.pg_namespace n ON n.oid=ty.typnamespace JOIN pg_catalog.pg_language l ON l.oid=t.trflang WHERE n.nspname='novaai_app' AND ty.typname='unsupported_range_probe' AND l.lanname='plpgsql'))::text" | tee security-label-provider-probe.json
           python phase2/metadata-inventory/tests/assert_security_label_probe.py security-label-provider-probe.json
       - name: Verify positive unsupported-object discovery
         env:

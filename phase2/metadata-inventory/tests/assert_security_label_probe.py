@@ -9,12 +9,16 @@ report=json.loads(Path(sys.argv[1]).read_text())
 ok=(report.get("provider_ddl_executed") is True
     and report.get("object_label_rows")==1
     and report.get("shared_label_rows")==1
+    and report.get("transform_ddl_executed") is True
+    and report.get("transform_rows")==1
     and report.get("label_values_read") is False)
 print(json.dumps({
  "status":"PASS" if ok else "FAIL",
  "provider_ddl_executed":report.get("provider_ddl_executed"),
  "object_label_rows":report.get("object_label_rows"),
  "shared_label_rows":report.get("shared_label_rows"),
+ "transform_ddl_executed":report.get("transform_ddl_executed"),
+ "transform_rows":report.get("transform_rows"),
  "label_values_read":report.get("label_values_read")
 },sort_keys=True))
 if not ok:

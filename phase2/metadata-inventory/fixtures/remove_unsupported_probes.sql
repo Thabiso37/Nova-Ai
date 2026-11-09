@@ -1,11 +1,9 @@
 -- Remove all disposable unsupported-object probes before clean inventory.
 
 
-SET allow_system_table_mods = on;
-DELETE FROM pg_catalog.pg_transform
- WHERE trftype=pg_catalog.to_regtype('novaai_app.unsupported_range_probe')
-   AND trflang=(SELECT oid FROM pg_catalog.pg_language WHERE lanname='plpgsql');
-RESET allow_system_table_mods;
+DROP TRANSFORM IF EXISTS FOR novaai_app.unsupported_range_probe LANGUAGE plpgsql;
+DROP FUNCTION IF EXISTS novaai_app.phase2_transform_from_sql(internal);
+DROP FUNCTION IF EXISTS novaai_app.phase2_transform_to_sql(internal);
 
 -- Remove labels through the same provider API; no label values are read or emitted.
 LOAD '/tmp/phase2_dummy_seclabel.so';

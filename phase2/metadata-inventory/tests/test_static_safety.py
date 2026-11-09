@@ -59,7 +59,10 @@ class StaticSafetyTests(unittest.TestCase):
   self.assertIn("register_label_provider",provider)
   self.assertIn("Build disposable SECURITY LABEL provider",workflow)
   self.assertIn("phase2_dummy_seclabel.so",workflow)
+  self.assertIn("CREATE TRANSFORM FOR",probes)
+  self.assertIn("phase2_transform_from_sql",provider)
   self.assertIn("security-label-provider-probe.json",workflow)
+  self.assertNotIn("SELECT label",workflow)
   assertion=(ROOT/"tests"/"assert_security_label_probe.py").read_text()
   self.assertIn("label_values_read",assertion)
  def test_shared_secret_scanning_policy(self):

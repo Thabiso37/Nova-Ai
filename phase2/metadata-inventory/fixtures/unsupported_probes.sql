@@ -47,24 +47,18 @@ CREATE SUBSCRIPTION phase2_probe_subscription
  PUBLICATION phase2_probe_publication WITH (connect=false,enabled=false,create_slot=false,slot_name=NONE);
 
 
--- pg_transform is a system catalogue. Insert a disposable synthetic metadata row
--- to exercise discovery without invoking the transform functions.
-SET allow_system_table_mods = on;
-INSERT INTO pg_catalog.pg_transform (oid,trftype,trflang,trffromsql,trftosql)
-SELECT 4294000000::oid,'novaai_app.unsupported_range_probe'::regtype,l.oid,
-       'pg_catalog.textin(cstring)'::regprocedure,
-       'pg_catalog.textout(text)'::regprocedure
-FROM pg_catalog.pg_language l
-WHERE l.lanname='plpgsql'
-  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_class WHERE oid=4294000000::oid)
-  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_proc WHERE oid=4294000000::oid)
-  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_type WHERE oid=4294000000::oid)
-  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_namespace WHERE oid=4294000000::oid)
-  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_database WHERE oid=4294000000::oid)
-  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE oid=4294000000::oid)
-  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_language WHERE oid=4294000000::oid)
-  AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_transform WHERE oid=4294000000::oid);
-RESET allow_system_table_mods;
+-- Exercise the real CREATE TRANSFORM DDL using disposable C conversion functions.
+CREATE FUNCTION novaai_app.phase2_transform_from_sql(internal) RETURNS internal
+ AS '/tmp/phase2_dummy_seclabel.so','phase2_transform_from_sql'
+ LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION novaai_app.phase2_transform_to_sql(internal)
+ RETURNS novaai_app.unsupported_range_probe
+ AS '/tmp/phase2_dummy_seclabel.so','phase2_transform_to_sql'
+ LANGUAGE C IMMUTABLE STRICT;
+CREATE TRANSFORM FOR novaai_app.unsupported_range_probe LANGUAGE plpgsql (
+ FROM SQL WITH FUNCTION novaai_app.phase2_transform_from_sql(internal),
+ TO SQL WITH FUNCTION novaai_app.phase2_transform_to_sql(internal)
+);
 
 -- Exercise the real SECURITY LABEL provider hook for object and shared-object labels.
 LOAD '/tmp/phase2_dummy_seclabel.so';

@@ -23,3 +23,20 @@ _PG_init(void)
 {
     register_label_provider("phase2_dummy", phase2_dummy_object_relabel);
 }
+
+
+/* Disposable transform conversion entry points. They are metadata probes only
+ * and are deliberately not invoked by this workflow. */
+PG_FUNCTION_INFO_V1(phase2_transform_from_sql);
+Datum
+phase2_transform_from_sql(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_NULL();
+}
+
+PG_FUNCTION_INFO_V1(phase2_transform_to_sql);
+Datum
+phase2_transform_to_sql(PG_FUNCTION_ARGS)
+{
+    PG_RETURN_NULL();
+}
