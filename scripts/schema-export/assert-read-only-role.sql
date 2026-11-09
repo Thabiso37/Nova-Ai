@@ -144,7 +144,7 @@ BEGIN
       AND has_function_privilege(current_user,p.oid,'EXECUTE')
 
   ) THEN
-    bad := array_append(bad, 'PUBLIC EXECUTE on SECURITY DEFINER routines');
+    bad := array_append(bad, 'effective EXECUTE on SECURITY DEFINER routines');
   END IF;
 
   -- Extension-owned VOLATILE routines can perform database or external side
@@ -162,13 +162,8 @@ BEGIN
       AND n.nspname !~ '^pg_'
       AND p.provolatile='v'
       AND has_function_privilege(current_user,p.oid,'EXECUTE')
-      AND EXISTS (
-        SELECT 1
-        FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) acl
-        WHERE acl.grantee=0 AND acl.privilege_type='EXECUTE'
-      )
   ) THEN
-    bad := array_append(bad, 'PUBLIC EXECUTE on VOLATILE extension routines');
+    bad := array_append(bad, 'effective EXECUTE on VOLATILE extension routines');
   END IF;
 
   IF EXISTS (
@@ -209,7 +204,9 @@ BEGIN
     SELECT 1 FROM pg_roles
     WHERE rolname IN ('pg_read_server_files','pg_write_server_files',
                       'pg_execute_server_program','pg_signal_backend',
-                      'pg_write_all_data')
+                      'pg_write_all_data','pg_read_all_data',
+                      'pg_read_all_settings','pg_read_all_stats',
+                      'pg_monitor','pg_stat_scan_tables')
       AND pg_has_role(current_user, oid, 'MEMBER')
   ) THEN
     bad := array_append(bad, 'membership in privileged server-operation roles');
