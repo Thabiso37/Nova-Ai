@@ -47,6 +47,13 @@ def main():
                 JOIN pg_roles r ON r.oid=m.member WHERE r.rolname=current_user""")
             assertion("no_role_memberships", cur.fetchone()[0])
 
+            cur.execute("""SELECT count(*)=0 FROM pg_shdepend
+                WHERE refclassid='pg_authid'::regclass
+                  AND refobjid=(SELECT oid FROM pg_roles WHERE rolname=current_user)
+                  AND deptype='o'
+                  AND (dbid=0 OR dbid=(SELECT oid FROM pg_database WHERE datname=current_database()))""")
+            assertion("inspector_owns_no_database_objects", cur.fetchone()[0])
+
             cur.execute("SELECT NOT has_database_privilege(current_user,current_database(),'CREATE') AND NOT has_database_privilege(current_user,current_database(),'TEMP')")
             assertion("database_create_and_temp_denied", cur.fetchone()[0])
 
@@ -116,6 +123,7 @@ def main():
         ("sequence_setval", "SELECT setval('novaai_app.customers_id_seq'::regclass,10)"),
         ("large_object_create", "SELECT lo_create(0)"),
         ("large_object_read", "SELECT lo_get(1::oid)"),
+        ("large_object_read_range", "SELECT lo_get(1::oid,0::bigint,1::bigint)"),
         ("large_object_from_bytea", "SELECT lo_from_bytea(0::oid,decode('00','hex'))"),
         ("large_object_write", "SELECT lo_put(0::oid,0,decode('00','hex'))"),
         ("large_object_unlink", "SELECT lo_unlink(0::oid)"),

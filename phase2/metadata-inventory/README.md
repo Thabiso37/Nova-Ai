@@ -31,3 +31,12 @@ A shared scanner checks evidence artifacts and captured command output for synth
 ## Acceptance boundary
 
 A PARTIAL visibility result, unverified provider-dependent probe, unsupported object, visibility failure, snapshot mismatch, missing provenance evidence, security audit failure or metadata mismatch blocks acceptance. Passing CI does not establish production security, managed Supabase compatibility or restoration equivalence.
+
+
+### Additional remediation evidence
+
+The structured catalogue comparator is authoritative for supported metadata properties and requires the exact support-matrix section set plus the positive-probe report from the same workflow run. The pg_dump parser remains a supplemental coverage check only; it is not used as the sole schema comparator.
+
+The shared \`secret_patterns.py\` policy is imported by both the inventory field scanner and the evidence/log scanner. A separate dependent workflow job downloads the completed disposable-database job log archive and scans the complete job logs, not only the \`tee\`-captured command output.
+
+Synthetic \`pg_seclabel\`, \`pg_shseclabel\` and \`pg_transform\` rows are created only inside the disposable PostgreSQL fixture with \`allow_system_table_mods\`, are positively discovered by the restricted inspector, and are removed before the clean inventory. These catalogue-row probes test visibility and classification discovery, not provider-specific \`SECURITY LABEL\` or \`CREATE TRANSFORM\` DDL semantics.

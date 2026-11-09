@@ -4,10 +4,19 @@ import json, os, sys
 import psycopg2
 DSN = os.environ.get("INVENTORY_DSN")
 if not DSN: raise SystemExit("INVENTORY_DSN is required")
-LO_REQUIRED = {"lo_get":2,"lo_from_bytea":1,"lo_put":1,"lo_unlink":1,"lo_create":1,"lo_creat":1,"lo_import":2,"lo_export":1,"lowrite":1,"loread":1,"lo_open":1,"lo_truncate":1,"lo_truncate64":1,"lo_close":1,"lo_lseek":1,"lo_lseek64":1,"lo_tell":1,"lo_tell64":1}
+LO_REQUIRED = {
+ ("lo_get","oid"),("lo_get","oid, bigint, bigint"),
+ ("lo_from_bytea","oid, bytea"),("lo_put","oid, bigint, bytea"),
+ ("lo_unlink","oid"),("lo_create","oid"),("lo_creat","integer"),
+ ("lo_import","text"),("lo_import","text, oid"),("lo_export","oid, text"),
+ ("lowrite","integer, bytea"),("loread","integer, integer"),("lo_open","oid, integer"),
+ ("lo_truncate","integer, integer"),("lo_truncate64","integer, bigint"),
+ ("lo_close","integer"),("lo_lseek","integer, integer, integer"),
+ ("lo_lseek64","integer, bigint, integer"),("lo_tell","integer"),("lo_tell64","integer")
+}
 APPROVED_SYSTEM_DEFINERS = set()  # No system SECURITY DEFINER routine is implicitly trusted.
 DANGEROUS = {"pg_read_file","pg_read_binary_file","pg_ls_dir","pg_stat_file","pg_ls_logdir","pg_ls_waldir","pg_ls_archive_statusdir","pg_write_file","pg_write_binary_file","pg_reload_conf","pg_terminate_backend","pg_cancel_backend","pg_log_backend_memory_contexts"}
-r={"status":"FAIL","violations":[],"security_definer_routines":[],"large_object_api":{"required":sorted(LO_REQUIRED),"found":[],"missing":[],"executable":[]}}
+r={"status":"FAIL","violations":[],"security_definer_routines":[],"owned_objects":[],"large_object_api":{"required":[list(x) for x in sorted(LO_REQUIRED)],"found":[],"missing":[],"unknown":[],"executable":[]}}
 try:
  conn=psycopg2.connect(DSN)
  try:
@@ -23,6 +32,11 @@ try:
    memberships=[x[0] for x in c.fetchall()];r["role"]["memberships"]=memberships
    if memberships:r["violations"].append("role_membership")
    c.execute("SELECT oid FROM pg_database WHERE datname=current_database()");dbid=c.fetchone()[0]
+   c.execute("""SELECT classid::regclass::text,objid::text,objsubid,deptype
+     FROM pg_shdepend WHERE refclassid='pg_authid'::regclass AND refobjid=%s
+       AND deptype='o' AND (dbid=0 OR dbid=%s) ORDER BY 1,2,3""",(oid,dbid))
+   r["owned_objects"]=[{"catalogue":x[0],"object_oid":x[1],"sub_id":x[2],"dependency_type":x[3]} for x in c.fetchall()]
+   if r["owned_objects"]:r["violations"].append("inspector_owns_database_objects")
    c.execute("SELECT setdatabase,setrole,setconfig FROM pg_db_role_setting WHERE setrole IN (0,%s) AND setdatabase IN (0,%s) ORDER BY 1,2",(oid,dbid))
    settings=[]; paths=[]
    for db,role,cfg in c.fetchall():
@@ -40,13 +54,19 @@ try:
     r["security_definer_routines"].append({"schema":schema,"name":name,"identity_arguments":args,"effective_execute":execute,"public_execute":public_exec})
     if execute and schema!="pg_catalog":r["violations"].append("executable_non_catalog_security_definer")
     if execute and schema=="pg_catalog" and (name in DANGEROUS or name not in APPROVED_SYSTEM_DEFINERS):r["violations"].append("executable_unapproved_system_security_definer")
-   c.execute("SELECT p.proname,p.pronargs,has_function_privilege(current_user,p.oid,'EXECUTE') FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='pg_catalog' AND p.proname=ANY(%s) ORDER BY 1,2",(list(LO_REQUIRED),))
-   found={}
-   for name,nargs,execute in c.fetchall():
-    found[name]=found.get(name,0)+1;r["large_object_api"]["found"].append({"name":name,"argument_count":nargs,"effective_execute":execute})
-    if execute:r["large_object_api"]["executable"].append(name)
-   r["large_object_api"]["missing"]=sorted(x for x,n in LO_REQUIRED.items() if found.get(x,0)<n)
-   if r["large_object_api"]["missing"]:r["violations"].append("large_object_api_catalogue_incomplete")
+   c.execute("""SELECT p.proname,pg_get_function_identity_arguments(p.oid),
+     has_function_privilege(current_user,p.oid,'EXECUTE')
+     FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+     WHERE n.nspname='pg_catalog' AND (p.proname LIKE 'lo_%' OR p.proname IN ('lowrite','loread'))
+     ORDER BY 1,2""")
+   found=set()
+   for name,args,execute in c.fetchall():
+    identity=(name,args);found.add(identity)
+    r["large_object_api"]["found"].append({"name":name,"identity_arguments":args,"effective_execute":execute})
+    if execute:r["large_object_api"]["executable"].append({"name":name,"identity_arguments":args})
+   r["large_object_api"]["missing"]=[list(x) for x in sorted(LO_REQUIRED-found)]
+   r["large_object_api"]["unknown"]=[list(x) for x in sorted(found-LO_REQUIRED)]
+   if r["large_object_api"]["missing"] or r["large_object_api"]["unknown"]:r["violations"].append("large_object_api_catalogue_incomplete_or_changed")
    if r["large_object_api"]["executable"]:r["violations"].append("large_object_api_execute_granted")
    c.execute("SELECT has_column_privilege(current_user,'pg_catalog.pg_user_mapping','umuser','SELECT'),has_column_privilege(current_user,'pg_catalog.pg_user_mapping','umserver','SELECT'),has_column_privilege(current_user,'pg_catalog.pg_user_mapping','umoptions','SELECT')")
    u,s,o=c.fetchone();r["foreign_user_mapping"]={"identity_columns_visible":bool(u and s),"options_visible":bool(o)}

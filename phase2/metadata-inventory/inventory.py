@@ -6,14 +6,8 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 VERSION = "0.1.0"
-CANARIES = ("CANARY_CUSTOMER_7f3c2a91", "CANARY_SELLER_8b1d4e62", "CANARY_RLS_DISABLED_91aa73")
-SECRET_PATTERNS = [
-    re.compile(r"""(?i)(password|passwd|secret|api[_-]?key|access[_-]?token)\s*[:=]\s*['"][^'"]+"""),
-    re.compile(r"""(?i)(postgres|postgresql|mysql)://[^\s'"]+"""),
-    re.compile(r"-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----"),
-    re.compile(r"(?i)sb_secret_[A-Za-z0-9_-]{12,}"),
-    re.compile(r"(?i)supabase.{0,20}(service_role|secret).{0,20}[A-Za-z0-9_-]{12,}"),
-]
+from secret_patterns import CANARIES, PATTERNS
+SECRET_PATTERNS = [pattern for _, pattern in PATTERNS]
 SYSTEM_SCHEMAS = {"pg_catalog", "information_schema", "pg_toast"}
 SUPPORTED = {
     "schema", "table", "partitioned_table", "partition", "view", "materialized_view",
@@ -149,6 +143,16 @@ def main():
               WHERE c.relowner=(SELECT oid FROM pg_roles WHERE rolname=current_user)
                 AND n.nspname NOT IN ('pg_catalog','information_schema')
             """)
+            owned_objects = rows(cur, """
+              SELECT classid::regclass::text AS catalogue, objid::text AS object_oid,
+                     objsubid, deptype
+              FROM pg_shdepend
+              WHERE refclassid='pg_authid'::regclass
+                AND refobjid=(SELECT oid FROM pg_roles WHERE rolname=current_user)
+                AND deptype='o'
+                AND (dbid=0 OR dbid=(SELECT oid FROM pg_database WHERE datname=current_database()))
+              ORDER BY 1,2,3
+            """)
             funcs = rows(cur, """
               SELECT n.nspname AS schema,p.proname AS name,
                      pg_get_function_identity_arguments(p.oid) AS identity_args,
@@ -191,7 +195,7 @@ def main():
                 AND p.proname IN ('lo_get','lo_from_bytea','lo_put','lo_unlink','lo_create','lo_creat','lo_import','lo_export','lowrite','loread','lo_open','lo_truncate','lo_truncate64','lo_close','lo_lseek','lo_lseek64','lo_tell','lo_tell64')
             """)
             security = {"role": role, "memberships": memberships, "database": dbpriv,
-                        "relations": relpriv, "columns": colpriv, "owned_relations": owned,
+                        "relations": relpriv, "columns": colpriv, "owned_relations": owned, "owned_objects": owned_objects,
                         "routines": funcs, "sequences": seqpriv, "types": typepriv, "schemas": schema_priv,
                         "large_object_routines": lo_exec}
             inventory["security"] = security
@@ -204,6 +208,7 @@ def main():
             if any(x["can_select"] for x in relpriv): violations.append("effective relation SELECT exists")
             if colpriv: violations.append("effective column SELECT exists")
             if owned: violations.append("inspection role owns application relation")
+            if owned_objects: violations.append("inspection role owns database objects")
             if any(x["can_create"] for x in schema_priv): violations.append("schema CREATE privilege present")
             if any(x["can_usage"] or x["can_update"] for x in seqpriv): violations.append("sequence privileges present")
             if any(x["can_usage"] for x in typepriv): violations.append("user-defined type USAGE privilege present")

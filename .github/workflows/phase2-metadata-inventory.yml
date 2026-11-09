@@ -97,7 +97,7 @@ jobs:
           python phase2/metadata-inventory/scan_sensitive.py inventory.json baseline.sql baseline-dependencies.json runtime-security.json unsupported.json unsupported-probe.json security-audit.json provenance-verification.json snapshot-consistency.json catalogue-baseline.json baseline-client-version.txt server-version.txt workflow-captured.log
       - name: Compare structured catalogue metadata
         if: always()
-        run: python phase2/metadata-inventory/compare_catalogue.py inventory.json catalogue-baseline.json unsupported.json
+        run: python phase2/metadata-inventory/compare_catalogue.py inventory.json catalogue-baseline.json unsupported.json unsupported-probe.json
       - name: Supplemental pg_dump identity and dependency comparison
         if: always()
         run: python phase2/metadata-inventory/compare_baseline.py inventory.json baseline.sql unsupported.json phase2/metadata-inventory/provenance_registry.json baseline-dependencies.json
@@ -125,3 +125,44 @@ jobs:
       - name: Stop disposable PostgreSQL container
         if: always()
         run: docker rm -f phase2-postgres || true
+
+  workflow-log-scan:
+    if: always()
+    needs: disposable-postgres-17
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Download complete disposable PostgreSQL job logs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs?per_page=100"
+          job_id="$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "${api}" | jq -r '.jobs[] | select(.name == "disposable-postgres-17") | .id' | head -n1)"
+          test -n "${job_id}" && test "${job_id}" != "null"
+          curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/jobs/${job_id}/logs" -o phase2-job-logs.zip
+          mkdir -p phase2-job-logs
+          unzip -q phase2-job-logs.zip -d phase2-job-logs
+          printf '%s\n' "${job_id}" > scanned-job-id.txt
+      - name: Scan complete job log archive with shared policy
+        if: always()
+        run: |
+          set -euo pipefail
+          mapfile -d '' log_files < <(find phase2-job-logs -type f -print0)
+          test "${#log_files[@]}" -gt 0
+          python phase2/metadata-inventory/scan_sensitive.py "${log_files[@]}" | tee workflow-log-scan.txt
+      - name: Upload workflow log scan report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2-workflow-log-scan
+          path: |
+            workflow-log-scan.txt
+            scanned-job-id.txt
+          if-no-files-found: warn
