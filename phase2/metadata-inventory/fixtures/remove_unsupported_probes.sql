@@ -3,7 +3,7 @@
 
 SET allow_system_table_mods = on;
 DELETE FROM pg_catalog.pg_transform
- WHERE trftype='novaai_app.unsupported_range_probe'::regtype
+ WHERE trftype=pg_catalog.to_regtype('novaai_app.unsupported_range_probe')
    AND trflang=(SELECT oid FROM pg_catalog.pg_language WHERE lanname='plpgsql');
 RESET allow_system_table_mods;
 

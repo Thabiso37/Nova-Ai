@@ -36,7 +36,7 @@ class StaticSafetyTests(unittest.TestCase):
  def test_provenance_hash_validation(self):
   verifier=(ROOT/"verify_provenance.py").read_text()
   self.assertIn("hash-object",verifier);self.assertIn("changed_migration_file",verifier)
-  self.assertIn("git ls-files",verifier);self.assertIn("git rev-parse",verifier)
+  self.assertIn('"ls-files"',verifier);self.assertIn('"rev-parse"',verifier)
  def test_structured_baseline_compares_full_routine_signatures(self):
   base=(ROOT/"catalogue_baseline.py").read_text()
   compare=(ROOT/"compare_catalogue.py").read_text()

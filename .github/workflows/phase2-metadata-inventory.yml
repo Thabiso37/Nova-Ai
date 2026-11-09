@@ -146,17 +146,15 @@ jobs:
           api="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs?per_page=100"
           job_id="$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "${api}" | jq -r '.jobs[] | select(.name == "disposable-postgres-17") | .id' | head -n1)"
           test -n "${job_id}" && test "${job_id}" != "null"
-          curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/jobs/${job_id}/logs" -o phase2-job-logs.zip
-          mkdir -p phase2-job-logs
-          unzip -q phase2-job-logs.zip -d phase2-job-logs
+          command -v gh
+          gh run view "${GITHUB_RUN_ID}" --job "${job_id}" --log > phase2-job-logs.txt
+          test -s phase2-job-logs.txt
           printf '%s\n' "${job_id}" > scanned-job-id.txt
       - name: Scan complete job log archive with shared policy
         if: always()
         run: |
           set -euo pipefail
-          mapfile -d '' log_files < <(find phase2-job-logs -type f -print0)
-          test "${#log_files[@]}" -gt 0
-          python phase2/metadata-inventory/scan_sensitive.py "${log_files[@]}" | tee workflow-log-scan.txt
+          python phase2/metadata-inventory/scan_sensitive.py phase2-job-logs.txt | tee workflow-log-scan.txt
       - name: Upload workflow log scan report
         if: always()
         uses: actions/upload-artifact@v4
