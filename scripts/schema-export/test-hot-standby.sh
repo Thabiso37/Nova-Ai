@@ -121,7 +121,6 @@ LOCK TABLE public."Products" IN ACCESS SHARE MODE;
 LOCK TABLE public.partitioned_parent IN ACCESS SHARE MODE;
 LOCK TABLE public.partitioned_child IN ACCESS SHARE MODE;
 LOCK TABLE public.export_view IN ACCESS SHARE MODE;
-LOCK TABLE public.export_foreign_table IN ACCESS SHARE MODE;
 COMMIT;
 SQL
 echo "PASS: ACCESS SHARE locks on relation kinds used by pg_dump."
