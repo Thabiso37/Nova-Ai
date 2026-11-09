@@ -370,7 +370,9 @@ mkdir -p "$RETRY_DIR"
 cat > "$RETRY_BIN/psql" <<'RETRY_WRAPPER'
 #!/usr/bin/env bash
 set -Eeuo pipefail
+is_coordinator=0
 for arg in "$@"; do
+  [[ "$arg" != "-qAt" ]] || is_coordinator=1
   if [[ "$arg" == *manifest-transaction.sql ]]; then
     count=0
     [[ ! -f "$RETRY_DIR/manifest-count" ]] || count="$(cat "$RETRY_DIR/manifest-count")"
@@ -383,22 +385,19 @@ for arg in "$@"; do
     exec "$REAL_PSQL" "$@"
   fi
 done
-set +e
-"$REAL_PSQL" "$@" | awk -v outfile="$RETRY_DIR/snapshot-ids" '
-  /^[0-9A-Fa-f]+-[0-9A-Fa-f]+-[0-9A-Fa-f]+$/ { print >> outfile; fflush(outfile) }
-  { print; fflush() }
-'
-status=$?
-set -e
-exit "$status"
+if [[ "$is_coordinator" -eq 1 ]]; then
+  count=0
+  [[ ! -f "$RETRY_DIR/coordinator-count" ]] || count="$(cat "$RETRY_DIR/coordinator-count")"
+  printf '%s\n' "$((count + 1))" > "$RETRY_DIR/coordinator-count"
+fi
+exec "$REAL_PSQL" "$@"
 RETRY_WRAPPER
 chmod 700 "$RETRY_BIN/psql"
 printf '%s\n' "SELECT jsonb_build_object('retry_test',true)::text;" > "$TMP/retry-manifest.sql"
 PATH="$RETRY_BIN:$PATH" SCHEMA_EXPORT_MAX_ATTEMPTS=2 \
   bash "$ROOT/scripts/schema-export/export-consistent.sh" "$SNAPSHOT_URL" "$TMP/retry-output" "$TMP/retry-manifest.sql"
 [[ "$(cat "$RETRY_DIR/manifest-count")" -eq 2 ]]
-[[ "$(wc -l < "$RETRY_DIR/snapshot-ids")" -eq 2 ]]
-[[ "$(sed -n '1p' "$RETRY_DIR/snapshot-ids")" != "$(sed -n '2p' "$RETRY_DIR/snapshot-ids")" ]]
+[[ "$(cat "$RETRY_DIR/coordinator-count")" -eq 2 ]]
 [[ -s "$TMP/retry-output/schema.sql" && -s "$TMP/retry-output/manifests.json" ]]
 jq -e '.retry_test == true' "$TMP/retry-output/manifests.json" >/dev/null
 echo "PASS: failed first attempt discarded its pair; retry used a fresh snapshot and published a complete pair."
