@@ -46,6 +46,17 @@ CREATE SUBSCRIPTION phase2_probe_subscription
  CONNECTION 'host=127.0.0.1 port=1 dbname=synthetic user=synthetic'
  PUBLICATION phase2_probe_publication WITH (connect=false,enabled=false,create_slot=false,slot_name=NONE);
 
+
+-- pg_transform is a system catalogue. Insert a disposable synthetic metadata row
+-- to exercise discovery without invoking the transform functions.
+SET allow_system_table_mods = on;
+INSERT INTO pg_catalog.pg_transform (trftype,trflang,trffromsql,trftosql)
+SELECT 'novaai_app.unsupported_range_probe'::regtype,l.oid,
+       'pg_catalog.textin(cstring)'::regprocedure,
+       'pg_catalog.textout(text)'::regprocedure
+FROM pg_catalog.pg_language l WHERE l.lanname='plpgsql';
+RESET allow_system_table_mods;
+
 -- Synthetic labels exercise both object and shared-object label catalogues.
 SET allow_system_table_mods = on;
 INSERT INTO pg_catalog.pg_seclabel (objoid,classoid,objsubid,provider,label)
