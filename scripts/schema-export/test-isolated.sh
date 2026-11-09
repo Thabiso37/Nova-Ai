@@ -214,7 +214,7 @@ if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STO
   echo "ERROR: preflight accepted PUBLIC-executable large-object write routines." >&2
   exit 1
 fi
-grep -Fq 'PUBLIC EXECUTE on write-capable pg_catalog large-object routines' "$TMP/lo-preflight.log" || {
+grep -Fq 'effective EXECUTE on write-capable pg_catalog large-object routines' "$TMP/lo-preflight.log" || {
   cat "$TMP/lo-preflight.log" >&2
   echo "ERROR: large-object routines were rejected for an unexpected reason." >&2
   exit 1
