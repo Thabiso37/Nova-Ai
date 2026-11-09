@@ -51,7 +51,7 @@ jobs:
       - name: Run runtime negative security tests as restricted inspector
         env:
           INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector password=local-test-only"
-        run: python phase2/metadata-inventory/tests/test_runtime_security.py | tee runtime-security.json
+        run: set -o pipefail; python phase2/metadata-inventory/tests/test_runtime_security.py | tee runtime-security.json
       - name: Generate independent disposable schema-only baseline
         run: pg_dump -h 127.0.0.1 -U postgres -d inventory_test --schema-only --schema=novaai_app --schema=novaai_private --no-owner --no-privileges --file=baseline.sql
       - name: Scan generated outputs for canaries and secret patterns
