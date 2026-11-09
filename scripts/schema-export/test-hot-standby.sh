@@ -159,6 +159,17 @@ fi
 psql -X -f scripts/schema-export/export-manifests.sql -o "$WORK/manifests.json"
 jq -e '.manifest_version == 2 and (.policies | any(.name == "export_storage_objects_read")) and (.functions | any(.name == "export_helper")) and (.triggers | any(.name == "export_products_trigger")) and (.indexes | length > 0) and (.constraints | length > 0)' "$WORK/manifests.json" >/dev/null
 bash scripts/schema-export/validate-export.sh "$WORK"
+tar -czf "$WORK/standby-export.tar.gz" -C "$WORK" schema.sql manifests.json
+age-keygen -o "$WORK/age-identity.txt" >/dev/null 2>&1
+RECIPIENT="$(age-keygen -y "$WORK/age-identity.txt")"
+age -r "$RECIPIENT" -o "$WORK/standby-export.age" "$WORK/standby-export.tar.gz"
+sha256sum "$WORK/standby-export.age" > "$WORK/standby-export.age.sha256"
+sha256sum -c "$WORK/standby-export.age.sha256"
+age -d -i "$WORK/age-identity.txt" -o "$WORK/standby-export.roundtrip.tar.gz" "$WORK/standby-export.age"
+cmp "$WORK/standby-export.tar.gz" "$WORK/standby-export.roundtrip.tar.gz"
+rm -f "$WORK/standby-export.tar.gz" "$WORK/standby-export.age" "$WORK/standby-export.age.sha256" "$WORK/standby-export.roundtrip.tar.gz"
+[[ ! -e "$WORK/standby-export.age" && ! -e "$WORK/standby-export.tar.gz" ]]
+echo "PASS: standby schema/manifest encrypted, checksummed, decrypted and cleaned up."
 psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" >"$WORK/watermark.after"
 psql -X -Atqc "SELECT pg_last_wal_replay_lsn()" >"$WORK/replay.after"
 cmp "$WORK/watermark.before" "$WORK/watermark.after"
