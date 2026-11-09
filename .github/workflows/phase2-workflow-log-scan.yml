@@ -1,46 +1,142 @@
 name: Phase 2 Complete Workflow Log Scan
+
 on:
+  push:
+    branches:
+      - feature/metadata-only-inventory-prototype
+    paths:
+      - .github/workflows/phase2-workflow-log-scan.yml
   workflow_dispatch:
     inputs:
       target_run_id:
-        description: Completed Phase 2 metadata inventory workflow run ID
+        description: Must be the approved completed Phase 2 metadata inventory workflow run
         required: true
         type: string
+
 permissions:
   actions: read
   contents: read
+
 jobs:
   scan-completed-run:
     runs-on: ubuntu-latest
+    env:
+      APPROVED_RUN_ID: "42640933100"
+      APPROVED_SOURCE_SHA: "41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb"
+      APPROVED_BRANCH: "feature/metadata-only-inventory-prototype"
+      APPROVED_WORKFLOW_NAME: "Phase 2 Metadata Inventory Prototype"
+      APPROVED_WORKFLOW_PATH: ".github/workflows/phase2-metadata-inventory.yml"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout scanner from the approved source commit
+        uses: actions/checkout@v4
+        with:
+          ref: 41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb
+          persist-credentials: false
+
+      - name: Set up pinned Python runtime
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Retrieve complete completed-job log stream
+
+      - name: Initialize evidence and verify source run identity
+        id: retrieve
         env:
           GH_TOKEN: ${{ github.token }}
-          TARGET_RUN_ID: ${{ inputs.target_run_id }}
+          DISPATCH_RUN_ID: ${{ inputs.target_run_id }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
-          [[ "${TARGET_RUN_ID}" =~ ^[0-9]+$ ]]
-          jobs_json="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${TARGET_RUN_ID}/jobs?per_page=100")"
-          job_id="$(printf '%s' "${jobs_json}" | jq -r '.jobs[] | select(.name == "disposable-postgres-17") | .id' | head -n1)"
-          test -n "${job_id}" && test "${job_id}" != "null"
-          gh run view "${TARGET_RUN_ID}" --job "${job_id}" --log > phase2-job-logs.txt
-          test -s phase2-job-logs.txt
-          printf '%s\n' "${TARGET_RUN_ID}" > scanned-run-id.txt
-          printf '%s\n' "${job_id}" > scanned-job-id.txt
-      - name: Scan complete workflow job logs
+          mkdir -p scan-evidence
+          printf '%s\\n' "NOT_STARTED" > scan-evidence/retrieval-status.txt
+          printf '%s\\n' "$APPROVED_RUN_ID" > scan-evidence/approved-source-run-id.txt
+          printf '%s\\n' "$APPROVED_SOURCE_SHA" > scan-evidence/approved-source-commit.txt
+          printf '%s\\n' "$APPROVED_BRANCH" > scan-evidence/approved-source-branch.txt
+          printf '%s\\n' "$APPROVED_WORKFLOW_NAME" > scan-evidence/approved-source-workflow.txt
+          printf '%s\\n' "$GITHUB_SHA" > scan-evidence/scanner-workflow-event-commit.txt
+          trap 'rc=$?; printf "FAIL (exit %s)\\n" "$rc" > scan-evidence/retrieval-status.txt; exit "$rc"' ERR
+
+          if [[ "$EVENT_NAME" == "push" ]]; then
+            target_run_id="$APPROVED_RUN_ID"
+          elif [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            [[ "$DISPATCH_RUN_ID" =~ ^[0-9]+$ ]]
+            target_run_id="$DISPATCH_RUN_ID"
+          else
+            echo "Unsupported trigger event: $EVENT_NAME" >&2
+            exit 1
+          fi
+          [[ "$target_run_id" == "$APPROVED_RUN_ID" ]]
+
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$target_run_id" > scan-evidence/source-run-metadata.json
+          jq -e \
+            --arg name "$APPROVED_WORKFLOW_NAME" \
+            --arg branch "$APPROVED_BRANCH" \
+            --arg sha "$APPROVED_SOURCE_SHA" \
+            --arg path "$APPROVED_WORKFLOW_PATH" \
+            --argjson id "$APPROVED_RUN_ID" \
+            '.id == $id and .name == $name and .path == $path and .head_branch == $branch and .head_sha == $sha and .status == "completed" and .conclusion == "success"' \
+            scan-evidence/source-run-metadata.json > /dev/null
+
+          gh api --paginate --jq '.jobs[]' \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$target_run_id/jobs?per_page=100" \
+            | jq -s '.' > scan-evidence/source-run-jobs.json
+
+          expected_total="$(jq -r '.total_count' < <(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$target_run_id/jobs?per_page=1"))"
+          actual_total="$(jq 'length' scan-evidence/source-run-jobs.json)"
+          [[ "$actual_total" -eq "$expected_total" ]]
+          [[ "$actual_total" -gt 0 ]]
+
+          matching_count="$(jq '[.[] | select(.name == "disposable-postgres-17")] | length' scan-evidence/source-run-jobs.json)"
+          [[ "$matching_count" -eq 1 ]]
+          job_id="$(jq -r '[.[] | select(.name == "disposable-postgres-17")][0].id' scan-evidence/source-run-jobs.json)"
+          jq -e --argjson id "$job_id" \
+            '.[] | select(.id == $id and .name == "disposable-postgres-17" and .status == "completed" and .conclusion == "success")' \
+            scan-evidence/source-run-jobs.json > /dev/null
+
+          gh run view "$target_run_id" --repo "$GITHUB_REPOSITORY" --job "$job_id" --log > scan-evidence/phase2-job-logs.txt
+          test -s scan-evidence/phase2-job-logs.txt
+
+          printf '%s\\n' "$target_run_id" > scan-evidence/scanned-run-id.txt
+          printf '%s\\n' "$job_id" > scan-evidence/scanned-job-id.txt
+          printf '%s\\n' "$APPROVED_SOURCE_SHA" > scan-evidence/scanner-source-commit.txt
+          sha256sum scan-evidence/phase2-job-logs.txt | awk '{print $1}' > scan-evidence/source-job-log-sha256.txt
+          sha256sum phase2/metadata-inventory/scan_sensitive.py phase2/metadata-inventory/secret_patterns.py > scan-evidence/scanner-files-sha256.txt
+          git rev-parse HEAD > scan-evidence/checked-out-scanner-commit.txt
+          printf '%s\\n' "PASS" > scan-evidence/retrieval-status.txt
+
+      - name: Scan complete workflow job logs with pinned scanner
+        id: scan
+        if: steps.retrieve.outcome == 'success'
         run: |
           set -euo pipefail
-          python phase2/metadata-inventory/scan_sensitive.py phase2-job-logs.txt | tee workflow-log-scan.txt
-      - name: Upload complete workflow log scan evidence
+          python phase2/metadata-inventory/scan_sensitive.py scan-evidence/phase2-job-logs.txt | tee scan-evidence/workflow-log-scan.txt
+
+      - name: Record scan execution status
+        if: always()
+        run: |
+          set -euo pipefail
+          if [[ "${{ steps.retrieve.outcome }}" != "success" ]]; then
+            printf 'NOT_RUN: retrieval/identity verification outcome=%s\\n' "${{ steps.retrieve.outcome }}" > scan-evidence/scan-status.txt
+          elif [[ "${{ steps.scan.outcome }}" == "success" ]]; then
+            printf '%s\\n' "PASS" > scan-evidence/scan-status.txt
+          else
+            printf 'FAIL: scanner outcome=%s\\n' "${{ steps.scan.outcome }}" > scan-evidence/scan-status.txt
+          fi
+
+      - name: Upload scan and failure evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: phase2-complete-workflow-log-scan
-          path: |
-            workflow-log-scan.txt
-            scanned-run-id.txt
-            scanned-job-id.txt
+          path: scan-evidence/
           if-no-files-found: error
+          retention-days: 90
+
+      - name: Fail closed unless retrieval and scan both pass
+        if: always()
+        env:
+          RETRIEVAL_OUTCOME: ${{ steps.retrieve.outcome }}
+          SCAN_OUTCOME: ${{ steps.scan.outcome }}
+        run: |
+          set -euo pipefail
+          [[ "$RETRIEVAL_OUTCOME" == "success" ]]
+          [[ "$SCAN_OUTCOME" == "success" ]]
