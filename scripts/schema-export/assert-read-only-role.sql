@@ -131,7 +131,7 @@ BEGIN
       AND oidvectortypes(p.proargtypes)=d.identity_arg_types
     WHERE has_function_privilege(current_user,p.oid,'EXECUTE')
   ) THEN
-    bad := array_append(bad, 'PUBLIC EXECUTE on write-capable pg_catalog large-object routines');
+    bad := array_append(bad, 'effective EXECUTE on write-capable pg_catalog large-object routines');
   END IF;
 
   -- A SECURITY DEFINER routine executes with its owner's privileges. Reject any
@@ -149,7 +149,7 @@ BEGIN
 
   -- Extension-owned VOLATILE routines can perform database or external side
   -- effects. PostgreSQL has no catalogue flag proving a function body harmless,
-  -- so fail closed for PUBLIC-executable extension routines in this category.
+  -- so fail closed whenever the export login has effective EXECUTE on such extension routines.
   -- Stable/immutable extension helpers remain usable when otherwise permitted.
   IF EXISTS (
     SELECT 1
