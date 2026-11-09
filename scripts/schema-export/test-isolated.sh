@@ -110,6 +110,15 @@ fi
 psql -X -Atqc "SELECT count(*) FROM public.products WHERE name='must-not-write'" | grep -qx 0
 psql -X -Atqc "SELECT count(*) FROM pg_class WHERE relname IN ('must_not_create','must_not_create_temp')" | grep -qx 0
 echo "PASS: table, sequence, DDL, temporary-table and large-object writes are denied after overriding the read-only default."
+# Server-side file and program capabilities require their predefined role grants;
+# ordinary PUBLIC EXECUTE on the SQL entry points must not bypass those checks.
+if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -c "SET default_transaction_read_only=off" -c "SELECT pg_read_file('/etc/passwd')" >/dev/null 2>&1; then
+  echo "ERROR: restricted login read a server-side file." >&2; exit 1
+fi
+if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -c "SET default_transaction_read_only=off" -c "COPY (SELECT 'x') TO PROGRAM 'true'" >/dev/null 2>&1; then
+  echo "ERROR: restricted login executed a server-side program." >&2; exit 1
+fi
+
 
 printf 'SET ROLE safe_export;\n\\o %s\n' "$TMP/manifests.json" > "$TMP/export-manifests-as-role.sql"
 cat "$ROOT/scripts/schema-export/export-manifests.sql" >> "$TMP/export-manifests-as-role.sql"
@@ -118,7 +127,7 @@ jq -e '[.tables_and_columns[] | select(.schema == "public" and .table == "no_sel
 jq -e '[.tables_and_columns[] | select(.schema == "public" and (.table == "products" or .table == "Products")) | .table] | unique == ["Products","products"]' "$TMP/manifests.json" >/dev/null
 jq -e '.product_case_check.lower_exists and .product_case_check.upper_exists and .product_case_check.distinct' "$TMP/manifests.json" >/dev/null
 jq -e '.policies | any(.name == "products_read") and any(.name == "storage_objects_read")' "$TMP/manifests.json" >/dev/null
-jq -e '.default_privileges | length > 0' "$TMP/manifests.json" >/dev/null
+jq -e '[.default_privileges[] | select(.grantee == "safe_export" and .privilege == "SELECT")] | length == 0' "$TMP/manifests.json" >/dev/null
 jq -e '.schema_grants | any(.grantee == "schema_writer" and .privilege == "CREATE")' "$TMP/manifests.json" >/dev/null
 jq -e '.table_grants | any(.grantee == "PUBLIC" and .table == "products" and .privilege == "SELECT")' "$TMP/manifests.json" >/dev/null
 jq -e '.table_grants | any(.grantee == "anon" and .table == "products" and .privilege == "SELECT") and any(.grantee == "authenticated" and .table == "products" and .privilege == "SELECT")' "$TMP/manifests.json" >/dev/null
@@ -213,7 +222,19 @@ grep -Fq 'PUBLIC EXECUTE on write-capable pg_catalog large-object routines' "$TM
 echo "RESULT: preflight detects PUBLIC-inherited EXECUTE on write-capable large-object routines."
 # Direct grants must be rejected even when PUBLIC has no EXECUTE entry.
 psql -X -v ON_ERROR_STOP=1 <<'DIRECT_LO'
-REVOKE EXECUTE ON FUNCTION pg_catalog.lo_create(oid) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION
+  pg_catalog.lo_create(oid),
+  pg_catalog.lo_from_bytea(oid,bytea),
+  pg_catalog.lo_put(oid,bigint,bytea),
+  pg_catalog.lo_unlink(oid),
+  pg_catalog.lo_import(text),
+  pg_catalog.lo_import(text,oid),
+  pg_catalog.lo_export(oid,text),
+  pg_catalog.lo_open(oid,integer),
+  pg_catalog.lowrite(integer,bytea),
+  pg_catalog.lo_truncate(integer,integer),
+  pg_catalog.lo_truncate64(integer,bigint)
+FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION pg_catalog.lo_create(oid) TO safe_export;
 DIRECT_LO
 if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -f "$ROOT/scripts/schema-export/assert-read-only-role.sql" >"$TMP/direct-lo-preflight.log" 2>&1; then
@@ -475,3 +496,21 @@ PATH="$RETRY_BIN:$PATH" SCHEMA_EXPORT_MAX_ATTEMPTS=2 \
 [[ -s "$TMP/retry-output/schema.sql" && -s "$TMP/retry-output/manifests.json" ]]
 jq -e '.retry_test == true' "$TMP/retry-output/manifests.json" >/dev/null
 echo "PASS: failed first attempt discarded its pair; retry used a fresh snapshot and published a complete pair."
+# Metadata visibility failures must abort, rather than serialize a plausible partial manifest.
+psql -X -v ON_ERROR_STOP=1 -c 'REVOKE USAGE ON SCHEMA private FROM safe_export' >/dev/null
+if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -f "$ROOT/scripts/schema-export/assert-read-only-role.sql" >"$TMP/missing-usage.log" 2>&1; then
+  echo "ERROR: preflight accepted missing USAGE on required schema private." >&2; exit 1
+fi
+grep -Fq 'Required schema visibility failed' "$TMP/missing-usage.log"
+if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -f "$ROOT/scripts/schema-export/export-manifests.sql" >"$TMP/missing-manifest.log" 2>&1; then
+  echo "ERROR: manifest accepted inaccessible required schema private." >&2; exit 1
+fi
+grep -Fq 'Manifest cannot see all required schemas' "$TMP/missing-manifest.log"
+psql -X -v ON_ERROR_STOP=1 -c 'GRANT USAGE ON SCHEMA private TO safe_export' >/dev/null
+psql -X -v ON_ERROR_STOP=1 -c 'DROP SCHEMA private CASCADE' >/dev/null
+if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STOP=1 -f "$ROOT/scripts/schema-export/assert-read-only-role.sql" >"$TMP/missing-schema.log" 2>&1; then
+  echo "ERROR: preflight accepted a missing required schema." >&2; exit 1
+fi
+grep -Fq 'Required schema visibility failed' "$TMP/missing-schema.log"
+echo "PASS: missing or inaccessible required schemas fail with nonzero status."
+
