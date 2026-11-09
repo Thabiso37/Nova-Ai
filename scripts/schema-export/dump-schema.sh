@@ -10,12 +10,16 @@ fi
 
 CONNECTION_STRING="$1"
 OUTPUT_FILE="$2"
+SNAPSHOT_ID="${3:-}"
 [[ -n "$CONNECTION_STRING" && -n "$OUTPUT_FILE" ]]
+if [[ -n "$SNAPSHOT_ID" && ! "$SNAPSHOT_ID" =~ ^[0-9A-Fa-f]+-[0-9A-Fa-f]+-[0-9A-Fa-f]+$ ]]; then echo "Invalid PostgreSQL exported snapshot identifier." >&2; exit 2; fi
 pg_dump --version | grep -Eq '^pg_dump \(PostgreSQL\) 17\.11([[:space:]]|$)'
 
 # Never leave a partial dump behind if pg_dump or its postcondition fails.
 rm -f -- "$OUTPUT_FILE"
-if ! pg_dump --no-password --schema-only --schema=public --schema=private --strict-names --file="$OUTPUT_FILE" "$CONNECTION_STRING"; then
+DUMP_ARGS=(--no-password --schema-only --schema=public --schema=private --strict-names --file="$OUTPUT_FILE")
+if [[ -n "$SNAPSHOT_ID" ]]; then DUMP_ARGS+=(--snapshot="$SNAPSHOT_ID"); fi
+if ! pg_dump "${DUMP_ARGS[@]}" "$CONNECTION_STRING"; then
   rm -f -- "$OUTPUT_FILE"
   exit 1
 fi
