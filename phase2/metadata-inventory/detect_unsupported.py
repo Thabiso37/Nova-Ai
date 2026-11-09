@@ -35,8 +35,11 @@ queries = [
        WHERE c.relkind='f' AND n.nspname=ANY(%s)""", (schemas,)),
     ("foreign_data_wrapper", "SELECT NULL::text schema,fdwname identity FROM pg_foreign_data_wrapper", ()),
     ("foreign_server", "SELECT NULL::text schema,srvname identity FROM pg_foreign_server", ()),
-    ("user_mapping", """SELECT NULL::text schema,m.usename||'@'||m.srvname identity
-       FROM pg_user_mappings m""", ()),
+    ("user_mapping", """SELECT NULL::text schema,
+       COALESCE(r.rolname,'PUBLIC')||'@'||s.srvname identity
+       FROM pg_user_mapping m
+       LEFT JOIN pg_roles r ON r.oid=m.umuser
+       JOIN pg_foreign_server s ON s.oid=m.umserver""", ()),
     ("event_trigger", "SELECT NULL::text schema,evtname identity FROM pg_event_trigger", ()),
     ("publication", "SELECT NULL::text schema,pubname identity FROM pg_publication", ()),
     ("subscription", "SELECT NULL::text schema,subname identity FROM pg_subscription", ()),
@@ -91,14 +94,14 @@ queries = [
          AS x(type,schema_name,name,identity)
        WHERE x.schema_name=ANY(%s)""", (schemas,))
 ]
-built_in_access_methods = {
-    x["identity"] for x in registry.get("external_prerequisites",[])
-    if x.get("family")=="access_method" and x.get("classification")=="CLUSTER_GLOBAL"
+registered_access_methods = {
+    x["identity"]: x["classification"] for x in registry.get("external_prerequisites",[])
+    if x.get("family")=="access_method" and x.get("classification") in ("CLUSTER_GLOBAL","EXTENSION_OWNED")
        and x.get("approved") is True
 }
 unsupported = []
 visibility_failures = []
-cluster_global_access_methods = []
+classified_access_methods = []
 conn = psycopg2.connect(DSN)
 try:
     conn.set_session(readonly=True, autocommit=False)
@@ -121,9 +124,9 @@ try:
                 cur.execute("RELEASE SAVEPOINT unsupported_scan")
         cur.execute("SELECT amname FROM pg_am ORDER BY amname")
         for (name,) in cur.fetchall():
-            if name in built_in_access_methods:
-                cluster_global_access_methods.append({"family":"access_method","identity":name,
-                                                       "classification":"CLUSTER_GLOBAL"})
+            if name in registered_access_methods:
+                classified_access_methods.append({"family":"access_method","identity":name,
+                                                   "classification":registered_access_methods[name]})
             else:
                 unsupported.append({"family":"access_method","schema":None,"identity":name})
     conn.commit()
@@ -133,7 +136,7 @@ result = {
     "postgres_version_num":version,
     "unsupported_objects":unsupported,
     "catalogue_visibility_failures":visibility_failures,
-    "cluster_global_access_methods":cluster_global_access_methods,
+    "classified_access_methods":classified_access_methods,
     "status":"FAIL" if unsupported or visibility_failures else "PASS",
     "limitations":"A clean scan establishes only visibility for the listed catalogue families in this disposable fixture."
 }
