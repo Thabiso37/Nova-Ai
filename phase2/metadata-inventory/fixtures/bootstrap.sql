@@ -95,7 +95,24 @@ GRANT SELECT ON novaai_app.inheritance_probe TO novaai_privileged_probe;
 REVOKE ALL ON ALL TABLES IN SCHEMA novaai_app, novaai_private FROM PUBLIC, novaai_inventory_inspector;
 REVOKE ALL ON ALL SEQUENCES IN SCHEMA novaai_app, novaai_private FROM PUBLIC, novaai_inventory_inspector;
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA novaai_app, novaai_private FROM PUBLIC, novaai_inventory_inspector;
-REVOKE ALL ON ALL TYPES IN SCHEMA novaai_app, novaai_private FROM PUBLIC, novaai_inventory_inspector;
+-- PostgreSQL has no "REVOKE ALL ON ALL TYPES" form. Revoke USAGE
+-- from PUBLIC and the inspector on every synthetic user-defined type,
+-- including table row types, domains, enums and standalone composites.
+DO $
+DECLARE t record;
+BEGIN
+  FOR t IN
+    SELECT n.nspname, typ.typname
+    FROM pg_type typ
+    JOIN pg_namespace n ON n.oid=typ.typnamespace
+    WHERE n.nspname IN ('novaai_app','novaai_private')
+      AND typ.typtype IN ('b','c','d','e','r','m')
+      AND typ.typowner=(SELECT oid FROM pg_roles WHERE rolname='novaai_inventory_owner')
+  LOOP
+    EXECUTE format('REVOKE USAGE ON TYPE %I.%I FROM PUBLIC, novaai_inventory_inspector',
+                   t.nspname,t.typname);
+  END LOOP;
+END $;
 REVOKE TEMPORARY, CREATE ON DATABASE inventory_test FROM PUBLIC;
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
