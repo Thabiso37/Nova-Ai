@@ -140,14 +140,23 @@ NETWORK_ID="$(docker inspect "$HOSTNAME" --format '{{range .NetworkSettings.Netw
 JOB_IP="$(docker inspect "$HOSTNAME" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')"
 [[ -n "$NETWORK_ID" && -n "$JOB_IP" ]]
 CLI_URL="postgresql://safe_export:$EP@$JOB_IP:$SP/postgres?sslmode=disable"
-supabase --network-id "$NETWORK_ID" db dump --db-url "$CLI_URL" --schema public,private --file "$WORK/supabase.sql"
-grep -Eq 'CREATE TABLE public\.products' "$WORK/supabase.sql"
-grep -Eq 'CREATE TABLE public\."Products"' "$WORK/supabase.sql"
-! grep -Eiq 'HOT_STANDBY_APPLICATION_ROW_MUST_NOT_EXPORT|HOT_STANDBY_LO_DATA_MUST_NOT_EXPORT|^[[:space:]]*(COPY[[:space:]]|INSERT[[:space:]]+INTO)' "$WORK/supabase.sql"
-echo "PASS: pinned Supabase CLI dump and no-application-data checks."
+if supabase --network-id "$NETWORK_ID" db dump --db-url "$CLI_URL" --schema public,private --file "$WORK/supabase.sql" >"$WORK/supabase-cli.log" 2>&1; then
+  echo "UNEXPECTED: pinned Supabase CLI succeeded with restricted login; inspect any behavior change." 
+  grep -Eq 'CREATE TABLE public\.products' "$WORK/supabase.sql"
+  grep -Eq 'CREATE TABLE public\."Products"' "$WORK/supabase.sql"
+  ! grep -Eiq 'HOT_STANDBY_APPLICATION_ROW_MUST_NOT_EXPORT|HOT_STANDBY_LO_DATA_MUST_NOT_EXPORT|^[[:space:]]*(COPY[[:space:]]|INSERT[[:space:]]+INTO)' "$WORK/supabase.sql"
+  cp "$WORK/supabase.sql" "$WORK/schema.sql"
+else
+  if grep -Fq 'permission denied to set role "postgres"' "$WORK/supabase-cli.log"; then
+    echo "CONFIRMED CLI INCOMPATIBILITY: supabase db dump attempts SET ROLE postgres, which the restricted export login must not be allowed to assume."
+    cp "$WORK/direct.sql" "$WORK/schema.sql"
+  else
+    cat "$WORK/supabase-cli.log" >&2
+    exit 1
+  fi
+fi
 psql -X -f scripts/schema-export/export-manifests.sql -o "$WORK/manifests.json"
 jq -e '.manifest_version == 2 and (.policies | any(.name == "export_storage_objects_read")) and (.functions | any(.name == "export_helper")) and (.triggers | any(.name == "export_products_trigger")) and (.indexes | length > 0) and (.constraints | length > 0)' "$WORK/manifests.json" >/dev/null
-cp "$WORK/supabase.sql" "$WORK/schema.sql"
 bash scripts/schema-export/validate-export.sh "$WORK"
 psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" >"$WORK/watermark.after"
 psql -X -Atqc "SELECT pg_last_wal_replay_lsn()" >"$WORK/replay.after"
