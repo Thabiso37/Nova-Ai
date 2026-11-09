@@ -9,6 +9,10 @@ on:
     branches:
       - feature/metadata-only-inventory-prototype
 
+concurrency:
+  group: phase2-metadata-inventory-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
