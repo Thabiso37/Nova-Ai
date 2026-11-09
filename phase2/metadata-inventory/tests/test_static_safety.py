@@ -151,14 +151,122 @@ class StaticSafetyTests(unittest.TestCase):
   self.assertIn("steps.scan_evidence.outcome == 'success'",workflow)
   self.assertIn("baseline-psql-client-version.txt",workflow)
   self.assertIn("baseline-pgdump-client-version.txt",workflow)
- def test_complete_workflow_job_logs_are_scanned(self):
-  workflow=(ROOT.parents[1]/".github"/"workflows"/"phase2-workflow-log-scan.yml").read_text()
-  self.assertIn("workflow_dispatch",workflow)
-  self.assertIn("gh run view",workflow)
-  self.assertIn("scan_sensitive.py",workflow)
-  self.assertIn("TARGET_RUN_ID}",workflow)
-  self.assertIn("GITHUB_REPOSITORY}",workflow)
-  self.assertIn("printf '%s\\n'",workflow)
+ def scanner_workflow(self):
+  return (ROOT.parents[1]/".github"/"workflows"/"phase2-workflow-log-scan.yml").read_text()
+
+ def run_shell(self, script, **env):
+  return subprocess.run(["bash","-euo","pipefail","-c",script],capture_output=True,text=True,
+                        env={**__import__("os").environ,**env})
+
+ def target_selection_block(self):
+  workflow=self.scanner_workflow()
+  start=workflow.index('          if [[ "$EVENT_NAME" == "push" ]]')
+  end=workflow.index('          [[ "$target_run_id" == "$APPROVED_RUN_ID" ]]',start)
+  return workflow[start:end]+'          [[ "$target_run_id" == "$APPROVED_RUN_ID" ]]\n'
+
+ def test_dispatch_input_is_explicitly_captured(self):
+  workflow=self.scanner_workflow()
+  self.assertRegex(workflow,r"DISPATCH_RUN_ID:\\s*\\$\\{\\{\\s*inputs\\.target_run_id\\s*\\}\\}")
+
+ def test_push_selects_only_the_approved_run(self):
+  result=self.run_shell(self.target_selection_block()+"printf '%s' \"$target_run_id\"",
+                        EVENT_NAME="push",DISPATCH_RUN_ID="",APPROVED_RUN_ID="42640933100")
+  self.assertEqual(result.returncode,0,result.stderr)
+  self.assertEqual(result.stdout,"42640933100")
+
+ def test_dispatch_accepts_approved_numeric_run(self):
+  result=self.run_shell(self.target_selection_block()+"printf '%s' \"$target_run_id\"",
+                        EVENT_NAME="workflow_dispatch",DISPATCH_RUN_ID="42640933100",
+                        APPROVED_RUN_ID="42640933100")
+  self.assertEqual(result.returncode,0,result.stderr)
+  self.assertEqual(result.stdout,"42640933100")
+
+ def test_dispatch_rejects_non_numeric_run_id(self):
+  result=self.run_shell(self.target_selection_block(),EVENT_NAME="workflow_dispatch",
+                        DISPATCH_RUN_ID="42640933100x",APPROVED_RUN_ID="42640933100")
+  self.assertNotEqual(result.returncode,0)
+
+ def test_both_trigger_paths_reject_unapproved_run_ids(self):
+  for event,dispatch in (("push",""),("workflow_dispatch","42640933101")):
+   with self.subTest(event=event):
+    result=self.run_shell(self.target_selection_block(),EVENT_NAME=event,
+                          DISPATCH_RUN_ID=dispatch,APPROVED_RUN_ID="42640933100")
+    self.assertNotEqual(result.returncode,0)
+
+ def test_source_workflow_name_and_path_are_validated(self):
+  workflow=self.scanner_workflow()
+  self.assertRegex(workflow,r'--arg name "\\$APPROVED_WORKFLOW_NAME"')
+  self.assertRegex(workflow,r'--arg path "\\$APPROVED_WORKFLOW_PATH"')
+  self.assertRegex(workflow,r'\\.name == \\$name')
+  self.assertRegex(workflow,r'\\.path == \\$path')
+
+ def test_source_branch_and_exact_commit_are_validated(self):
+  workflow=self.scanner_workflow()
+  self.assertRegex(workflow,r'--arg branch "\\$APPROVED_BRANCH"')
+  self.assertRegex(workflow,r'--arg sha "\\$APPROVED_SOURCE_SHA"')
+  self.assertRegex(workflow,r'\\.head_branch == \\$branch')
+  self.assertRegex(workflow,r'\\.head_sha == \\$sha')
+
+ def test_source_run_must_be_completed_successfully(self):
+  workflow=self.scanner_workflow()
+  self.assertRegex(workflow,r'\\.status == "completed"')
+  self.assertRegex(workflow,r'\\.conclusion == "success"')
+
+ def test_job_pagination_is_exhaustive_and_count_checked(self):
+  workflow=self.scanner_workflow()
+  self.assertRegex(workflow,r"gh api --paginate")
+  self.assertRegex(workflow,r"actual_total=.*jq 'length'")
+  self.assertRegex(workflow,r'\\[\\[ "\\$actual_total" -eq "\\$expected_total" \\]\\]')
+
+ def test_exactly_one_expected_job_is_required(self):
+  workflow=self.scanner_workflow()
+  self.assertRegex(workflow,r'\\.name == "disposable-postgres-17"')
+  self.assertRegex(workflow,r'\\[\\[ "\\$matching_count" -eq 1 \\]\\]')
+
+ def test_selected_job_must_be_completed_successfully(self):
+  workflow=self.scanner_workflow()
+  self.assertRegex(workflow,r'\\.status == "completed"')
+  self.assertRegex(workflow,r'\\.conclusion == "success"')
+  self.assertIn('job_id="$(jq -r',workflow)
+
+ def test_log_retrieval_uses_validated_source_run_and_job_identifiers(self):
+  workflow=self.scanner_workflow()
+  self.assertIn('gh run view "$target_run_id" --repo "$GITHUB_REPOSITORY" --job "$job_id" --log',workflow)
+  self.assertIn('target_run_id="$APPROVED_RUN_ID"',workflow)
+  self.assertIn('[[ "$target_run_id" == "$APPROVED_RUN_ID" ]]',workflow)
+
+ def test_retrieval_nonempty_hash_and_scan_share_one_log_path(self):
+  workflow=self.scanner_workflow()
+  path="scan-evidence/phase2-job-logs.txt"
+  self.assertIn(f'> {path}',workflow)
+  self.assertIn(f'test -s {path}',workflow)
+  self.assertIn(f'sha256sum {path}',workflow)
+  self.assertIn(f'scan_sensitive.py {path}',workflow)
+
+ def test_raw_logs_are_excluded_from_uploaded_artifact(self):
+  workflow=self.scanner_workflow()
+  self.assertRegex(workflow,r"uses: actions/upload-artifact@v4")
+  self.assertIn("!scan-evidence/phase2-job-logs.txt",workflow)
+
+ def test_scanner_failure_causes_final_gate_to_fail(self):
+  workflow=self.scanner_workflow()
+  start=workflow.index('          [[ "$RETRIEVAL_OUTCOME" == "success" ]]')
+  gate=workflow[start:workflow.index("\n",workflow.index('          [[ "$SCAN_OUTCOME" == "success" ]]',start))+1]
+  result=self.run_shell(gate,RETRIEVAL_OUTCOME="success",SCAN_OUTCOME="failure")
+  self.assertNotEqual(result.returncode,0)
+  passed=self.run_shell(gate,RETRIEVAL_OUTCOME="success",SCAN_OUTCOME="success")
+  self.assertEqual(passed.returncode,0,passed.stderr)
+
+ def test_retrieval_or_identity_failure_skips_scanner_and_fails_gate(self):
+  workflow=self.scanner_workflow()
+  self.assertRegex(workflow,r"if: steps\\.retrieve\\.outcome == 'success'")
+  self.assertIn('if [[ "$RETRIEVAL_OUTCOME" != "success" ]]',workflow)
+  start=workflow.index('          [[ "$RETRIEVAL_OUTCOME" == "success" ]]')
+  gate=workflow[start:workflow.index("\n",workflow.index('          [[ "$SCAN_OUTCOME" == "success" ]]',start))+1]
+  for outcome in ("failure","skipped"):
+   with self.subTest(outcome=outcome):
+    result=self.run_shell(gate,RETRIEVAL_OUTCOME=outcome,SCAN_OUTCOME="skipped")
+    self.assertNotEqual(result.returncode,0)
 
 if __name__=="__main__":
  unittest.main()
