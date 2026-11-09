@@ -148,6 +148,9 @@ class StaticSafetyTests(unittest.TestCase):
   self.assertIn("workflow_dispatch",workflow)
   self.assertIn("gh run view",workflow)
   self.assertIn("scan_sensitive.py",workflow)
+  self.assertIn("TARGET_RUN_ID}",workflow)
+  self.assertIn("GITHUB_REPOSITORY}",workflow)
+  self.assertIn("printf '%s\\n'",workflow)
 
 if __name__=="__main__":
  unittest.main()
