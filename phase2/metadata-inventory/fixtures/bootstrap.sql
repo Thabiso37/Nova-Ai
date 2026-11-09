@@ -107,6 +107,7 @@ BEGIN
     JOIN pg_namespace n ON n.oid=typ.typnamespace
     WHERE n.nspname IN ('novaai_app','novaai_private')
       AND typ.typtype IN ('b','c','d','e','r','m')
+      AND typ.typelem=0
       AND typ.typowner=(SELECT oid FROM pg_roles WHERE rolname='novaai_inventory_owner')
   LOOP
     EXECUTE format('REVOKE USAGE ON TYPE %I.%I FROM PUBLIC, novaai_inventory_inspector',
