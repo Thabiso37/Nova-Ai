@@ -48,7 +48,7 @@ The registry describes only synthetic fixture evidence. It does not establish pr
 
 The detector checks aggregates, rules, operators, operator classes/families, foreign tables, foreign-data wrappers, foreign servers and user mappings, event triggers, publications/subscriptions, text-search objects, extended statistics, casts, collations, conversions, transforms, user-defined type families, security labels and large-object metadata. It checks access methods against the explicit PostgreSQL 17.11 external-prerequisite registry. User-mapping discovery has column-level SELECT on `umuser` and `umserver` only; it never has SELECT on or reads `umoptions`, which is separately tested as denied.
 
-A catalogue family that cannot be inspected produces a visibility failure. It is not silently treated as empty. The current synthetic fixture discovers no unsupported objects; positive fixture probes have not been created for every unsupported family, so independent review should examine those catalogue queries and their PostgreSQL-version assumptions.
+A catalogue family that cannot be inspected produces a visibility failure. It is not silently treated as empty. The workflow positively injects an extended-statistics object, a custom rule and a user-defined range/multirange type; it requires the detector to fail closed on all three families, then drops the probes and requires a clean full scan. Other unsupported families are covered by explicit catalogue queries and static matrix checks, but do not yet each have a positive fixture probe.
 
 ## Baseline comparison
 
