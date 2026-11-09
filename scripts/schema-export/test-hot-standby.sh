@@ -144,7 +144,7 @@ COMMIT;
 SQL
 echo "PASS: ACCESS SHARE locks on relation kinds used by pg_dump."
 URL="postgresql://safe_export:$EP@127.0.0.1:$SP/postgres?sslmode=disable"
-psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" >"$WORK/watermark.before"
+PGUSER=postgres PGPASSWORD= PGPORT="$SP" psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" >"$WORK/watermark.before"
 psql -X -Atqc "SELECT pg_last_wal_replay_lsn()" >"$WORK/replay.before"
 pg_dump --version | grep -Eq '^pg_dump \(PostgreSQL\) 17\.11([[:space:]]|$)'
 if bash scripts/schema-export/dump-schema.sh "postgresql://safe_export:$EP@127.0.0.1:$((SP + 100))/postgres?sslmode=disable" "$WORK/failed.sql" >"$WORK/failed-export.log" 2>&1; then
@@ -174,7 +174,7 @@ cmp "$WORK/standby-export.tar.gz" "$WORK/standby-export.roundtrip.tar.gz"
 rm -f "$WORK/standby-export.tar.gz" "$WORK/standby-export.age" "$WORK/standby-export.age.sha256" "$WORK/standby-export.roundtrip.tar.gz"
 [[ ! -e "$WORK/standby-export.age" && ! -e "$WORK/standby-export.tar.gz" ]]
 echo "PASS: standby schema/manifest encrypted, checksummed, decrypted and cleaned up."
-psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" >"$WORK/watermark.after"
+PGUSER=postgres PGPASSWORD= PGPORT="$SP" psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" >"$WORK/watermark.after"
 psql -X -Atqc "SELECT pg_last_wal_replay_lsn()" >"$WORK/replay.after"
 cmp "$WORK/watermark.before" "$WORK/watermark.after"
 grep -qx '202611090001' "$WORK/watermark.before"
@@ -184,8 +184,8 @@ printf 'WAL replay freshness: primary_lsn=%s standby_replay_start=%s standby_rep
 echo "PASS: stable watermark bracket and replay LSN captured."
 PGUSER=postgres PGPASSWORD= PGPORT="$PP" psql -X -v ON_ERROR_STOP=1 -c "ALTER TABLE public.products ADD COLUMN watermark_probe text; UPDATE supabase_migrations.schema_migrations SET version='202611090002'"
 for _ in $(seq 1 60); do psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" 2>/dev/null | grep -qx 202611090002 && break; sleep 1; done
-psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" | grep -qx 202611090002
-if cmp -s "$WORK/watermark.before" <(psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations"); then echo "ERROR: watermark drift was not detected" >&2; exit 1; fi
+PGUSER=postgres PGPASSWORD= PGPORT="$SP" psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" | grep -qx 202611090002
+if cmp -s "$WORK/watermark.before" <(PGUSER=postgres PGPASSWORD= PGPORT="$SP" psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations"); then echo "ERROR: watermark drift was not detected" >&2; exit 1; fi
 ! grep -q watermark_probe "$WORK/schema.sql"
 echo "PASS: advancing WAL changes watermark; separate schema/manifest drift is detectable."
 echo "Genuine PostgreSQL 17.11 hot-standby tests passed."
