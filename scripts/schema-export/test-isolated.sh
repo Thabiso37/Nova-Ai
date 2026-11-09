@@ -346,7 +346,7 @@ snapshot_import_must_fail() {
 }
 for ending in commit terminate; do
   coproc SNAP_COORD { PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql "$SNAPSHOT_URL" -X -qAt -v ON_ERROR_STOP=1; }
-  C_PID="$SNAP_COORD_PID"; C_IN="\${SNAP_COORD[1]}"; C_OUT="\${SNAP_COORD[0]}"
+  C_PID="$SNAP_COORD_PID"; C_IN="${SNAP_COORD[1]}"; C_OUT="${SNAP_COORD[0]}"
   printf 'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;\nSELECT pg_export_snapshot();\n' >&"$C_IN"
   IFS= read -r -t 15 EXPIRED_SNAPSHOT <&"$C_OUT"
   [[ "$EXPIRED_SNAPSHOT" =~ ^[0-9A-Fa-f]+-[0-9A-Fa-f]+-[0-9A-Fa-f]+$ ]]
@@ -360,3 +360,45 @@ echo "PASS: snapshot expiry and coordinator termination fail closed."
 PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -Atqc "SELECT count(*)=0 FROM pg_auth_members WHERE member=(SELECT oid FROM pg_roles WHERE rolname=current_user) OR roleid=(SELECT oid FROM pg_roles WHERE rolname=current_user)" | grep -qx t
 PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -Atqc "SELECT NOT rolsuper AND NOT rolbypassrls AND NOT rolcreaterole AND NOT rolcreatedb AND NOT rolreplication FROM pg_roles WHERE rolname=current_user" | grep -qx t
 echo "PASS: no extra privileges or role escalation introduced."
+
+# Retry must discard the failed first attempt and obtain a different exported snapshot.
+REAL_PSQL="$(command -v psql)"
+RETRY_BIN="$TMP/retry-bin"
+mkdir -p "$RETRY_BIN"
+export REAL_PSQL RETRY_DIR="$TMP/retry-state"
+mkdir -p "$RETRY_DIR"
+cat > "$RETRY_BIN/psql" <<'RETRY_WRAPPER'
+#!/usr/bin/env bash
+set -Eeuo pipefail
+for arg in "$@"; do
+  if [[ "$arg" == *manifest-transaction.sql ]]; then
+    count=0
+    [[ ! -f "$RETRY_DIR/manifest-count" ]] || count="$(cat "$RETRY_DIR/manifest-count")"
+    count=$((count + 1))
+    printf '%s\n' "$count" > "$RETRY_DIR/manifest-count"
+    if [[ "$count" -eq 1 ]]; then
+      echo "Injected first-attempt manifest failure for retry test." >&2
+      exit 73
+    fi
+    exec "$REAL_PSQL" "$@"
+  fi
+done
+set +e
+"$REAL_PSQL" "$@" | awk -v log="$RETRY_DIR/snapshot-ids" '
+  /^[0-9A-Fa-f]+-[0-9A-Fa-f]+-[0-9A-Fa-f]+$/ { print >> log; fflush(log) }
+  { print; fflush() }
+'
+status=$?
+set -e
+exit "$status"
+RETRY_WRAPPER
+chmod 700 "$RETRY_BIN/psql"
+printf '%s\n' "SELECT jsonb_build_object('retry_test',true)::text;" > "$TMP/retry-manifest.sql"
+PATH="$RETRY_BIN:$PATH" SCHEMA_EXPORT_MAX_ATTEMPTS=2 \
+  bash "$ROOT/scripts/schema-export/export-consistent.sh" "$SNAPSHOT_URL" "$TMP/retry-output" "$TMP/retry-manifest.sql"
+[[ "$(cat "$RETRY_DIR/manifest-count")" -eq 2 ]]
+[[ "$(wc -l < "$RETRY_DIR/snapshot-ids")" -eq 2 ]]
+[[ "$(sed -n '1p' "$RETRY_DIR/snapshot-ids")" != "$(sed -n '2p' "$RETRY_DIR/snapshot-ids")" ]]
+[[ -s "$TMP/retry-output/schema.sql" && -s "$TMP/retry-output/manifests.json" ]]
+jq -e '.retry_test == true' "$TMP/retry-output/manifests.json" >/dev/null
+echo "PASS: failed first attempt discarded its pair; retry used a fresh snapshot and published a complete pair."
