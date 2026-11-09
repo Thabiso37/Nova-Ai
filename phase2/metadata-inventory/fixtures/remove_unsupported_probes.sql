@@ -12,7 +12,7 @@ LOAD '/tmp/phase2_dummy_seclabel.so';
 SECURITY LABEL FOR phase2_dummy ON TABLE novaai_app.orders IS NULL;
 SECURITY LABEL FOR phase2_dummy ON DATABASE inventory_test IS NULL;
 
-DO $
+DO $phase2$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_catalog.pg_seclabel
              WHERE provider='phase2_dummy'
@@ -36,7 +36,7 @@ BEGIN
     RAISE EXCEPTION 'transform probe was not removed';
   END IF;
 END
-$;
+$phase2$;
 
 SELECT lo_unlink(424242) WHERE EXISTS (SELECT 1 FROM pg_largeobject_metadata WHERE oid=424242);
 DROP SUBSCRIPTION IF EXISTS phase2_probe_subscription;

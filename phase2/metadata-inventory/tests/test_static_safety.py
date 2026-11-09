@@ -97,6 +97,14 @@ class StaticSafetyTests(unittest.TestCase):
                          capture_output=True,text=True)
   self.assertNotEqual(result.returncode,0)
   self.assertIn("snapshot_id_mismatch",result.stdout)
+ def test_probe_cleanup_fails_closed_and_verifies_removal(self):
+  cleanup=(ROOT/"fixtures"/"remove_unsupported_probes.sql").read_text()
+  self.assertIn("LOAD '/tmp/phase2_dummy_seclabel.so'",cleanup)
+  self.assertIn("DO $phase2$",cleanup)
+  self.assertIn("object security-label probe was not removed",cleanup)
+  self.assertIn("shared security-label probe was not removed",cleanup)
+  self.assertIn("transform probe was not removed",cleanup)
+  self.assertNotIn("pg_stat_file",cleanup)
  def test_catalogue_visibility_includes_shared_security_labels(self):
   self.assertIn("pg_shseclabel",DETECTOR)
   self.assertIn("shared_security_label",DETECTOR)
