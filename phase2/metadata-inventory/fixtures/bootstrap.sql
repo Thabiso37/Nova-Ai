@@ -94,7 +94,7 @@ REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
 -- Deny all large-object APIs to PUBLIC and the inspector.
 REVOKE EXECUTE ON FUNCTION pg_catalog.lo_get(oid) FROM PUBLIC, novaai_inventory_inspector;
-REVOKE EXECUTE ON FUNCTION pg_catalog.lo_get(oid, integer, integer) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_get(oid, bigint, integer) FROM PUBLIC, novaai_inventory_inspector;
 REVOKE EXECUTE ON FUNCTION pg_catalog.lo_from_bytea(oid, bytea) FROM PUBLIC, novaai_inventory_inspector;
 REVOKE EXECUTE ON FUNCTION pg_catalog.lo_put(oid, bigint, bytea) FROM PUBLIC, novaai_inventory_inspector;
 REVOKE EXECUTE ON FUNCTION pg_catalog.lo_unlink(oid) FROM PUBLIC, novaai_inventory_inspector;
@@ -107,3 +107,4 @@ REVOKE EXECUTE ON FUNCTION pg_catalog.lowrite(integer, bytea) FROM PUBLIC, novaa
 REVOKE EXECUTE ON FUNCTION pg_catalog.loread(integer, integer) FROM PUBLIC, novaai_inventory_inspector;
 REVOKE EXECUTE ON FUNCTION pg_catalog.lo_open(oid, integer) FROM PUBLIC, novaai_inventory_inspector;
 REVOKE EXECUTE ON FUNCTION pg_catalog.lo_truncate(integer, integer) FROM PUBLIC, novaai_inventory_inspector;
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_truncate64(integer, bigint) FROM PUBLIC, novaai_inventory_inspector;
