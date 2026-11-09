@@ -474,6 +474,7 @@ def main():
                     "unresolved_dependency_count": len(unresolved),
                     "unresolved_dependency_types": sorted({x["object_type"] for x in unresolved}),
                     "unsupported_dependency_types": sorted({x["type"] for x in unsupported_dependencies}),
+                    "unresolved_dependency_samples": unresolved[:25],
                     "secret_finding_count": len(secret_findings)
                 }), file=sys.stderr)
                 raise RuntimeError("Inventory failed closed: unclassified, unsupported, unresolved, or sensitive metadata found.")
