@@ -18,7 +18,9 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'novaai_inventory_inspector') THEN
     CREATE ROLE novaai_inventory_inspector LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
   END IF;
-END $$;
+END $;
+
+ALTER ROLE novaai_inventory_inspector SET search_path = pg_catalog;
 
 REVOKE ALL ON DATABASE inventory_test FROM PUBLIC;
 GRANT CONNECT ON DATABASE inventory_test TO novaai_inventory_inspector;

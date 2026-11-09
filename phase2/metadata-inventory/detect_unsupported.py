@@ -36,10 +36,9 @@ queries = [
     ("foreign_data_wrapper", "SELECT NULL::text schema,fdwname identity FROM pg_foreign_data_wrapper", ()),
     ("foreign_server", "SELECT NULL::text schema,srvname identity FROM pg_foreign_server", ()),
     ("user_mapping", """SELECT NULL::text schema,
-       COALESCE(r.rolname,'PUBLIC')||'@'||s.srvname identity
+       COALESCE(r.rolname,'PUBLIC')||'@server_oid:'||m.umserver::text identity
        FROM pg_user_mapping m
-       LEFT JOIN pg_roles r ON r.oid=m.umuser
-       JOIN pg_foreign_server s ON s.oid=m.umserver""", ()),
+       LEFT JOIN pg_roles r ON r.oid=m.umuser""", ()),
     ("event_trigger", "SELECT NULL::text schema,evtname identity FROM pg_event_trigger", ()),
     ("publication", "SELECT NULL::text schema,pubname identity FROM pg_publication", ()),
     ("subscription", "SELECT NULL::text schema,subname identity FROM pg_subscription", ()),

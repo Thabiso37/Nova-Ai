@@ -3,7 +3,7 @@
 import json,subprocess,sys
 from pathlib import Path
 root=Path(__file__).resolve().parents[2]
-reg=json.loads((root/"provenance_registry.json").read_text())
+reg=json.loads((Path(__file__).resolve().parent/"provenance_registry.json").read_text())
 bad=[];history=reg.get("migration_history",[]);ids=[x.get("migration_id") for x in history]
 if len(ids)!=len(set(ids)) or any(not x for x in ids):bad.append("duplicate_or_missing_migration_id")
 byid={x["migration_id"]:x for x in history if x.get("migration_id")}

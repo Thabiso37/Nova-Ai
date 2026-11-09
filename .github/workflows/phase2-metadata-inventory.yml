@@ -37,28 +37,30 @@ jobs:
           exit 1
       - name: Verify disposable PostgreSQL 17.11 server
         run: |
+          set -o pipefail
           psql -X -h 127.0.0.1 -U postgres -d inventory_test -v ON_ERROR_STOP=1 -Atc "SHOW server_version" | tee server-version.txt
           grep -E '^17\.11([ -]|$)' server-version.txt
       - name: Create synthetic database fixtures
-        run: psql -X -h 127.0.0.1 -U postgres -d inventory_test -v ON_ERROR_STOP=1 -f phase2/metadata-inventory/fixtures/bootstrap.sql 2>&1 | tee -a workflow-captured.log
+        run: set -o pipefail; psql -X -h 127.0.0.1 -U postgres -d inventory_test -v ON_ERROR_STOP=1 -f phase2/metadata-inventory/fixtures/bootstrap.sql 2>&1 | tee -a workflow-captured.log
       - name: Run static safety tests
-        run: python -m unittest discover -s phase2/metadata-inventory/tests -v 2>&1 | tee -a workflow-captured.log
+        run: set -o pipefail; python -m unittest discover -s phase2/metadata-inventory/tests -v 2>&1 | tee -a workflow-captured.log
       - name: Verify synthetic migration provenance against Git blob identities
-        run: python phase2/metadata-inventory/verify_provenance.py | tee provenance-verification.json | tee -a workflow-captured.log
+        run: set -o pipefail; python phase2/metadata-inventory/verify_provenance.py | tee provenance-verification.json | tee -a workflow-captured.log
       - name: Demonstrate exported snapshot consistency under concurrent DDL
         env:
           BASELINE_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=postgres"
-        run: python phase2/metadata-inventory/snapshot_consistency_test.py | tee snapshot-consistency.json | tee -a workflow-captured.log
+        run: set -o pipefail; python phase2/metadata-inventory/snapshot_consistency_test.py | tee snapshot-consistency.json | tee -a workflow-captured.log
       - name: Audit inspector role configuration and privilege boundaries
         env:
           INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector"
-        run: python phase2/metadata-inventory/security_audit.py | tee security-audit.json | tee -a workflow-captured.log
+        run: set -o pipefail; python phase2/metadata-inventory/security_audit.py | tee security-audit.json | tee -a workflow-captured.log
       - name: Create unsupported-object positive probes
-        run: psql -X -h 127.0.0.1 -U postgres -d inventory_test -v ON_ERROR_STOP=1 -f phase2/metadata-inventory/fixtures/unsupported_probes.sql 2>&1 | tee -a workflow-captured.log
+        run: set -o pipefail; psql -X -h 127.0.0.1 -U postgres -d inventory_test -v ON_ERROR_STOP=1 -f phase2/metadata-inventory/fixtures/unsupported_probes.sql 2>&1 | tee -a workflow-captured.log
       - name: Verify positive unsupported-object discovery
         env:
           INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector"
         run: |
+          set -o pipefail
           set +e
           python phase2/metadata-inventory/detect_unsupported.py > unsupported-probe.json 2>>workflow-captured.log
           detector_status=$?
@@ -69,12 +71,13 @@ jobs:
           fi
           python phase2/metadata-inventory/tests/assert_unsupported_probe.py unsupported-probe.json 2>&1 | tee -a workflow-captured.log
       - name: Remove every unsupported-object probe
-        run: psql -X -h 127.0.0.1 -U postgres -d inventory_test -v ON_ERROR_STOP=1 -f phase2/metadata-inventory/fixtures/remove_unsupported_probes.sql 2>&1 | tee -a workflow-captured.log
+        if: always()
+        run: set -o pipefail; psql -X -h 127.0.0.1 -U postgres -d inventory_test -v ON_ERROR_STOP=1 -f phase2/metadata-inventory/fixtures/remove_unsupported_probes.sql 2>&1 | tee -a workflow-captured.log
       - name: Generate inventory, dependency and structured baseline from one exported snapshot
         env:
           INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector"
           BASELINE_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=postgres"
-        run: python phase2/metadata-inventory/snapshot_coordinator.py 2>&1 | tee -a workflow-captured.log
+        run: set -o pipefail; python phase2/metadata-inventory/snapshot_coordinator.py 2>&1 | tee -a workflow-captured.log
       - name: Discover clean unsupported-object state and catalogue visibility
         env:
           INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector"
@@ -85,6 +88,7 @@ jobs:
         run: set -o pipefail; python phase2/metadata-inventory/runtime_security.py | tee runtime-security.json | tee -a workflow-captured.log
       - name: Pin PostgreSQL 17 pg_dump client and generate schema-only SQL baseline
         run: |
+          set -o pipefail
           docker run --rm postgres:17.11 pg_dump --version | tee baseline-client-version.txt | tee -a workflow-captured.log
           docker run --rm --network host postgres:17.11 pg_dump -h 127.0.0.1 -U postgres -d inventory_test --schema-only --schema=novaai_app --schema=novaai_private --schema=supabase_managed_fixture --schema=environment_specific_fixture > baseline.sql 2>>workflow-captured.log
       - name: Scan evidence and captured command output

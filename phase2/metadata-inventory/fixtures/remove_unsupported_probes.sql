@@ -1,5 +1,5 @@
 -- Remove all disposable unsupported-object probes before clean inventory.
-DO $$ BEGIN PERFORM lo_unlink(424242); END $$;
+DO $ BEGIN IF EXISTS (SELECT 1 FROM pg_largeobject_metadata WHERE oid=424242) THEN PERFORM lo_unlink(424242); END IF; END $;
 DROP SUBSCRIPTION IF EXISTS phase2_probe_subscription;
 DROP PUBLICATION IF EXISTS phase2_probe_publication;
 DROP EVENT TRIGGER IF EXISTS phase2_probe_event_trigger;
