@@ -98,6 +98,10 @@ echo "PASS: large-object creation, modification and deletion rejected."
 if psql -X -v ON_ERROR_STOP=1 -c "SELECT public.standby_secdef_write()" >"$WORK/secdef" 2>&1; then exit 1; fi
 grep -Eqi 'read.only transaction|recovery mode' "$WORK/secdef"
 echo "PASS: SECURITY DEFINER local write rejected."
+PGUSER=postgres PGPASSWORD= PGPORT="$PP" psql -X -v ON_ERROR_STOP=1 -c "REVOKE EXECUTE ON FUNCTION public.standby_secdef_write() FROM safe_export"
+for _ in $(seq 1 60); do psql -X -Atqc "SELECT has_function_privilege(current_user,'public.standby_secdef_write()','EXECUTE')" 2>/dev/null | grep -qx f && break; sleep 1; done
+psql -X -v ON_ERROR_STOP=1 -f scripts/schema-export/assert-read-only-role.sql
+echo "PASS: production read-only preflight accepted the restricted login on standby."
 psql -X -v ON_ERROR_STOP=1 <<'SQL'
 BEGIN READ ONLY;
 LOCK TABLE public.products IN ACCESS SHARE MODE;
@@ -111,6 +115,8 @@ COMMIT;
 SQL
 echo "PASS: ACCESS SHARE locks on relation kinds used by pg_dump."
 URL="postgresql://safe_export:$EP@127.0.0.1:$SP/postgres?sslmode=disable"
+psql -X -Atqc "SELECT max(version) FROM private.export_migrations" >"$WORK/watermark.before"
+psql -X -Atqc "SELECT pg_last_wal_replay_lsn()" >"$WORK/replay.before"
 pg_dump --version | grep -F '17.11'
 pg_dump --schema-only --no-owner --no-privileges --schema=public --schema=private --file="$WORK/direct.sql" "$URL"
 for pat in 'CREATE TABLE public\.products' 'CREATE TABLE public\."Products"' 'CREATE VIEW public\.export_view' 'CREATE MATERIALIZED VIEW public\.export_matview' 'CREATE FUNCTION public\.export_helper' 'CREATE TRIGGER export_products_trigger' 'CREATE SEQUENCE public\.export_sequence' 'CREATE FOREIGN TABLE public\.export_foreign_table'; do grep -Eq "$pat" "$WORK/direct.sql" || { echo "missing schema object: $pat" >&2; exit 1; }; done
@@ -122,17 +128,19 @@ grep -Eq 'CREATE TABLE public\.products' "$WORK/supabase.sql"
 grep -Eq 'CREATE TABLE public\."Products"' "$WORK/supabase.sql"
 ! grep -Eiq 'HOT_STANDBY_APPLICATION_ROW_MUST_NOT_EXPORT|^[[:space:]]*(COPY[[:space:]]|INSERT[[:space:]]+INTO)' "$WORK/supabase.sql"
 echo "PASS: pinned Supabase CLI dump and no-application-data checks."
-psql -X -Atqc "SELECT max(version) FROM private.export_migrations" >"$WORK/watermark.before"
-psql -X -Atqc "SELECT pg_last_wal_replay_lsn()" >"$WORK/replay.before"
-psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT jsonb_build_object('tables',(SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN('public','private') AND c.relkind IN('r','p','v','m','f','S')),'policies',(SELECT count(*) FROM pg_policies WHERE schemaname IN('public','private')),'functions',(SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname IN('public','private')),'triggers',(SELECT count(*) FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN('public','private') AND NOT t.tgisinternal),'watermark',(SELECT max(version) FROM private.export_migrations),'replay_lsn',pg_last_wal_replay_lsn())" >"$WORK/manifest.json"
+psql -X -f scripts/schema-export/export-manifests.sql -o "$WORK/manifests.json"
+jq -e '.manifest_version == 2 and (.policies | any(.name == "export_storage_objects_read")) and (.functions | any(.name == "export_helper")) and (.triggers | any(.name == "export_products_trigger")) and (.indexes | length > 0) and (.constraints | length > 0)' "$WORK/manifests.json" >/dev/null
+cp "$WORK/supabase.sql" "$WORK/schema.sql"
+bash scripts/schema-export/validate-export.sh "$WORK"
 psql -X -Atqc "SELECT max(version) FROM private.export_migrations" >"$WORK/watermark.after"
 psql -X -Atqc "SELECT pg_last_wal_replay_lsn()" >"$WORK/replay.after"
 cmp "$WORK/watermark.before" "$WORK/watermark.after"
-grep -q '202611090001' "$WORK/manifest.json"
+grep -q '202611090001' "$WORK/manifests.json"
 echo "PASS: stable watermark bracket and replay LSN captured."
 PGUSER=postgres PGPASSWORD= PGPORT="$PP" psql -X -v ON_ERROR_STOP=1 -c "ALTER TABLE public.products ADD COLUMN watermark_probe text; UPDATE private.export_migrations SET version='202611090002'"
 for _ in $(seq 1 60); do psql -X -Atqc "SELECT max(version) FROM private.export_migrations" 2>/dev/null | grep -qx 202611090002 && break; sleep 1; done
 psql -X -Atqc "SELECT max(version) FROM private.export_migrations" | grep -qx 202611090002
+if cmp -s "$WORK/watermark.before" <(psql -X -Atqc "SELECT max(version) FROM private.export_migrations"); then echo "ERROR: watermark drift was not detected" >&2; exit 1; fi
 ! grep -q watermark_probe "$WORK/direct.sql"
 echo "PASS: advancing WAL changes watermark; separate schema/manifest drift is detectable."
 echo "Genuine PostgreSQL 17.11 hot-standby tests passed."
