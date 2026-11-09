@@ -35,6 +35,7 @@ END
 $manifest_visibility$;
 SELECT jsonb_pretty(jsonb_build_object(
  'manifest_version',2,
+ 'export_role',current_user,
  'server_version',current_setting('server_version'),
  'schemas',(SELECT coalesce(jsonb_agg(nspname ORDER BY nspname),'[]'::jsonb) FROM pg_namespace WHERE nspname IN ('public','private','storage')),
  'tables_and_columns',(SELECT coalesce(jsonb_agg(jsonb_build_object('schema',n.nspname,'table',c.relname,'column',a.attname,'ordinal',a.attnum,'data_type',format_type(a.atttypid,a.atttypmod),'udt_name',t.typname,'nullable',CASE WHEN a.attnotnull THEN 'NO' ELSE 'YES' END,'default',pg_get_expr(d.adbin,d.adrelid,true),'identity',CASE a.attidentity WHEN 'a' THEN 'ALWAYS' WHEN 'd' THEN 'BY DEFAULT' ELSE NULL END,'generated',CASE WHEN a.attgenerated <> '' THEN 'ALWAYS' ELSE 'NEVER' END) ORDER BY n.nspname,c.relname,a.attnum),'[]'::jsonb) FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid JOIN pg_namespace n ON n.oid=c.relnamespace JOIN pg_type t ON t.oid=a.atttypid LEFT JOIN pg_attrdef d ON d.adrelid=a.attrelid AND d.adnum=a.attnum WHERE n.nspname IN ('public','private','storage') AND c.relkind IN ('r','p','v','m','f') AND a.attnum>0 AND NOT a.attisdropped),
