@@ -33,7 +33,7 @@ REVOKE TEMPORARY ON DATABASE postgres FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION pg_catalog.lo_create(oid),pg_catalog.lo_from_bytea(oid,bytea),pg_catalog.lo_put(oid,bigint,bytea),pg_catalog.lo_unlink(oid),pg_catalog.lo_import(text),pg_catalog.lo_import(text,oid),pg_catalog.lo_export(oid,text),pg_catalog.lo_open(oid,integer),pg_catalog.lowrite(integer,bytea),pg_catalog.lo_truncate(integer,integer),pg_catalog.lo_truncate64(integer,bigint) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION pg_catalog.lo_create(oid),pg_catalog.lo_put(oid,bigint,bytea),pg_catalog.lo_unlink(oid) TO safe_export;
 SELECT pg_catalog.lo_create(900001);
-SELECT pg_catalog.lo_put(900001,0,decode('01','hex'));
+SELECT pg_catalog.lo_put(900001,0,convert_to('HOT_STANDBY_LO_DATA_MUST_NOT_EXPORT','UTF8'));
 CREATE SCHEMA private;
 CREATE SCHEMA storage;
 CREATE TABLE storage.buckets(id text PRIMARY KEY,name text NOT NULL,public boolean NOT NULL DEFAULT false,file_size_limit bigint,allowed_mime_types text[]);
@@ -79,8 +79,13 @@ hot_standby=on
 EOF
 aspg pg_ctl -D "$STANDBY" -l "$WORK/standby.log" -w start >/dev/null
 export PGPORT="$SP"
+SOURCE_LSN="$(PGUSER=postgres PGPASSWORD= PGPORT="$PP" psql -X -Atqc "SELECT pg_current_wal_lsn()")"
 for _ in $(seq 1 60); do psql -X -Atqc 'SELECT pg_is_in_recovery()' 2>/dev/null | grep -qx t && break; sleep 1; done
 psql -X -Atqc "SELECT pg_is_in_recovery() AND current_setting('transaction_read_only')='on' AND current_setting('in_hot_standby')='on'" | grep -qx t
+for _ in $(seq 1 60); do psql -X -Atqc "SELECT pg_last_wal_replay_lsn() >= '$SOURCE_LSN'::pg_lsn" | grep -qx t && break; sleep 1; done
+psql -X -Atqc "SELECT pg_last_wal_replay_lsn() >= '$SOURCE_LSN'::pg_lsn" | grep -qx t
+printf '%s\\n' "$SOURCE_LSN" > "$WORK/source-primary-lsn"
+psql -X -Atqc "SELECT pg_last_wal_replay_lsn()" > "$WORK/source-standby-replay-lsn"
 echo "PASS: genuine recovery mode and independent read-only settings."
 export PGUSER=safe_export PGPASSWORD="$EP"
 IDENTITY="$(psql -X -Atqc "SELECT current_user || ':' || current_setting('transaction_read_only')")"
@@ -126,13 +131,13 @@ psql -X -Atqc "SELECT pg_last_wal_replay_lsn()" >"$WORK/replay.before"
 pg_dump --version | grep -F '17.11'
 pg_dump --schema-only --no-owner --no-privileges --schema=public --schema=private --file="$WORK/direct.sql" "$URL"
 for pat in 'CREATE TABLE public\.products' 'CREATE TABLE public\."Products"' 'CREATE VIEW public\.export_view' 'CREATE MATERIALIZED VIEW public\.export_matview' 'CREATE FUNCTION public\.export_helper' 'CREATE TRIGGER export_products_trigger' 'CREATE SEQUENCE public\.export_sequence' 'CREATE FOREIGN TABLE public\.export_foreign_table'; do grep -Eq "$pat" "$WORK/direct.sql" || { echo "missing schema object: $pat" >&2; exit 1; }; done
-! grep -Eiq 'HOT_STANDBY_APPLICATION_ROW_MUST_NOT_EXPORT|^[[:space:]]*(COPY[[:space:]]|INSERT[[:space:]]+INTO)' "$WORK/direct.sql"
+! grep -Eiq 'HOT_STANDBY_APPLICATION_ROW_MUST_NOT_EXPORT|HOT_STANDBY_LO_DATA_MUST_NOT_EXPORT|^[[:space:]]*(COPY[[:space:]]|INSERT[[:space:]]+INTO)' "$WORK/direct.sql"
 echo "PASS: PostgreSQL 17.11 pg_dump schema-only and schema object/data checks."
 supabase --version | grep -F '2.122.1'
 supabase db dump --db-url "$URL" --schema public,private --file "$WORK/supabase.sql"
 grep -Eq 'CREATE TABLE public\.products' "$WORK/supabase.sql"
 grep -Eq 'CREATE TABLE public\."Products"' "$WORK/supabase.sql"
-! grep -Eiq 'HOT_STANDBY_APPLICATION_ROW_MUST_NOT_EXPORT|^[[:space:]]*(COPY[[:space:]]|INSERT[[:space:]]+INTO)' "$WORK/supabase.sql"
+! grep -Eiq 'HOT_STANDBY_APPLICATION_ROW_MUST_NOT_EXPORT|HOT_STANDBY_LO_DATA_MUST_NOT_EXPORT|^[[:space:]]*(COPY[[:space:]]|INSERT[[:space:]]+INTO)' "$WORK/supabase.sql"
 echo "PASS: pinned Supabase CLI dump and no-application-data checks."
 psql -X -f scripts/schema-export/export-manifests.sql -o "$WORK/manifests.json"
 jq -e '.manifest_version == 2 and (.policies | any(.name == "export_storage_objects_read")) and (.functions | any(.name == "export_helper")) and (.triggers | any(.name == "export_products_trigger")) and (.indexes | length > 0) and (.constraints | length > 0)' "$WORK/manifests.json" >/dev/null
