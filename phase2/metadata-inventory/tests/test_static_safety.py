@@ -61,7 +61,7 @@ class StaticSafetyTests(unittest.TestCase):
  def test_complete_workflow_job_logs_are_scanned(self):
   workflow=(ROOT.parents[1]/".github"/"workflows"/"phase2-metadata-inventory.yml").read_text()
   self.assertIn("workflow-log-scan",workflow)
-  self.assertIn("actions/jobs/",workflow)
+  self.assertIn("gh run view",workflow)
   self.assertIn("scan_sensitive.py",workflow)
 
 if __name__=="__main__":
