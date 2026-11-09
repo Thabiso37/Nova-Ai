@@ -35,9 +35,8 @@ queries = [
        WHERE c.relkind='f' AND n.nspname=ANY(%s)""", (schemas,)),
     ("foreign_data_wrapper", "SELECT NULL::text schema,fdwname identity FROM pg_foreign_data_wrapper", ()),
     ("foreign_server", "SELECT NULL::text schema,srvname identity FROM pg_foreign_server", ()),
-    ("user_mapping", """SELECT NULL::text schema,
-       pg_get_userbyid(m.umuser)||'@'||s.srvname identity
-       FROM pg_user_mapping m JOIN pg_foreign_server s ON s.oid=m.umserver""", ()),
+    ("user_mapping", """SELECT NULL::text schema,m.usename||'@'||m.srvname identity
+       FROM pg_user_mappings m""", ()),
     ("event_trigger", "SELECT NULL::text schema,evtname identity FROM pg_event_trigger", ()),
     ("publication", "SELECT NULL::text schema,pubname identity FROM pg_publication", ()),
     ("subscription", "SELECT NULL::text schema,subname identity FROM pg_subscription", ()),
