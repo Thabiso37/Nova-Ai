@@ -466,7 +466,17 @@ def main():
             }
             if unclassified or unsupported or unresolved or unsupported_dependencies or secret_findings:
                 inventory["completeness"]["status"] = "FAIL"
-                raise RuntimeError("Inventory failed closed: unclassified, unsupported, or sensitive metadata found.")
+                print(json.dumps({
+                    "diagnostic": "inventory_rejected",
+                    "unclassified_count": len(unclassified),
+                    "unclassified_families": sorted({x["family"] for x in unclassified}),
+                    "unsupported_object_types": sorted({x.get("object_type","unknown") for x in unsupported}),
+                    "unresolved_dependency_count": len(unresolved),
+                    "unresolved_dependency_types": sorted({x["object_type"] for x in unresolved}),
+                    "unsupported_dependency_types": sorted({x["type"] for x in unsupported_dependencies}),
+                    "secret_finding_count": len(secret_findings)
+                }), file=sys.stderr)
+                raise RuntimeError("Inventory failed closed: unclassified, unsupported, unresolved, or sensitive metadata found.")
             if any(canary in json.dumps(inventory, default=str) for canary in CANARIES):
                 raise RuntimeError("Synthetic canary detected in inventory output.")
             conn.commit()
