@@ -13,7 +13,7 @@ if [[ "$(id -u)" -eq 0 ]]; then chown postgres:postgres "$WORK"; aspg(){ runuser
 aspg mkdir -p "$PRIMARY" "$STANDBY"
 aspg initdb -D "$PRIMARY" --auth-local=trust --auth-host=trust >/dev/null
 cat >> "$PRIMARY/postgresql.conf" <<EOF
-listen_addresses='127.0.0.1'
+listen_addresses='*'
 port=$PP
 wal_level=replica
 max_wal_senders=8
@@ -23,6 +23,8 @@ EOF
 cat >> "$PRIMARY/pg_hba.conf" <<'EOF'
 host all all 127.0.0.1/32 trust
 host replication repl 127.0.0.1/32 trust
+host all all 0.0.0.0/0 scram-sha-256
+host replication repl 0.0.0.0/0 scram-sha-256
 EOF
 aspg pg_ctl -D "$PRIMARY" -l "$WORK/primary.log" -w start >/dev/null
 psql -X -v ON_ERROR_STOP=1 <<SQL
@@ -74,7 +76,7 @@ REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;
 SQL
 PGPASSWORD="$RP" aspg pg_basebackup -h 127.0.0.1 -p "$PP" -U repl -D "$STANDBY" -Fp -Xs -P -R
 cat >> "$STANDBY/postgresql.conf" <<EOF
-listen_addresses='127.0.0.1'
+listen_addresses='*'
 port=$SP
 hot_standby=on
 EOF
@@ -134,7 +136,11 @@ for pat in 'CREATE TABLE public\.products' 'CREATE TABLE public\."Products"' 'CR
 ! grep -Eiq 'HOT_STANDBY_APPLICATION_ROW_MUST_NOT_EXPORT|HOT_STANDBY_LO_DATA_MUST_NOT_EXPORT|^[[:space:]]*(COPY[[:space:]]|INSERT[[:space:]]+INTO)' "$WORK/direct.sql"
 echo "PASS: PostgreSQL 17.11 pg_dump schema-only and schema object/data checks."
 supabase --version | grep -F '2.122.1'
-supabase db dump --db-url "$URL" --schema public,private --file "$WORK/supabase.sql"
+NETWORK_ID="$(docker inspect "$HOSTNAME" --format '{{range .NetworkSettings.Networks}}{{.NetworkID}}{{end}}')"
+JOB_IP="$(docker inspect "$HOSTNAME" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')"
+[[ -n "$NETWORK_ID" && -n "$JOB_IP" ]]
+CLI_URL="postgresql://safe_export:$EP@$JOB_IP:$SP/postgres?sslmode=disable"
+supabase --network-id "$NETWORK_ID" db dump --db-url "$CLI_URL" --schema public,private --file "$WORK/supabase.sql"
 grep -Eq 'CREATE TABLE public\.products' "$WORK/supabase.sql"
 grep -Eq 'CREATE TABLE public\."Products"' "$WORK/supabase.sql"
 ! grep -Eiq 'HOT_STANDBY_APPLICATION_ROW_MUST_NOT_EXPORT|HOT_STANDBY_LO_DATA_MUST_NOT_EXPORT|^[[:space:]]*(COPY[[:space:]]|INSERT[[:space:]]+INTO)' "$WORK/supabase.sql"
