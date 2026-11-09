@@ -540,6 +540,16 @@ def main():
         (key,sorted(acl_inventory.get(key,set())))
         for key,_ in baseline_revokes if acl_inventory.get(key,set())
     )
+    baseline_default_privileges = re.findall(r'ALTER DEFAULT PRIVILEGES [^;]+;',sql,re.I)
+    inventory_default_privileges = sections.get("default_privileges",[])
+    default_privilege_status = "PASS" if not baseline_default_privileges and not inventory_default_privileges else "FAIL"
+    report["default_privileges"] = {
+        "baseline_statement_count":len(baseline_default_privileges),
+        "inventory_record_count":len(inventory_default_privileges),
+        "status":default_privilege_status,
+        "limitation":"The disposable fixture currently requires an empty default-privilege set; any discovered default ACL fails closed pending a semantic parser."
+    }
+
     report["acl_metadata"] = {
         "baseline_grant_statements":len(baseline_acl),
         "baseline_revoke_statements":len(baseline_revokes),
@@ -547,8 +557,8 @@ def main():
         "grant_mismatches":acl_missing,
         "unexpected_baseline_grants":acl_extra,
         "revoke_violations":revoke_violations,
-        "status":"PASS" if not acl_missing and not acl_extra and not revoke_violations else "FAIL",
-        "limitation":"Compares explicit non-owner grants and PUBLIC revocations for the disposable fixture. Default privilege semantics outside these statements remain separately inventoried."
+        "status":"PASS" if not acl_missing and not acl_extra and not revoke_violations and default_privilege_status=="PASS" else "FAIL",
+        "limitation":"Compares explicit non-owner grants and PUBLIC revocations; non-empty default-privilege metadata fails closed rather than being silently skipped."
     }
 
     inventory_dependency_keys = {
