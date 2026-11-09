@@ -135,6 +135,7 @@ bash scripts/schema-export/dump-schema.sh "$URL" "$WORK/schema.sql"
 for pat in 'CREATE TABLE public\.products' 'CREATE TABLE public\."Products"' 'CREATE VIEW public\.export_view' 'CREATE MATERIALIZED VIEW public\.export_matview' 'CREATE FUNCTION public\.export_helper' 'CREATE TRIGGER export_products_trigger' 'CREATE SEQUENCE public\.export_sequence' 'CREATE FOREIGN TABLE public\.export_foreign_table'; do grep -Eq "$pat" "$WORK/schema.sql" || { echo "missing schema object: $pat" >&2; exit 1; }; done
 grep -Eq 'ALTER TABLE public\.products OWNER TO postgres' "$WORK/schema.sql"
 grep -Eq 'GRANT SELECT ON TABLE public\.products TO safe_export' "$WORK/schema.sql"
+! grep -Eiq 'CREATE SCHEMA (storage|supabase_migrations)|CREATE TABLE (storage|supabase_migrations)\.' "$WORK/schema.sql"
 ! grep -Eiq 'HOT_STANDBY_APPLICATION_ROW_MUST_NOT_EXPORT|HOT_STANDBY_LO_DATA_MUST_NOT_EXPORT|^[[:space:]]*(COPY[[:space:]]|INSERT[[:space:]]+INTO)' "$WORK/schema.sql"
 echo "PASS: exact production helper uses PostgreSQL 17.11 strict public/private schema-only pg_dump; ownership/grants retained; no rows or large-object contents."
 psql -X -f scripts/schema-export/export-manifests.sql -o "$WORK/manifests.json"
