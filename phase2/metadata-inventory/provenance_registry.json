@@ -1,0 +1,475 @@
+{
+  "format_version": 1,
+  "scope": "disposable synthetic PostgreSQL 17.11 fixture only",
+  "migration_history": [
+    {
+      "migration_id": "fixture-migration-0001",
+      "path": "phase2/metadata-inventory/fixtures/bootstrap.sql",
+      "evidence_kind": "synthetic fixture DDL",
+      "authoritative_for": "only objects explicitly listed below; not NOVAAI production migration history"
+    },
+    {
+      "migration_id": "postgresql-bootstrap-extension",
+      "path": "PostgreSQL 17.11 initdb",
+      "evidence_kind": "cluster bootstrap",
+      "authoritative_for": "plpgsql extension prerequisite"
+    }
+  ],
+  "objects": [
+    {
+      "family": "table",
+      "identity": "novaai_app.audit_log",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "sequence",
+      "identity": "novaai_app.audit_log_id_seq",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "index",
+      "identity": "novaai_app.audit_log_pkey",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "view",
+      "identity": "novaai_app.customer_view",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "table",
+      "identity": "novaai_app.customers",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "index",
+      "identity": "novaai_app.customers_email_key",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "sequence",
+      "identity": "novaai_app.customers_id_seq",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "index",
+      "identity": "novaai_app.customers_pkey",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "table",
+      "identity": "novaai_app.inheritance_probe",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "materialized_view",
+      "identity": "novaai_app.order_summary",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "table",
+      "identity": "novaai_app.orders",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "sequence",
+      "identity": "novaai_app.orders_id_seq",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "index",
+      "identity": "novaai_app.orders_pkey",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "partitioned_table",
+      "identity": "novaai_app.partitioned_events",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "table",
+      "identity": "novaai_app.partitioned_events_2026",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "index",
+      "identity": "novaai_app.partitioned_events_2026_note_idx",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "index",
+      "identity": "novaai_app.partitioned_events_note_idx",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "table",
+      "identity": "novaai_app.rls_disabled_probe",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "table",
+      "identity": "novaai_app.sellers",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "sequence",
+      "identity": "novaai_app.sellers_id_seq",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "index",
+      "identity": "novaai_app.sellers_pkey",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.audit_log.id",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.audit_log.event",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.customer_view.id",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.customer_view.email",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.customers.id",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.customers.email",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.customers.synthetic_canary",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.inheritance_probe.protected_value",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.order_summary.state",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.order_summary.order_count",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.orders.id",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.orders.customer_id",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.orders.amount",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.orders.state",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.partitioned_events.event_id",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.partitioned_events.occurred_at",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.partitioned_events.note",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.partitioned_events_2026.event_id",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.partitioned_events_2026.occurred_at",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.partitioned_events_2026.note",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.rls_disabled_probe.payload",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.sellers.id",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.sellers.phone",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "column",
+      "identity": "novaai_app.sellers.synthetic_canary",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "constraint",
+      "identity": "novaai_app.audit_log.audit_log_pkey",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "constraint",
+      "identity": "novaai_app.customers.customers_email_key",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "constraint",
+      "identity": "novaai_app.customers.customers_pkey",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "constraint",
+      "identity": "novaai_app.orders.orders_customer_id_fkey",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "constraint",
+      "identity": "novaai_app.orders.orders_pkey",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "constraint",
+      "identity": "novaai_app.sellers.sellers_pkey",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "constraint",
+      "identity": "novaai_app.positive_amount.positive_amount_check",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "routine",
+      "identity": "novaai_app.audit_trigger_fn()",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "routine",
+      "identity": "novaai_app.customer_count()",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "routine",
+      "identity": "novaai_app.definer_probe()",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "trigger",
+      "identity": "novaai_app.customers.customers_audit",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "type",
+      "identity": "novaai_app.order_state",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "type",
+      "identity": "novaai_app.positive_amount",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "policy",
+      "identity": "novaai_app.customers.customers_owner_policy",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "schema",
+      "identity": "novaai_app",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "schema",
+      "identity": "novaai_private",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
+    },
+    {
+      "family": "extension",
+      "identity": "plpgsql",
+      "classification": "EXTENSION_OWNED",
+      "extension_name": "plpgsql",
+      "migration_id": "postgresql-bootstrap-extension"
+    }
+  ],
+  "external_prerequisites": [
+    {
+      "family": "extension",
+      "identity": "plpgsql",
+      "classification": "EXTENSION_OWNED",
+      "approved": true,
+      "evidence_migration_id": "postgresql-bootstrap-extension"
+    }
+  ],
+  "approved_exclusions": [
+    {
+      "identity_prefix": "pg_catalog.",
+      "classification": "CLUSTER_GLOBAL",
+      "reason": "PostgreSQL built-in catalogue objects are not part of this application-schema fixture; explicit support-matrix handling remains required."
+    },
+    {
+      "identity_prefix": "information_schema.",
+      "classification": "CLUSTER_GLOBAL",
+      "reason": "PostgreSQL information schema is a cluster-provided prerequisite."
+    }
+  ]
+}
