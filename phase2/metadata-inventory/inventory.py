@@ -422,7 +422,7 @@ def main():
                 elif typ in ("extension","language"):
                     resolved_identity = name
 
-                if typ=="trigger" and name and name.strip('"').startswith("RI_ConstraintTrigger_"):
+                if typ=="trigger" and "RI_ConstraintTrigger_" in identity:
                     match = re.search(r" on (.+)$", identity)
                     if match:
                         parts = match.group(1).strip('"').split(".")
