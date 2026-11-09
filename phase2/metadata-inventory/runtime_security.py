@@ -61,6 +61,10 @@ denied("temporary_table_creation", "CREATE TEMP TABLE inspector_temp_probe(id in
 denied("schema_creation", "CREATE SCHEMA inspector_schema_probe")
 denied("table_creation_in_scoped_schema", "CREATE TABLE novaai_app.inspector_table_probe(id integer)")
 denied("protected_data_with_rls_disabled", "SELECT payload FROM novaai_app.rls_disabled_probe")
+denied("privileged_role_inheritance_probe", "SELECT protected_value FROM novaai_app.inheritance_probe")
+denied("sequence_setval_mutation", "SELECT setval('novaai_app.customers_id_seq'::regclass, 10)")
+denied("large_object_write", "SELECT lo_put(0::oid, 0, decode('00','hex'))")
+denied("large_object_unlink_mutation", "SELECT lo_unlink(0::oid)")
 
 failed = [r for r in results if r["status"] != "PASS"]
 print(json.dumps({"status": "FAIL" if failed else "PASS", "results": results}, sort_keys=True))
