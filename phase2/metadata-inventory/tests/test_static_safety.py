@@ -6,6 +6,8 @@ import tempfile
 import unittest
 
 ROOT=pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0,str(ROOT))
+from secret_patterns import PATTERNS
 SCRIPT=(ROOT/"inventory.py").read_text()
 FIXTURE=(ROOT/"fixtures"/"bootstrap.sql").read_text()
 DETECTOR=(ROOT/"detect_unsupported.py").read_text()
@@ -112,6 +114,27 @@ class StaticSafetyTests(unittest.TestCase):
   self.assertIn("azure_sas_signature",policy)
   self.assertIn("private_key",policy)
   self.assertIn("from secret_patterns import CANARIES, PATTERNS",scanner)
+ def test_expanded_secret_patterns_compile_and_match(self):
+  patterns=dict(PATTERNS)
+  samples={
+   "authorization_api_key_headers":"X-API-Key: ABCDEFGHIJKLMNOPQRSTUVWXYZ123456",
+   "gcp_service_account_private_key":'"private_key":"-----BEGIN PRIVATE KEY-----"',
+   "azure_storage_account_key":"AccountKey=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/==",
+   "aws_secret_or_session_key":"aws_secret_access_key=ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcd",
+   "oci_credential_assignment":"tenancy=ocid1.tenancy.oc1..abcdefghijklmnopqrstuvwx",
+   "pem_private_key_variants":"-----BEGIN OPENSSH PRIVATE KEY-----"
+  }
+  for name,sample in samples.items():
+   with self.subTest(name=name):
+    self.assertIn(name,patterns)
+    self.assertIsNotNone(patterns[name].search(sample))
+ def test_workflow_pins_both_postgres_clients_and_gates_artifact_upload(self):
+  workflow=(ROOT.parents[1]/".github"/"workflows"/"phase2-metadata-inventory.yml").read_text()
+  self.assertIn("postgres:17.11 pg_dump --version",workflow)
+  self.assertIn("psql --version",workflow)
+  self.assertIn("steps.scan_evidence.outcome == 'success'",workflow)
+  self.assertIn("baseline-psql-client-version.txt",workflow)
+  self.assertIn("baseline-pgdump-client-version.txt",workflow)
  def test_complete_workflow_job_logs_are_scanned(self):
   workflow=(ROOT.parents[1]/".github"/"workflows"/"phase2-workflow-log-scan.yml").read_text()
   self.assertIn("workflow_dispatch",workflow)
