@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Strict metadata-only inventory prototype. PostgreSQL 17; no DDL generation."""
-import argparse, json, os, re, sys, hashlib
+import argparse, json, os, re, sys, hashlib, traceback
 from datetime import datetime, timezone
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -301,4 +301,5 @@ if __name__ == "__main__":
     except Exception as exc:
         # Never echo query values or secret-bearing metadata.
         print(f"INVENTORY FAILED CLOSED: {type(exc).__name__}: {str(exc)[:300]}", file=sys.stderr)
+        print(traceback.format_exc(), file=sys.stderr)
         sys.exit(1)
