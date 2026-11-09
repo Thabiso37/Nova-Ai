@@ -66,7 +66,7 @@ jobs:
           INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector "
         run: set -o pipefail; python phase2/metadata-inventory/runtime_security.py | tee runtime-security.json
       - name: Generate independent disposable schema-only baseline
-        run: pg_dump -h 127.0.0.1 -U postgres -d inventory_test --schema-only --schema=novaai_app --schema=novaai_private --file=baseline.sql
+        run: pg_dump -h 127.0.0.1 -U postgres -d inventory_test --schema-only --schema=novaai_app --schema=novaai_private --schema=supabase_managed_fixture --schema=environment_specific_fixture --file=baseline.sql
       - name: Scan generated outputs for canaries and secret patterns
         run: python phase2/metadata-inventory/validate_artifacts.py inventory.json baseline.sql baseline-dependencies.json runtime-security.json unsupported.json
       - name: Compare baseline object identities
