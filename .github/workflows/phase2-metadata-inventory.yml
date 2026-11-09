@@ -58,7 +58,7 @@ jobs:
       - name: Discover unsupported object families as restricted inspector
         env:
           INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector password=local-test-only"
-        run: python phase2/metadata-inventory/detect_unsupported.py | tee unsupported.json
+        run: set -o pipefail; python phase2/metadata-inventory/detect_unsupported.py | tee unsupported.json
       - name: Run runtime negative security tests as restricted inspector
         env:
           INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector password=local-test-only"
