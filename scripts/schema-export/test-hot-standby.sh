@@ -66,6 +66,7 @@ CREATE SERVER export_file_server FOREIGN DATA WRAPPER file_fdw;
 CREATE FOREIGN TABLE public.export_foreign_table(line text) SERVER export_file_server OPTIONS(filename '/dev/null',format 'text');
 GRANT SELECT ON public.export_foreign_table TO safe_export;
 GRANT SELECT ON storage.buckets TO safe_export;
+REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;
 SQL
 PGPASSWORD="$RP" aspg pg_basebackup -h 127.0.0.1 -p "$PP" -U repl -D "$STANDBY" -Fp -Xs -P -R
 cat >> "$STANDBY/postgresql.conf" <<EOF
