@@ -178,7 +178,7 @@ def main():
               WHERE n.nspname = ANY(%s) ORDER BY 1,2
             """, (list(allowed),))
             for obj in rels:
-                obj["classification"] = PROVENANCE_OWNERS.get(obj.get("owner"), "UNCLASSIFIED")
+                obj["classification"] = "UNCLASSIFIED"  # replaced by exact migration-backed registry below
                 obj["support"] = obj["object_type"] if obj["object_type"] in SUPPORTED else "UNSUPPORTED"
                 scrub_scan(obj.get("view_definition"), f'{obj["schema"]}.{obj["name"]}', secret_findings)
                 inventory["objects"].append(obj)
