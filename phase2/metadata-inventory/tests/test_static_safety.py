@@ -28,7 +28,7 @@ class StaticSafetyTests(unittest.TestCase):
   audit=(ROOT/"security_audit.py").read_text()
   for term in ("current_setting('search_path')","pg_db_role_setting","p.prosecdef",
                "lo_truncate64","pg_shseclabel","pg_shdepend",
-               "pg_get_function_identity_arguments"):
+               "pg_get_function_identity_arguments","unsafe_configured_search_paths","writable_schemas"):
    self.assertIn(term,audit)
  def test_snapshot_coordinator_imports_exported_snapshot(self):
   self.assertIn("pg_export_snapshot",(ROOT/"snapshot_coordinator.py").read_text())

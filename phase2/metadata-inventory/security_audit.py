@@ -39,14 +39,25 @@ try:
    if r["owned_objects"]:r["violations"].append("inspector_owns_database_objects")
    c.execute("SELECT setdatabase,setrole,setconfig FROM pg_db_role_setting WHERE setrole IN (0,%s) AND setdatabase IN (0,%s) ORDER BY 1,2",(oid,dbid))
    settings=[]; paths=[]
+   role_paths=[x.split("=",1)[1] for x in (config or []) if x.split("=",1)[0]=="search_path"]
+   paths.extend(role_paths)
    for db,role,cfg in c.fetchall():
     settings.append({"scope":"database" if db else "global","role_specific":bool(role),"setting_names":sorted(x.split("=",1)[0] for x in (cfg or []))})
     paths.extend(x.split("=",1)[1] for x in (cfg or []) if x.split("=",1)[0]=="search_path")
    c.execute("SELECT current_setting('search_path'),current_schemas(false),current_schemas(true)")
    raw,explicit,effective=c.fetchone()
-   r["role_settings"]={"entries":settings,"search_path_values":paths}
+   unsafe_paths=sorted(set(x for x in paths if x.strip()!="pg_catalog"))
+   r["role_settings"]={"entries":settings,"role_setting_names":sorted(x.split("=",1)[0] for x in (config or [])),
+                       "search_path_values":paths,"unsafe_configured_search_paths":unsafe_paths}
    r["search_path"]={"configured":raw,"explicit_schemas":explicit,"effective_schemas":effective}
+   if unsafe_paths:r["violations"].append("unsafe_stored_search_path")
    if raw.strip()!="pg_catalog" or explicit!=["pg_catalog"] or effective!=["pg_catalog"]:r["violations"].append("unsafe_effective_search_path")
+   c.execute("""SELECT n.nspname,has_schema_privilege(current_user,n.oid,'CREATE')
+     FROM pg_namespace n WHERE n.nspname NOT IN ('pg_catalog','information_schema')
+       AND n.nspname NOT LIKE 'pg_toast%%' ORDER BY 1""")
+   writable=[x[0] for x in c.fetchall() if x[1]]
+   r["writable_schemas"]=writable
+   if writable:r["violations"].append("writable_schema_privilege")
    c.execute("""SELECT n.nspname,p.proname,pg_get_function_identity_arguments(p.oid),has_function_privilege(current_user,p.oid,'EXECUTE'),
      EXISTS(SELECT 1 FROM aclexplode(COALESCE(p.proacl,acldefault('f',p.proowner))) a WHERE a.grantee=0 AND a.privilege_type='EXECUTE')
      FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE p.prosecdef ORDER BY 1,2,3""")
