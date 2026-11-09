@@ -4,6 +4,7 @@ import unittest
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCRIPT = (ROOT / "inventory.py").read_text()
 FIXTURE = (ROOT / "fixtures" / "bootstrap.sql").read_text()
+DETECTOR = (ROOT / "detect_unsupported.py").read_text()
 
 class StaticSafetyTests(unittest.TestCase):
     def test_requires_explicit_dsn(self):
@@ -20,6 +21,22 @@ class StaticSafetyTests(unittest.TestCase):
     def test_no_ddl_output(self):
         self.assertNotIn("CREATE TABLE", SCRIPT)
         self.assertNotIn("ALTER TABLE", SCRIPT)
+    def test_unsupported_detector_covers_phase1_matrix(self):
+        required = [
+            "aggregate", "rule", "operator", "operator_class", "operator_family",
+            "foreign_table", "foreign_data_wrapper", "foreign_server", "user_mapping",
+            "event_trigger", "publication", "subscription", "text_search_configuration",
+            "text_search_dictionary", "text_search_parser", "text_search_template",
+            "extended_statistics", "collation", "conversion", "transform",
+            "user_defined_language", "large_object_metadata", "custom_cast",
+            "unsupported_type_family", "security_label"
+        ]
+        for family in required:
+            self.assertIn(f'("{family}",', DETECTOR)
+        self.assertIn("FROM pg_am", DETECTOR)
+        self.assertIn("FROM pg_user_mapping m", DETECTOR)
+        self.assertNotIn("umoptions", DETECTOR)
+
     def test_explicit_classification(self):
         scope = (ROOT / "scope.json").read_text()
         registry = (ROOT / "provenance_registry.json").read_text()
