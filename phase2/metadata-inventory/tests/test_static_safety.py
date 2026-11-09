@@ -21,7 +21,12 @@ class StaticSafetyTests(unittest.TestCase):
         self.assertNotIn("CREATE TABLE", SCRIPT)
         self.assertNotIn("ALTER TABLE", SCRIPT)
     def test_explicit_classification(self):
-        self.assertIn("owner_registry", (ROOT / "scope.json").read_text())
+        scope = (ROOT / "scope.json").read_text()
+        registry = (ROOT / "provenance_registry.json").read_text()
+        self.assertNotIn("owner_registry", scope)
+        self.assertIn("migration_history", registry)
+        self.assertIn("SUPABASE_MANAGED", registry)
+        self.assertIn("ENVIRONMENT_SPECIFIC", registry)
 
 if __name__ == "__main__":
     unittest.main()
