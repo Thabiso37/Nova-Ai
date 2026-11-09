@@ -73,6 +73,13 @@ def main():
     def norm_sql(value):
         return re.sub(r'\s+',' ',value.replace('"','').strip()).lower()
 
+    def canonical_sql(value):
+        value = norm_sql(value)
+        for _ in range(8):
+            value = re.sub(r'\(\s*(-?\d+(?:\.\d+)?)\s*\)', r'\1', value)
+            value = re.sub(r'\(\s*\(([^()]+)\)\s*\)', r'(\1)', value)
+        return value
+
     def parse_column_definition(definition):
         type_match = re.match(
             r'(.+?)(?=\s+(?:NOT NULL|NULL|DEFAULT|GENERATED|COLLATE|CONSTRAINT)\b|$)',
@@ -143,38 +150,64 @@ def main():
         "status": "PASS" if not column_property_mismatches else "FAIL"
     }
 
-    baseline_constraints = set()
-    for table,name in re.findall(
-        rf'ALTER TABLE ONLY\s+({QUALIFIED})\s+ADD CONSTRAINT\s+"?([A-Za-z_][A-Za-z0-9_]*)"?',
-        sql,re.I
+    baseline_constraint_definitions = {}
+    for table, name, definition in re.findall(
+        rf'ALTER TABLE ONLY\s+({QUALIFIED})\s+ADD CONSTRAINT\s+"?([A-Za-z_][A-Za-z0-9_]*)"?\s+(.+?);',
+        sql, re.I | re.S
     ):
-        baseline_constraints.add(f"{clean(table)}.{name}")
-    for domain,name in re.findall(
-        rf'CREATE DOMAIN\s+({QUALIFIED})[\s\S]*?\bCONSTRAINT\s+"?([A-Za-z_][A-Za-z0-9_]*)"?',
-        sql,re.I
-    ):
-        baseline_constraints.add(f"{clean(domain)}.{name}")
-    inventory_constraints = {
-        f'{x["schema"]}.{x.get("relation") or x.get("domain_name")}.{x["name"]}'
+        baseline_constraint_definitions[f"{clean(table)}.{name}"] = canonical_sql(definition)
+    for match in re.finditer(rf'CREATE DOMAIN\s+({QUALIFIED})\s+AS\s+([\s\S]*?);', sql, re.I):
+        domain, body = clean(match.group(1)), match.group(2)
+        cm = re.search(r'\bCONSTRAINT\s+"?([A-Za-z_][A-Za-z0-9_]*)"?\s+(CHECK\s*\([\s\S]*\))\s*$', body, re.I)
+        if cm:
+            baseline_constraint_definitions[f"{domain}.{cm.group(1)}"] = canonical_sql(cm.group(2))
+    inventory_constraint_definitions = {
+        f'{x["schema"]}.{x.get("relation") or x.get("domain_name")}.{x["name"]}': canonical_sql(x["definition"])
         for x in sections.get("constraints",[])
     }
-    add_missing(report,"constraints",baseline_constraints,inventory_constraints)
+    add_missing(report,"constraints",baseline_constraint_definitions,inventory_constraint_definitions)
+    constraint_definition_mismatches = [
+        {"constraint":key,"baseline":baseline_constraint_definitions.get(key),
+         "inventory":inventory_constraint_definitions.get(key)}
+        for key in sorted(set(baseline_constraint_definitions)|set(inventory_constraint_definitions))
+        if baseline_constraint_definitions.get(key)!=inventory_constraint_definitions.get(key)
+    ]
+    report["constraint_definitions"] = {
+        "compared_constraints":len(set(baseline_constraint_definitions)&set(inventory_constraint_definitions)),
+        "mismatches":constraint_definition_mismatches,
+        "status":"PASS" if not constraint_definition_mismatches else "FAIL"
+    }
 
-    baseline_indexes = set()
-    for table,name in re.findall(
-        rf'ALTER TABLE ONLY\s+({QUALIFIED})\s+ADD CONSTRAINT\s+"?([A-Za-z_][A-Za-z0-9_]*)"?\s+(?:PRIMARY KEY|UNIQUE)\b',
-        sql,re.I
+    baseline_index_definitions = {}
+    for match in re.finditer(
+        rf'CREATE\s+(?:UNIQUE\s+)?INDEX\s+"?([A-Za-z_][A-Za-z0-9_]*)"?\s+ON\s+(?:ONLY\s+)?({QUALIFIED})[\s\S]*?;',
+        sql, re.I
     ):
-        schema = clean(table).split(".")[0]
-        baseline_indexes.add(f"{schema}.{name}")
-    for name,table in re.findall(
-        rf'CREATE\s+(?:UNIQUE\s+)?INDEX\s+"?([A-Za-z_][A-Za-z0-9_]*)"?\s+ON\s+(?:ONLY\s+)?({QUALIFIED})',
-        sql,re.I
+        name, table = match.group(1), clean(match.group(2))
+        baseline_index_definitions[f"{table.split('.')[0]}.{name}"] = canonical_sql(match.group(0).rstrip(";"))
+    for table, name, kind, columns in re.findall(
+        rf'ALTER TABLE ONLY\s+({QUALIFIED})\s+ADD CONSTRAINT\s+"?([A-Za-z_][A-Za-z0-9_]*)"?\s+(PRIMARY KEY|UNIQUE)\s*(\([^;]+\))',
+        sql, re.I
     ):
-        schema = clean(table).split(".")[0]
-        baseline_indexes.add(f"{schema}.{name}")
-    inventory_indexes = {f'{x["schema"]}.{x["index_name"]}' for x in sections.get("indexes",[])}
-    add_missing(report,"indexes",baseline_indexes,inventory_indexes)
+        baseline_index_definitions[f"{clean(table).split('.')[0]}.{name}"] = canonical_sql(
+            f"CREATE UNIQUE INDEX {name} ON {clean(table)} USING btree {columns}"
+        )
+    inventory_index_definitions = {
+        f'{x["schema"]}.{x["index_name"]}': canonical_sql(x["definition"])
+        for x in sections.get("indexes",[])
+    }
+    add_missing(report,"indexes",baseline_index_definitions,inventory_index_definitions)
+    index_definition_mismatches = [
+        {"index":key,"baseline":baseline_index_definitions.get(key),
+         "inventory":inventory_index_definitions.get(key)}
+        for key in sorted(set(baseline_index_definitions)|set(inventory_index_definitions))
+        if baseline_index_definitions.get(key)!=inventory_index_definitions.get(key)
+    ]
+    report["index_definitions"] = {
+        "compared_indexes":len(set(baseline_index_definitions)&set(inventory_index_definitions)),
+        "mismatches":index_definition_mismatches,
+        "status":"PASS" if not index_definition_mismatches else "FAIL"
+    }
 
     baseline_routines = {
         clean(x) for x in re.findall(rf'CREATE\s+(?:OR REPLACE\s+)?(?:FUNCTION|PROCEDURE)\s+({QUALIFIED})\s*\(',sql,re.I)
@@ -182,18 +215,27 @@ def main():
     inventory_routines = {f'{x["schema"]}.{x["name"]}' for x in sections.get("routines",[])}
     add_missing(report,"functions_and_procedures",baseline_routines,inventory_routines)
 
-    inventory_extensions = {x["name"] for x in sections.get("extensions",[])}
+    inventory_extension_records = {
+        (x["name"],x["version"],x["schema"],x["owner"])
+        for x in sections.get("extensions",[])
+    }
+    baseline_extension_records = {
+        (x["name"],x["version"],x["schema"],x["owner"])
+        for x in (baseline_dependencies or {}).get("extensions",[])
+    }
     approved_extensions = {
         x["identity"] for x in registry.get("external_prerequisites",[])
         if x.get("family")=="extension" and x.get("classification")=="EXTENSION_OWNED"
            and x.get("approved") is True
     }
     report["extensions"] = {
-        "inventory_count":len(inventory_extensions),
-        "approved_external_prerequisites":sorted(approved_extensions),
-        "unapproved_inventory_extensions":sorted(inventory_extensions-approved_extensions),
-        "status":"PASS" if inventory_extensions <= approved_extensions else "FAIL",
-        "limitation":"The selected application-schema pg_dump omits the built-in pg_catalog plpgsql extension; its provenance is checked against the explicit external-prerequisite registry, not falsely treated as a DDL dump match."
+        "baseline_count":len(baseline_extension_records),
+        "inventory_count":len(inventory_extension_records),
+        "missing_from_inventory":sorted(baseline_extension_records-inventory_extension_records),
+        "missing_from_baseline":sorted(inventory_extension_records-baseline_extension_records),
+        "unapproved_inventory_extensions":sorted(x[0] for x in inventory_extension_records if x[0] not in approved_extensions),
+        "status":"PASS" if baseline_dependencies is not None and baseline_extension_records==inventory_extension_records and all(x[0] in approved_extensions for x in inventory_extension_records) else "FAIL",
+        "limitation":"Extension name, version, schema and owner are compared against the independent administrative catalogue snapshot; provenance approval is checked separately."
     }
 
 
@@ -264,49 +306,127 @@ def main():
         "status":"PASS" if not enum_mismatches and not domain_mismatches else "FAIL"
     }
 
-    baseline_triggers = set()
-    for name,table in re.findall(
-        rf'CREATE TRIGGER\s+"?([A-Za-z_][A-Za-z0-9_]*)"?[\s\S]*?\bON\s+({QUALIFIED})',
-        sql,re.I
-    ):
-        baseline_triggers.add(f"{clean(table)}.{name}")
-    inventory_triggers = {f'{x["schema"]}.{x["relation"]}.{x["name"]}' for x in sections.get("triggers",[])}
-    add_missing(report,"triggers",baseline_triggers,inventory_triggers)
+    baseline_trigger_definitions = {}
+    for match in re.finditer(r'CREATE TRIGGER\s+"?([A-Za-z_][A-Za-z0-9_]*)"?[\s\S]*?;',sql,re.I):
+        statement = match.group(0).rstrip(";")
+        table_match = re.search(rf'\bON\s+({QUALIFIED})',statement,re.I)
+        if table_match:
+            key = f"{clean(table_match.group(1))}.{match.group(1)}"
+            baseline_trigger_definitions[key] = canonical_sql(statement)
+    inventory_trigger_definitions = {
+        f'{x["schema"]}.{x["relation"]}.{x["name"]}': canonical_sql(x["definition"])
+        for x in sections.get("triggers",[])
+    }
+    add_missing(report,"triggers",baseline_trigger_definitions,inventory_trigger_definitions)
+    trigger_definition_mismatches = [
+        {"trigger":key,"baseline":baseline_trigger_definitions.get(key),
+         "inventory":inventory_trigger_definitions.get(key)}
+        for key in sorted(set(baseline_trigger_definitions)|set(inventory_trigger_definitions))
+        if baseline_trigger_definitions.get(key)!=inventory_trigger_definitions.get(key)
+    ]
+    report["trigger_definitions"] = {
+        "compared_triggers":len(set(baseline_trigger_definitions)&set(inventory_trigger_definitions)),
+        "mismatches":trigger_definition_mismatches,
+        "status":"PASS" if not trigger_definition_mismatches else "FAIL"
+    }
 
-    baseline_policies = set()
-    for name,table in re.findall(
-        rf'CREATE POLICY\s+"?([A-Za-z_][A-Za-z0-9_]*)"?\s+ON\s+({QUALIFIED})',
+    baseline_policy_properties = {}
+    command_codes = {"ALL":"*","SELECT":"r","INSERT":"a","UPDATE":"w","DELETE":"d"}
+    for match in re.finditer(
+        rf'CREATE POLICY\s+"?([A-Za-z_][A-Za-z0-9_]*)"?\s+ON\s+({QUALIFIED})([\s\S]*?);',
         sql,re.I
     ):
-        baseline_policies.add(f"{clean(table)}.{name}")
-    inventory_policies = {f'{x["schema"]}.{x["relation"]}.{x["name"]}' for x in sections.get("policies",[])}
-    add_missing(report,"rls_policies",baseline_policies,inventory_policies)
+        name, table, tail = match.group(1), clean(match.group(2)), match.group(3)
+        command_match = re.search(r'\bFOR\s+(ALL|SELECT|INSERT|UPDATE|DELETE)\b',tail,re.I)
+        role_match = re.search(r'\bTO\s+(.+?)(?=\s+(?:USING|WITH CHECK)\b|$)',tail,re.I|re.S)
+        roles = sorted(x.strip().replace('"','') for x in role_match.group(1).split(",")) if role_match else ["PUBLIC"]
+        using_match = re.search(r'\bUSING\s*\((.*?)\)(?=\s+WITH CHECK\b|$)',tail,re.I|re.S)
+        check_match = re.search(r'\bWITH CHECK\s*\((.*?)\)\s*$',tail,re.I|re.S)
+        baseline_policy_properties[f"{table}.{name}"] = (
+            command_codes.get(command_match.group(1).upper(),"*") if command_match else "*",
+            not bool(re.search(r'\bAS\s+RESTRICTIVE\b',tail,re.I)),
+            roles,
+            canonical_sql(using_match.group(1)) if using_match else None,
+            canonical_sql(check_match.group(1)) if check_match else None
+        )
+    inventory_policy_properties = {
+        f'{x["schema"]}.{x["relation"]}.{x["name"]}': (
+            x["command"],bool(x["permissive"]),sorted(x["roles"]),
+            canonical_sql(x["using_expression"]) if x["using_expression"] is not None else None,
+            canonical_sql(x["check_expression"]) if x["check_expression"] is not None else None
+        )
+        for x in sections.get("policies",[])
+    }
+    add_missing(report,"rls_policies",baseline_policy_properties,inventory_policy_properties)
+    policy_property_mismatches = [
+        {"policy":key,"baseline":baseline_policy_properties.get(key),
+         "inventory":inventory_policy_properties.get(key)}
+        for key in sorted(set(baseline_policy_properties)|set(inventory_policy_properties))
+        if baseline_policy_properties.get(key)!=inventory_policy_properties.get(key)
+    ]
+    report["rls_policy_properties"] = {
+        "compared_policies":len(set(baseline_policy_properties)&set(inventory_policy_properties)),
+        "mismatches":policy_property_mismatches,
+        "status":"PASS" if not policy_property_mismatches else "FAIL"
+    }
 
-    baseline_partitions = set()
-    for parent,child in re.findall(
-        rf'ALTER TABLE ONLY\s+({QUALIFIED})\s+ATTACH PARTITION\s+({QUALIFIED})',
+    baseline_partition_bounds = {}
+    for parent,child,bound in re.findall(
+        rf'ALTER TABLE ONLY\s+({QUALIFIED})\s+ATTACH PARTITION\s+({QUALIFIED})(?:\s+(FOR VALUES [^;]+))?;',
         sql,re.I
     ):
-        baseline_partitions.add(f"{clean(parent)}->{clean(child)}")
+        baseline_partition_bounds[f"{clean(parent)}->{clean(child)}"] = canonical_sql(bound) if bound else None
     for parent,child in re.findall(
-        rf'ALTER INDEX\s+({QUALIFIED})\s+ATTACH PARTITION\s+({QUALIFIED})',
+        rf'ALTER INDEX\s+({QUALIFIED})\s+ATTACH PARTITION\s+({QUALIFIED});',
         sql,re.I
     ):
-        baseline_partitions.add(f"{clean(parent)}->{clean(child)}")
-    inventory_partitions = {
-        f'{x["parent_schema"]}.{x["parent_name"]}->{x["child_schema"]}.{x["child_name"]}'
+        baseline_partition_bounds[f"{clean(parent)}->{clean(child)}"] = None
+    inventory_partition_bounds = {
+        f'{x["parent_schema"]}.{x["parent_name"]}->{x["child_schema"]}.{x["child_name"]}':
+        canonical_sql(x["partition_bound"]) if x["partition_bound"] else None
         for x in sections.get("partitions",[])
     }
-    add_missing(report,"partitions",baseline_partitions,inventory_partitions)
+    add_missing(report,"partitions",baseline_partition_bounds,inventory_partition_bounds)
+    partition_bound_mismatches = [
+        {"partition":key,"baseline":baseline_partition_bounds.get(key),
+         "inventory":inventory_partition_bounds.get(key)}
+        for key in sorted(set(baseline_partition_bounds)|set(inventory_partition_bounds))
+        if baseline_partition_bounds.get(key)!=inventory_partition_bounds.get(key)
+    ]
+    report["partition_bounds"] = {
+        "compared_partitions":len(set(baseline_partition_bounds)&set(inventory_partition_bounds)),
+        "mismatches":partition_bound_mismatches,
+        "status":"PASS" if not partition_bound_mismatches else "FAIL"
+    }
 
-    baseline_rls = {
+    baseline_rls_enabled = {
         clean(x) for x in re.findall(rf'ALTER TABLE\s+({QUALIFIED})\s+ENABLE ROW LEVEL SECURITY',sql,re.I)
     }
-    inventory_rls = {
+    baseline_rls_forced = {
+        clean(x) for x in re.findall(rf'ALTER TABLE\s+({QUALIFIED})\s+FORCE ROW LEVEL SECURITY',sql,re.I)
+    }
+    inventory_rls_enabled = {
         f'{x["schema"]}.{x["name"]}' for x in inv.get("objects",[])
         if x.get("relrowsecurity")
     }
-    add_missing(report,"rls_configuration",baseline_rls,inventory_rls)
+    inventory_rls_forced = {
+        f'{x["schema"]}.{x["name"]}' for x in inv.get("objects",[])
+        if x.get("relforcerowsecurity")
+    }
+    rls_mismatches = {
+        "enabled_missing_from_inventory":sorted(baseline_rls_enabled-inventory_rls_enabled),
+        "enabled_missing_from_baseline":sorted(inventory_rls_enabled-baseline_rls_enabled),
+        "forced_missing_from_inventory":sorted(baseline_rls_forced-inventory_rls_forced),
+        "forced_missing_from_baseline":sorted(inventory_rls_forced-baseline_rls_forced)
+    }
+    report["rls_configuration"] = {
+        "baseline_enabled_count":len(baseline_rls_enabled),
+        "inventory_enabled_count":len(inventory_rls_enabled),
+        "baseline_forced_count":len(baseline_rls_forced),
+        "inventory_forced_count":len(inventory_rls_forced),
+        **rls_mismatches,
+        "status":"PASS" if not any(rls_mismatches.values()) else "FAIL"
+    }
 
     baseline_owner_map = {}
     owner_pattern = re.compile(
