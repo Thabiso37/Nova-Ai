@@ -1,0 +1,63 @@
+name: Phase 2 Metadata Inventory Prototype
+
+on:
+  push:
+    branches:
+      - feature/metadata-only-inventory-prototype
+  pull_request:
+    branches:
+      - feature/metadata-only-inventory-prototype
+
+permissions:
+  contents: read
+
+jobs:
+  disposable-postgres-17:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17.11
+        env:
+          POSTGRES_PASSWORD: admin-test-only
+          POSTGRES_DB: inventory_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d inventory_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PGPASSWORD: admin-test-only
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install client and Python dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          python -m pip install -r phase2/metadata-inventory/requirements.txt
+      - name: Create synthetic database fixtures
+        run: psql -h 127.0.0.1 -U postgres -d inventory_test -v ON_ERROR_STOP=1 -f phase2/metadata-inventory/fixtures/bootstrap.sql
+      - name: Run static tests
+        run: python -m unittest discover -s phase2/metadata-inventory/tests -v
+      - name: Run restricted inventory
+        env:
+          INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector password=local-test-only"
+        run: python phase2/metadata-inventory/inventory.py --output inventory.json
+      - name: Generate independent disposable schema-only baseline
+        run: pg_dump -h 127.0.0.1 -U postgres -d inventory_test --schema-only --schema=novaai_app --schema=novaai_private --no-owner --no-privileges --file=baseline.sql
+      - name: Compare baseline object identities
+        run: python phase2/metadata-inventory/compare_baseline.py inventory.json baseline.sql
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2-metadata-inventory-report
+          path: |
+            inventory.json
+            baseline.sql
+          if-no-files-found: warn

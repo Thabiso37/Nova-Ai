@@ -1,0 +1,17 @@
+{
+  "format_version": 1,
+  "schemas": ["novaai_app", "novaai_private"],
+  "classifications": {
+    "novaai_app": "A_NOVAAI_OWNED",
+    "novaai_private": "A_NOVAAI_OWNED"
+  },
+  "excluded_schemas": [
+    "pg_catalog",
+    "information_schema",
+    "auth",
+    "storage",
+    "realtime",
+    "vault"
+  ],
+  "note": "Synthetic fixture scope only. Schema ownership is explicit configuration, not inferred from names. Real NOVAAI scope requires separate approval."
+}
