@@ -35,12 +35,27 @@ base_sections=set(base.get("sections",{}))
 missing_required=sorted(REQUIRED_SECTIONS-base_sections)
 # Inventory-only dependency edges are compared against baseline-dependencies.json
 # by the supplemental comparator, not duplicated in this catalogue baseline.
-allowed_inventory_only={"dependencies","dependency_cycles"}
+allowed_inventory_only={"dependencies","dependency_cycles","unsupported_dependencies"}
 section_set_mismatch=sorted((inv_sections-base_sections)-allowed_inventory_only | (base_sections-inv_sections))
 report["checks"]["required_support_matrix_sections"]={
  "status":"PASS" if not missing_required and not section_set_mismatch else "FAIL",
  "missing_required_from_baseline":missing_required,
  "section_set_mismatch":section_set_mismatch
+}
+completeness=inv.get("completeness",{})
+unsupported_dependency_count=len(inv.get("sections",{}).get("unsupported_dependencies",[]))
+report["checks"]["inventory_completeness"]={
+ "status":"PASS" if completeness.get("status")=="PASS" and unsupported_dependency_count==0
+           and not completeness.get("unclassified_objects")
+           and not completeness.get("unsupported_objects")
+           and not completeness.get("unresolved_dependencies")
+           and not completeness.get("unsupported_dependency_types")
+           and not completeness.get("secret_findings") else "FAIL",
+ "exporter_status":completeness.get("status"),
+ "unsupported_dependency_count":unsupported_dependency_count,
+ "unclassified_count":len(completeness.get("unclassified_objects",[])),
+ "unsupported_object_count":len(completeness.get("unsupported_objects",[])),
+ "unresolved_dependency_count":len(completeness.get("unresolved_dependencies",[]))
 }
 
 def clean_objects(items):

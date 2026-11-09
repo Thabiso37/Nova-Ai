@@ -45,6 +45,8 @@ class StaticSafetyTests(unittest.TestCase):
   self.assertIn("snapshot_id",compare)
   self.assertIn("REQUIRED_SECTIONS",compare)
   self.assertIn("allowed_inventory_only",compare)
+  self.assertIn("unsupported_dependencies",compare)
+  self.assertIn("inventory_completeness",compare)
  def test_catalogue_visibility_includes_shared_security_labels(self):
   self.assertIn("pg_shseclabel",DETECTOR)
   self.assertIn("shared_security_label",DETECTOR)
