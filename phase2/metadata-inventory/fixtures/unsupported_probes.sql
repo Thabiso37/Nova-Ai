@@ -18,11 +18,11 @@ CREATE TEXT SEARCH CONFIGURATION novaai_app.phase2_probe_tsc (COPY=pg_catalog.si
 CREATE TEXT SEARCH DICTIONARY novaai_app.phase2_probe_tsd (TEMPLATE=pg_catalog.simple);
 CREATE FUNCTION novaai_app.phase2_int_to_range(integer) RETURNS novaai_app.unsupported_range_probe
  LANGUAGE sql IMMUTABLE AS 'SELECT novaai_app.unsupported_range_probe($1,$1+1)';
-CREATE CAST (integer AS novaai_app.unsupported_range_probe)
- WITH FUNCTION novaai_app.phase2_int_to_range(integer) AS ASSIGNMENT;
 CREATE FUNCTION novaai_app.phase2_event_trigger_fn() RETURNS event_trigger
  LANGUAGE plpgsql AS 'BEGIN RETURN; END;';
 RESET ROLE;
+CREATE CAST (integer AS novaai_app.unsupported_range_probe)
+ WITH FUNCTION novaai_app.phase2_int_to_range(integer) AS ASSIGNMENT;
 CREATE OPERATOR FAMILY novaai_app.phase2_probe_family USING btree;
 CREATE OPERATOR CLASS novaai_app.phase2_probe_int4_ops FOR TYPE integer USING btree
  FAMILY novaai_app.phase2_probe_family AS OPERATOR 1 pg_catalog.<, FUNCTION 1 pg_catalog.btint4cmp(integer,integer);
