@@ -318,9 +318,6 @@ def main():
                 identity = f'{x["schema"]}.{parent}.{x["name"]}'
                 register_object("constraint", identity, parent_owner=x.get("owner"))
 
-            for x in sections["indexes"]:
-                register_object("index", f'{x["schema"]}.{x["index_name"]}', owner=x.get("owner"))
-
             for x in sections["routines"]:
                 register_object("routine", f'{x["schema"]}.{x["name"]}({x["identity_arguments"]})',
                                 owner=x.get("owner"))
@@ -402,6 +399,10 @@ def main():
                 if schema_name in allowed:
                     key = f"{family}|{resolved_identity}" if family else None
                     entry = registry_entries.get(key) if key else None
+                    if not entry and family=="table":
+                        alternate = f"partitioned_table|{resolved_identity}"
+                        if alternate in registry_entries:
+                            key, entry = alternate, registry_entries[alternate]
                     if entry and entry.get("migration_id") in migration_ids:
                         return {"status":"RESOLVED_INVENTORY","key":key}
                     if family is None:
