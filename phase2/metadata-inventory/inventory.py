@@ -505,6 +505,12 @@ if __name__ == "__main__":
                         if len(target_parts)==2:
                             schema_name = target_parts[0].strip('"')
                             resolved_identity = f"{schema_name}.{target_parts[1].strip(chr(34))}.{object_name}"
+                elif typ in ("table column","materialized view column"):
+                    parts = identity.split(".")
+                    if len(parts)==3:
+                        schema_name = parts[0].strip('"')
+                        family = "column"
+                        resolved_identity = ".".join(x.strip('"') for x in parts)
                 elif typ=="default value":
                     match = re.search(r"for (?:table )?(.+)$", identity)
                     if match:
