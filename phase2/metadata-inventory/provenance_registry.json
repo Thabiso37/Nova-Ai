@@ -843,6 +843,13 @@
       "expected_owner": "environment_fixture_owner",
       "migration_id": "fixture-environment-specific-0001",
       "generated_by": "PostgreSQL array type"
+    },
+    {
+      "family": "default",
+      "identity": "novaai_app.orders.state",
+      "classification": "NOVAAI_OWNED",
+      "parent_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001"
     }
   ],
   "external_prerequisites": [
