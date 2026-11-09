@@ -87,6 +87,7 @@ psql -X -v ON_ERROR_STOP=1 -c 'CREATE TABLE public.future_ungranted_fixture(id i
 if psql -X -Atqc "SELECT has_table_privilege('safe_export','public.future_ungranted_fixture','SELECT')" | grep -qx t; then
   echo "ERROR: safe_export received implicit SELECT on a future relation." >&2; exit 1
 fi
+psql -X -v ON_ERROR_STOP=1 -c 'DROP TABLE public.future_ungranted_fixture' >/dev/null
 
 # Prove the login has no write authority even after overriding the accidental-write
 # default. Each attempted write is expected to fail for lack of authorization.
@@ -241,7 +242,22 @@ if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -v ON_ERROR_STO
   echo "ERROR: preflight accepted direct EXECUTE on pg_catalog.lo_create(oid)." >&2; exit 1
 fi
 grep -Fq 'write-capable pg_catalog large-object routines' "$TMP/direct-lo-preflight.log"
-psql -X -v ON_ERROR_STOP=1 -c 'REVOKE EXECUTE ON FUNCTION pg_catalog.lo_create(oid) FROM safe_export' >/dev/null
+psql -X -v ON_ERROR_STOP=1 <<'RESTORE_LO_PUBLIC'
+REVOKE EXECUTE ON FUNCTION pg_catalog.lo_create(oid) FROM safe_export;
+GRANT EXECUTE ON FUNCTION
+  pg_catalog.lo_create(oid),
+  pg_catalog.lo_from_bytea(oid,bytea),
+  pg_catalog.lo_put(oid,bigint,bytea),
+  pg_catalog.lo_unlink(oid),
+  pg_catalog.lo_import(text),
+  pg_catalog.lo_import(text,oid),
+  pg_catalog.lo_export(oid,text),
+  pg_catalog.lo_open(oid,integer),
+  pg_catalog.lowrite(integer,bytea),
+  pg_catalog.lo_truncate(integer,integer),
+  pg_catalog.lo_truncate64(integer,bigint)
+TO PUBLIC;
+RESTORE_LO_PUBLIC
 
 
 # Use ONE actual safe_export login session to demonstrate that the connection default
@@ -324,7 +340,23 @@ grep -Fq 'effective EXECUTE on SECURITY DEFINER routines' "$TMP/queue-preflight.
   exit 1
 }
 grep -Fq 'function ownership or EXECUTE on user-defined routines' "$TMP/queue-preflight.log"
-echo "RESULT: preflight detects PUBLIC-inherited EXECUTE on synthetic SECURITY DEFINER queue function and the function is proven able to write."
+echo "RESULT: preflight detects effective EXECUTE on synthetic SECURITY DEFINER queue function and the function is proven able to write."
+psql -X -v ON_ERROR_STOP=1 -c 'DROP SCHEMA net CASCADE' >/dev/null
+psql -X -v ON_ERROR_STOP=1 <<'CLEAN_DANGEROUS_ACLS'
+REVOKE EXECUTE ON FUNCTION
+  pg_catalog.lo_create(oid),
+  pg_catalog.lo_from_bytea(oid,bytea),
+  pg_catalog.lo_put(oid,bigint,bytea),
+  pg_catalog.lo_unlink(oid),
+  pg_catalog.lo_import(text),
+  pg_catalog.lo_import(text,oid),
+  pg_catalog.lo_export(oid,text),
+  pg_catalog.lo_open(oid,integer),
+  pg_catalog.lowrite(integer,bytea),
+  pg_catalog.lo_truncate(integer,integer),
+  pg_catalog.lo_truncate64(integer,bigint)
+FROM PUBLIC;
+CLEAN_DANGEROUS_ACLS
 
 mkdir "$TMP/valid"
 cp "$TMP/schema.sql" "$TMP/valid/schema.sql"
