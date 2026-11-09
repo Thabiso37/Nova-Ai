@@ -578,7 +578,7 @@ if __name__=="__main__":
 
     baseline_owner_map = {}
     owner_pattern = re.compile(
-        rf'ALTER\s+(MATERIALIZED VIEW|TABLE|SEQUENCE|VIEW|INDEX|FUNCTION|PROCEDURE|TYPE|DOMAIN|SCHEMA)\s+({QUALIFIED}|{IDENT})(?:\([^;]*?\))?\s+OWNER TO\s+("?[\w]+"?)\s*;',
+        rf'ALTER\s+(MATERIALIZED VIEW|TABLE|SEQUENCE|VIEW|INDEX|FUNCTION|PROCEDURE|TYPE|DOMAIN|SCHEMA)\s+({QUALIFIED}(?:\([^;]*?\))?|{IDENT})\s+OWNER TO\s+("?[\w]+"?)\s*;',
         re.I
     )
     for kind,obj,owner in owner_pattern.findall(sql):
