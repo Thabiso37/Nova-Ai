@@ -32,6 +32,8 @@ ALTER ROLE safe_export SET default_transaction_read_only=on;
 REVOKE TEMPORARY ON DATABASE postgres FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION pg_catalog.lo_create(oid),pg_catalog.lo_from_bytea(oid,bytea),pg_catalog.lo_put(oid,bigint,bytea),pg_catalog.lo_unlink(oid),pg_catalog.lo_import(text),pg_catalog.lo_import(text,oid),pg_catalog.lo_export(oid,text),pg_catalog.lo_open(oid,integer),pg_catalog.lowrite(integer,bytea),pg_catalog.lo_truncate(integer,integer),pg_catalog.lo_truncate64(integer,bigint) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION pg_catalog.lo_create(oid),pg_catalog.lo_put(oid,bigint,bytea),pg_catalog.lo_unlink(oid) TO safe_export;
+SELECT pg_catalog.lo_create(900001);
+SELECT pg_catalog.lo_put(900001,0,decode('01','hex'));
 CREATE SCHEMA private;
 CREATE SCHEMA storage;
 CREATE TABLE storage.buckets(id text PRIMARY KEY,name text NOT NULL,public boolean NOT NULL DEFAULT false,file_size_limit bigint,allowed_mime_types text[]);
@@ -95,10 +97,10 @@ expect_ro SEQUENCE psql -X -v ON_ERROR_STOP=1 -c "SELECT nextval('public.export_
 PGUSER=postgres PGPASSWORD= PGPORT="$PP" psql -X -v ON_ERROR_STOP=1 -c "REVOKE USAGE ON SEQUENCE public.export_sequence FROM safe_export"
 if psql -X -v ON_ERROR_STOP=1 -c "SELECT lo_create(0)" >"$WORK/lo1" 2>&1; then exit 1; fi
 grep -Eqi 'read.only transaction|recovery mode' "$WORK/lo1"
-if psql -X -v ON_ERROR_STOP=1 -c "SELECT lo_put(987654321,0,decode('01','hex'))" >"$WORK/lo2" 2>&1; then exit 1; fi
-grep -Eqi 'read.only transaction|recovery mode|large object' "$WORK/lo2"
-if psql -X -v ON_ERROR_STOP=1 -c "SELECT lo_unlink(987654321)" >"$WORK/lo3" 2>&1; then exit 1; fi
-grep -Eqi 'read.only transaction|recovery mode|large object' "$WORK/lo3"
+if psql -X -v ON_ERROR_STOP=1 -c "SELECT lo_put(900001,0,decode('02','hex'))" >"$WORK/lo2" 2>&1; then exit 1; fi
+grep -Eqi 'read.only transaction|recovery mode|cannot execute' "$WORK/lo2"
+if psql -X -v ON_ERROR_STOP=1 -c "SELECT lo_unlink(900001)" >"$WORK/lo3" 2>&1; then exit 1; fi
+grep -Eqi 'read.only transaction|recovery mode|cannot execute' "$WORK/lo3"
 echo "PASS: large-object creation, modification and deletion rejected."
 if psql -X -v ON_ERROR_STOP=1 -c "SELECT public.standby_secdef_write()" >"$WORK/secdef" 2>&1; then exit 1; fi
 grep -Eqi 'read.only transaction|recovery mode' "$WORK/secdef"
