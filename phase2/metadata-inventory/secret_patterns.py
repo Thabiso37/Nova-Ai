@@ -24,11 +24,11 @@ PATTERNS = [
     ("supabase_secret", re.compile(r"(?i)\bsb_secret_[A-Za-z0-9_-]{12,}")),
     ("cloud_provider_token", re.compile(r"(?i)\b(?:cloudflare|azure|aws|gcp|google_cloud|digitalocean)[_-]?(?:api[_-]?key|token|secret)\b\s*[:=]\s*['\"]?[^'\"\s,;]{12,}")),
     ("credentialed_connection_string", re.compile(r"(?i)\b(host|user|username)\s*=\s*[^\s]+\s+password\s*=\s*[^\s]+")),
-    ("authorization_api_key_headers", re.compile(r"(?i)\\b(?:x-api-key|x-auth-token|api-key|x-goog-api-key)\\s*[:=]\\s*['\"]?[^'\\"\\s,;]{12,}")),
-    ("gcp_service_account_private_key", re.compile(r'(?i)"private_key"\\s*:\\s*"-----BEGIN (?:RSA )?PRIVATE KEY-----')),
-    ("azure_storage_account_key", re.compile(r"(?i)\\bAccountKey\\s*=\\s*[A-Za-z0-9+/]{40,}={0,2}")),
-    ("aws_secret_or_session_key", re.compile(r"(?i)\\b(?:aws_secret_access_key|aws_session_token)\\s*[:=]\\s*['\"]?[A-Za-z0-9/+=]{20,}")),
-    ("oci_credential_assignment", re.compile(r"(?i)\\b(?:tenancy|user|fingerprint|key_file)\\s*[:=]\\s*['\"]?ocid1\\.[A-Za-z0-9._-]{20,}")),
+    ("authorization_api_key_headers", re.compile(r"(?i)\b(?:x-api-key|x-auth-token|api-key|x-goog-api-key)\s*[:=]\s*['\"]?[^'\"\s,;]{12,}")),
+    ("gcp_service_account_private_key", re.compile(r'(?i)"private_key"\s*:\s*"-----BEGIN (?:RSA )?PRIVATE KEY-----')),
+    ("azure_storage_account_key", re.compile(r"(?i)\bAccountKey\s*=\s*[A-Za-z0-9+/]{40,}={0,2}")),
+    ("aws_secret_or_session_key", re.compile(r"(?i)\b(?:aws_secret_access_key|aws_session_token)\s*[:=]\s*['\"]?[A-Za-z0-9/+=]{20,}")),
+    ("oci_credential_assignment", re.compile(r"(?i)\b(?:tenancy|user|fingerprint|key_file)\s*[:=]\s*['\"]?ocid1\.[A-Za-z0-9._-]{20,}")),
     ("pem_private_key_variants", re.compile(r"-----BEGIN [A-Z0-9 ]{0,40}PRIVATE KEY-----")),
 ]
 
