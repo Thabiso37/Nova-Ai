@@ -625,6 +625,102 @@
       "expected_owner": "novaai_inventory_owner",
       "migration_id": "fixture-migration-0001",
       "generated_by": "fixture migration"
+    },
+    {
+      "family": "type",
+      "identity": "novaai_app.audit_log[]",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001",
+      "generated_by": "PostgreSQL array type"
+    },
+    {
+      "family": "type",
+      "identity": "novaai_app.customers[]",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001",
+      "generated_by": "PostgreSQL array type"
+    },
+    {
+      "family": "type",
+      "identity": "novaai_app.customer_view[]",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001",
+      "generated_by": "PostgreSQL array type"
+    },
+    {
+      "family": "type",
+      "identity": "novaai_app.inheritance_probe[]",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001",
+      "generated_by": "PostgreSQL array type"
+    },
+    {
+      "family": "type",
+      "identity": "novaai_app.orders[]",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001",
+      "generated_by": "PostgreSQL array type"
+    },
+    {
+      "family": "type",
+      "identity": "novaai_app.order_state[]",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001",
+      "generated_by": "PostgreSQL array type"
+    },
+    {
+      "family": "type",
+      "identity": "novaai_app.order_summary[]",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001",
+      "generated_by": "PostgreSQL array type"
+    },
+    {
+      "family": "type",
+      "identity": "novaai_app.partitioned_events[]",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001",
+      "generated_by": "PostgreSQL array type"
+    },
+    {
+      "family": "type",
+      "identity": "novaai_app.partitioned_events_2026[]",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001",
+      "generated_by": "PostgreSQL array type"
+    },
+    {
+      "family": "type",
+      "identity": "novaai_app.positive_amount[]",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001",
+      "generated_by": "PostgreSQL array type"
+    },
+    {
+      "family": "type",
+      "identity": "novaai_app.rls_disabled_probe[]",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001",
+      "generated_by": "PostgreSQL array type"
+    },
+    {
+      "family": "type",
+      "identity": "novaai_app.sellers[]",
+      "classification": "NOVAAI_OWNED",
+      "expected_owner": "novaai_inventory_owner",
+      "migration_id": "fixture-migration-0001",
+      "generated_by": "PostgreSQL array type"
     }
   ],
   "external_prerequisites": [
