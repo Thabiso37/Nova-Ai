@@ -21,7 +21,7 @@ CREATE FUNCTION novaai_app.phase2_int_to_range(integer) RETURNS novaai_app.unsup
 CREATE CAST (integer AS novaai_app.unsupported_range_probe)
  WITH FUNCTION novaai_app.phase2_int_to_range(integer) AS ASSIGNMENT;
 CREATE FUNCTION novaai_app.phase2_event_trigger_fn() RETURNS event_trigger
- LANGUAGE plpgsql AS 'BEGIN RETURN; END';
+ LANGUAGE plpgsql AS 'BEGIN RETURN; END;';
 RESET ROLE;
 CREATE OPERATOR FAMILY novaai_app.phase2_probe_family USING btree;
 CREATE OPERATOR CLASS novaai_app.phase2_probe_int4_ops FOR TYPE integer USING btree

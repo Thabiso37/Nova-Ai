@@ -96,7 +96,7 @@ CREATE TABLE novaai_app.audit_log (
   event text NOT NULL
 );
 CREATE FUNCTION novaai_app.audit_trigger_fn() RETURNS trigger
-AS 'BEGIN INSERT INTO novaai_app.audit_log(event) VALUES (TG_OP); RETURN NEW;'
+AS 'BEGIN INSERT INTO novaai_app.audit_log(event) VALUES (TG_OP); RETURN NEW; END;'
 LANGUAGE plpgsql;
 CREATE TRIGGER customers_audit AFTER INSERT ON novaai_app.customers
 FOR EACH ROW EXECUTE FUNCTION novaai_app.audit_trigger_fn();
