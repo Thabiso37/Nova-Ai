@@ -171,6 +171,6 @@ PGUSER=postgres PGPASSWORD= PGPORT="$PP" psql -X -v ON_ERROR_STOP=1 -c "ALTER TA
 for _ in $(seq 1 60); do psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" 2>/dev/null | grep -qx 202611090002 && break; sleep 1; done
 psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" | grep -qx 202611090002
 if cmp -s "$WORK/watermark.before" <(psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations"); then echo "ERROR: watermark drift was not detected" >&2; exit 1; fi
-! grep -q watermark_probe "$WORK/direct.sql"
+! grep -q watermark_probe "$WORK/schema.sql"
 echo "PASS: advancing WAL changes watermark; separate schema/manifest drift is detectable."
 echo "Genuine PostgreSQL 17.11 hot-standby tests passed."
