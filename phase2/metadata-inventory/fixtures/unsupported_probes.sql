@@ -32,5 +32,5 @@ CREATE USER MAPPING FOR novaai_inventory_inspector SERVER phase2_probe_server OP
 CREATE PUBLICATION phase2_probe_publication FOR TABLE novaai_app.orders;
 CREATE SUBSCRIPTION phase2_probe_subscription
  CONNECTION 'host=127.0.0.1 port=1 dbname=synthetic user=synthetic'
- PUBLICATION phase2_probe_publication WITH (connect=false,enabled=false,create_slot=false);
+ PUBLICATION phase2_probe_publication WITH (connect=false,enabled=false,create_slot=false,slot_name=NONE);
 SELECT lo_create(424242);
