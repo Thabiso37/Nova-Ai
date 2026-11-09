@@ -48,6 +48,7 @@ CREATE TABLE public.partitioned_child PARTITION OF public.partitioned_parent FOR
 CREATE VIEW public.export_view AS SELECT id,name FROM public.products;
 CREATE MATERIALIZED VIEW public.export_matview AS SELECT count(*) AS product_count FROM public.products;
 CREATE SEQUENCE public.export_sequence;
+GRANT USAGE ON SEQUENCE public.export_sequence TO safe_export;
 CREATE FUNCTION public.export_helper() RETURNS int LANGUAGE sql IMMUTABLE AS 'SELECT 17';
 CREATE FUNCTION public.export_trigger_fn() RETURNS trigger LANGUAGE plpgsql AS 'BEGIN NEW.name:=upper(NEW.name); RETURN NEW; END';
 CREATE TRIGGER export_products_trigger BEFORE INSERT ON public.products FOR EACH ROW EXECUTE FUNCTION public.export_trigger_fn();
@@ -85,12 +86,13 @@ IDENTITY="$(psql -X -Atqc "SELECT current_user || ':' || current_setting('transa
 if psql -X -v ON_ERROR_STOP=1 -c 'SET transaction_read_only=off' >"$WORK/setoff" 2>&1; then echo "ERROR: standby allowed transaction_read_only=off" >&2; exit 1; fi
 if ! grep -Eqi 'read.only transaction|cannot set transaction_read_only|during recovery' "$WORK/setoff"; then cat "$WORK/setoff" >&2; exit 1; fi
 echo "PASS: standby rejected SET transaction_read_only=off."
-expect_ro(){ label="$1"; shift; if "$@" >"$WORK/attempt" 2>&1; then echo "unexpected write success: $label" >&2; exit 1; fi; grep -Eqi 'read.only transaction|recovery mode|cannot execute' "$WORK/attempt"; echo "PASS: $label rejected"; }
+expect_ro(){ label="$1"; shift; if "$@" >"$WORK/attempt" 2>&1; then echo "unexpected write success: $label" >&2; exit 1; fi; if ! grep -Eqi 'read.only transaction|recovery mode|cannot execute' "$WORK/attempt"; then cat "$WORK/attempt" >&2; exit 1; fi; echo "PASS: $label rejected"; }
 expect_ro INSERT psql -X -v ON_ERROR_STOP=1 -c "INSERT INTO public.products(name) VALUES('blocked')"
 expect_ro UPDATE psql -X -v ON_ERROR_STOP=1 -c "UPDATE public.products SET name='blocked' WHERE id=1"
 expect_ro DELETE psql -X -v ON_ERROR_STOP=1 -c "DELETE FROM public.products WHERE id=1"
 expect_ro TEMP psql -X -v ON_ERROR_STOP=1 -c "CREATE TEMP TABLE blocked(id int)"
 expect_ro SEQUENCE psql -X -v ON_ERROR_STOP=1 -c "SELECT nextval('public.export_sequence')"
+PGUSER=postgres PGPASSWORD= PGPORT="$PP" psql -X -v ON_ERROR_STOP=1 -c "REVOKE USAGE ON SEQUENCE public.export_sequence FROM safe_export"
 if psql -X -v ON_ERROR_STOP=1 -c "SELECT lo_create(0)" >"$WORK/lo1" 2>&1; then exit 1; fi
 grep -Eqi 'read.only transaction|recovery mode' "$WORK/lo1"
 if psql -X -v ON_ERROR_STOP=1 -c "SELECT lo_put(987654321,0,decode('01','hex'))" >"$WORK/lo2" 2>&1; then exit 1; fi
