@@ -302,3 +302,61 @@ UPLOAD_PATHS="$(sed -n '/path: |/,+4p' "$ROOT/.github/workflows/production-schem
 ' "$UPLOAD_PATHS" | sed '/^$/d' | wc -l)" -eq 2 ]]
 ! grep -Eiq '\.(sql|json|tar|gz)$' <<<"$UPLOAD_PATHS"
 echo "Isolated schema-export tests passed."
+
+# Shared-snapshot consistency, negative control, and fail-closed cleanup.
+SNAPSHOT_URL="postgresql://safe_export:$TEST_EXPORT_PASSWORD@$PGHOST:$PGPORT/$PGDATABASE"
+psql -X -v ON_ERROR_STOP=1 <<'SNAPSHOT_FIXTURE'
+CREATE TABLE public.snapshot_probe(id integer PRIMARY KEY, value text);
+GRANT SELECT ON public.snapshot_probe TO safe_export;
+SNAPSHOT_FIXTURE
+cat > "$TMP/snapshot-manifest.sql" <<'SNAPSHOT_MANIFEST'
+\! psql -X -v ON_ERROR_STOP=1 -c "ALTER TABLE public.snapshot_probe ADD COLUMN added_after_dump text"
+SELECT jsonb_build_object('columns',(SELECT jsonb_agg(attname ORDER BY attnum) FROM pg_attribute WHERE attrelid='public.snapshot_probe'::regclass AND attnum>0 AND NOT attisdropped))::text;
+SNAPSHOT_MANIFEST
+bash scripts/schema-export/export-consistent.sh "$SNAPSHOT_URL" "$TMP/shared-snapshot" "$TMP/snapshot-manifest.sql"
+! grep -q 'added_after_dump' "$TMP/shared-snapshot/schema.sql"
+jq -e '.columns | index("id") != null and index("value") != null and index("added_after_dump") == null' "$TMP/shared-snapshot/manifests.json" >/dev/null
+psql -X -Atqc "SELECT EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid='public.snapshot_probe'::regclass AND attname='added_after_dump' AND NOT attisdropped)" | grep -qx t
+echo "PASS: both outputs preserve the same pre-DDL snapshot."
+
+# Negative control deliberately uses independent snapshots.
+psql -X -v ON_ERROR_STOP=1 -c 'DROP TABLE public.snapshot_probe; CREATE TABLE public.snapshot_probe(id integer PRIMARY KEY,value text); GRANT SELECT ON public.snapshot_probe TO safe_export' >/dev/null
+bash scripts/schema-export/dump-schema.sh "$SNAPSHOT_URL" "$TMP/independent-schema.sql"
+psql -X -v ON_ERROR_STOP=1 -c 'ALTER TABLE public.snapshot_probe ADD COLUMN independent_later text' >/dev/null
+psql -X -qAt -v ON_ERROR_STOP=1 -c "SELECT jsonb_build_object('columns',(SELECT jsonb_agg(attname ORDER BY attnum) FROM pg_attribute WHERE attrelid='public.snapshot_probe'::regclass AND attnum>0 AND NOT attisdropped))::text" -o "$TMP/independent-manifest.json"
+! grep -q independent_later "$TMP/independent-schema.sql"
+jq -e '.columns | index("independent_later") != null' "$TMP/independent-manifest.json" >/dev/null
+echo "PASS: negative control proves independent snapshots can disagree."
+
+# Failed schema dump and failed manifest both discard the entire pair.
+if SCHEMA_EXPORT_MAX_ATTEMPTS=1 bash scripts/schema-export/export-consistent.sh "postgresql://safe_export:invalid@127.0.0.1:1/postgres?connect_timeout=1" "$TMP/failed-dump" >/dev/null 2>&1; then exit 1; fi
+[[ ! -e "$TMP/failed-dump/schema.sql" && ! -e "$TMP/failed-dump/manifests.json" ]]
+printf 'SELECT 1/0;\n' > "$TMP/manifest-fails.sql"
+if SCHEMA_EXPORT_MAX_ATTEMPTS=1 bash scripts/schema-export/export-consistent.sh "$SNAPSHOT_URL" "$TMP/failed-manifest" "$TMP/manifest-fails.sql" >/dev/null 2>&1; then exit 1; fi
+[[ ! -e "$TMP/failed-manifest/schema.sql" && ! -e "$TMP/failed-manifest/manifests.json" ]]
+echo "PASS: failed pg_dump and manifest generation discard both outputs."
+
+# Snapshot IDs expire after COMMIT and after coordinator termination.
+snapshot_import_must_fail() {
+  local snapshot="$1" sqlfile="$2"
+  printf "BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;\nSET TRANSACTION SNAPSHOT :'snapshot';\nSELECT 1;\nCOMMIT;\n" > "$sqlfile"
+  if PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql "$SNAPSHOT_URL" -X -v ON_ERROR_STOP=1 -v snapshot="$snapshot" -f "$sqlfile" >/dev/null 2>&1; then
+    echo "ERROR: expired snapshot imported successfully." >&2; exit 1
+  fi
+}
+for ending in commit terminate; do
+  coproc SNAP_COORD { PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql "$SNAPSHOT_URL" -X -qAt -v ON_ERROR_STOP=1; }
+  C_PID="$SNAP_COORD_PID"; C_IN="\${SNAP_COORD[1]}"; C_OUT="\${SNAP_COORD[0]}"
+  printf 'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;\nSELECT pg_export_snapshot();\n' >&"$C_IN"
+  IFS= read -r -t 15 EXPIRED_SNAPSHOT <&"$C_OUT"
+  [[ "$EXPIRED_SNAPSHOT" =~ ^[0-9A-Fa-f]+-[0-9A-Fa-f]+-[0-9A-Fa-f]+$ ]]
+  if [[ "$ending" == commit ]]; then printf 'COMMIT;\n\\q\n' >&"$C_IN"; else kill -TERM "$C_PID"; fi
+  exec {C_IN}>&-; exec {C_OUT}<&-
+  wait "$C_PID" 2>/dev/null || true
+  unset SNAP_COORD SNAP_COORD_PID
+  snapshot_import_must_fail "$EXPIRED_SNAPSHOT" "$TMP/expired-snapshot.sql"
+done
+echo "PASS: snapshot expiry and coordinator termination fail closed."
+PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -Atqc "SELECT count(*)=0 FROM pg_auth_members WHERE member=(SELECT oid FROM pg_roles WHERE rolname=current_user) OR roleid=(SELECT oid FROM pg_roles WHERE rolname=current_user)" | grep -qx t
+PGPASSWORD="$TEST_EXPORT_PASSWORD" PGUSER=safe_export psql -X -Atqc "SELECT NOT rolsuper AND NOT rolbypassrls AND NOT rolcreaterole AND NOT rolcreatedb AND NOT rolreplication FROM pg_roles WHERE rolname=current_user" | grep -qx t
+echo "PASS: no extra privileges or role escalation introduced."
