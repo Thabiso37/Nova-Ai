@@ -65,5 +65,6 @@ jobs:
           name: phase2-metadata-inventory-report
           path: |
             inventory.json
-            baseline.sql\n            runtime-security.json
+            baseline.sql
+            runtime-security.json
           if-no-files-found: warn
