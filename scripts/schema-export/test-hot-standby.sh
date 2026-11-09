@@ -37,6 +37,7 @@ GRANT EXECUTE ON FUNCTION pg_catalog.lo_create(oid),pg_catalog.lo_put(oid,bigint
 SELECT pg_catalog.lo_create(900001);
 SELECT pg_catalog.lo_put(900001,0,convert_to('HOT_STANDBY_LO_DATA_MUST_NOT_EXPORT','UTF8'));
 CREATE SCHEMA private;
+CREATE TABLE private.export_private_config(id int PRIMARY KEY,value text NOT NULL);
 CREATE SCHEMA storage;
 CREATE SCHEMA supabase_migrations;
 CREATE TABLE supabase_migrations.schema_migrations(version text PRIMARY KEY);
@@ -131,8 +132,14 @@ URL="postgresql://safe_export:$EP@127.0.0.1:$SP/postgres?sslmode=disable"
 psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" >"$WORK/watermark.before"
 psql -X -Atqc "SELECT pg_last_wal_replay_lsn()" >"$WORK/replay.before"
 pg_dump --version | grep -Eq '^pg_dump \(PostgreSQL\) 17\.11([[:space:]]|$)'
+if bash scripts/schema-export/dump-schema.sh "postgresql://safe_export:invalid-password@127.0.0.1:$SP/postgres?sslmode=disable" "$WORK/failed.sql" >"$WORK/failed-export.log" 2>&1; then
+  echo "ERROR: invalid-credential export unexpectedly succeeded." >&2
+  exit 1
+fi
+[[ ! -e "$WORK/failed.sql" ]]
+echo "PASS: failed direct exports leave no partial plaintext dump."
 bash scripts/schema-export/dump-schema.sh "$URL" "$WORK/schema.sql"
-for pat in 'CREATE TABLE public\.products' 'CREATE TABLE public\."Products"' 'CREATE VIEW public\.export_view' 'CREATE MATERIALIZED VIEW public\.export_matview' 'CREATE FUNCTION public\.export_helper' 'CREATE TRIGGER export_products_trigger' 'CREATE SEQUENCE public\.export_sequence' 'CREATE FOREIGN TABLE public\.export_foreign_table'; do grep -Eq "$pat" "$WORK/schema.sql" || { echo "missing schema object: $pat" >&2; exit 1; }; done
+for pat in 'CREATE TABLE private\.export_private_config' 'CREATE TABLE public\.products' 'CREATE TABLE public\."Products"' 'CREATE VIEW public\.export_view' 'CREATE MATERIALIZED VIEW public\.export_matview' 'CREATE FUNCTION public\.export_helper' 'CREATE TRIGGER export_products_trigger' 'CREATE SEQUENCE public\.export_sequence' 'CREATE FOREIGN TABLE public\.export_foreign_table'; do grep -Eq "$pat" "$WORK/schema.sql" || { echo "missing schema object: $pat" >&2; exit 1; }; done
 grep -Eq 'ALTER TABLE public\.products OWNER TO postgres' "$WORK/schema.sql"
 grep -Eq 'GRANT SELECT ON TABLE public\.products TO safe_export' "$WORK/schema.sql"
 ! grep -Eiq 'CREATE SCHEMA (storage|supabase_migrations)|CREATE TABLE (storage|supabase_migrations)\.' "$WORK/schema.sql"
