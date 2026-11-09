@@ -16,8 +16,12 @@ CREATE AGGREGATE novaai_app.phase2_probe_sum(integer)
 CREATE COLLATION novaai_app.phase2_probe_collation (provider=libc,locale='C');
 CREATE TEXT SEARCH CONFIGURATION novaai_app.phase2_probe_tsc (COPY=pg_catalog.simple);
 CREATE TEXT SEARCH DICTIONARY novaai_app.phase2_probe_tsd (TEMPLATE=pg_catalog.simple);
+SELECT n.nspname AS conversion_schema,p.proname AS conversion_function
+ FROM pg_catalog.pg_conversion c JOIN pg_catalog.pg_proc p ON p.oid=c.conproc
+ JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace
+ WHERE c.conname='iso_8859_1_to_utf8' LIMIT 1 \gset
 CREATE CONVERSION novaai_app.phase2_probe_conversion FOR 'LATIN1' TO 'UTF8'
- FROM pg_catalog.iso_8859_1_to_utf8;
+ FROM :"conversion_schema".:"conversion_function";
 CREATE FUNCTION novaai_app.phase2_int_to_range(integer) RETURNS novaai_app.unsupported_range_probe
  LANGUAGE sql IMMUTABLE AS 'SELECT novaai_app.unsupported_range_probe($1,$1+1)';
 CREATE FUNCTION novaai_app.phase2_event_trigger_fn() RETURNS event_trigger
