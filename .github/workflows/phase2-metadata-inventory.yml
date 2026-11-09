@@ -49,6 +49,23 @@ jobs:
         run: psql -X -h 127.0.0.1 -U postgres -d inventory_test -v ON_ERROR_STOP=1 -f phase2/metadata-inventory/fixtures/bootstrap.sql
       - name: Run static tests
         run: python -m unittest discover -s phase2/metadata-inventory/tests -v
+      - name: Create unsupported-object positive probes
+        run: psql -X -h 127.0.0.1 -U postgres -d inventory_test -v ON_ERROR_STOP=1 -f phase2/metadata-inventory/fixtures/unsupported_probes.sql
+      - name: Verify unsupported detector fails closed on positive probes
+        env:
+          INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector"
+        run: |
+          set +e
+          python phase2/metadata-inventory/detect_unsupported.py > unsupported-probe.json
+          detector_status=$?
+          set -e
+          if [ "$detector_status" -eq 0 ]; then
+            echo "Detector unexpectedly accepted unsupported synthetic objects."
+            exit 1
+          fi
+          python phase2/metadata-inventory/tests/assert_unsupported_probe.py unsupported-probe.json
+      - name: Remove unsupported-object positive probes
+        run: psql -X -h 127.0.0.1 -U postgres -d inventory_test -v ON_ERROR_STOP=1 -c "DROP RULE unsupported_probe_rule ON novaai_app.orders; DROP STATISTICS novaai_app.unsupported_probe_stats; DROP TYPE novaai_app.unsupported_range_probe;"
       - name: Run restricted inventory
         env:
           INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector"
@@ -68,7 +85,7 @@ jobs:
       - name: Generate independent disposable schema-only baseline
         run: pg_dump -h 127.0.0.1 -U postgres -d inventory_test --schema-only --schema=novaai_app --schema=novaai_private --schema=supabase_managed_fixture --schema=environment_specific_fixture --file=baseline.sql
       - name: Scan generated outputs for canaries and secret patterns
-        run: python phase2/metadata-inventory/validate_artifacts.py inventory.json baseline.sql baseline-dependencies.json runtime-security.json unsupported.json
+        run: python phase2/metadata-inventory/validate_artifacts.py inventory.json baseline.sql baseline-dependencies.json runtime-security.json unsupported.json unsupported-probe.json
       - name: Compare baseline object identities
         run: python phase2/metadata-inventory/compare_baseline.py inventory.json baseline.sql unsupported.json phase2/metadata-inventory/provenance_registry.json baseline-dependencies.json
       - name: Upload test report
@@ -82,4 +99,5 @@ jobs:
             baseline-dependencies.json
             runtime-security.json
             unsupported.json
+            unsupported-probe.json
           if-no-files-found: warn
