@@ -130,32 +130,13 @@ echo "PASS: ACCESS SHARE locks on relation kinds used by pg_dump."
 URL="postgresql://safe_export:$EP@127.0.0.1:$SP/postgres?sslmode=disable"
 psql -X -Atqc "SELECT max(version) FROM supabase_migrations.schema_migrations" >"$WORK/watermark.before"
 psql -X -Atqc "SELECT pg_last_wal_replay_lsn()" >"$WORK/replay.before"
-pg_dump --version | grep -F '17.11'
-pg_dump --schema-only --schema=public --schema=private --file="$WORK/direct.sql" "$URL"
-for pat in 'CREATE TABLE public\.products' 'CREATE TABLE public\."Products"' 'CREATE VIEW public\.export_view' 'CREATE MATERIALIZED VIEW public\.export_matview' 'CREATE FUNCTION public\.export_helper' 'CREATE TRIGGER export_products_trigger' 'CREATE SEQUENCE public\.export_sequence' 'CREATE FOREIGN TABLE public\.export_foreign_table'; do grep -Eq "$pat" "$WORK/direct.sql" || { echo "missing schema object: $pat" >&2; exit 1; }; done
-grep -Eq 'GRANT SELECT ON TABLE public\.products TO safe_export' "$WORK/direct.sql"
-! grep -Eiq 'HOT_STANDBY_APPLICATION_ROW_MUST_NOT_EXPORT|HOT_STANDBY_LO_DATA_MUST_NOT_EXPORT|^[[:space:]]*(COPY[[:space:]]|INSERT[[:space:]]+INTO)' "$WORK/direct.sql"
-echo "PASS: PostgreSQL 17.11 pg_dump schema-only and schema object/data checks."
-supabase --version | grep -F '2.122.1'
-NETWORK_ID="$(docker inspect "$HOSTNAME" --format '{{range .NetworkSettings.Networks}}{{.NetworkID}}{{end}}')"
-JOB_IP="$(docker inspect "$HOSTNAME" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')"
-[[ -n "$NETWORK_ID" && -n "$JOB_IP" ]]
-CLI_URL="postgresql://safe_export:$EP@$JOB_IP:$SP/postgres?sslmode=disable"
-if supabase --network-id "$NETWORK_ID" db dump --db-url "$CLI_URL" --schema public,private --file "$WORK/supabase.sql" >"$WORK/supabase-cli.log" 2>&1; then
-  echo "UNEXPECTED: pinned Supabase CLI succeeded with restricted login; inspect any behavior change." 
-  grep -Eq 'CREATE TABLE public\.products' "$WORK/supabase.sql"
-  grep -Eq 'CREATE TABLE public\."Products"' "$WORK/supabase.sql"
-  ! grep -Eiq 'HOT_STANDBY_APPLICATION_ROW_MUST_NOT_EXPORT|HOT_STANDBY_LO_DATA_MUST_NOT_EXPORT|^[[:space:]]*(COPY[[:space:]]|INSERT[[:space:]]+INTO)' "$WORK/supabase.sql"
-  cp "$WORK/supabase.sql" "$WORK/schema.sql"
-else
-  if grep -Fq 'permission denied to set role "postgres"' "$WORK/supabase-cli.log"; then
-    echo "CONFIRMED CLI INCOMPATIBILITY: supabase db dump attempts SET ROLE postgres, which the restricted export login must not be allowed to assume."
-    cp "$WORK/direct.sql" "$WORK/schema.sql"
-  else
-    cat "$WORK/supabase-cli.log" >&2
-    exit 1
-  fi
-fi
+[[ "$(pg_dump --version)" == "pg_dump (PostgreSQL) 17.11" ]]
+bash scripts/schema-export/dump-schema.sh "$URL" "$WORK/schema.sql"
+for pat in 'CREATE TABLE public\.products' 'CREATE TABLE public\."Products"' 'CREATE VIEW public\.export_view' 'CREATE MATERIALIZED VIEW public\.export_matview' 'CREATE FUNCTION public\.export_helper' 'CREATE TRIGGER export_products_trigger' 'CREATE SEQUENCE public\.export_sequence' 'CREATE FOREIGN TABLE public\.export_foreign_table'; do grep -Eq "$pat" "$WORK/schema.sql" || { echo "missing schema object: $pat" >&2; exit 1; }; done
+grep -Eq 'ALTER TABLE public\.products OWNER TO postgres' "$WORK/schema.sql"
+grep -Eq 'GRANT SELECT ON TABLE public\.products TO safe_export' "$WORK/schema.sql"
+! grep -Eiq 'HOT_STANDBY_APPLICATION_ROW_MUST_NOT_EXPORT|HOT_STANDBY_LO_DATA_MUST_NOT_EXPORT|^[[:space:]]*(COPY[[:space:]]|INSERT[[:space:]]+INTO)' "$WORK/schema.sql"
+echo "PASS: exact production helper uses PostgreSQL 17.11 strict public/private schema-only pg_dump; ownership/grants retained; no rows or large-object contents."
 psql -X -f scripts/schema-export/export-manifests.sql -o "$WORK/manifests.json"
 jq -e '.manifest_version == 2 and (.policies | any(.name == "export_storage_objects_read")) and (.functions | any(.name == "export_helper")) and (.triggers | any(.name == "export_products_trigger")) and (.indexes | length > 0) and (.constraints | length > 0)' "$WORK/manifests.json" >/dev/null
 bash scripts/schema-export/validate-export.sh "$WORK"
