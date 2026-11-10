@@ -1,0 +1,55 @@
+# NOVAAI Phase 2 F-02 — trusted workflow log scanner
+
+## Sole-owner trust model
+
+The repository has one owner, `Thabiso37`. No independent reviewer or independent approval is claimed. This design is not an independent trust anchor against a malicious or compromised owner. F-02 remains OPEN until the workflow and evidence are independently assessed if a qualified independent reviewer becomes available.
+
+## Trust and eligibility policy
+
+The trusted orchestrator checks out and executes its own source at the event's `github.sha` into a dedicated directory, and rejects execution unless `GITHUB_REF` is exactly `refs/heads/main`. It separately checks out the fixed approved scanner commit. It only listens for `workflow_run` completions and the typed `repository_dispatch` event. It never checks out candidate branches, downloads candidate artifacts, or evaluates source logs as commands. It checks out only scanner commit `294fa19fac21b5467b9cf2eb0acb428678395575`.
+
+Historical runs use a strict immutable pair allowlist:
+- `42640933100` — `41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb`
+- `42652510694` — `294fa19fac21b5467b9cf2eb0acb428678395575`
+
+The source workflow identity is checked against the source repository `Thabiso37/Nova-Ai`, ID `411977040`, name `Phase 2 Metadata Inventory Prototype`, path `.github/workflows/phase2-metadata-inventory.yml`, branch `feature/metadata-only-inventory-prototype`, event `push`, completed/success status and attempt 1. Job pagination must match a stable API total, contain unique job IDs, and match the API total, and exactly one completed/success `disposable-postgres-17` job must exist.
+
+### Future workflow_run policy
+
+A workflow name or workflow ID is NOT sufficient to trust a future run. The future-run path is separate from the historical allowlist and starts with an empty `FUTURE_APPROVED_PAIRS`. A future run is rejected unless its exact `(run_id, head_sha)` pair is explicitly added to that set by a reviewed change to this trusted default-branch implementation, after the source run has completed and its workflow identity, branch, event, conclusion, attempt, jobs and provenance have been inspected. Each pair is one-time and attempt 1 only. Do not automatically approve a run from the event itself. Updating the allowlist is a deliberate trust decision, not an automatic name match. This prevents candidate branch writers from gaining eligibility simply by producing another workflow_run event.
+
+## Dispatch credential
+
+The scanner has only `actions: read` and `contents: read`. It never receives `contents: write`. The repository_dispatch API requires a credential with repository Contents: write permission; the owner must hold and use that credential externally, outside GitHub Actions, and send only the event payload. Do not store it in repository or environment secrets, workflow variables, artifacts, source files, or command-line arguments. Prefer a short-lived GitHub App installation token scoped to this repository; if that is unavailable, a fine-grained PAT restricted to this repository and Contents: write is the minimum documented alternative. The credential is not suitable for the scanner job because it exceeds scanner needs. Keep it in a password manager or secure operator environment, never paste it into chat or CI logs, and revoke/rotate immediately on exposure and periodically. If the owner cannot obtain a narrowly scoped credential, historical dispatch is unavailable; do not weaken scanner permissions. Actor allowlisting is an additional check only.
+
+## Scanner integrity and log handling
+
+Approved scanner hashes:
+- `scan_sensitive.py`: `806789ebbe64e39af537415718b6b142d9f94e383def200390e6cf075e4ac238`
+- `secret_patterns.py`: `bc76e0af5047a093c093710621f85f1d89f3cb07a8622c6da51dc7088a470233`
+
+The scanner verifies commit identity, a detached isolated clone, Git common-dir containment, symlinks, alternates, remote removal and both file hashes.
+
+### Job-log redirect and response boundary
+
+The job-level endpoint is documented to return HTTP 302 with a temporary download URL. GitHub's self-hosted runner network requirements identify `*.blob.core.windows.net` as required for downloading job summaries, logs, workflow artifacts and caches. The implementation therefore allows only HTTPS DNS subdomains ending in the exact label-boundary suffix `.blob.core.windows.net`; it rejects the suffix apex, lookalike suffixes, IP literals, non-443 ports, URL credentials, fragments, malformed hosts and all other schemes/hosts. This is deliberately narrower than the full runner-domain list. The job-log endpoint documentation does not enumerate individual storage hostnames, so this is a documentation-based domain-family allowlist, not proof of a particular live redirect destination. If GitHub changes its documented storage domain family, retrieval fails closed until reviewed.
+
+Sources:
+- GitHub Actions self-hosted runner accessible domains: https://docs.github.com/en/actions/reference/runners/self-hosted-runners (lists `*.blob.core.windows.net` for downloading logs/artifacts)
+- GitHub REST API — download job logs: https://docs.github.com/en/rest/actions/workflow-jobs#download-job-logs-for-a-workflow-run (documents 302 and Location URL, but not a concrete hostname)
+
+At most **3 redirects** are followed. Every redirect is validated before opening and creates a new request with only a fixed User-Agent, Accept and Accept-Encoding headers; Authorization, Cookie and caller credentials are not forwarded. The initial token is sent only to `api.github.com`. Redirect URLs and exception text are never included in rejection messages or evidence. The response must be HTTP 200, `text/plain`, identity content encoding, valid UTF-8, non-empty and free of disallowed control bytes. The stream is read in chunks and rejected immediately when it exceeds **25 MiB**, whether or not Content-Length exists. If Content-Length is supplied, it must be a valid decimal length, no greater than the limit, and exactly match the bytes received. Transfer-Encoding is accepted only as `chunked`, and is rejected if Content-Length is also present. A close-delimited response that ends cleanly without Content-Length cannot be reliably identified as truncated; this implementation does not claim otherwise. The log bytes are SHA-256 hashed before scanning. These are simulated redirect tests through urllib's redirect machinery; they do not demonstrate a live GitHub redirect or trusted main-branch retrieval.
+
+### Evidence manifests and publication
+
+Raw source logs remain runner-local and are excluded from artifacts. The **success manifest** requires `summary.json` (valid JSON with `result=PASS`), `scanner-integrity.json` (valid JSON with a scanner commit), and `scanner-output.txt` containing `SCAN PASS`. The **failure manifest** requires `summary.json` (valid JSON with `result=FAIL`) and a non-empty `failure-reason.txt`. Both manifests reject empty evidence directories, missing required files, unexpected files, symlinks and non-regular files. Success evidence additionally validates the scanner-integrity commit SHA, scanner-output marker, 64-character log SHA-256, source run ID/SHA and selected job ID. Failure evidence must always identify a non-empty failure reason.
+
+Staging copies only the validated manifest into a temporary directory on the destination filesystem, revalidates the staged files, then publishes using an atomic rename to a destination that **must not already exist**. The implementation rejects an existing or symlinked destination; it does not delete-then-replace and does not claim atomic replacement of an existing directory. The upload step runs only when the staging step succeeds and retains `if-no-files-found: error`. Evidence records source run ID/SHA, selected job ID, scanner hashes, log digest where retrieval succeeded, scan outcome and failure reason. A pattern scan is defence in depth and cannot prove arbitrary secrets are absent.
+
+## Protections and limitations
+
+The repository has one owner. Do not configure a fictitious independent-review requirement or self-approve as independent. Where available, the owner can configure PR-required changes, disable force pushes and deletion, restrict direct pushes, and require trusted test checks. The connected GitHub API previously reported main unprotected and no rulesets; the branch-protection write operation was not available through the current integration. These controls therefore remain unconfigured/unverified. Owner/admin bypass remains a residual trust risk.
+
+## Acceptance
+
+F-02 remains OPEN. Tests and implementation are not acceptance. Acceptance requires the workflow to be on the default branch, trigger behavior and historical scan execution to be evidenced, artifacts inspected, protection and dispatch constraints documented, and independent assessment where available. F-01 remains closed at `6e44e478536fccf235700cc6db85e97234f32ee7`.
