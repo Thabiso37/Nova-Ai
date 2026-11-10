@@ -67,14 +67,17 @@ def validate_run_metadata(meta, run_id, mode, requested_sha=None, future_pairs=N
     if type(meta.get("workflow_id")) is not int or meta["workflow_id"] != WORKFLOW_ID:
         raise Reject("workflow_id_mismatch")
     if meta.get("name") != WORKFLOW_NAME: raise Reject("workflow_name_mismatch")
-    if meta.get("path") != WORKFLOW_PATH: raise Reject("workflow_path_mismatch")
     if mode == "historical":
+        if meta.get("path") not in (WORKFLOW_PATH, WORKFLOW_PATH + "@refs/heads/" + HISTORICAL_BRANCH):
+            raise Reject("workflow_path_mismatch")
         if meta.get("head_branch") != HISTORICAL_BRANCH: raise Reject("source_branch_mismatch")
         head=meta.get("head_repository")
         if not isinstance(head,dict) or head.get("full_name") != SOURCE_REPOSITORY:
             raise Reject("source_repository_mismatch")
         if meta.get("event") != "push": raise Reject("source_event_mismatch")
     elif mode == "future":
+        if meta.get("path") != WORKFLOW_PATH:
+            raise Reject("workflow_path_mismatch")
         repo=meta.get("repository")
         head=meta.get("head_repository")
         if (not isinstance(repo,dict) or type(repo.get("id")) is not int
