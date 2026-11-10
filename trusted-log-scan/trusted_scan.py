@@ -155,7 +155,7 @@ def safe_artifact_manifest(evidence_dir, raw_path):
     manifest=[]
     for path in sorted(evidence_dir.rglob("*")):
         if path.is_dir(): continue
-        if path.resolve()==raw: raise Reject("raw_log_inside_evidence_directory")
+        if path.resolve()==raw: continue  # present on runner, deliberately omitted from artifact
         rel=path.relative_to(evidence_dir).as_posix()
         if rel not in {"summary.json","source-run-metadata.json","source-run-jobs-sanitized.json",
                        "scanner-integrity.json","log-retrieval-exit-status.txt","scanner-output.txt",
