@@ -130,7 +130,8 @@ def _validated_log_redirect_url(newurl):
         or parsed.username is not None or parsed.password is not None
         or parsed.fragment or port not in (None,443)):
         raise Reject("unsafe_log_redirect_target")
-    host=host.rstrip(".").lower()
+    if host.endswith("."): raise Reject("unsafe_log_redirect_target")
+    host=host.lower()
     try:
         import ipaddress
         ipaddress.ip_address(host)
@@ -211,6 +212,11 @@ def fetch_job_log_text(repo, job_id, token, opener=None, *, max_bytes=LOG_MAX_BY
             if content_encoding not in ("","identity"):
                 raise Reject("unexpected_log_content_encoding")
             content_length=headers.get("Content-Length")
+            transfer_encoding=headers.get("Transfer-Encoding","").strip().lower()
+            if transfer_encoding and content_length is not None:
+                raise Reject("ambiguous_log_response_framing")
+            if transfer_encoding and transfer_encoding!="chunked":
+                raise Reject("unsupported_log_transfer_encoding")
             if content_length is not None:
                 if not re.fullmatch(r"[0-9]+",content_length.strip()):
                     raise Reject("invalid_log_content_length")
@@ -319,7 +325,14 @@ def safe_artifact_manifest(evidence_dir, raw_path):
             output=(evidence_dir/"scanner-output.txt").read_text(encoding="utf-8")
         except (OSError,UnicodeError,json.JSONDecodeError):
             raise Reject("invalid_success_evidence_content")
-        if not isinstance(integrity,dict) or not integrity.get("commit") or "SCAN PASS" not in output:
+        if (not isinstance(integrity,dict) or not isinstance(integrity.get("commit"),str)
+            or not re.fullmatch(r"[0-9a-f]{40}",integrity["commit"])
+            or "SCAN PASS" not in output
+            or not isinstance(summary.get("log_sha256"),str)
+            or not re.fullmatch(r"[0-9a-f]{64}",summary["log_sha256"])
+            or not str(summary.get("source_run_id","")).isdigit()
+            or not re.fullmatch(r"[0-9a-f]{40}",str(summary.get("source_sha","")))
+            or not isinstance(summary.get("selected_job_id"),int)):
             raise Reject("invalid_success_evidence_content")
     else:
         try: reason=(evidence_dir/"failure-reason.txt").read_text(encoding="utf-8")
