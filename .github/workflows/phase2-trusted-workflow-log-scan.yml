@@ -50,7 +50,7 @@ jobs:
           import trusted_scan
           e=pathlib.Path("trusted-evidence")
           raw=e/"raw-source-job-logs.txt"
-          trusted_scan.safe_artifact_manifest(e,raw)
+          trusted_scan.stage_sanitized_artifact(e,raw,pathlib.Path("trusted-evidence-upload"))
           PY
       - name: Upload sanitized evidence only
         if: always()
@@ -58,7 +58,6 @@ jobs:
         with:
           name: phase2-f02-trusted-scan-evidence-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            trusted-evidence/
-            !trusted-evidence/raw-source-job-logs.txt
-          if-no-files-found: error
+            trusted-evidence-upload/
+          if-no-files-found: ignore
           retention-days: 90
