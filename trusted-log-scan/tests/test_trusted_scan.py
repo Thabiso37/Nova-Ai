@@ -221,7 +221,7 @@ class ValidationBehavior(unittest.TestCase):
    def scan_runner(self,args,**kwargs): return types.SimpleNamespace(returncode=0,stdout="SCAN PASS\n",stderr="")
   with tempfile.TemporaryDirectory() as d:
    env={"EVENT_NAME":"repository_dispatch","DISPATCH_ACTOR":"Thabiso37","DISPATCH_RUN_ID":"42640933100",
-        "DISPATCH_SOURCE_SHA":GOOD_SHA,"EVENT_RUN_ID":"","EVENT_RUN_ATTEMPT":"0",
+        "DISPATCH_SOURCE_SHA":GOOD_SHA,"EVENT_RUN_ID":"","EVENT_RUN_ATTEMPT":"",
         "GITHUB_REF":"refs/heads/main","GITHUB_SHA":"a"*40}
    with patch.dict(os.environ,env,clear=False),patch.object(ts.pathlib.Path,"cwd",return_value=pathlib.Path(d)):
     ts.execute(SuccessfulAdapter())
@@ -241,7 +241,7 @@ class ValidationBehavior(unittest.TestCase):
    def run_metadata(self,*a): raise AssertionError("must reject before API access")
   with tempfile.TemporaryDirectory() as d:
    env={"EVENT_NAME":"repository_dispatch","DISPATCH_ACTOR":"intruder","DISPATCH_RUN_ID":"42640933100",
-        "DISPATCH_SOURCE_SHA":GOOD_SHA,"EVENT_RUN_ID":"","EVENT_RUN_ATTEMPT":"0",
+        "DISPATCH_SOURCE_SHA":GOOD_SHA,"EVENT_RUN_ID":"","EVENT_RUN_ATTEMPT":"",
         "GITHUB_REF":"refs/heads/main","GITHUB_SHA":"a"*40}
    with patch.dict(os.environ,env,clear=False),patch.object(ts.pathlib.Path,"cwd",return_value=pathlib.Path(d)):
     with self.assertRaisesRegex(ts.Reject,"unauthorized_dispatch_actor"):ts.execute(NeverCalled())
@@ -515,7 +515,7 @@ class RedirectLeakEvidenceTests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as d:
    env={"EVENT_NAME":"repository_dispatch","DISPATCH_ACTOR":"Thabiso37",
         "DISPATCH_RUN_ID":"42640933100","DISPATCH_SOURCE_SHA":GOOD_SHA,
-        "EVENT_RUN_ID":"","EVENT_RUN_ATTEMPT":"0","GITHUB_REF":"refs/heads/main",
+        "EVENT_RUN_ID":"","EVENT_RUN_ATTEMPT":"","GITHUB_REF":"refs/heads/main",
         "GITHUB_SHA":"a"*40}
    with patch.dict(os.environ,env,clear=False),patch.object(ts.pathlib.Path,"cwd",return_value=pathlib.Path(d)):
     with self.assertRaisesRegex(ts.Reject,"unsafe_log_redirect_target"):

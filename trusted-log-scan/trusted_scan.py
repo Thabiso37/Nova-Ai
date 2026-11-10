@@ -412,12 +412,16 @@ def execute(adapter=None):
             "result":"FAIL","rejected_conditions":[],"raw_logs_uploaded":False}
     try:
         status["trusted_workflow_commit"]=validate_trusted_context(os.environ.get("GITHUB_REF",""),os.environ.get("GITHUB_SHA",""))
-        raw_attempt=os.environ.get("EVENT_RUN_ATTEMPT","0")
-        if not re.fullmatch(r"[0-9]+",raw_attempt):
-            raise Reject("invalid_event_run_attempt")
+        raw_attempt=os.environ.get("EVENT_RUN_ATTEMPT","")
+        if status["event"] == "workflow_run":
+            if not re.fullmatch(r"[0-9]+",raw_attempt):
+                raise Reject("invalid_event_run_attempt")
+            event_attempt=int(raw_attempt)
+        else:
+            event_attempt=0
         mode,run_id,requested_sha,attempt=validate_event(status["event"],status["dispatch_actor"],
           {"target_run_id":os.environ.get("DISPATCH_RUN_ID",""),"target_source_sha":os.environ.get("DISPATCH_SOURCE_SHA","")},
-          {"id":os.environ.get("EVENT_RUN_ID",""),"run_attempt":int(raw_attempt)})
+          {"id":os.environ.get("EVENT_RUN_ID",""),"run_attempt":event_attempt})
         meta=adapter.run_metadata(run_id)
         sha=validate_run_metadata(meta,run_id,mode,requested_sha,event_attempt=attempt)
         status.update(source_run_id=run_id,source_sha=sha)
