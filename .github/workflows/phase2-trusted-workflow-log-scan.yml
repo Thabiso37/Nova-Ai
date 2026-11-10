@@ -29,6 +29,13 @@ jobs:
       DISPATCH_RUN_ID: ${{ github.event.client_payload.target_run_id }}
       DISPATCH_SOURCE_SHA: ${{ github.event.client_payload.target_source_sha }}
     steps:
+      - name: Checkout trusted default-branch orchestrator source only
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: Thabiso37/Nova-Ai
+          ref: ${{ github.sha }}
+          path: trusted-orchestrator-source
+          persist-credentials: false
       - name: Checkout only the pinned trusted scanner source
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -40,7 +47,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Execute fail-closed trusted scanner
-        run: python trusted-log-scan/trusted_scan.py
+        run: python trusted-orchestrator-source/trusted-log-scan/trusted_scan.py
       - name: Validate evidence allowlist and stage sanitized artifact
         if: always()
         run: |
