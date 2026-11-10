@@ -63,7 +63,9 @@ class ValidationBehavior(unittest.TestCase):
    ts.validate_jobs([dict(GOOD_JOB,conclusion="failure")],1)
  def test_incomplete_job_pagination_rejected(self):
   with self.assertRaisesRegex(ts.Reject,"incomplete_job_pagination"):ts.validate_jobs([GOOD_JOB],2)
-  def api(args): return {"jobs":[GOOD_JOB],"total_count":2}
+  def api(args):
+   if "page=2" in args[0]: return {"jobs":[],"total_count":2}
+   return {"jobs":[GOOD_JOB],"total_count":2}
   with self.assertRaisesRegex(ts.Reject,"incomplete_job_pagination"):ts.fetch_all_jobs("owner/repo","1",api)
  def test_pagination_fetches_every_page(self):
   calls=[]
@@ -96,17 +98,17 @@ class ValidationBehavior(unittest.TestCase):
  def test_sensitive_canaries_pass_through_real_approved_scanner(self):
   # Exercise the pinned scanner source checked into this repo only if present in test environment.
   # The CI checkout includes the source in the commit tree under phase2/metadata-inventory.
-  candidates=[pathlib.Path("phase2/metadata-inventory/scan_sensitive.py"),
-              pathlib.Path("approved-scanner-source/phase2/metadata-inventory/scan_sensitive.py")]
+  candidates=[pathlib.Path("approved-scanner-source/phase2/metadata-inventory/scan_sensitive.py")]
   scanner=next((p for p in candidates if p.exists()),None)
   self.assertIsNotNone(scanner,"approved scanner source must be made available to this integration test")
-  canary=b"-----BEGIN PRIVATE KEY-----\nCANARY_PRIVATE_KEY_8e8f7d6c\n-----END PRIVATE KEY-----\n"
+  canary=b"CANARY_CUSTOMER_7f3c2a91\nCANARY_SELLER_8b1d4e62\nCANARY_RLS_DISABLED_91aa73\n"
   with tempfile.TemporaryDirectory() as d:
    log=pathlib.Path(d)/"canary.log";log.write_bytes(canary)
    import subprocess,sys
    p=subprocess.run([sys.executable,str(scanner),str(log)],capture_output=True,text=True)
    self.assertNotEqual(p.returncode,0)
    self.assertIn("SCAN FAIL",p.stdout+p.stderr)
+   self.assertIn("synthetic_canary",p.stdout+p.stderr)
  def test_raw_log_never_in_artifact_manifest_and_unexpected_files_rejected(self):
   with tempfile.TemporaryDirectory() as d:
    e=pathlib.Path(d)/"evidence";e.mkdir();raw=e/"raw-source-job-logs.txt";raw.write_text("SECRET")
