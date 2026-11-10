@@ -165,6 +165,7 @@ def safe_artifact_manifest(evidence_dir, raw_path):
     manifest=[]
     for path in sorted(evidence_dir.rglob("*")):
         if path.is_dir(): continue
+        if path.is_symlink(): raise Reject("symlink_in_artifact_evidence")
         if path.resolve()==raw: continue  # present on runner, deliberately omitted from artifact
         rel=path.relative_to(evidence_dir).as_posix()
         if rel not in {"summary.json","source-run-metadata.json","source-run-jobs-sanitized.json",
@@ -173,6 +174,19 @@ def safe_artifact_manifest(evidence_dir, raw_path):
             raise Reject("unexpected_artifact_file:"+rel)
         manifest.append(rel)
     return manifest
+
+def stage_sanitized_artifact(evidence_dir, raw_path, staging_dir):
+    manifest=safe_artifact_manifest(evidence_dir,raw_path)
+    if staging_dir.exists(): shutil.rmtree(staging_dir)
+    staging_dir.mkdir(parents=True)
+    for rel in manifest:
+        source=evidence_dir/rel
+        target=staging_dir/rel
+        target.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copyfile(source,target)
+    staged={p.relative_to(staging_dir).as_posix() for p in staging_dir.rglob("*") if p.is_file()}
+    if staged != set(manifest): raise Reject("staged_artifact_manifest_mismatch")
+    return sorted(staged)
 
 def execute(adapter=None):
     """Orchestrate using injectable API/command adapters for deterministic behavioral tests."""
