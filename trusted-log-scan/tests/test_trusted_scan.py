@@ -1,4 +1,4 @@
-import io, json, os, pathlib, tempfile, unittest, zipfile, hashlib, subprocess
+import json, os, pathlib, tempfile, unittest, hashlib, subprocess
 from unittest.mock import patch
 import sys, urllib.error, urllib.request, urllib.parse
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parents[1]))
@@ -8,11 +8,6 @@ GOOD_SHA="41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb"
 GOOD_META={"id":42640933100,"workflow_id":411977040,"name":ts.WORKFLOW_NAME,"path":ts.WORKFLOW_PATH,
  "head_branch":ts.BRANCH,"head_repository":{"full_name":"Thabiso37/Nova-Ai"},"head_sha":GOOD_SHA,"event":"push","status":"completed","conclusion":"success","run_attempt":1}
 GOOD_JOB={"id":991,"name":ts.TARGET_JOB,"status":"completed","conclusion":"success"}
-def archive(data=b"ordinary workflow log\n"):
- b=io.BytesIO()
- with zipfile.ZipFile(b,"w",zipfile.ZIP_DEFLATED) as z:z.writestr("job.txt",data)
- return b.getvalue()
-
 class ValidationBehavior(unittest.TestCase):
  def test_trusted_workflow_trigger_and_checkout_boundary(self):
   workflow=pathlib.Path(".github/workflows/phase2-trusted-workflow-log-scan.yml").read_text()
@@ -113,6 +108,7 @@ class ValidationBehavior(unittest.TestCase):
   client=FakeOpener()
   result=ts.fetch_job_log_text("owner/repo",991,"SENSITIVE_GH_TOKEN",client)
   self.assertEqual(result,body)
+  self.assertEqual(client.initial.full_url,"https://api.github.com/repos/owner/repo/actions/jobs/991/logs")
   self.assertIn("SENSITIVE_GH_TOKEN",client.initial.get_header("Authorization"))
   self.assertIsNone(client.redirected.get_header("Authorization"))
   self.assertEqual(urllib.parse.urlsplit(client.redirected.full_url).scheme,"https")
