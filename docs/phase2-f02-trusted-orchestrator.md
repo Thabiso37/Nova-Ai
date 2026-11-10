@@ -63,6 +63,8 @@ The CI evidence distinguishes the two GitHub Actions execution contexts:
 
 Both runs succeeded, but they are not evidence of two executions against the same commit. New commits to this PR require their own CI results.
 
+After the remediation commits, PR CI run **42792228891** also completed successfully. Its checkout log records synthetic merge commit `458371a916616ef138a5b6977cefb947d8f695ed`, which merges current PR head `042bf0a2f85a9ef2a8e610f0f61ea20272908576` into base `5dd9b7160765774db0b2bb2e16678d215e11558f`. It is a PR merge-result test, not a head-only checkout. The connected Actions listing exposes this PR-triggered run; it does not expose the corresponding push-triggered run, so no push-run ID for `042bf0a2f85a9ef2a8e610f0f61ea20272908576` is asserted here.
+
 ## Protections and limitations
 
 The repository has one owner. Do not configure a fictitious independent-review requirement or self-approve as independent. Where available, the owner can configure PR-required changes, disable force pushes and deletion, restrict direct pushes, and require trusted test checks. The connected GitHub API previously reported main unprotected and no rulesets; the branch-protection write operation was not available through the current integration. These controls therefore remain unconfigured/unverified. Owner/admin bypass remains a residual trust risk.
