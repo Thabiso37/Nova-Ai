@@ -19,6 +19,7 @@ on:
         type: string
 
 permissions:
+  # Read-only access: scanner never writes to source workflows or repository contents.
   actions: read
   contents: read
 
@@ -188,7 +189,7 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: Fail closed unless retrieval and scan both pass
+      - name: Fail closed unless tests, integrity, retrieval and scan all pass
         if: always()
         env:
           RETRIEVAL_OUTCOME: ${{ steps.retrieve.outcome }}
