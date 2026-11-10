@@ -20,6 +20,7 @@ on:
 
 permissions:
   # Read-only access: scanner never writes to source workflows or repository contents.
+  # Candidate branch includes the same scanner workflow checks as the approved prototype branch.
   actions: read
   contents: read
 
