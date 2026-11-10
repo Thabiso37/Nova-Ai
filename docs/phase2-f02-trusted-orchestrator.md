@@ -12,7 +12,7 @@ Historical runs use a strict immutable pair allowlist:
 - `42640933100` — `41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb`
 - `42652510694` — `294fa19fac21b5467b9cf2eb0acb428678395575`
 
-The source workflow identity is checked against ID `411977040`, name `Phase 2 Metadata Inventory Prototype`, path `.github/workflows/phase2-metadata-inventory.yml`, branch `feature/metadata-only-inventory-prototype`, event `push`, completed/success status and attempt 1. Job pagination must match the API total, and exactly one completed/success `disposable-postgres-17` job must exist.
+The source workflow identity is checked against the source repository `Thabiso37/Nova-Ai`, ID `411977040`, name `Phase 2 Metadata Inventory Prototype`, path `.github/workflows/phase2-metadata-inventory.yml`, branch `feature/metadata-only-inventory-prototype`, event `push`, completed/success status and attempt 1. Job pagination must match the API total, and exactly one completed/success `disposable-postgres-17` job must exist.
 
 ### Future workflow_run policy
 
@@ -28,7 +28,7 @@ Approved scanner hashes:
 - `scan_sensitive.py`: `806789ebbe64e39af537415718b6b142d9f94e383def200390e6cf075e4ac238`
 - `secret_patterns.py`: `bc76e0af5047a093c093710621f85f1d89f3cb07a8622c6da51dc7088a470233`
 
-The scanner verifies commit identity, a detached isolated clone, Git common-dir containment, symlinks, alternates, remote removal and both file hashes. Job logs must be retrieved as a complete ZIP archive; malformed, empty or truncated archives fail closed. Logs are data only. Raw log bytes are runner-local and never part of the evidence allowlist. The artifact manifest rejects unexpected files and raw log inclusion. Evidence records source run ID/SHA, selected job ID, scanner hashes, log digest, scan outcome and failure reason. A pattern scan is defence in depth and cannot prove arbitrary secrets are absent.
+The scanner verifies commit identity, a detached isolated clone, Git common-dir containment, symlinks, alternates, remote removal and both file hashes. Job logs must be retrieved as a complete ZIP archive; malformed, empty, CRC-invalid/truncated archives and archives exceeding the uncompressed size limit fail closed. Logs are data only. Raw log bytes are runner-local and never part of the evidence allowlist. The artifact manifest rejects unexpected files and raw log inclusion. Evidence records source run ID/SHA, selected job ID, scanner hashes, log digest, scan outcome and failure reason. An allowlisted evidence manifest excludes the runner-local raw log and rejects unexpected files. A pattern scan is defence in depth and cannot prove arbitrary secrets are absent.
 
 ## Protections and limitations
 
