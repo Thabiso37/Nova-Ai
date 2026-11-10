@@ -193,6 +193,7 @@ class ValidationBehavior(unittest.TestCase):
   with tempfile.TemporaryDirectory() as d:
    e=pathlib.Path(d)/"evidence";e.mkdir();raw=e/"raw-source-job-logs.txt";raw.write_text("SECRET")
    (e/"summary.json").write_text('{"result":"FAIL"}')
+   (e/"failure-reason.txt").write_text("expected failure")
    self.assertNotIn(raw.name,ts.safe_artifact_manifest(e,raw))
    (e/"unexpected.bin").write_bytes(b"x")
    with self.assertRaisesRegex(ts.Reject,"unexpected_artifact_file"):ts.safe_artifact_manifest(e,raw)
