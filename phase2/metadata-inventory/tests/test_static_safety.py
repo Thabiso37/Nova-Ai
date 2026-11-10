@@ -400,7 +400,17 @@ class StaticSafetyTests(unittest.TestCase):
   git_common_path=(root/git_common).resolve() if not pathlib.Path(git_common).is_absolute() else pathlib.Path(git_common).resolve()
   self.assertTrue(git_common_path.is_relative_to((root/".git").resolve()),str(git_common_path))
   self.assertFalse((root/".git").is_symlink())
-  self.assertFalse((root/"phase2").is_symlink())
+  candidate_checkout=ROOT.parents[1].resolve()
+  self.assertFalse(root.resolve().is_relative_to(candidate_checkout))
+  self.assertFalse(candidate_checkout.is_relative_to(root.resolve()))
+  symlinks=[str(path) for path in root.rglob("*") if path.is_symlink()]
+  self.assertEqual(symlinks,[],f"isolated checkout contains symlinks: {symlinks}")
+  alternates=root/".git"/"objects"/"info"/"alternates"
+  self.assertFalse(alternates.exists(),str(alternates))
+  subprocess.run(["git","-C",str(root),"remote","remove","origin"],check=True,
+                 capture_output=True,text=True)
+  remotes=subprocess.run(["git","-C",str(root),"remote"],capture_output=True,text=True,check=True).stdout.strip()
+  self.assertEqual(remotes,"")
   for relative,expected in expected_hashes.items():
    scanner_file=root/relative
    self.assertTrue(scanner_file.is_file(),str(scanner_file))
