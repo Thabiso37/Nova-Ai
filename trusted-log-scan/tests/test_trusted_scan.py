@@ -6,7 +6,7 @@ import trusted_scan as ts
 
 GOOD_SHA="41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb"
 GOOD_META={"id":42640933100,"workflow_id":411977040,"name":ts.WORKFLOW_NAME,"path":ts.WORKFLOW_PATH,
- "head_branch":ts.BRANCH,"head_sha":GOOD_SHA,"event":"push","status":"completed","conclusion":"success","run_attempt":1}
+ "head_branch":ts.BRANCH,"head_repository":{"full_name":"Thabiso37/Nova-Ai"},"head_sha":GOOD_SHA,"event":"push","status":"completed","conclusion":"success","run_attempt":1}
 GOOD_JOB={"id":991,"name":ts.TARGET_JOB,"status":"completed","conclusion":"success"}
 def archive(data=b"ordinary workflow log\n"):
  b=io.BytesIO()
@@ -33,6 +33,9 @@ class ValidationBehavior(unittest.TestCase):
   for field,value,reason in [("workflow_id",1,"workflow_id_mismatch"),("name","lookalike","workflow_name_mismatch"),("path","evil.yml","workflow_path_mismatch")]:
    with self.subTest(field=field),self.assertRaisesRegex(ts.Reject,reason):
     ts.validate_run_metadata(dict(GOOD_META,**{field:value}),"42640933100","historical",GOOD_SHA)
+ def test_incorrect_source_repository_rejected(self):
+  with self.assertRaisesRegex(ts.Reject,"source_repository_mismatch"):
+   ts.validate_run_metadata(dict(GOOD_META,head_repository={"full_name":"attacker/fork"}),"42640933100","historical",GOOD_SHA)
  def test_incorrect_source_branch_rejected(self):
   with self.assertRaisesRegex(ts.Reject,"source_branch_mismatch"):
    ts.validate_run_metadata(dict(GOOD_META,head_branch="main"),"42640933100","historical",GOOD_SHA)
@@ -84,6 +87,11 @@ class ValidationBehavior(unittest.TestCase):
  def test_empty_truncated_and_invalid_logs_rejected(self):
   for data in [b"",b"not a zip",archive(b"")[:-8]]:
    with self.subTest(length=len(data)),self.assertRaises(ts.Reject):ts.validate_log_bytes(data)
+ def test_approved_scanner_source_hashes_match_trusted_values(self):
+  root=pathlib.Path("approved-scanner-source/phase2/metadata-inventory")
+  self.assertTrue(root.is_dir())
+  for name,expected in ts.HASHES.items():
+   self.assertEqual(hashlib.sha256((root/name).read_bytes()).hexdigest(),expected)
  def test_scanner_checksum_mismatch_rejected(self):
   with tempfile.TemporaryDirectory() as d:
    p=pathlib.Path(d);(p/".git/objects/info").mkdir(parents=True);(p/"phase2/metadata-inventory").mkdir(parents=True)
