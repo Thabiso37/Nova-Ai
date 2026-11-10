@@ -294,7 +294,7 @@ class StaticSafetyTests(unittest.TestCase):
  def test_scanner_failure_causes_final_gate_to_fail(self):
   workflow=self.scanner_workflow()
   start=workflow.index('          [[ "$RETRIEVAL_OUTCOME" == "success" ]]')
-  gate=workflow[start:workflow.index('\n\n',start)]
+  gate=workflow[start:]
   result=self.run_shell(gate,RETRIEVAL_OUTCOME="success",SCAN_OUTCOME="failure",STATIC_TEST_OUTCOME="success",INTEGRITY_OUTCOME="success")
   self.assertNotEqual(result.returncode,0)
   passed=self.run_shell(gate,RETRIEVAL_OUTCOME="success",SCAN_OUTCOME="success",STATIC_TEST_OUTCOME="success",INTEGRITY_OUTCOME="success")
@@ -305,7 +305,7 @@ class StaticSafetyTests(unittest.TestCase):
   self.assertRegex(workflow,r"if: steps\.retrieve\.outcome == 'success'")
   self.assertIn('if [[ "${{ steps.retrieve.outcome }}" != "success" ]]',workflow)
   start=workflow.index('          [[ "$RETRIEVAL_OUTCOME" == "success" ]]')
-  gate=workflow[start:workflow.index("\n\n",start)]
+  gate=workflow[start:]
   for outcome in ("failure","skipped"):
    with self.subTest(outcome=outcome):
     result=self.run_shell(gate,RETRIEVAL_OUTCOME=outcome,SCAN_OUTCOME="skipped",STATIC_TEST_OUTCOME="success",INTEGRITY_OUTCOME="success")
