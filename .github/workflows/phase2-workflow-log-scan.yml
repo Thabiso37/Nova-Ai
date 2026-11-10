@@ -99,6 +99,8 @@ jobs:
           TARGET_RUN_ID: ${{ steps.select.outputs.target_run_id }}
           TARGET_SOURCE_SHA: ${{ steps.select.outputs.target_source_sha }}
           EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
           mkdir -p scan-evidence
           printf '%s\n' "NOT_STARTED" > scan-evidence/retrieval-status.txt
           printf '%s\n' "$TARGET_RUN_ID" > scan-evidence/approved-source-run-id.txt
@@ -119,7 +121,7 @@ jobs:
             --arg branch "$APPROVED_BRANCH" \
             --arg sha "$target_source_sha" \
             --arg path "$APPROVED_WORKFLOW_PATH" \
-            --argjson id "$APPROVED_RUN_ID" \
+            --argjson id "$target_run_id" \
             '.id == $id and .name == $name and (.path == $path or .path == ($path + "@refs/heads/" + $branch)) and .head_branch == $branch and .head_sha == $sha and .status == "completed" and .conclusion == "success"' \
             scan-evidence/source-run-metadata.json > /dev/null
 
