@@ -1,54 +1,39 @@
 # NOVAAI Phase 2 F-02 — trusted workflow log scanner
 
-## Trust model and scope
+## Sole-owner trust model
 
-This repository currently has one owner, `Thabiso37`. There is no independent reviewer configured or claimed. The owner can change the default branch and repository settings; this design reduces accidental/self-service workflow bypass but cannot create independent governance. A successful run is implementation evidence, not independent security approval or F-02 acceptance.
+The repository has one owner, `Thabiso37`. No independent reviewer or independent approval is claimed. This design is not an independent trust anchor against a malicious or compromised owner. F-02 remains OPEN until the workflow and evidence are independently assessed if a qualified independent reviewer becomes available.
 
-The trusted orchestrator is intended to be merged to `main` and is activated only by `workflow_run` and the typed `repository_dispatch` event. It never checks out candidate branches, downloads candidate artifacts, or executes source log contents. It checks out only the fixed approved scanner commit and makes a separate isolated clone before executing the scanner.
+## Trust and eligibility policy
 
-## Approved historical sources
+The trusted orchestrator is defined on the default branch and only listens for `workflow_run` completions and the typed `repository_dispatch` event. It never checks out candidate branches, downloads candidate artifacts, or evaluates source logs as commands. It checks out only scanner commit `294fa19fac21b5467b9cf2eb0acb428678395575`.
 
-Only these historical run/SHA pairs are accepted:
+Historical runs use a strict immutable pair allowlist:
 - `42640933100` — `41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb`
 - `42652510694` — `294fa19fac21b5467b9cf2eb0acb428678395575`
 
-The source workflow identity is checked against workflow ID `411977040`, name `Phase 2 Metadata Inventory Prototype`, path `.github/workflows/phase2-metadata-inventory.yml`, branch `feature/metadata-only-inventory-prototype`, event `push`, completed/success conclusion and attempt 1. The complete paginated job list is compared with the API total; exactly one completed/success `disposable-postgres-17` job is required.
+The source workflow identity is checked against ID `411977040`, name `Phase 2 Metadata Inventory Prototype`, path `.github/workflows/phase2-metadata-inventory.yml`, branch `feature/metadata-only-inventory-prototype`, event `push`, completed/success status and attempt 1. Job pagination must match the API total, and exactly one completed/success `disposable-postgres-17` job must exist.
 
-For future workflow_run events, run IDs are obtained from the GitHub event and the source commit SHA is validated against the run metadata. The source branch workflow is not treated as trusted code: its logs remain untrusted data. The source workflow has no production credentials and this scanner has only Actions read and Contents read permissions.
+### Future workflow_run policy
 
-## Historical dispatch credential
+A workflow name or workflow ID is NOT sufficient to trust a future run. The future-run path is separate from the historical allowlist and starts with an empty `FUTURE_APPROVED_PAIRS`. A future run is rejected unless its exact `(run_id, head_sha)` pair is explicitly added to that set by a reviewed change to this trusted default-branch implementation, after the source run has completed and its workflow identity, branch, event, conclusion, attempt, jobs and provenance have been inspected. Each pair is one-time and attempt 1 only. Do not automatically approve a run from the event itself. Updating the allowlist is a deliberate trust decision, not an automatic name match. This prevents candidate branch writers from gaining eligibility simply by producing another workflow_run event.
 
-The scanner does not receive or store a dispatch credential. An operator must use a repository-scoped fine-grained PAT or GitHub App installation token held outside Actions, with only repository Contents: write permission needed by the repository_dispatch API. Do not place this credential in repository secrets, workflow inputs, artifacts, shell command arguments, or logs. The dispatch API requires write access to create the event; the scanner itself remains read-only. Dispatch actor allowlisting is an additional check, not a substitute for token permissions.
+## Dispatch credential
 
-Credential ownership: the repository owner is responsible for creating, securely storing and using the dispatch-only credential. Rotate/revoke it immediately after suspected exposure and on a documented periodic schedule; use a short lifetime where the issuing mechanism supports it. If a credential with narrowly scoped dispatch permission cannot be issued, historical dispatch is blocked; do not add contents: write to the workflow. Actor allowlisting currently permits only `Thabiso37`.
+The scanner has only `actions: read` and `contents: read`. It never receives `contents: write`. The repository_dispatch API requires a credential with repository Contents: write permission; the owner must hold and use that credential externally, outside GitHub Actions, and send only the event payload. Do not store it in repository or environment secrets, workflow variables, artifacts, source files, or command-line arguments. Prefer a short-lived GitHub App installation token scoped to this repository; if that is unavailable, a fine-grained PAT restricted to this repository and Contents: write is the minimum documented alternative. The credential is not suitable for the scanner job because it exceeds scanner needs. Keep it in a password manager or secure operator environment, never paste it into chat or CI logs, and revoke/rotate immediately on exposure and periodically. If the owner cannot obtain a narrowly scoped credential, historical dispatch is unavailable; do not weaken scanner permissions. Actor allowlisting is an additional check only.
 
-Example API payload (send from the operator's secure environment; do not commit or store the token):
-```json
-{
-  "event_type": "phase2-approved-log-scan",
-  "client_payload": {
-    "target_run_id": "42652510694",
-    "target_source_sha": "294fa19fac21b5467b9cf2eb0acb428678395575"
-  }
-}
-```
+## Scanner integrity and log handling
 
-## Scanner integrity and evidence
-
-Approved scanner SHA: `294fa19fac21b5467b9cf2eb0acb428678395575`.
+Approved scanner hashes:
 - `scan_sensitive.py`: `806789ebbe64e39af537415718b6b142d9f94e383def200390e6cf075e4ac238`
 - `secret_patterns.py`: `bc76e0af5047a093c093710621f85f1d89f3cb07a8622c6da51dc7088a470233`
 
-The workflow creates a detached isolated clone with no hardlinks/local object sharing, verifies commit identity, checks symlinks and alternates, removes the remote, and verifies both file hashes. Raw job logs stay on the runner and are explicitly excluded from uploaded artifacts. Sanitized evidence records run/job identity, scanner hashes, log digest, scan result and rejection reason. Pattern scanning is defence in depth and cannot prove that arbitrary or obfuscated secrets are absent.
+The scanner verifies commit identity, a detached isolated clone, Git common-dir containment, symlinks, alternates, remote removal and both file hashes. Job logs must be retrieved as a complete ZIP archive; malformed, empty or truncated archives fail closed. Logs are data only. Raw log bytes are runner-local and never part of the evidence allowlist. The artifact manifest rejects unexpected files and raw log inclusion. Evidence records source run ID/SHA, selected job ID, scanner hashes, log digest, scan outcome and failure reason. A pattern scan is defence in depth and cannot prove arbitrary secrets are absent.
 
-## Repository protection and limits
+## Protections and limitations
 
-Configure `main` protection using available GitHub repository settings: require PRs where feasible; prohibit force pushes and deletion; restrict direct pushes to the owner/maintainers; require the trusted scanner test check where supported. Do not configure a one-approval rule that the sole owner would satisfy themselves, and do not claim independent review. If GitHub plan/permissions or the one-owner model prevents a control, record it as unenforced rather than bypassing the owner or locking them out. Repository administration controls and sole-owner authority remain residual trust risks.
+The repository has one owner. Do not configure a fictitious independent-review requirement or self-approve as independent. Where available, the owner can configure PR-required changes, disable force pushes and deletion, restrict direct pushes, and require trusted test checks. The connected GitHub API previously reported main unprotected and no rulesets; the branch-protection write operation was not available through the current integration. These controls therefore remain unconfigured/unverified. Owner/admin bypass remains a residual trust risk.
 
-## Acceptance boundary
+## Acceptance
 
-F-02 remains OPEN until the trusted workflow is on `main`, repository protections and credential constraints are evidenced, historical and future trigger behavior has been exercised, sanitized artifacts independently checked, and a genuinely independent reviewer (if one becomes available) assesses the evidence. Passing automated tests alone is not acceptance. F-01 remains closed at `6e44e478536fccf235700cc6db85e97234f32ee7`.
-
-
-## Implementation note
-The pull-request test workflow is intentionally read-only and exercises the trusted scanner's fixed pair/hash policy and artifact/trigger boundaries. The actual orchestrator cannot execute historical scans until it is present on the default branch and a dispatch credential is available.
+F-02 remains OPEN. Tests and implementation are not acceptance. Acceptance requires the workflow to be on the default branch, trigger behavior and historical scan execution to be evidenced, artifacts inspected, protection and dispatch constraints documented, and independent assessment where available. F-01 remains closed at `6e44e478536fccf235700cc6db85e97234f32ee7`.
