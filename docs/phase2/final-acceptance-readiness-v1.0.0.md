@@ -4,7 +4,7 @@
 **Closeout branch:** `docs/phase2-final-closeout`  
 **Source run:** [42800792137](https://github.com/Thabiso37/Nova-Ai/actions/runs/42800792137)  
 **F-02:** CLOSED — ACCEPTED  
-**Decision:** Prepared for owner review; do not infer formal Phase 2 acceptance from this report.
+**Decision:** Requirements transcription owner-confirmed; formal Phase 2 acceptance has not been declared.
 
 ## 1. Technical objectives completed
 
@@ -25,19 +25,18 @@ The live synthetic PostgreSQL 17.11 source workflow completed successfully on `m
 
 ## 2. Administrative closeout completed by this PR
 
-- Canonical Phase 2 requirements transcription, version 1.0.0.
-- Requirements-to-evidence mapping with explicit status vocabulary.
-- Separate machine-readable structured catalogue and `pg_dump` comparison results, extracted from source job log stdout.
-- Phase 2 README corrected to record the successful live run.
+- Canonical Phase 2 requirements transcription, version 1.0.0, confirmed by the owner on 2026-11-10 as accurately representing the original approved Phase 2 scope.
+- Requirements-to-evidence mapping with explicit status vocabulary and the owner confirmation recorded.
+- Separate machine-readable structured catalogue and `pg_dump` comparison results, extracted from source job log stdout, classified as administrative closeout evidence rather than new Phase 2 requirements.
+- Phase 2 README updated to record the successful live synthetic run.
 - F-02 acceptance status addendum documenting CLOSED — ACCEPTED without altering its implementation or historical evidence.
 - Governance and reproducibility review distinguishing acceptance requirements from optional hardening.
 
-## 3. Mandatory acceptance blockers / owner confirmations
+## 3. Owner confirmation and remaining decision
 
-1. **Requirements provenance confirmation:** no verbatim original approval file was located in the repository. The requirements document is a controlled transcription from recovered user approvals and contemporaneous project documentation. The owner must confirm that the transcription accurately captures the approved Phase 2 scope before final acceptance.
-2. **Pull request review:** this closeout must be reviewed on its feature branch. No merge has been performed or authorized.
+The owner confirmed on 2026-11-10 that `requirements-v1.0.0.md` accurately represents the original approved Phase 2 scope. This resolves the requirements-transcription confirmation item. The lack of a verbatim signed/original approval file remains transparently documented as a source limitation; it is no longer an outstanding owner-confirmation blocker.
 
-No technical failure in the recorded synthetic source run was identified in this closeout. The provenance confirmation is an administrative acceptance blocker because the exact original approval artifact is unavailable.
+**Formal Phase 2 acceptance remains undecided.** PR #27 must complete its review and the owner must make a separate formal acceptance decision. This report does not infer acceptance from the owner’s confirmation, successful implementation or CI.
 
 ## 4. Optional hardening remaining
 
@@ -61,6 +60,6 @@ None is retroactively required for Phase 2. No work on these items is included i
 
 ## 6. Final readiness statement
 
-**PHASE 2 READY FOR OWNER REVIEW — FORMAL ACCEPTANCE PENDING REQUIREMENTS-PROVENANCE CONFIRMATION AND PR REVIEW.**
+**REQUIREMENTS TRANSCRIPTION OWNER-CONFIRMED — CLOSEOUT REVIEW PENDING — PHASE 2 NOT FORMALLY ACCEPTED.**
 
-This is not a declaration that Phase 2 has been accepted. F-02 remains CLOSED — ACCEPTED and immutable.
+This report records the owner's requirements confirmation only. F-02 remains CLOSED — ACCEPTED and immutable. Formal Phase 2 acceptance requires a separate explicit decision.
