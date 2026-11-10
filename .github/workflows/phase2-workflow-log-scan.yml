@@ -7,6 +7,7 @@ on:
       - feature/phase2-exact-pair-scanner-candidate
     paths:
       - .github/workflows/phase2-workflow-log-scan.yml
+      - phase2/metadata-inventory/tests/test_static_safety.py
   workflow_dispatch:
     inputs:
       target_run_id:
@@ -70,7 +71,7 @@ jobs:
           persist-credentials: false
 
       - name: Checkout candidate tests
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           ref: ${{ github.sha }}
           path: candidate-tests
