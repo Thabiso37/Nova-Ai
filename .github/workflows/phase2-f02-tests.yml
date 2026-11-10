@@ -1,5 +1,11 @@
 name: Phase 2 F-02 Trusted Scanner Tests
 on:
+  push:
+    branches: [feature/phase2-f02-trusted-orchestrator]
+    paths:
+      - "trusted-log-scan/**"
+      - ".github/workflows/phase2-trusted-workflow-log-scan.yml"
+      - ".github/workflows/phase2-f02-tests.yml"
   pull_request:
     branches: [main]
     paths:
