@@ -121,6 +121,24 @@ class ValidationBehavior(unittest.TestCase):
    self.assertNotEqual(p.returncode,0)
    self.assertIn("SCAN FAIL",p.stdout+p.stderr)
    self.assertIn("synthetic_canary",p.stdout+p.stderr)
+ def test_staging_copies_only_allowlisted_evidence_and_excludes_raw_logs(self):
+  with tempfile.TemporaryDirectory() as d:
+   root=pathlib.Path(d);e=root/"evidence";e.mkdir()
+   raw=e/"raw-source-job-logs.txt";raw.write_text("PRIVATE_RAW_LOG")
+   (e/"summary.json").write_text('{"result":"FAIL"}')
+   (e/"failure-reason.txt").write_text("expected failure")
+   staged=root/"upload"
+   files=ts.stage_sanitized_artifact(e,raw,staged)
+   self.assertEqual(set(files),{"summary.json","failure-reason.txt"})
+   self.assertFalse((staged/raw.name).exists())
+   self.assertNotIn(b"PRIVATE_RAW_LOG",b"".join(p.read_bytes() for p in staged.iterdir()))
+ def test_symlink_evidence_is_rejected(self):
+  with tempfile.TemporaryDirectory() as d:
+   root=pathlib.Path(d);e=root/"evidence";e.mkdir()
+   outside=root/"outside.txt";outside.write_text("not evidence")
+   (e/"summary.json").symlink_to(outside)
+   with self.assertRaisesRegex(ts.Reject,"symlink_in_artifact_evidence"):
+    ts.safe_artifact_manifest(e,e/"raw-source-job-logs.txt")
  def test_raw_log_never_in_artifact_manifest_and_unexpected_files_rejected(self):
   with tempfile.TemporaryDirectory() as d:
    e=pathlib.Path(d)/"evidence";e.mkdir();raw=e/"raw-source-job-logs.txt";raw.write_text("SECRET")
@@ -142,10 +160,18 @@ class ValidationBehavior(unittest.TestCase):
    self.assertFalse(summary["raw_logs_uploaded"])
 
  def test_untrusted_workflow_definition_is_not_executed(self):
-  # Eligibility depends on a run/SHA allowlist; source workflow code/artifacts are never an input.
+  # Eligibility depends on an exact run/SHA allowlist; workflow text remains inert log data.
   self.assertEqual(ts.FUTURE_APPROVED_PAIRS,set())
   with self.assertRaisesRegex(ts.Reject,"future_run_pair_not_explicitly_approved"):
    ts.validate_run_metadata(dict(GOOD_META,id=88),"88","future")
+  scanner=pathlib.Path("approved-scanner-source/phase2/metadata-inventory/scan_sensitive.py")
+  with tempfile.TemporaryDirectory() as d:
+   root=pathlib.Path(d);log=root/"candidate-workflow.log";sentinel=root/"executed"
+   log.write_text("name: untrusted\\njobs:\\n  pwn:\\n    steps:\\n      - run: touch "+str(sentinel)+"\\n")
+   import subprocess,sys
+   result=subprocess.run([sys.executable,str(scanner),str(log)],capture_output=True,text=True)
+   self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+   self.assertFalse(sentinel.exists())
  def test_scanner_checkout_rejects_shared_git_metadata(self):
   with tempfile.TemporaryDirectory() as d:
    p=pathlib.Path(d);(p/".git").mkdir();(p/"phase2/metadata-inventory").mkdir(parents=True)
