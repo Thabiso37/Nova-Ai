@@ -486,4 +486,34 @@ class CompleteEvidenceManifestTests(unittest.TestCase):
     ts.stage_sanitized_artifact(e,e/"raw-source-job-logs.txt",dest)
    self.assertEqual((dest/"keep.txt").read_text(),"keep")
 
+
+class RedirectLeakEvidenceTests(unittest.TestCase):
+ def test_charset_mismatch_rejected(self):
+  with self.assertRaisesRegex(ts.Reject,"unexpected_log_character_set"):
+   ts.validate_log_bytes(b"plain text\n",content_type="text/plain; charset=iso-8859-1")
+ def test_signed_redirect_and_token_absent_from_failure_evidence(self):
+  class Adapter:
+   def run_metadata(self,run_id): return GOOD_META
+   def jobs(self,run_id): return [GOOD_JOB],1
+   def logs(self,job_id):
+    class Routes:
+     def open(inner,req,timeout):
+      raise ts.Reject("unsafe_log_redirect_target")
+    return ts.fetch_job_log_text("o/r",job_id,"DO_NOT_LEAK_TOKEN",Routes())
+  with tempfile.TemporaryDirectory() as d:
+   env={"EVENT_NAME":"repository_dispatch","DISPATCH_ACTOR":"Thabiso37",
+        "DISPATCH_RUN_ID":"42640933100","DISPATCH_SOURCE_SHA":GOOD_SHA,
+        "EVENT_RUN_ID":"","EVENT_RUN_ATTEMPT":"0","GITHUB_REF":"refs/heads/main",
+        "GITHUB_SHA":"a"*40}
+   with patch.dict(os.environ,env,clear=False),patch.object(ts.pathlib.Path,"cwd",return_value=pathlib.Path(d)):
+    with self.assertRaisesRegex(ts.Reject,"unsafe_log_redirect_target"):
+     ts.execute(Adapter())
+   evidence=pathlib.Path(d)/"trusted-evidence"
+   for name in ("summary.json","failure-reason.txt"):
+    content=(evidence/name).read_text()
+    self.assertNotIn("DO_NOT_LEAK_TOKEN",content)
+    self.assertNotIn("DO_NOT_LEAK_SIGNATURE",content)
+    self.assertNotIn("blob.core.windows.net",content)
+   ts.safe_artifact_manifest(evidence,evidence/"raw-source-job-logs.txt")
+
 if __name__=="__main__":unittest.main(verbosity=2)
