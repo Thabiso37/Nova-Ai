@@ -150,6 +150,13 @@ def fetch_job_log_zip(repo, job_id, token, opener=None):
     if p.returncode: raise Reject("log_retrieval_failed")
     return p.stdout
 
+def execute_scanner(scanner_path, raw_path, runner=subprocess.run):
+    proc=runner([sys.executable,str(scanner_path),str(raw_path)],text=True,stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,check=False)
+    if proc.returncode != 0: raise Reject("scanner_nonzero_exit")
+    if "SCAN PASS" not in proc.stdout: raise Reject("scanner_did_not_report_pass")
+    return {"returncode":proc.returncode,"stdout":proc.stdout,"stderr":proc.stderr}
+
 def safe_artifact_manifest(evidence_dir, raw_path):
     raw=raw_path.resolve()
     manifest=[]
@@ -194,9 +201,8 @@ def execute(adapter=None):
         adapter.clone(source,isolated,SCANNER_SHA)
         records=validate_scanner_checkout(isolated,adapter.git)
         (evidence/"scanner-integrity.json").write_text(json.dumps(records,sort_keys=True,indent=2)+"\n")
-        scan=adapter.scan(isolated/"phase2/metadata-inventory/scan_sensitive.py",raw)
-        if scan["returncode"]!=0: raise Reject("scanner_nonzero_exit")
-        if "SCAN PASS" not in scan["stdout"]: raise Reject("scanner_did_not_report_pass")
+        scan=execute_scanner(isolated/"phase2/metadata-inventory/scan_sensitive.py",raw,adapter.scan_runner)
+
         (evidence/"scanner-output.txt").write_text(scan["stdout"][:2000])
         status.update(scanner_exit_code=0,scan_result="PASS",scanner_hashes=records["files"],result="PASS")
     except Exception as exc:
@@ -221,9 +227,8 @@ class RuntimeAdapter:
         run_command(["git","clone","--no-hardlinks","--no-local",str(source),str(dest)])
         run_command(["git","-C",str(dest),"checkout","--detach",sha])
         run_command(["git","-C",str(dest),"remote","remove","origin"])
-    def scan(self,scanner,raw):
-        p=subprocess.run([sys.executable,str(scanner),str(raw)],text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=False)
-        return {"returncode":p.returncode,"stdout":p.stdout,"stderr":p.stderr}
+    def scan_runner(self,args,**kwargs):
+        return subprocess.run(args,**kwargs)
 
 if __name__=="__main__":
     execute()
