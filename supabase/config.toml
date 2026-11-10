@@ -1,0 +1,2 @@
+[functions.nearby-search]
+verify_jwt = false
