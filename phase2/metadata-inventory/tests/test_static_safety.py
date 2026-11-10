@@ -328,7 +328,7 @@ class StaticSafetyTests(unittest.TestCase):
 
  def test_raw_logs_are_excluded_from_uploaded_artifact(self):
   workflow=self.scanner_workflow()
-  self.assertRegex(workflow,r"uses: actions/upload-artifact@v4")
+  self.assertIn("actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",workflow)
   self.assertIn("!scan-evidence/phase2-job-logs.txt",workflow)
 
  def test_scanner_failure_causes_final_gate_to_fail(self):
@@ -350,6 +350,148 @@ class StaticSafetyTests(unittest.TestCase):
    with self.subTest(outcome=outcome):
     result=self.run_shell(gate,RETRIEVAL_OUTCOME=outcome,SCAN_OUTCOME="skipped",STATIC_TEST_OUTCOME="success",INTEGRITY_OUTCOME="success")
     self.assertNotEqual(result.returncode,0)
+
+
+ def workflow_step(self, heading):
+  workflow=self.scanner_workflow()
+  marker=f"      - name: {heading}\n"
+  self.assertIn(marker,workflow)
+  start=workflow.index(marker)
+  run_marker="        run: |\n"
+  run_start=workflow.index(run_marker,start)+len(run_marker)
+  next_step=workflow.find("\n      - name:",run_start)
+  if next_step < 0:
+   next_step=len(workflow)
+  block=workflow[run_start:next_step]
+  lines=[]
+  for line in block.splitlines():
+   if line.startswith("          "): lines.append(line[10:])
+   elif not line.strip(): lines.append("")
+   else: break
+  return "\n".join(lines).rstrip()+"\n"
+
+ def run_mock_retrieval(self, mode):
+  tmp=tempfile.TemporaryDirectory()
+  root=pathlib.Path(tmp.name)
+  bindir=root/"bin"; bindir.mkdir()
+  mock=bindir/"gh"
+  mock.write_text("""#!/usr/bin/env python3
+import json, os, sys
+mode=os.environ.get("MOCK_GH_MODE","ok")
+args=sys.argv[1:]
+if args[:1] == ["api"] and "--paginate" in args:
+ jobs=[{"id":7001,"name":"disposable-postgres-17","status":"completed","conclusion":"success"}]
+ if mode=="missing_job": jobs=[]
+ if mode=="duplicate_job": jobs.append(dict(jobs[0],id=7002))
+ for item in jobs: print(json.dumps(item))
+ sys.exit(0)
+if args[:1] == ["api"] and any("per_page=1" in x for x in args):
+ print(json.dumps({"total_count":2 if mode=="incomplete_pagination" else (0 if mode=="missing_job" else 1)})); sys.exit(0)
+if args[:1] == ["api"]:
+ metadata={"id":42652510694,"name":"Phase 2 Metadata Inventory Prototype","path":".github/workflows/phase2-metadata-inventory.yml","head_branch":"feature/metadata-only-inventory-prototype","head_sha":"294fa19fac21b5467b9cf2eb0acb428678395575","status":"completed","conclusion":"success"}
+ if mode=="invalid_metadata": metadata["head_sha"]="0"*40
+ print(json.dumps(metadata)); sys.exit(0)
+if args[:2] == ["run","view"]:
+ if mode=="failed_log": print("log endpoint unavailable",file=sys.stderr); sys.exit(1)
+ if mode=="empty_log": sys.exit(0)
+ print("synthetic harmless workflow log")
+ sys.exit(0)
+print("unexpected gh invocation: "+repr(args),file=sys.stderr); sys.exit(90)
+""")
+  mock.chmod(0o755)
+  evidence=root/"scan-evidence"
+  env={
+   **os.environ,"PATH":str(bindir)+os.pathsep+os.environ.get("PATH",""),
+   "MOCK_GH_MODE":mode,"GH_TOKEN":"mock-token","GITHUB_REPOSITORY":"Thabiso37/Nova-Ai",
+   "GITHUB_SHA":"c31553f1d1d46e147415e7ffae26d7abed149928",
+   "TARGET_RUN_ID":"42652510694","TARGET_SOURCE_SHA":"294fa19fac21b5467b9cf2eb0acb428678395575",
+   "APPROVED_BRANCH":"feature/metadata-only-inventory-prototype",
+   "APPROVED_WORKFLOW_NAME":"Phase 2 Metadata Inventory Prototype",
+   "APPROVED_WORKFLOW_PATH":".github/workflows/phase2-metadata-inventory.yml",
+  }
+  evidence.mkdir()
+  result=subprocess.run(["bash","-euo","pipefail","-c",self.workflow_step("Initialize evidence and verify source run identity")],
+                        cwd=root,env=env,capture_output=True,text=True)
+  return tmp,root,evidence,result,env
+
+ def assert_mock_failure(self, mode, expected_evidence):
+  tmp,root,evidence,result,env=self.run_mock_retrieval(mode)
+  try:
+   self.assertNotEqual(result.returncode,0, result.stdout+result.stderr)
+   self.assertTrue((evidence/expected_evidence).exists(), list(p.name for p in evidence.iterdir()))
+   scan_marker=root/"scanner-was-run"
+   # The workflow's scan step is conditional on successful retrieval; model that condition
+   # using the actual step body and a marker-producing Python shim.
+   bindir=root/"bin"
+   py=bindir/"python"
+   py.write_text("#!/bin/sh\ntouch \"$SCANNER_MARKER\"\nexit 0\n");py.chmod(0o755)
+   env["SCANNER_MARKER"]=str(scan_marker)
+   if result.returncode==0:
+    subprocess.run(["bash","-euo","pipefail","-c",self.workflow_step("Scan complete workflow job logs with pinned scanner")],
+                   cwd=root,env=env,capture_output=True,text=True)
+   self.assertFalse(scan_marker.exists())
+   gate=self.workflow_step("Fail closed unless tests, integrity, retrieval and scan all pass")
+   gate_result=self.run_shell(gate,RETRIEVAL_OUTCOME="failure",SCAN_OUTCOME="skipped",
+                              STATIC_TEST_OUTCOME="success",INTEGRITY_OUTCOME="success")
+   self.assertNotEqual(gate_result.returncode,0)
+   # The uploaded artifact explicitly excludes the raw log file, including failure cases.
+   self.assertIn("!scan-evidence/phase2-job-logs.txt",self.scanner_workflow())
+  finally:
+   tmp.cleanup()
+
+ def test_mock_gh_invalid_source_metadata_fails_before_scanner(self):
+  self.assert_mock_failure("invalid_metadata","source-run-metadata.json")
+
+ def test_mock_gh_missing_expected_job_fails_before_scanner(self):
+  self.assert_mock_failure("missing_job","source-run-jobs.json")
+
+ def test_mock_gh_duplicate_expected_jobs_fail_before_scanner(self):
+  self.assert_mock_failure("duplicate_job","source-run-jobs.json")
+
+ def test_mock_gh_incomplete_pagination_fails_before_scanner(self):
+  self.assert_mock_failure("incomplete_pagination","source-run-jobs.json")
+
+ def test_mock_gh_failed_source_job_fails_before_scanner(self):
+  tmp,root,evidence,result,env=self.run_mock_retrieval("failed_source_job")
+  try:
+   # The mock reports a completed successful job by default; alter its response to a failed job.
+   mock=root/"bin"/"gh"
+   source=mock.read_text().replace('"conclusion":"success"}]','"conclusion":"failure"}]')
+   mock.write_text(source);mock.chmod(0o755)
+   result=subprocess.run(["bash","-euo","pipefail","-c",self.workflow_step("Initialize evidence and verify source run identity")],
+                         cwd=root,env=env,capture_output=True,text=True)
+   self.assertNotEqual(result.returncode,0)
+   self.assertTrue((evidence/"source-run-jobs.json").exists())
+   self.assertFalse((evidence/"phase2-job-logs.txt").exists())
+   gate=self.workflow_step("Fail closed unless tests, integrity, retrieval and scan all pass")
+   self.assertNotEqual(self.run_shell(gate,RETRIEVAL_OUTCOME="failure",SCAN_OUTCOME="skipped",
+                         STATIC_TEST_OUTCOME="success",INTEGRITY_OUTCOME="success").returncode,0)
+   self.assertIn("!scan-evidence/phase2-job-logs.txt",self.scanner_workflow())
+  finally: tmp.cleanup()
+
+ def test_mock_gh_failed_log_retrieval_fails_and_retains_status(self):
+  self.assert_mock_failure("failed_log","log-download-exit-status.txt")
+
+ def test_mock_gh_empty_successful_log_retrieval_fails_and_retains_log(self):
+  self.assert_mock_failure("empty_log","phase2-job-logs.txt")
+
+ def test_mock_scanner_execution_failure_fails_final_gate(self):
+  tmp,root,evidence,result,env=self.run_mock_retrieval("ok")
+  try:
+   self.assertEqual(result.returncode,0,result.stderr)
+   marker=root/"scanner-was-run"
+   py=root/"bin"/"python"
+   py.write_text("#!/bin/sh\ntouch \"$SCANNER_MARKER\"\nexit 42\n");py.chmod(0o755)
+   env["SCANNER_MARKER"]=str(marker)
+   scan=subprocess.run(["bash","-euo","pipefail","-c",self.workflow_step("Scan complete workflow job logs with pinned scanner")],
+                       cwd=root,env=env,capture_output=True,text=True)
+   self.assertNotEqual(scan.returncode,0)
+   self.assertTrue(marker.exists())
+   gate=self.workflow_step("Fail closed unless tests, integrity, retrieval and scan all pass")
+   self.assertNotEqual(self.run_shell(gate,RETRIEVAL_OUTCOME="success",SCAN_OUTCOME="failure",
+                         STATIC_TEST_OUTCOME="success",INTEGRITY_OUTCOME="success").returncode,0)
+   self.assertIn("!scan-evidence/phase2-job-logs.txt",self.scanner_workflow())
+  finally: tmp.cleanup()
 
 if __name__=="__main__":
  unittest.main()
