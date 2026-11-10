@@ -8,6 +8,7 @@ permissions:
   contents: read
 jobs:
   disposable-postgres-17:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

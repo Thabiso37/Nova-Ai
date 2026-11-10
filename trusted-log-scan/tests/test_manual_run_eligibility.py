@@ -192,6 +192,7 @@ class ManualWorkflowRunEligibilityTests(unittest.TestCase):
     def test_source_workflow_is_manual_only_and_actions_are_pinned(self):
         workflow = pathlib.Path(".github/workflows/phase2-metadata-inventory.yml").read_text()
         self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("if: github.ref == 'refs/heads/main'", workflow)
         self.assertNotIn("pull_request:", workflow)
         self.assertNotIn("push:", workflow)
         self.assertIn("postgres:17.11", workflow)
