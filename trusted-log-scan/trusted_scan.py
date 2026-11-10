@@ -8,6 +8,7 @@ BRANCH = "feature/metadata-only-inventory-prototype"
 WORKFLOW_ID = 411977040
 WORKFLOW_NAME = "Phase 2 Metadata Inventory Prototype"
 WORKFLOW_PATH = ".github/workflows/phase2-metadata-inventory.yml"
+SOURCE_REPOSITORY = "Thabiso37/Nova-Ai"
 SCANNER_SHA = "294fa19fac21b5467b9cf2eb0acb428678395575"
 HASHES = {
  "scan_sensitive.py":"806789ebbe64e39af537415718b6b142d9f94e383def200390e6cf075e4ac238",
@@ -48,6 +49,7 @@ def validate_run_metadata(meta, run_id, mode, requested_sha=None, future_pairs=N
       (meta.get("name") == WORKFLOW_NAME, "workflow_name_mismatch"),
       (meta.get("path") in (WORKFLOW_PATH, WORKFLOW_PATH+"@refs/heads/"+BRANCH), "workflow_path_mismatch"),
       (meta.get("head_branch") == BRANCH, "source_branch_mismatch"),
+      (isinstance(meta.get("head_repository"),dict) and meta["head_repository"].get("full_name") == SOURCE_REPOSITORY, "source_repository_mismatch"),
       (meta.get("event") == "push", "source_event_mismatch"),
       (meta.get("status") == "completed" and meta.get("conclusion") == "success", "source_run_not_successful"),
       (meta.get("run_attempt") == 1, "unexpected_run_attempt"),
@@ -87,6 +89,7 @@ def validate_log_bytes(data, *, max_bytes=25*1024*1024):
         with zipfile.ZipFile(io.BytesIO(data)) as z:
             infos=z.infolist()
             if not infos: raise Reject("empty_log_archive")
+            if sum(i.file_size for i in infos) > max_bytes: raise Reject("log_archive_uncompressed_size_limit")
             if any(i.file_size > max_bytes for i in infos): raise Reject("log_entry_too_large")
             bad=[i for i in infos if i.flag_bits & 0x1]
             if bad: raise Reject("encrypted_log_archive")
