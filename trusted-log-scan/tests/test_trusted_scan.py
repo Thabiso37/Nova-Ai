@@ -287,7 +287,7 @@ class ValidationBehavior(unittest.TestCase):
  def test_artifact_copy_failure_does_not_publish_partial_directory(self):
   with tempfile.TemporaryDirectory() as d:
    root=pathlib.Path(d);e=root/"evidence";e.mkdir()
-   (e/"summary.json").write_text("{}")
+   (e/"summary.json").write_text('{"result":"FAIL"}')
    (e/"failure-reason.txt").write_text("failed")
    staged=root/"upload"
    with patch.object(ts.shutil,"copyfile",side_effect=OSError("simulated copy failure")):
