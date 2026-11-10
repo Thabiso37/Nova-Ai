@@ -92,18 +92,6 @@
       "notes": "23 inventory objects vs 23 baseline objects; all required support sections passed; no unsupported comparisons."
     },
     {
-      "id": "P2-08",
-      "requirement": "Supplemental schema-only pg_dump comparison",
-      "status": "COMPLETE",
-      "evidence": [
-        "baseline.sql in artifact",
-        "baseline-pgdump-client-version.txt in artifact",
-        "docs/phase2/evidence/source-run-42800792137/pg-dump-comparison.json",
-        "Source job log 129777441548 at 2026-11-10T10:38:36.2216807Z"
-      ],
-      "notes": "Comparison PASS with empty failures. Explicitly not a restore test or restoration-equivalence claim."
-    },
-    {
       "id": "P2-09",
       "requirement": "Sensitive-data screening and limitation disclosure",
       "status": "COMPLETE",
@@ -123,18 +111,6 @@
         "SHA-256 99920e7263f5654922f901418dbf693c3b8313e4d93a203b882c9047bdd4fb7c"
       ],
       "notes": "The original artifact is unchanged. Comparator outputs are separate closeout copies extracted from the original Actions job log, not changes to the original artifact."
-    },
-    {
-      "id": "P2-11",
-      "requirement": "Trusted workflow log scanner milestone",
-      "status": "COMPLETE",
-      "evidence": [
-        "F-02 status record docs/phase2/f02-acceptance-status.md",
-        "Source run 42800792137",
-        "Scanner run 42800891197",
-        "Approved scanner commit 294fa19fac21b5467b9cf2eb0acb428678395575"
-      ],
-      "notes": "F-02 CLOSED — ACCEPTED; implementation and historical evidence are immutable."
     },
     {
       "id": "P2-LATER-RESTORE",
@@ -193,5 +169,34 @@
     "Configure suitable main-branch protection/rulesets through a separately authorized governance change.",
     "Pin PostgreSQL container image by immutable digest after verifying official image provenance and architecture.",
     "Retain comparison JSON in a future approved workflow artifact upload; do not alter original run evidence."
+  ],
+  "additional_checks": [
+    {
+      "id": "P2-ADD-01",
+      "name": "Supplemental schema-only pg_dump comparison",
+      "status": "COMPLETE",
+      "mandatory_phase2_gate": false,
+      "evidence": [
+        "baseline.sql in original artifact",
+        "baseline-pgdump-client-version.txt in original artifact",
+        "docs/phase2/evidence/source-run-42800792137/pg-dump-comparison.json",
+        "Source job log 129777441548 at 2026-11-10T10:38:36.2216807Z"
+      ],
+      "notes": "This comparison passed with no failures. It is retained as supplemental implementation evidence; the recovered original Phase 2 approval does not establish it as a separate Phase 2 acceptance gate."
+    },
+    {
+      "id": "CROSS-MILESTONE-F02",
+      "name": "F-02 Trusted Workflow Log Scanner",
+      "status": "COMPLETE",
+      "milestone_status": "CLOSED — ACCEPTED",
+      "mandatory_phase2_gate": false,
+      "evidence": [
+        "docs/phase2/f02-acceptance-status.md",
+        "Source run 42800792137",
+        "Scanner run 42800891197",
+        "Approved scanner commit 294fa19fac21b5467b9cf2eb0acb428678395575"
+      ],
+      "notes": "Recorded separately as an already accepted milestone. It is not used to expand the original Phase 2 inventory requirements."
+    }
   ]
 }
