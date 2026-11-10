@@ -37,7 +37,7 @@ class TrustedScannerTests(unittest.TestCase):
         self.assertNotIn("contents: write",wf)
 
     def test_trusted_trigger_has_no_workflow_dispatch(self):
-        wf=(pathlib.Path(__file__).resolve().parents[3]/".github/workflows/phase2-trusted-workflow-log-scan.yml").read_text()
+        wf=(pathlib.Path(__file__).resolve().parents[2]/".github/workflows/phase2-trusted-workflow-log-scan.yml").read_text()
         self.assertIn("workflow_run:",wf); self.assertIn("repository_dispatch:",wf)
         self.assertNotIn("workflow_dispatch:",wf)
 
