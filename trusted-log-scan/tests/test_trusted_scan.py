@@ -384,14 +384,20 @@ class RedirectTransportIntegration(unittest.TestCase):
   import io
   from email.message import Message
   from urllib.request import HTTPSHandler,build_opener
-  from urllib.response import addinfourl
+  class FakeResponse:
+   def __init__(self,req,status,headers,body):
+    self._stream=io.BytesIO(body);self.code=status;self.status=status;self.msg=Message()
+    for k,v in headers.items():self.msg[k]=v
+    self.headers=self.msg;self.url=req.full_url
+   def info(self):return self.msg
+   def geturl(self):return self.url
+   def getcode(self):return self.code
+   def read(self,n=-1):return self._stream.read(n)
+   def close(self):self._stream.close()
   class Adapter(HTTPSHandler):
    def https_open(inner,req):
     status,headers,body=routes(req)
-    msg=Message()
-    for k,v in headers.items():msg[k]=v
-    response=addinfourl(io.BytesIO(body),msg,req.full_url,code=status)
-    return response
+    return FakeResponse(req,status,headers,body)
   adapter=Adapter()
   return build_opener(ts.SafeRedirectHandler(),adapter)
  def _redirect(self,location):
