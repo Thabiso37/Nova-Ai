@@ -1,0 +1,74 @@
+name: Phase 2 Trusted Workflow Log Scan
+
+on:
+  workflow_run:
+    workflows:
+      - "Phase 2 Metadata Inventory Prototype"
+    types: [completed]
+    branches:
+      - feature/metadata-only-inventory-prototype
+  repository_dispatch:
+    types: [phase2-approved-log-scan]
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: phase2-trusted-log-scan-${{ github.event.workflow_run.id || github.event.client_payload.target_run_id || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  trusted-scan:
+    if: github.event_name == 'workflow_run' || (github.event_name == 'repository_dispatch' && github.actor == 'Thabiso37')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
+      EVENT_NAME: ${{ github.event_name }}
+      DISPATCH_ACTOR: ${{ github.actor }}
+      EVENT_RUN_ID: ${{ github.event.workflow_run.id }}
+      EVENT_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+      DISPATCH_RUN_ID: ${{ github.event.client_payload.target_run_id }}
+      DISPATCH_SOURCE_SHA: ${{ github.event.client_payload.target_source_sha }}
+      APPROVED_WORKFLOW_ID: "411977040"
+      APPROVED_WORKFLOW_NAME: "Phase 2 Metadata Inventory Prototype"
+      APPROVED_WORKFLOW_PATH: ".github/workflows/phase2-metadata-inventory.yml"
+      APPROVED_BRANCH: "feature/metadata-only-inventory-prototype"
+      APPROVED_SCAN_SHA: "294fa19fac21b5467b9cf2eb0acb428678395575"
+      EXPECTED_SCAN_HASH: "806789ebbe64e39af537415718b6b142d9f94e383def200390e6cf075e4ac238"
+      EXPECTED_PATTERNS_HASH: "bc76e0af5047a093c093710621f85f1d89f3cb07a8622c6da51dc7088a470233"
+    steps:
+      - name: Checkout only the approved scanner source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: Thabiso37/Nova-Ai
+          ref: 294fa19fac21b5467b9cf2eb0acb428678395575
+          path: approved-scanner-source
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+
+      - name: Validate source run, retrieve complete logs, isolate scanner and scan
+        id: scan
+        run: |
+          set -euo pipefail
+          python trusted-log-scan/trusted_scan.py
+
+      - name: Upload sanitized evidence only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: phase2-f02-trusted-scan-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            trusted-evidence/
+            !trusted-evidence/raw-source-job-logs.txt
+          if-no-files-found: error
+          retention-days: 90
