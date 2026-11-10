@@ -2,7 +2,7 @@
 
 **Document ID:** NOVAAI-PHASE2-REQ  
 **Version:** 1.0.0  
-**Status:** Canonical closeout transcription — pending owner confirmation  
+**Status:** Canonical closeout transcription — owner-confirmed 2026-11-10  
 **Baseline commit:** `6506a966d39c41e7240186a3c392af9cd6eb423d`  
 **Prepared:** 2026-11-10
 
@@ -10,7 +10,7 @@
 
 This document consolidates the user's Phase 2 approvals and scope decisions recorded in the NOVAAI project conversation on 2026-11-09, together with the contemporaneous Phase 2 implementation specification and workflow on the baseline commit above.
 
-**Source limitation:** a verbatim, signed/original approval document was not found in the repository. The original approval is recoverable as conversation approval records and project decisions, but this document is a controlled transcription, not a claim that the original wording has been recovered byte-for-byte. The owner must confirm this transcription before treating it as an independently authenticated requirements artifact. No requirement has been added merely because a later phase roadmap mentions it.
+**Source limitation:** a verbatim, signed/original approval document was not found in the repository. The original approval is recoverable as conversation approval records and project decisions, but this document is a controlled transcription, not a claim that the original wording has been recovered byte-for-byte. **The owner confirmed on 2026-11-10 that this transcription accurately represents the original approved Phase 2 scope.** That confirmation resolves the transcription-confirmation item; it does not itself constitute formal Phase 2 acceptance. No requirement has been added merely because a later phase roadmap mentions it.
 
 ## 2. Phase 2 purpose
 
@@ -38,7 +38,6 @@ Deliver a metadata-inventory prototype using **synthetic PostgreSQL 17.11 only**
 | P2-07 | Compare structured catalogue metadata against the administrative baseline for supported metadata properties. | Structured catalogue comparator output and matching snapshot/server identity. |
 | P2-09 | Screen generated evidence and captured command output for sensitive-data patterns; retain the stated limits of pattern-based screening. | Sensitive-scan report and documented limitations. |
 | P2-10 | Produce traceable evidence tied to the source run and commit; preserve original uploaded evidence. | GitHub run metadata, artifact ID/digest and independently verified downloaded artifact digest. |
-| P2-11 | Complete the trusted workflow log scanner milestone separately, with its own strict trust boundary and acceptance evidence. | F-02 accepted status record and preserved scanner/source run evidence. F-02 is immutable for this closeout. |
 
 The structured catalogue comparison is part of the implemented metadata-inventory validation and passed in the live Phase 2 run. The separate `pg_dump` comparison also passed, but is recorded as supplemental corroborating evidence only; this closeout does not assert that the recovered Phase 2 approval made it a standalone acceptance gate. The broader roadmap places independent comparison work in a later separately approved phase.
 
@@ -46,7 +45,11 @@ The structured catalogue comparison is part of the implemented metadata-inventor
 
 A schema-only `pg_dump` baseline and supplemental comparison were run and passed. Their exact output is preserved under `docs/phase2/evidence/source-run-42800792137/`. This is recorded as a completed additional check, not an extra mandatory Phase 2 requirement.
 
-## 5. Phase roadmap boundary — not Phase 2 gates
+## 5. Separate cross-milestone status — F-02
+
+F-02 — Trusted Workflow Log Scanner is **CLOSED — ACCEPTED** as a separate cross-milestone. It is not a Phase 2 metadata-inventory requirement or acceptance gate. Its implementation and accepted historical evidence remain unchanged by this closeout.
+
+## 6. Phase roadmap boundary — not Phase 2 gates
 
 The user's earlier roadmap separated later work into separately authorized phases. The following are **not required to close Phase 2** and must not be started under this Phase 2 closeout authorization:
 
@@ -58,7 +61,7 @@ The user's earlier roadmap separated later work into separately authorized phase
 
 These are later-phase roadmap items, not retroactive Phase 2 acceptance criteria. Each requires its own approval and scope. Production Supabase access remains excluded.
 
-## 6. Status vocabulary
+## 7. Status vocabulary
 
 - **COMPLETE:** implementation and supporting evidence are available and passed.
 - **INCOMPLETE:** an approved Phase 2 deliverable or required closeout record is missing or inaccurate.
@@ -66,8 +69,8 @@ These are later-phase roadmap items, not retroactive Phase 2 acceptance criteria
 - **UNVERIFIED:** available evidence is insufficient to establish the claim.
 - **NOT REQUIRED:** outside approved Phase 2 scope or explicitly deferred to a later phase.
 
-## 7. Acceptance boundary
+## 8. Acceptance boundary
 
 A Phase 2 acceptance decision must be made against this requirements baseline and its evidence mapping. Successful implementation or CI alone does not constitute formal acceptance. The source workflow's own comparator reports explicitly disclaim DDL reconstruction, restore validation, production provenance and restoration equivalence.
 
-F-02 remains **CLOSED — ACCEPTED**. This baseline does not reopen or modify it.
+The owner-confirmed requirements transcription resolves the requirements-provenance confirmation item. **Phase 2 is not declared accepted by this document or by that confirmation.** A separate formal acceptance decision remains outstanding.
