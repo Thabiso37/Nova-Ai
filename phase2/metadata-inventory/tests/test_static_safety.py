@@ -373,6 +373,10 @@ class StaticSafetyTests(unittest.TestCase):
  def run_mock_retrieval(self, mode):
   tmp=tempfile.TemporaryDirectory()
   root=pathlib.Path(tmp.name)
+  (root / "phase2").symlink_to(
+      ROOT.parents[1] / "phase2",
+      target_is_directory=True,
+  )
   bindir=root/"bin"; bindir.mkdir()
   mock=bindir/"gh"
   mock.write_text("""#!/usr/bin/env python3
