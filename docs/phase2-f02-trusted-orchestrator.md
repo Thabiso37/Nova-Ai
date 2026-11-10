@@ -6,13 +6,13 @@ The repository has one owner, `Thabiso37`. No independent reviewer or independen
 
 ## Trust and eligibility policy
 
-The trusted orchestrator is defined on the default branch and only listens for `workflow_run` completions and the typed `repository_dispatch` event. It never checks out candidate branches, downloads candidate artifacts, or evaluates source logs as commands. It checks out only scanner commit `294fa19fac21b5467b9cf2eb0acb428678395575`.
+The trusted orchestrator checks out and executes its own source at the event's `github.sha` into a dedicated directory, and rejects execution unless `GITHUB_REF` is exactly `refs/heads/main`. It separately checks out the fixed approved scanner commit. It only listens for `workflow_run` completions and the typed `repository_dispatch` event. It never checks out candidate branches, downloads candidate artifacts, or evaluates source logs as commands. It checks out only scanner commit `294fa19fac21b5467b9cf2eb0acb428678395575`.
 
 Historical runs use a strict immutable pair allowlist:
 - `42640933100` — `41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb`
 - `42652510694` — `294fa19fac21b5467b9cf2eb0acb428678395575`
 
-The source workflow identity is checked against the source repository `Thabiso37/Nova-Ai`, ID `411977040`, name `Phase 2 Metadata Inventory Prototype`, path `.github/workflows/phase2-metadata-inventory.yml`, branch `feature/metadata-only-inventory-prototype`, event `push`, completed/success status and attempt 1. Job pagination must match the API total, and exactly one completed/success `disposable-postgres-17` job must exist.
+The source workflow identity is checked against the source repository `Thabiso37/Nova-Ai`, ID `411977040`, name `Phase 2 Metadata Inventory Prototype`, path `.github/workflows/phase2-metadata-inventory.yml`, branch `feature/metadata-only-inventory-prototype`, event `push`, completed/success status and attempt 1. Job pagination must match a stable API total, contain unique job IDs, and match the API total, and exactly one completed/success `disposable-postgres-17` job must exist.
 
 ### Future workflow_run policy
 
