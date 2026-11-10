@@ -289,7 +289,7 @@ class StaticSafetyTests(unittest.TestCase):
   for term in expression.split("&&"):
    if term == "always()":
     continue
-   match = re.fullmatch(r"steps\\.([A-Za-z0-9_]+)\\.outcome=='success'", term)
+   match = re.fullmatch(r"steps\.([A-Za-z0-9_]+)\.outcome=='success'", term)
    if not match:
     raise AssertionError("unsupported workflow condition in test harness: " + expression)
    if outcomes.get(match.group(1)) != "success":
