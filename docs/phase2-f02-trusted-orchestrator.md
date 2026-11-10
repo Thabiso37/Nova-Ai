@@ -54,6 +54,15 @@ Raw source logs remain runner-local and are excluded from artifacts. The **succe
 
 Staging copies only the validated manifest into a temporary directory on the destination filesystem, revalidates the staged files, then publishes using an atomic rename to a destination that **must not already exist**. The implementation rejects an existing or symlinked destination; it does not delete-then-replace and does not claim atomic replacement of an existing directory. The upload step runs only when the staging step succeeds and retains `if-no-files-found: error`. Evidence records source run ID/SHA, selected job ID, scanner hashes, log digest where retrieval succeeded, scan outcome and failure reason. A pattern scan is defence in depth and cannot prove arbitrary secrets are absent.
 
+### CI commit identity
+
+The CI evidence distinguishes the two GitHub Actions execution contexts:
+
+- Push run **42784226992** checked out and tested the exact PR branch head `43c73f8350e9e442eb0194d826730174e5e70c91`.
+- Pull-request run **42784234903** checked out and tested GitHub's synthetic merge commit `0e1d65fdcd3871a318eaa779f38824bed5a9c86f`, combining the PR head with the base. It did **not** test the exact head commit by itself.
+
+Both runs succeeded, but they are not evidence of two executions against the same commit. New commits to this PR require their own CI results.
+
 ## Protections and limitations
 
 The repository has one owner. Do not configure a fictitious independent-review requirement or self-approve as independent. Where available, the owner can configure PR-required changes, disable force pushes and deletion, restrict direct pushes, and require trusted test checks. The connected GitHub API previously reported main unprotected and no rulesets; the branch-protection write operation was not available through the current integration. These controls therefore remain unconfigured/unverified. Owner/admin bypass remains a residual trust risk.
