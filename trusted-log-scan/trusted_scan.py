@@ -102,31 +102,120 @@ def validate_log_bytes(data, *, max_bytes=25*1024*1024, content_type="text/plain
     if any(ord(ch)<32 and ch not in "\n\r\t\f\x1b" for ch in text): raise Reject("malformed_log_content")
     return bytes(data)
 
-class SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
-    """Follow HTTPS redirects with a fresh request that never carries the API token."""
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        parsed=urllib.parse.urlsplit(newurl)
-        if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
-            raise Reject("unsafe_log_redirect_target")
-        return urllib.request.Request(newurl,headers={"Accept":"text/plain","User-Agent":"NOVAAI-F02-log-fetcher"},method="GET")
+MAX_LOG_REDIRECTS = 3
+LOG_MAX_BYTES = 25 * 1024 * 1024
+# GitHub's self-hosted runner requirements identify *.blob.core.windows.net
+# as the domain family used to download job logs and workflow artifacts.
+# The job-log REST endpoint documents a 302 Location but does not enumerate
+# concrete storage hostnames. Therefore accept only a strict subdomain of
+# blob.core.windows.net; never accept the apex, arbitrary HTTPS hosts, or
+# substring/lookalike matches. This is intentionally narrower than GitHub's
+# complete runner-domain list.
+ALLOWED_LOG_REDIRECT_SUFFIX = ".blob.core.windows.net"
 
-def fetch_job_log_text(repo, job_id, token, opener=None, *, max_bytes=25*1024*1024):
-    """Fetch the job-level plain-text log; authenticate only to api.github.com."""
+def _validated_log_redirect_url(newurl):
+    try:
+        parsed=urllib.parse.urlsplit(newurl)
+        host=parsed.hostname
+        # Accessing .port also forces validation of malformed port syntax.
+        port=parsed.port
+    except (ValueError,UnicodeError):
+        raise Reject("unsafe_log_redirect_target")
+    if (parsed.scheme.lower()!="https" or not parsed.netloc or not host
+        or parsed.username is not None or parsed.password is not None
+        or parsed.fragment or port not in (None,443)):
+        raise Reject("unsafe_log_redirect_target")
+    host=host.rstrip(".").lower()
+    try:
+        import ipaddress
+        ipaddress.ip_address(host)
+        raise Reject("unsafe_log_redirect_target")
+    except ValueError:
+        pass
+    # Require at least one non-empty DNS label before the documented suffix.
+    if not host.endswith(ALLOWED_LOG_REDIRECT_SUFFIX):
+        raise Reject("unsafe_log_redirect_target")
+    prefix=host[:-len(ALLOWED_LOG_REDIRECT_SUFFIX)]
+    if not prefix or any(not re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?",label)
+                         for label in prefix.split(".")):
+        raise Reject("unsafe_log_redirect_target")
+    if not parsed.path.startswith("/") or any(ord(c)<32 for c in newurl):
+        raise Reject("unsafe_log_redirect_target")
+    return urllib.parse.urlunsplit(("https",parsed.netloc,parsed.path,parsed.query,""))
+
+class SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Allow at most three HTTPS redirects to GitHub's documented blob domain.
+
+    Each redirect creates a fresh request containing no Authorization, Cookie,
+    Proxy-Authorization, or caller-supplied headers.
+    """
+    max_redirections = MAX_LOG_REDIRECTS
+    max_repeats = MAX_LOG_REDIRECTS
+    def __init__(self):
+        super().__init__()
+        self.redirect_count=0
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        self.redirect_count += 1
+        if self.redirect_count > self.max_redirections:
+            raise Reject("log_redirect_limit_exceeded")
+        safe_url=_validated_log_redirect_url(newurl)
+        return urllib.request.Request(safe_url,headers={
+            "Accept":"text/plain",
+            "Accept-Encoding":"identity",
+            "User-Agent":"NOVAAI-F02-log-fetcher",
+        },method="GET")
+
+def _read_bounded(response,max_bytes):
+    chunks=[]
+    total=0
+    while True:
+        chunk=response.read(min(65536,max_bytes+1-total))
+        if not chunk: break
+        total += len(chunk)
+        if total>max_bytes: raise Reject("log_exceeds_size_limit")
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+def fetch_job_log_text(repo, job_id, token, opener=None, *, max_bytes=LOG_MAX_BYTES):
+    """Fetch plain-text logs; credentials are sent only to api.github.com.
+
+    A missing Content-Length is permitted: the stream is still bounded while
+    reading. Without an expected length or trustworthy framing metadata, a
+    clean EOF on a close-delimited response cannot prove truncation.
+    """
     if not isinstance(token,str) or not token.strip(): raise Reject("missing_log_api_token")
+    if not isinstance(max_bytes,int) or max_bytes<1: raise Reject("invalid_log_size_limit")
     url=f"https://api.github.com/repos/{repo}/actions/jobs/{job_id}/logs"
-    req=urllib.request.Request(url,headers={"Authorization":"Bearer "+token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","User-Agent":"NOVAAI-F02-trusted-scanner"},method="GET")
-    client=opener or urllib.request.build_opener(SafeRedirectHandler())
+    req=urllib.request.Request(url,headers={
+        "Authorization":"Bearer "+token,
+        "Accept":"application/vnd.github+json",
+        "X-GitHub-Api-Version":"2022-11-28",
+        "User-Agent":"NOVAAI-F02-trusted-scanner",
+    },method="GET")
+    handler=SafeRedirectHandler()
+    client=opener or urllib.request.build_opener(handler)
     try:
         response=client.open(req,timeout=30)
         try:
             status=getattr(response,"status",None) or response.getcode()
-            if status != 200: raise Reject("log_http_status_not_success")
-            content_type=response.headers.get("Content-Type","")
-            content_length=response.headers.get("Content-Length")
-            data=response.read(max_bytes+1)
-        finally: response.close()
+            if status!=200: raise Reject("log_http_status_not_success")
+            headers=response.headers
+            content_type=headers.get("Content-Type","")
+            content_encoding=headers.get("Content-Encoding","identity").strip().lower()
+            if content_encoding not in ("","identity"):
+                raise Reject("unexpected_log_content_encoding")
+            content_length=headers.get("Content-Length")
+            if content_length is not None:
+                if not re.fullmatch(r"[0-9]+",content_length.strip()):
+                    raise Reject("invalid_log_content_length")
+                if int(content_length)>max_bytes:
+                    raise Reject("log_exceeds_size_limit")
+            data=_read_bounded(response,max_bytes)
+        finally:
+            response.close()
     except Reject: raise
     except (urllib.error.HTTPError,urllib.error.URLError,http.client.HTTPException,TimeoutError,OSError) as exc:
+        # Never include exception text: it may contain a signed redirect URL.
         raise Reject("log_retrieval_http_failure:"+type(exc).__name__)
     return validate_log_bytes(data,max_bytes=max_bytes,content_type=content_type,content_length=content_length)
 
