@@ -383,10 +383,11 @@ if args[:1] == ["api"] and "--paginate" in args:
  jobs=[{"id":7001,"name":"disposable-postgres-17","status":"completed","conclusion":"success"}]
  if mode=="missing_job": jobs=[]
  if mode=="duplicate_job": jobs.append(dict(jobs[0],id=7002))
+ if mode=="failed_source_job": jobs[0]["conclusion"]="failure"
  for item in jobs: print(json.dumps(item))
  sys.exit(0)
 if args[:1] == ["api"] and any("per_page=1" in x for x in args):
- print(json.dumps({"total_count":2 if mode=="incomplete_pagination" else (0 if mode=="missing_job" else 1)})); sys.exit(0)
+ print(json.dumps({"total_count":2 if mode in ("incomplete_pagination","duplicate_job") else (0 if mode=="missing_job" else 1)})); sys.exit(0)
 if args[:1] == ["api"]:
  metadata={"id":42652510694,"name":"Phase 2 Metadata Inventory Prototype","path":".github/workflows/phase2-metadata-inventory.yml","head_branch":"feature/metadata-only-inventory-prototype","head_sha":"294fa19fac21b5467b9cf2eb0acb428678395575","status":"completed","conclusion":"success"}
  if mode=="invalid_metadata": metadata["head_sha"]="0"*40
@@ -454,12 +455,6 @@ print("unexpected gh invocation: "+repr(args),file=sys.stderr); sys.exit(90)
  def test_mock_gh_failed_source_job_fails_before_scanner(self):
   tmp,root,evidence,result,env=self.run_mock_retrieval("failed_source_job")
   try:
-   # The mock reports a completed successful job by default; alter its response to a failed job.
-   mock=root/"bin"/"gh"
-   source=mock.read_text().replace('"conclusion":"success"}]','"conclusion":"failure"}]')
-   mock.write_text(source);mock.chmod(0o755)
-   result=subprocess.run(["bash","-euo","pipefail","-c",self.workflow_step("Initialize evidence and verify source run identity")],
-                         cwd=root,env=env,capture_output=True,text=True)
    self.assertNotEqual(result.returncode,0)
    self.assertTrue((evidence/"source-run-jobs.json").exists())
    self.assertFalse((evidence/"phase2-job-logs.txt").exists())
