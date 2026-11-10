@@ -295,9 +295,9 @@ class StaticSafetyTests(unittest.TestCase):
   workflow=self.scanner_workflow()
   start=workflow.index('          [[ "$RETRIEVAL_OUTCOME" == "success" ]]')
   gate=workflow[start:workflow.index('\n\n',start)]
-  result=self.run_shell(gate,RETRIEVAL_OUTCOME="success",SCAN_OUTCOME="failure")
+  result=self.run_shell(gate,RETRIEVAL_OUTCOME="success",SCAN_OUTCOME="failure",STATIC_TEST_OUTCOME="success",INTEGRITY_OUTCOME="success")
   self.assertNotEqual(result.returncode,0)
-  passed=self.run_shell(gate,RETRIEVAL_OUTCOME="success",SCAN_OUTCOME="success")
+  passed=self.run_shell(gate,RETRIEVAL_OUTCOME="success",SCAN_OUTCOME="success",STATIC_TEST_OUTCOME="success",INTEGRITY_OUTCOME="success")
   self.assertEqual(passed.returncode,0,passed.stderr)
 
  def test_retrieval_or_identity_failure_skips_scanner_and_fails_gate(self):
@@ -308,7 +308,7 @@ class StaticSafetyTests(unittest.TestCase):
   gate=workflow[start:workflow.index("\n\n",start)]
   for outcome in ("failure","skipped"):
    with self.subTest(outcome=outcome):
-    result=self.run_shell(gate,RETRIEVAL_OUTCOME=outcome,SCAN_OUTCOME="skipped")
+    result=self.run_shell(gate,RETRIEVAL_OUTCOME=outcome,SCAN_OUTCOME="skipped",STATIC_TEST_OUTCOME="success",INTEGRITY_OUTCOME="success")
     self.assertNotEqual(result.returncode,0)
 
 if __name__=="__main__":
