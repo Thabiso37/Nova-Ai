@@ -192,7 +192,7 @@ class ValidationBehavior(unittest.TestCase):
  def test_raw_log_never_in_artifact_manifest_and_unexpected_files_rejected(self):
   with tempfile.TemporaryDirectory() as d:
    e=pathlib.Path(d)/"evidence";e.mkdir();raw=e/"raw-source-job-logs.txt";raw.write_text("SECRET")
-   (e/"summary.json").write_text("{}")
+   (e/"summary.json").write_text('{"result":"FAIL"}')
    self.assertNotIn(raw.name,ts.safe_artifact_manifest(e,raw))
    (e/"unexpected.bin").write_bytes(b"x")
    with self.assertRaisesRegex(ts.Reject,"unexpected_artifact_file"):ts.safe_artifact_manifest(e,raw)
@@ -442,5 +442,48 @@ class RedirectTransportIntegration(unittest.TestCase):
     ts.fetch_job_log_text("o/r",42,"TOKEN",self._opener(route),max_bytes=1024)
  def test_failure_message_never_contains_signed_redirect_or_token(self):
   self._redirect("https://evil.example/log?sig=SECRET")
+
+
+class CompleteEvidenceManifestTests(unittest.TestCase):
+ def test_missing_summary_rejected(self):
+  with tempfile.TemporaryDirectory() as d:
+   root=pathlib.Path(d);e=root/"e";e.mkdir()
+   (e/"failure-reason.txt").write_text("scanner rejected")
+   with self.assertRaisesRegex(ts.Reject,"missing_mandatory_evidence:summary.json"):
+    ts.safe_artifact_manifest(e,e/"raw-source-job-logs.txt")
+ def test_empty_evidence_rejected(self):
+  with tempfile.TemporaryDirectory() as d:
+   e=pathlib.Path(d)/"e";e.mkdir()
+   with self.assertRaisesRegex(ts.Reject,"empty_artifact_evidence"):
+    ts.safe_artifact_manifest(e,e/"raw-source-job-logs.txt")
+ def test_failure_manifest_requires_failure_reason(self):
+  with tempfile.TemporaryDirectory() as d:
+   e=pathlib.Path(d)/"e";e.mkdir()
+   (e/"summary.json").write_text('{"result":"FAIL"}')
+   with self.assertRaisesRegex(ts.Reject,"missing_mandatory_evidence:failure-reason.txt"):
+    ts.safe_artifact_manifest(e,e/"raw-source-job-logs.txt")
+ def test_success_manifest_requires_integrity_and_scan_output(self):
+  with tempfile.TemporaryDirectory() as d:
+   e=pathlib.Path(d)/"e";e.mkdir()
+   (e/"summary.json").write_text('{"result":"PASS"}')
+   with self.assertRaisesRegex(ts.Reject,"missing_mandatory_evidence"):
+    ts.safe_artifact_manifest(e,e/"raw-source-job-logs.txt")
+ def test_success_manifest_validates_formats_and_scan_pass(self):
+  with tempfile.TemporaryDirectory() as d:
+   e=pathlib.Path(d)/"e";e.mkdir()
+   (e/"summary.json").write_text('{"result":"PASS"}')
+   (e/"scanner-integrity.json").write_text('{"commit":"abc"}')
+   (e/"scanner-output.txt").write_text("SCAN FAIL")
+   with self.assertRaisesRegex(ts.Reject,"invalid_success_evidence_content"):
+    ts.safe_artifact_manifest(e,e/"raw-source-job-logs.txt")
+ def test_existing_staging_destination_is_never_deleted_or_replaced(self):
+  with tempfile.TemporaryDirectory() as d:
+   root=pathlib.Path(d);e=root/"e";e.mkdir()
+   (e/"summary.json").write_text('{"result":"FAIL"}')
+   (e/"failure-reason.txt").write_text("expected failure")
+   dest=root/"upload";dest.mkdir();(dest/"keep.txt").write_text("keep")
+   with self.assertRaisesRegex(ts.Reject,"staging_destination_must_not_exist"):
+    ts.stage_sanitized_artifact(e,e/"raw-source-job-logs.txt",dest)
+   self.assertEqual((dest/"keep.txt").read_text(),"keep")
 
 if __name__=="__main__":unittest.main(verbosity=2)
