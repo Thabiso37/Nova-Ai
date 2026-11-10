@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Fail-closed trusted Phase 2 log scanner. Retrieved logs are inert data."""
 from __future__ import annotations
-import hashlib, json, os, pathlib, re, shutil, subprocess, sys, zipfile, io, tempfile, http.client, urllib.error, urllib.parse, urllib.request
-from dataclasses import dataclass
+import hashlib, json, os, pathlib, re, shutil, subprocess, sys, tempfile, http.client, urllib.error, urllib.parse, urllib.request
 
 BRANCH = "feature/metadata-only-inventory-prototype"
 WORKFLOW_ID = 411977040
