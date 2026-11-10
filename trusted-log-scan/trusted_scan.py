@@ -129,9 +129,10 @@ def _validated_log_redirect_url(newurl):
     try:
         import ipaddress
         ipaddress.ip_address(host)
-        raise Reject("unsafe_log_redirect_target")
     except ValueError:
         pass
+    else:
+        raise Reject("unsafe_log_redirect_target")
     # Require at least one non-empty DNS label before the documented suffix.
     if not host.endswith(ALLOWED_LOG_REDIRECT_SUFFIX):
         raise Reject("unsafe_log_redirect_target")
