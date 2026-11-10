@@ -121,10 +121,10 @@ class ValidationBehavior(unittest.TestCase):
  def test_plain_text_log_rejects_empty_oversized_malformed_and_truncated(self):
   cases=[(b"","text/plain",None,"empty_log"),
          (b"12345","text/plain",None,"log_exceeds_size_limit"),
-         (b"\\xff","text/plain",None,"malformed_log_encoding"),
+         (b"\xff","text/plain",None,"malformed_log_encoding"),
          (b"hello","application/zip",None,"unexpected_log_content_type"),
          (b"hello","text/plain","9","truncated_or_inconsistent_log_response"),
-         (b"\\x00binary","text/plain",None,"malformed_log_content")]
+         (b"\x00binary","text/plain",None,"malformed_log_content")]
   for data,ctype,length,reason in cases:
    with self.subTest(reason=reason),self.assertRaisesRegex(ts.Reject,reason):
     ts.validate_log_bytes(data,max_bytes=4 if reason=="log_exceeds_size_limit" else 100,
@@ -368,7 +368,7 @@ class ValidationBehavior(unittest.TestCase):
   with tempfile.TemporaryDirectory() as d:
    dest=pathlib.Path(d)/"isolated"
    ts.RuntimeAdapter().clone(source,dest,ts.SCANNER_SHA)
-   records=ts.validate_scanner_checkout(dest,ts.run_command)
+   records=ts.validate_scanner_checkout(dest,lambda args:ts.run_command(["git",*args]))
    self.assertEqual(records["commit"],ts.SCANNER_SHA)
    self.assertTrue(records["isolated_clone"])
    self.assertFalse(records["alternates"])
