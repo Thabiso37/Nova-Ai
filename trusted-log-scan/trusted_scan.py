@@ -94,7 +94,12 @@ def validate_log_bytes(data, *, max_bytes=25*1024*1024, content_type="text/plain
         try: declared=int(content_length)
         except (TypeError,ValueError): raise Reject("invalid_log_content_length")
         if declared != len(data): raise Reject("truncated_or_inconsistent_log_response")
-    if content_type.split(";",1)[0].strip().lower() != "text/plain": raise Reject("unexpected_log_content_type")
+    parts=[part.strip() for part in content_type.split(";")]
+    if not parts or parts[0].lower() != "text/plain": raise Reject("unexpected_log_content_type")
+    for parameter in parts[1:]:
+        if parameter.lower().startswith("charset="):
+            charset=parameter.split("=",1)[1].strip().strip('"').lower()
+            if charset not in ("utf-8","utf8"): raise Reject("unexpected_log_character_set")
     try: text=data.decode("utf-8",errors="strict")
     except UnicodeDecodeError: raise Reject("malformed_log_encoding")
     if not text or not text.strip(): raise Reject("empty_log")
@@ -215,9 +220,9 @@ def fetch_job_log_text(repo, job_id, token, opener=None, *, max_bytes=LOG_MAX_BY
         finally:
             response.close()
     except Reject: raise
-    except (urllib.error.HTTPError,urllib.error.URLError,http.client.HTTPException,TimeoutError,OSError) as exc:
+    except Exception as exc:
         # Never include exception text: it may contain a signed redirect URL.
-        raise Reject("log_retrieval_http_failure:"+type(exc).__name__)
+        raise Reject("log_retrieval_failure:"+type(exc).__name__)
     return validate_log_bytes(data,max_bytes=max_bytes,content_type=content_type,content_length=content_length)
 
 def validate_scanner_checkout(repo_dir, git_run, expected_sha=SCANNER_SHA, expected_hashes=None):
