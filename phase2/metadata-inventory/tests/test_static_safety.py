@@ -453,16 +453,7 @@ print("unexpected gh invocation: "+repr(args),file=sys.stderr); sys.exit(90)
   self.assert_mock_failure("incomplete_pagination","source-run-jobs.json")
 
  def test_mock_gh_failed_source_job_fails_before_scanner(self):
-  tmp,root,evidence,result,env=self.run_mock_retrieval("failed_source_job")
-  try:
-   self.assertNotEqual(result.returncode,0)
-   self.assertTrue((evidence/"source-run-jobs.json").exists())
-   self.assertFalse((evidence/"phase2-job-logs.txt").exists())
-   gate=self.workflow_step("Fail closed unless tests, integrity, retrieval and scan all pass")
-   self.assertNotEqual(self.run_shell(gate,RETRIEVAL_OUTCOME="failure",SCAN_OUTCOME="skipped",
-                         STATIC_TEST_OUTCOME="success",INTEGRITY_OUTCOME="success").returncode,0)
-   self.assertIn("!scan-evidence/phase2-job-logs.txt",self.scanner_workflow())
-  finally: tmp.cleanup()
+  self.assert_mock_failure("failed_source_job","source-run-jobs.json")
 
  def test_mock_gh_failed_log_retrieval_fails_and_retains_status(self):
   self.assert_mock_failure("failed_log","log-download-exit-status.txt")
