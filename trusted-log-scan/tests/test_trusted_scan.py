@@ -98,7 +98,7 @@ class ValidationBehavior(unittest.TestCase):
   jobs,total=ts.fetch_all_jobs("o/r","1",api)
   self.assertEqual((len(jobs),total),(2,2));self.assertEqual(len(calls),2)
  def test_successful_plain_text_log_and_safe_302_redirect(self):
-  body=b"2026-11-09T15:04:37Z Runner started\\n##[group]Build\\nstep completed\\n"
+  body=b"2026-11-09T15:04:37Z Runner started\n##[group]Build\nstep completed\n"
   class Response:
    status=200
    headers={"Content-Type":"text/plain; charset=utf-8","Content-Length":str(len(body))}
@@ -206,7 +206,7 @@ class ValidationBehavior(unittest.TestCase):
   class SuccessfulAdapter:
    def run_metadata(self,run_id): return GOOD_META
    def jobs(self,run_id): return [GOOD_JOB],1
-   def logs(self,job_id): return b"2026-11-09T15:04:37Z clean workflow log\\n"
+   def logs(self,job_id): return b"2026-11-09T15:04:37Z clean workflow log\n"
    def git(self,args):
     if "rev-parse" in args and "HEAD" in args: return ts.SCANNER_SHA
     if "--git-common-dir" in args: return ".git"
@@ -216,7 +216,7 @@ class ValidationBehavior(unittest.TestCase):
     dest.mkdir(parents=True);(dest/".git/objects/info").mkdir(parents=True)
     target=dest/"phase2/metadata-inventory";target.mkdir(parents=True)
     for name in ts.HASHES: shutil.copyfile(source_checkout/"phase2/metadata-inventory"/name,target/name)
-   def scan_runner(self,args,**kwargs): return types.SimpleNamespace(returncode=0,stdout="SCAN PASS\\n",stderr="")
+   def scan_runner(self,args,**kwargs): return types.SimpleNamespace(returncode=0,stdout="SCAN PASS\n",stderr="")
   with tempfile.TemporaryDirectory() as d:
    env={"EVENT_NAME":"repository_dispatch","DISPATCH_ACTOR":"Thabiso37","DISPATCH_RUN_ID":"42640933100",
         "DISPATCH_SOURCE_SHA":GOOD_SHA,"EVENT_RUN_ID":"","EVENT_RUN_ATTEMPT":"0",
@@ -228,7 +228,7 @@ class ValidationBehavior(unittest.TestCase):
    self.assertEqual(summary["result"],"PASS")
    self.assertEqual(summary["source_run_id"],"42640933100")
    self.assertEqual(summary["source_sha"],GOOD_SHA)
-   self.assertEqual(summary["log_sha256"],hashlib.sha256(b"2026-11-09T15:04:37Z clean workflow log\\n").hexdigest())
+   self.assertEqual(summary["log_sha256"],hashlib.sha256(b"2026-11-09T15:04:37Z clean workflow log\n").hexdigest())
    self.assertEqual(summary["selected_job_id"],991)
    self.assertEqual(summary["scanner_hashes"],{k:{"sha256":v,"expected":v,"match":True} for k,v in ts.HASHES.items()})
    staged=pathlib.Path(d)/"staged"
@@ -261,7 +261,7 @@ class ValidationBehavior(unittest.TestCase):
   scanner=pathlib.Path("approved-scanner-source/phase2/metadata-inventory/scan_sensitive.py")
   with tempfile.TemporaryDirectory() as d:
    root=pathlib.Path(d);log=root/"candidate-workflow.log";sentinel=root/"executed"
-   log.write_text("name: untrusted\\njobs:\\n  pwn:\\n    steps:\\n      - run: touch "+str(sentinel)+"\\n")
+   log.write_text("name: untrusted\njobs:\n  pwn:\n    steps:\n      - run: touch "+str(sentinel)+"\n")
    import subprocess,sys
    result=subprocess.run([sys.executable,str(scanner),str(log)],capture_output=True,text=True)
    self.assertEqual(result.returncode,0,result.stdout+result.stderr)
