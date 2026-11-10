@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fail-closed trusted Phase 2 log scanner. Retrieved logs are inert data."""
 from __future__ import annotations
-import hashlib, json, os, pathlib, re, shutil, subprocess, sys, zipfile, io
+import hashlib, json, os, pathlib, re, shutil, subprocess, sys, zipfile, io, tempfile, urllib.error, urllib.parse, urllib.request
 from dataclasses import dataclass
 
 BRANCH = "feature/metadata-only-inventory-prototype"
@@ -87,25 +87,49 @@ def validate_jobs(pages, total_count):
     if not isinstance(job.get("id"),int): raise Reject("invalid_target_job_id")
     return job
 
-def validate_log_bytes(data, *, max_bytes=25*1024*1024):
+def validate_log_bytes(data, *, max_bytes=25*1024*1024, content_type="text/plain", content_length=None):
+    """Validate a bounded, complete UTF-8 plain-text job log."""
     if not isinstance(data,(bytes,bytearray)) or not data: raise Reject("empty_log")
     if len(data)>max_bytes: raise Reject("log_exceeds_size_limit")
-    # Downloaded job logs are delivered as a ZIP archive. Reject malformed,
-    # incomplete, encrypted, multi-entry or suspicious archives rather than
-    # scanning a partial text rendering.
+    if content_length is not None:
+        try: declared=int(content_length)
+        except (TypeError,ValueError): raise Reject("invalid_log_content_length")
+        if declared != len(data): raise Reject("truncated_or_inconsistent_log_response")
+    if content_type.split(";",1)[0].strip().lower() != "text/plain": raise Reject("unexpected_log_content_type")
+    try: text=data.decode("utf-8",errors="strict")
+    except UnicodeDecodeError: raise Reject("malformed_log_encoding")
+    if not text or not text.strip(): raise Reject("empty_log")
+    if "\x00" in text: raise Reject("malformed_log_content")
+    if any(ord(ch)<32 and ch not in "\n\r\t\f\x1b" for ch in text): raise Reject("malformed_log_content")
+    return bytes(data)
+
+class SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Follow HTTPS redirects with a fresh request that never carries the API token."""
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        parsed=urllib.parse.urlsplit(newurl)
+        if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
+            raise Reject("unsafe_log_redirect_target")
+        return urllib.request.Request(newurl,headers={"Accept":"text/plain","User-Agent":"NOVAAI-F02-log-fetcher"},method="GET")
+
+def fetch_job_log_text(repo, job_id, token, opener=None, *, max_bytes=25*1024*1024):
+    """Fetch the job-level plain-text log; authenticate only to api.github.com."""
+    if not isinstance(token,str) or not token.strip(): raise Reject("missing_log_api_token")
+    url=f"https://api.github.com/repos/{repo}/actions/jobs/{job_id}/logs"
+    req=urllib.request.Request(url,headers={"Authorization":"Bearer "+token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","User-Agent":"NOVAAI-F02-trusted-scanner"},method="GET")
+    client=opener or urllib.request.build_opener(SafeRedirectHandler())
     try:
-        with zipfile.ZipFile(io.BytesIO(data)) as z:
-            infos=z.infolist()
-            if not infos: raise Reject("empty_log_archive")
-            if sum(i.file_size for i in infos) > max_bytes: raise Reject("log_archive_uncompressed_size_limit")
-            if any(i.file_size > max_bytes for i in infos): raise Reject("log_entry_too_large")
-            bad=[i for i in infos if i.flag_bits & 0x1]
-            if bad: raise Reject("encrypted_log_archive")
-            chunks=[z.read(i) for i in infos if not i.is_dir()]
-    except (zipfile.BadZipFile, OSError, RuntimeError):
-        raise Reject("invalid_or_truncated_log_archive")
-    if not chunks or not any(chunks): raise Reject("empty_log")
-    return b"\n".join(chunks)
+        response=client.open(req,timeout=30)
+        try:
+            status=getattr(response,"status",None) or response.getcode()
+            if status != 200: raise Reject("log_http_status_not_success")
+            content_type=response.headers.get("Content-Type","")
+            content_length=response.headers.get("Content-Length")
+            data=response.read(max_bytes+1)
+        finally: response.close()
+    except Reject: raise
+    except (urllib.error.HTTPError,urllib.error.URLError,TimeoutError,OSError) as exc:
+        raise Reject("log_retrieval_http_failure:"+type(exc).__name__)
+    return validate_log_bytes(data,max_bytes=max_bytes,content_type=content_type,content_length=content_length)
 
 def validate_scanner_checkout(repo_dir, git_run, expected_sha=SCANNER_SHA, expected_hashes=None):
     expected_hashes=expected_hashes or HASHES
@@ -154,14 +178,6 @@ def fetch_all_jobs(repo, run_id, api=gh_json):
     if len(jobs)!=data["total_count"]: raise Reject("incomplete_job_pagination")
     return jobs,data["total_count"]
 
-def fetch_job_log_zip(repo, job_id, token, opener=None):
-    # REST endpoint returns a short-lived redirect to the archive. gh api
-    # follows redirects and returns binary bytes; caller must preserve bytes.
-    p=subprocess.run(["gh","api",f"repos/{repo}/actions/jobs/{job_id}/logs"],
-                     stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=False)
-    if p.returncode: raise Reject("log_retrieval_failed")
-    return p.stdout
-
 def execute_scanner(scanner_path, raw_path, runner=subprocess.run):
     proc=runner([sys.executable,str(scanner_path),str(raw_path)],text=True,stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,check=False)
@@ -173,8 +189,9 @@ def safe_artifact_manifest(evidence_dir, raw_path):
     raw=raw_path.resolve()
     manifest=[]
     for path in sorted(evidence_dir.rglob("*")):
-        if path.is_dir(): continue
         if path.is_symlink(): raise Reject("symlink_in_artifact_evidence")
+        if path.is_dir(): continue
+        if not path.is_file(): raise Reject("non_regular_artifact_file")
         if path.resolve()==raw: continue  # present on runner, deliberately omitted from artifact
         rel=path.relative_to(evidence_dir).as_posix()
         if rel not in {"summary.json","source-run-metadata.json","source-run-jobs-sanitized.json",
@@ -196,6 +213,34 @@ def stage_sanitized_artifact(evidence_dir, raw_path, staging_dir):
     staged={p.relative_to(staging_dir).as_posix() for p in staging_dir.rglob("*") if p.is_file()}
     if staged != set(manifest): raise Reject("staged_artifact_manifest_mismatch")
     return sorted(staged)
+
+def stage_sanitized_artifact(evidence_dir, raw_path, staging_dir):
+    """Build and validate in a temp directory, then atomically publish."""
+    manifest=safe_artifact_manifest(evidence_dir,raw_path)
+    staging_dir=pathlib.Path(staging_dir)
+    staging_dir.parent.mkdir(parents=True,exist_ok=True)
+    temp_root=pathlib.Path(tempfile.mkdtemp(prefix=".f02-stage-",dir=staging_dir.parent))
+    candidate=temp_root/"payload"
+    try:
+        candidate.mkdir()
+        for rel in manifest:
+            source=evidence_dir/rel; target=candidate/rel
+            target.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copyfile(source,target)
+        staged=set()
+        for path in candidate.rglob("*"):
+            if path.is_symlink(): raise Reject("symlink_in_staged_artifact")
+            if path.is_file(): staged.add(path.relative_to(candidate).as_posix())
+            elif not path.is_dir(): raise Reject("non_regular_staged_artifact")
+        if staged != set(manifest): raise Reject("staged_artifact_manifest_mismatch")
+        if set(safe_artifact_manifest(candidate,candidate/"raw-source-job-logs.txt")) != set(manifest):
+            raise Reject("staged_artifact_manifest_mismatch")
+        if staging_dir.exists():
+            if staging_dir.is_symlink() or not staging_dir.is_dir(): raise Reject("unsafe_staging_destination")
+            shutil.rmtree(staging_dir)
+        os.replace(candidate,staging_dir)
+        return sorted(staged)
+    finally: shutil.rmtree(temp_root,ignore_errors=True)
 
 def execute(adapter=None):
     """Orchestrate using injectable API/command adapters for deterministic behavioral tests."""
@@ -248,7 +293,7 @@ class RuntimeAdapter:
     def jobs(self,run_id):
         return fetch_all_jobs(os.environ["GITHUB_REPOSITORY"],run_id)
     def logs(self,job_id):
-        return fetch_job_log_zip(os.environ["GITHUB_REPOSITORY"],job_id,os.environ["GH_TOKEN"])
+        return fetch_job_log_text(os.environ["GITHUB_REPOSITORY"],job_id,os.environ["GH_TOKEN"])
     def git(self,args): return run_command(args)
     def clone(self,source,dest,sha):
         run_command(["git","clone","--no-hardlinks","--no-local",str(source),str(dest)])
