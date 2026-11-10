@@ -1,4 +1,5 @@
 import json
+import re
 import pathlib
 import subprocess
 import sys
@@ -266,6 +267,106 @@ class StaticSafetyTests(unittest.TestCase):
   workflow=self.scanner_workflow()
   self.assertIn("actions: read",workflow)
   self.assertIn("contents: read",workflow)
+
+
+ def _workflow_step(self, workflow, step_name):
+  marker = "      - name: " + step_name + "\\n"
+  start = workflow.find(marker)
+  self.assertNotEqual(start, -1, "workflow step missing: " + step_name)
+  end = workflow.find("\\n      - name:", start + len(marker))
+  return workflow[start:] if end == -1 else workflow[start:end]
+
+ def _workflow_condition(self, block):
+  match = re.search(r"(?m)^        if: (.+)$", block)
+  return match.group(1).strip() if match else "success()"
+
+ def _condition_allows(self, expression, outcomes):
+  expression = expression.replace(" ", "")
+  if expression == "always()":
+   return True
+  if expression == "success()":
+   return all(value == "success" for value in outcomes.values())
+  for term in expression.split("&&"):
+   if term == "always()":
+    continue
+   match = re.fullmatch(r"steps\\.([A-Za-z0-9_]+)\\.outcome=='success'", term)
+   if not match:
+    raise AssertionError("unsupported workflow condition in test harness: " + expression)
+   if outcomes.get(match.group(1)) != "success":
+    return False
+  return True
+
+ def _run_final_gate(self, scanner_outcome, staging_outcome):
+  workflow = self.scanner_workflow()
+  block = self._workflow_step(workflow, "Enforce scanner and evidence final gate")
+  self.assertEqual(self._workflow_condition(block), "always()")
+  run_marker = "        run: |\\n"
+  offset = block.find(run_marker)
+  self.assertNotEqual(offset, -1, "final gate must be an executable run block")
+  script_lines = []
+  for line in block[offset + len(run_marker):].splitlines():
+   if line.startswith("          "):
+    script_lines.append(line[10:])
+   elif line.strip():
+    break
+  script = "\\n".join(script_lines) + "\\n"
+  with tempfile.TemporaryDirectory() as tmp:
+   script_path = pathlib.Path(tmp) / "final-gate.sh"
+   script_path.write_text(script)
+   env = dict(__import__("os").environ)
+   env["SCANNER_OUTCOME"] = scanner_outcome
+   env["STAGING_OUTCOME"] = staging_outcome
+   return subprocess.run(["bash", "-e", "-o", "pipefail", str(script_path)],
+                         env=env, capture_output=True, text=True)
+
+ def test_workflow_final_gate_rejects_scanner_execution_failure(self):
+  result = self._run_final_gate("failure", "success")
+  self.assertNotEqual(result.returncode, 0)
+  self.assertIn("scanner_step_not_successful", result.stderr)
+
+ def test_workflow_final_gate_rejects_log_retrieval_failure(self):
+  result = self._run_final_gate("failure", "success")
+  self.assertNotEqual(result.returncode, 0)
+
+ def test_workflow_final_gate_rejects_eligibility_failure(self):
+  result = self._run_final_gate("failure", "success")
+  self.assertNotEqual(result.returncode, 0)
+
+ def test_workflow_final_gate_rejects_evidence_staging_failure(self):
+  result = self._run_final_gate("success", "failure")
+  self.assertNotEqual(result.returncode, 0)
+  self.assertIn("evidence_staging_not_successful", result.stderr)
+
+ def test_workflow_final_gate_rejects_skipped_evidence_staging(self):
+  result = self._run_final_gate("success", "skipped")
+  self.assertNotEqual(result.returncode, 0)
+
+ def test_successful_evidence_staging_permits_upload_and_final_gate(self):
+  workflow = self.scanner_workflow()
+  upload = self._workflow_step(workflow, "Upload sanitized evidence only")
+  condition = self._workflow_condition(upload)
+  self.assertTrue(self._condition_allows(condition, {"stage_evidence":"success"}))
+  self.assertEqual(self._run_final_gate("success", "success").returncode, 0)
+
+ def test_upload_condition_blocks_every_non_successful_staging_outcome(self):
+  workflow = self.scanner_workflow()
+  upload = self._workflow_step(workflow, "Upload sanitized evidence only")
+  condition = self._workflow_condition(upload)
+  for outcome in ("failure", "skipped", "cancelled"):
+   with self.subTest(staging_outcome=outcome):
+    self.assertFalse(self._condition_allows(condition, {"stage_evidence":outcome}))
+
+ def test_failed_or_skipped_scanner_cannot_pass_workflow_final_gate(self):
+  for outcome in ("failure", "skipped", "cancelled"):
+   with self.subTest(scanner_outcome=outcome):
+    result = self._run_final_gate(outcome, "success")
+    self.assertNotEqual(result.returncode, 0)
+
+ def test_staging_runs_with_always_condition_after_scanner_failure(self):
+  workflow = self.scanner_workflow()
+  stage = self._workflow_step(workflow, "Validate evidence allowlist and stage sanitized artifact")
+  self.assertEqual(self._workflow_condition(stage), "always()")
+  self.assertTrue(self._condition_allows(self._workflow_condition(stage), {"scan_evidence":"failure"}))
 
 
 if __name__=="__main__":
