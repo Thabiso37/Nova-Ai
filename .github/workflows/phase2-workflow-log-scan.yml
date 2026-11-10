@@ -4,12 +4,17 @@ on:
   push:
     branches:
       - feature/metadata-only-inventory-prototype
+      - feature/phase2-exact-pair-scanner-candidate
     paths:
       - .github/workflows/phase2-workflow-log-scan.yml
   workflow_dispatch:
     inputs:
       target_run_id:
         description: Must be the approved completed Phase 2 metadata inventory workflow run
+        required: true
+        type: string
+      target_source_sha:
+        description: Exact approved source commit SHA paired with the run ID
         required: true
         type: string
 
@@ -21,16 +26,50 @@ jobs:
   scan-completed-run:
     runs-on: ubuntu-latest
     env:
-      APPROVED_RUN_ID: "42640933100"
-      APPROVED_SOURCE_SHA: "41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb"
       APPROVED_BRANCH: "feature/metadata-only-inventory-prototype"
       APPROVED_WORKFLOW_NAME: "Phase 2 Metadata Inventory Prototype"
       APPROVED_WORKFLOW_PATH: ".github/workflows/phase2-metadata-inventory.yml"
     steps:
-      - name: Checkout scanner from the approved source commit
+      - name: Select exact approved source pair
+        id: select
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          DISPATCH_RUN_ID: ${{ inputs.target_run_id }}
+          DISPATCH_SOURCE_SHA: ${{ inputs.target_source_sha }}
+        run: |
+          set -euo pipefail
+          # BEGIN APPROVED_PAIR_SELECTOR
+          if [[ "$EVENT_NAME" == "push" ]]; then
+            target_run_id="42652510694"
+            target_source_sha="294fa19fac21b5467b9cf2eb0acb428678395575"
+          elif [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            target_run_id="$DISPATCH_RUN_ID"
+            target_source_sha="$DISPATCH_SOURCE_SHA"
+            [[ "$target_run_id" =~ ^[0-9]+$ ]]
+            [[ "$target_source_sha" =~ ^[0-9a-f]{40}$ ]]
+          else
+            echo "Unsupported trigger event: $EVENT_NAME" >&2
+            exit 1
+          fi
+          case "$target_run_id:$target_source_sha" in
+            "42640933100:41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb"|"42652510694:294fa19fac21b5467b9cf2eb0acb428678395575") ;;
+            *) echo "Run ID/source SHA pair is not approved" >&2; exit 1 ;;
+          esac
+          printf 'target_run_id=%s\n' "$target_run_id" >> "$GITHUB_OUTPUT"
+          printf 'target_source_sha=%s\n' "$target_source_sha" >> "$GITHUB_OUTPUT"
+          # END APPROVED_PAIR_SELECTOR
+
+      - name: Checkout scanner from selected approved source commit
         uses: actions/checkout@v4
         with:
-          ref: 41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb
+          ref: ${{ steps.select.outputs.target_source_sha }}
+          persist-credentials: false
+
+      - name: Checkout candidate tests
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: candidate-tests
           persist-credentials: false
 
       - name: Set up pinned Python runtime
@@ -38,39 +77,47 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Run complete candidate static test suite
+        id: static_tests
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s candidate-tests/phase2/metadata-inventory/tests -p 'test_*.py' -v
+
+      - name: Verify pinned scanner source integrity
+        id: scanner_integrity
+        run: |
+          set -euo pipefail
+          printf '%s  %s\n' \
+            "806789ebbe64e39af537415718b6b142d9f94e383def200390e6cf075e4ac238" "phase2/metadata-inventory/scan_sensitive.py" \
+            "bc76e0af5047a093c093710621f85f1d89f3cb07a8622c6da51dc7088a470233" "phase2/metadata-inventory/secret_patterns.py" \
+            | sha256sum --check --strict
+
       - name: Initialize evidence and verify source run identity
         id: retrieve
         env:
           GH_TOKEN: ${{ github.token }}
-          DISPATCH_RUN_ID: ${{ inputs.target_run_id }}
+          TARGET_RUN_ID: ${{ steps.select.outputs.target_run_id }}
+          TARGET_SOURCE_SHA: ${{ steps.select.outputs.target_source_sha }}
           EVENT_NAME: ${{ github.event_name }}
-        run: |
-          set -euo pipefail
           mkdir -p scan-evidence
           printf '%s\n' "NOT_STARTED" > scan-evidence/retrieval-status.txt
-          printf '%s\n' "$APPROVED_RUN_ID" > scan-evidence/approved-source-run-id.txt
-          printf '%s\n' "$APPROVED_SOURCE_SHA" > scan-evidence/approved-source-commit.txt
+          printf '%s\n' "$TARGET_RUN_ID" > scan-evidence/approved-source-run-id.txt
+          printf '%s\n' "$TARGET_SOURCE_SHA" > scan-evidence/approved-source-commit.txt
           printf '%s\n' "$APPROVED_BRANCH" > scan-evidence/approved-source-branch.txt
           printf '%s\n' "$APPROVED_WORKFLOW_NAME" > scan-evidence/approved-source-workflow.txt
           printf '%s\n' "$GITHUB_SHA" > scan-evidence/scanner-workflow-event-commit.txt
           trap 'rc=$?; printf "FAIL (exit %s)\n" "$rc" > scan-evidence/retrieval-status.txt; exit "$rc"' ERR
 
-          if [[ "$EVENT_NAME" == "push" ]]; then
-            target_run_id="$APPROVED_RUN_ID"
-          elif [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            [[ "$DISPATCH_RUN_ID" =~ ^[0-9]+$ ]]
-            target_run_id="$DISPATCH_RUN_ID"
-          else
-            echo "Unsupported trigger event: $EVENT_NAME" >&2
-            exit 1
-          fi
-          [[ "$target_run_id" == "$APPROVED_RUN_ID" ]]
+          target_run_id="$TARGET_RUN_ID"
+          target_source_sha="$TARGET_SOURCE_SHA"
+          [[ "$target_run_id" =~ ^[0-9]+$ ]]
+          [[ "$target_source_sha" =~ ^[0-9a-f]{40}$ ]]
 
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$target_run_id" > scan-evidence/source-run-metadata.json
           jq -e \
             --arg name "$APPROVED_WORKFLOW_NAME" \
             --arg branch "$APPROVED_BRANCH" \
-            --arg sha "$APPROVED_SOURCE_SHA" \
+            --arg sha "$target_source_sha" \
             --arg path "$APPROVED_WORKFLOW_PATH" \
             --argjson id "$APPROVED_RUN_ID" \
             '.id == $id and .name == $name and (.path == $path or .path == ($path + "@refs/heads/" + $branch)) and .head_branch == $branch and .head_sha == $sha and .status == "completed" and .conclusion == "success"' \
@@ -103,7 +150,7 @@ jobs:
 
           printf '%s\n' "$target_run_id" > scan-evidence/scanned-run-id.txt
           printf '%s\n' "$job_id" > scan-evidence/scanned-job-id.txt
-          printf '%s\n' "$APPROVED_SOURCE_SHA" > scan-evidence/scanner-source-commit.txt
+          printf '%s\n' "$target_source_sha" > scan-evidence/scanner-source-commit.txt
           sha256sum scan-evidence/phase2-job-logs.txt | awk '{print $1}' > scan-evidence/source-job-log-sha256.txt
           sha256sum phase2/metadata-inventory/scan_sensitive.py phase2/metadata-inventory/secret_patterns.py > scan-evidence/scanner-files-sha256.txt
           git rev-parse HEAD > scan-evidence/checked-out-scanner-commit.txt
@@ -144,7 +191,11 @@ jobs:
         env:
           RETRIEVAL_OUTCOME: ${{ steps.retrieve.outcome }}
           SCAN_OUTCOME: ${{ steps.scan.outcome }}
+          STATIC_TEST_OUTCOME: ${{ steps.static_tests.outcome }}
+          INTEGRITY_OUTCOME: ${{ steps.scanner_integrity.outcome }}
         run: |
           set -euo pipefail
           [[ "$RETRIEVAL_OUTCOME" == "success" ]]
           [[ "$SCAN_OUTCOME" == "success" ]]
+          [[ "$STATIC_TEST_OUTCOME" == "success" ]]
+          [[ "$INTEGRITY_OUTCOME" == "success" ]]
