@@ -150,6 +150,13 @@ class StaticSafetyTests(unittest.TestCase):
    with self.subTest(name=name):
     self.assertIn(name,patterns)
     self.assertIsNotNone(patterns[name].search(sample))
+ def test_postgres_port_publication_is_explicitly_localhost_bound(self):
+  workflow=self.source_workflow()
+  docker_lines=[line.strip() for line in workflow.splitlines() if "docker run -d --name phase2-postgres" in line]
+  self.assertEqual(len(docker_lines),1,"expected exactly one disposable PostgreSQL launch command")
+  self.assertRegex(docker_lines[0],r"-p 127\.0\.0\.1:5432:5432\s+postgres:17\.11(?:\s|$)")
+  self.assertNotIn("-p 5432:5432",docker_lines[0])
+
  def test_workflow_pins_both_postgres_clients_and_gates_artifact_upload(self):
   workflow=(ROOT.parents[1]/".github"/"workflows"/"phase2-metadata-inventory.yml").read_text()
   self.assertIn("postgres:17.11 pg_dump --version",workflow)
