@@ -76,9 +76,11 @@ class ValidationBehavior(unittest.TestCase):
   jobs,total=ts.fetch_all_jobs("o/r","1",api)
   self.assertEqual((len(jobs),total),(2,2));self.assertEqual(len(calls),2)
  def test_failed_log_retrieval_rejected(self):
-  class Failed:
-   def logs(self,job): raise ts.Reject("log_retrieval_failed")
-  with self.assertRaisesRegex(ts.Reject,"log_retrieval_failed"):Failed().logs(991)
+  from unittest.mock import patch
+  failed=type("Proc",(),{"returncode":1,"stdout":b"","stderr":b"API unavailable"})()
+  with patch.object(ts.subprocess,"run",return_value=failed):
+   with self.assertRaisesRegex(ts.Reject,"log_retrieval_failed"):
+    ts.fetch_job_log_zip("owner/repo",991,"not-a-real-token")
  def test_empty_truncated_and_invalid_logs_rejected(self):
   for data in [b"",b"not a zip",archive(b"")[:-8]]:
    with self.subTest(length=len(data)),self.assertRaises(ts.Reject):ts.validate_log_bytes(data)
@@ -92,9 +94,11 @@ class ValidationBehavior(unittest.TestCase):
     return ""
    with self.assertRaisesRegex(ts.Reject,"scanner_checksum_mismatch"):ts.validate_scanner_checkout(p,git)
  def test_scanner_nonzero_exit_fails(self):
-  result={"returncode":9,"stdout":"SCAN FAIL"}
-  with self.assertRaises(ts.Reject):
-   if result["returncode"]!=0:raise ts.Reject("scanner_nonzero_exit")
+  from unittest.mock import patch
+  failed=type("Proc",(),{"returncode":9,"stdout":"SCAN FAIL","stderr":"pattern found"})()
+  with patch.object(ts.subprocess,"run",return_value=failed):
+   with self.assertRaisesRegex(ts.Reject,"scanner_nonzero_exit"):
+    ts.execute_scanner("scanner.py","source.log")
  def test_sensitive_canaries_pass_through_real_approved_scanner(self):
   # Exercise the pinned scanner source checked into this repo only if present in test environment.
   # The CI checkout includes the source in the commit tree under phase2/metadata-inventory.
@@ -116,12 +120,19 @@ class ValidationBehavior(unittest.TestCase):
    self.assertNotIn(raw.name,ts.safe_artifact_manifest(e,raw))
    (e/"unexpected.bin").write_bytes(b"x")
    with self.assertRaisesRegex(ts.Reject,"unexpected_artifact_file"):ts.safe_artifact_manifest(e,raw)
- def test_evidence_records_required_identity_and_hashes(self):
-  evidence={"source_run_id":"42640933100","source_sha":GOOD_SHA,"selected_job_id":991,
-            "scanner_hashes":ts.HASHES}
-  self.assertEqual(evidence["source_run_id"],"42640933100")
-  self.assertEqual(evidence["selected_job_id"],991)
-  self.assertEqual(evidence["scanner_hashes"],ts.HASHES)
+ def test_execute_failure_writes_fail_closed_evidence(self):
+  class NeverCalled:
+   def run_metadata(self,*a): raise AssertionError("must reject before API access")
+  with tempfile.TemporaryDirectory() as d:
+   env={"EVENT_NAME":"repository_dispatch","DISPATCH_ACTOR":"intruder","DISPATCH_RUN_ID":"42640933100",
+        "DISPATCH_SOURCE_SHA":GOOD_SHA,"EVENT_RUN_ID":"","EVENT_RUN_ATTEMPT":"0"}
+   with patch.dict(os.environ,env,clear=False),patch.object(ts.pathlib.Path,"cwd",return_value=pathlib.Path(d)):
+    with self.assertRaisesRegex(ts.Reject,"unauthorized_dispatch_actor"):ts.execute(NeverCalled())
+   summary=json.loads((pathlib.Path(d)/"trusted-evidence/summary.json").read_text())
+   self.assertEqual(summary["result"],"FAIL")
+   self.assertIn("unauthorized_dispatch_actor",summary["rejected_conditions"][0])
+   self.assertFalse(summary["raw_logs_uploaded"])
+
  def test_untrusted_workflow_definition_is_not_executed(self):
   # Eligibility depends on a run/SHA allowlist; source workflow code/artifacts are never an input.
   self.assertEqual(ts.FUTURE_APPROVED_PAIRS,set())
