@@ -127,7 +127,7 @@ def fetch_job_log_text(repo, job_id, token, opener=None, *, max_bytes=25*1024*10
             data=response.read(max_bytes+1)
         finally: response.close()
     except Reject: raise
-    except (urllib.error.HTTPError,urllib.error.URLError,TimeoutError,OSError) as exc:
+    except (urllib.error.HTTPError,urllib.error.URLError,http.client.HTTPException,TimeoutError,OSError) as exc:
         raise Reject("log_retrieval_http_failure:"+type(exc).__name__)
     return validate_log_bytes(data,max_bytes=max_bytes,content_type=content_type,content_length=content_length)
 
