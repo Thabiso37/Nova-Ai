@@ -170,6 +170,7 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
+          mkdir -p scan-evidence
           if [[ "${{ steps.retrieve.outcome }}" != "success" ]]; then
             printf 'NOT_RUN: retrieval/identity verification outcome=%s\n' "${{ steps.retrieve.outcome }}" > scan-evidence/scan-status.txt
           elif [[ "${{ steps.scan.outcome }}" == "success" ]]; then
