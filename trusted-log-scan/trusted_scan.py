@@ -202,19 +202,6 @@ def safe_artifact_manifest(evidence_dir, raw_path):
     return manifest
 
 def stage_sanitized_artifact(evidence_dir, raw_path, staging_dir):
-    manifest=safe_artifact_manifest(evidence_dir,raw_path)
-    if staging_dir.exists(): shutil.rmtree(staging_dir)
-    staging_dir.mkdir(parents=True)
-    for rel in manifest:
-        source=evidence_dir/rel
-        target=staging_dir/rel
-        target.parent.mkdir(parents=True,exist_ok=True)
-        shutil.copyfile(source,target)
-    staged={p.relative_to(staging_dir).as_posix() for p in staging_dir.rglob("*") if p.is_file()}
-    if staged != set(manifest): raise Reject("staged_artifact_manifest_mismatch")
-    return sorted(staged)
-
-def stage_sanitized_artifact(evidence_dir, raw_path, staging_dir):
     """Build and validate in a temp directory, then atomically publish."""
     manifest=safe_artifact_manifest(evidence_dir,raw_path)
     staging_dir=pathlib.Path(staging_dir)
@@ -235,8 +222,9 @@ def stage_sanitized_artifact(evidence_dir, raw_path, staging_dir):
         if staged != set(manifest): raise Reject("staged_artifact_manifest_mismatch")
         if set(safe_artifact_manifest(candidate,candidate/"raw-source-job-logs.txt")) != set(manifest):
             raise Reject("staged_artifact_manifest_mismatch")
+        if staging_dir.is_symlink(): raise Reject("unsafe_staging_destination")
         if staging_dir.exists():
-            if staging_dir.is_symlink() or not staging_dir.is_dir(): raise Reject("unsafe_staging_destination")
+            if not staging_dir.is_dir(): raise Reject("unsafe_staging_destination")
             shutil.rmtree(staging_dir)
         os.replace(candidate,staging_dir)
         return sorted(staged)
@@ -264,7 +252,7 @@ def execute(adapter=None):
         log_data=validate_log_bytes(archive)
         raw.write_bytes(log_data)
         status.update(log_sha256=hashlib.sha256(log_data).hexdigest(),log_bytes=len(log_data),
-                      log_retrieval="complete_archive_validated")
+                      log_retrieval="complete_plain_text_validated")
         source=root/"approved-scanner-source"
         actual=adapter.git(["-C",str(source),"rev-parse","HEAD"]).strip()
         if actual!=SCANNER_SHA: raise Reject("scanner_source_commit_mismatch")
