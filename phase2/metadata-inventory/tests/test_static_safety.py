@@ -165,13 +165,13 @@ class StaticSafetyTests(unittest.TestCase):
   end=workflow.index("# END APPROVED_PAIR_SELECTOR",start)
   return "\n".join(line[10:] if line.startswith("          ") else line for line in workflow[start:end].splitlines())
 
- def run_selector(self,event,run_id="",source_sha=""):
+ def run_selector(self,event,run_id="",source_sha="",workflow_ref="refs/heads/feature/phase2-exact-pair-scanner-candidate"):
   with tempfile.TemporaryDirectory() as tmp:
    output=pathlib.Path(tmp)/"github-output.txt"
    output.write_text("")
    result=self.run_shell(self.target_selection_block(),EVENT_NAME=event,
                          DISPATCH_RUN_ID=run_id,DISPATCH_SOURCE_SHA=source_sha,
-                         GITHUB_OUTPUT=str(output))
+                         WORKFLOW_EXECUTION_REF=workflow_ref,GITHUB_OUTPUT=str(output))
    values={}
    for line in output.read_text().splitlines():
     key,value=line.split("=",1);values[key]=value
@@ -190,6 +190,46 @@ class StaticSafetyTests(unittest.TestCase):
     result,values=self.run_selector("workflow_dispatch",run_id,sha)
     self.assertEqual(result.returncode,0,result.stderr)
     self.assertEqual(values,{"target_run_id":run_id,"target_source_sha":sha})
+
+ def test_dispatch_requires_exact_candidate_execution_ref(self):
+  pair=("42640933100","41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb")
+  accepted,values=self.run_selector("workflow_dispatch",*pair,
+      workflow_ref="refs/heads/feature/phase2-exact-pair-scanner-candidate")
+  self.assertEqual(accepted.returncode,0,accepted.stderr)
+  self.assertEqual(values,{"target_run_id":pair[0],"target_source_sha":pair[1]})
+  rejected_refs=[
+   "refs/heads/main",
+   "refs/heads/feature/metadata-only-inventory-prototype",
+   "refs/tags/feature/phase2-exact-pair-scanner-candidate",
+   "refs/tags/v1.0",
+   "feature/phase2-exact-pair-scanner-candidate",
+   "refs/heads/",
+   "refs/remotes/origin/feature/phase2-exact-pair-scanner-candidate",
+   "refs/pull/23/merge",
+   "",
+  ]
+  for ref in rejected_refs:
+   with self.subTest(ref=ref):
+    result,_=self.run_selector("workflow_dispatch",*pair,workflow_ref=ref)
+    self.assertNotEqual(result.returncode,0,ref)
+
+ def test_selector_receives_actual_workflow_ref_from_github_context(self):
+  workflow=self.scanner_workflow()
+  self.assertIn("WORKFLOW_EXECUTION_REF: ${{ github.ref }}",workflow)
+  selector=self.target_selection_block()
+  self.assertIn("WORKFLOW_EXECUTION_REF",selector)
+  self.assertLess(selector.index("WORKFLOW_EXECUTION_REF"),
+                  selector.index("case \"$target_run_id:$target_source_sha\""))
+
+ def test_actions_are_pinned_to_reviewed_immutable_shas(self):
+  workflow=self.scanner_workflow()
+  for action in (
+   "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+   "actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+   "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+  ):
+   self.assertIn(action,workflow)
+  self.assertNotRegex(workflow,r"uses: actions/(?:checkout|setup-python|upload-artifact)@v")
 
  def test_dispatch_rejects_crossed_pairs(self):
   pairs=[("42640933100","294fa19fac21b5467b9cf2eb0acb428678395575"),
