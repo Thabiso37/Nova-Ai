@@ -36,6 +36,33 @@ class ValidationBehavior(unittest.TestCase):
  def test_invalid_dispatch_actor_rejected(self):
   with self.assertRaisesRegex(ts.Reject,"unauthorized_dispatch_actor"):
    ts.validate_event("repository_dispatch","intruder",{"target_run_id":"42640933100","target_source_sha":GOOD_SHA})
+ def test_historical_workflow_path_accepts_both_legacy_representations(self):
+  accepted = (ts.WORKFLOW_PATH, ts.WORKFLOW_PATH + "@refs/heads/" + ts.HISTORICAL_BRANCH)
+  for path in accepted:
+   with self.subTest(path=path):
+    meta = dict(GOOD_META, path=path)
+    self.assertEqual(ts.validate_run_metadata(meta,"42640933100","historical",GOOD_SHA),GOOD_SHA)
+
+ def test_historical_workflow_path_rejects_unauthorized_representation(self):
+  meta = dict(GOOD_META, path=ts.WORKFLOW_PATH + "@refs/heads/attacker")
+  with self.assertRaisesRegex(ts.Reject,"workflow_path_mismatch"):
+   ts.validate_run_metadata(meta,"42640933100","historical",GOOD_SHA)
+
+ def test_future_workflow_run_accepts_only_canonical_workflow_path(self):
+  event={"id":"77","run_attempt":1}
+  mode,run_id,_,attempt=ts.validate_event("workflow_run","Thabiso37",{},event)
+  meta={"id":77,"workflow_id":ts.WORKFLOW_ID,"name":ts.WORKFLOW_NAME,"path":ts.WORKFLOW_PATH,
+   "repository":{"id":ts.SOURCE_REPOSITORY_ID,"full_name":ts.SOURCE_REPOSITORY},
+   "head_repository":{"id":ts.SOURCE_REPOSITORY_ID,"full_name":ts.SOURCE_REPOSITORY},
+   "head_branch":"main","event":"workflow_dispatch",
+   "actor":{"login":"Thabiso37","id":ts.ALLOWED_ACTOR_ID},
+   "triggering_actor":{"login":"Thabiso37","id":ts.ALLOWED_ACTOR_ID},
+   "status":"completed","conclusion":"success","run_attempt":1,"head_sha":"a"*40}
+  self.assertEqual(ts.validate_run_metadata(meta,run_id,mode,event_attempt=attempt),"a"*40)
+  meta["path"] = ts.WORKFLOW_PATH + "@refs/heads/main"
+  with self.assertRaisesRegex(ts.Reject,"workflow_path_mismatch"):
+   ts.validate_run_metadata(meta,run_id,mode,event_attempt=attempt)
+
  def test_incorrect_source_run_id_rejected(self):
   m=dict(GOOD_META,id=2)
   with self.assertRaisesRegex(ts.Reject,"run_id_mismatch"):ts.validate_run_metadata(m,"42640933100","historical",GOOD_SHA)
