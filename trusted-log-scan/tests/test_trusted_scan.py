@@ -14,6 +14,12 @@ def archive(data=b"ordinary workflow log\n"):
  return b.getvalue()
 
 class ValidationBehavior(unittest.TestCase):
+ def test_trusted_execution_requires_main_default_branch_context(self):
+  self.assertEqual(ts.validate_trusted_context("refs/heads/main","a"*40),"a"*40)
+  with self.assertRaisesRegex(ts.Reject,"trusted_workflow_not_running_from_main"):
+   ts.validate_trusted_context("refs/heads/feature/untrusted","a"*40)
+  with self.assertRaisesRegex(ts.Reject,"invalid_trusted_workflow_commit"):
+   ts.validate_trusted_context("refs/heads/main","not-a-sha")
  def test_historical_pair_accepts_only_exact_run_sha(self):
   self.assertEqual(ts.validate_event("repository_dispatch","Thabiso37",{"target_run_id":"42640933100","target_source_sha":GOOD_SHA})[:3],
                    ("historical","42640933100",GOOD_SHA))
@@ -60,6 +66,7 @@ class ValidationBehavior(unittest.TestCase):
    ts.validate_run_metadata(future,rid,mode)
   self.assertEqual(ts.validate_run_metadata(future,rid,mode,future_pairs={("77",GOOD_SHA)}),GOOD_SHA)
  def test_missing_duplicate_and_failed_jobs_rejected(self):
+  with self.assertRaisesRegex(ts.Reject,"duplicate_or_invalid_job_ids"):ts.validate_jobs([GOOD_JOB,dict(GOOD_JOB,name="other")],2)
   with self.assertRaisesRegex(ts.Reject,"missing_target_job"):ts.validate_jobs([{"id":1,"name":"other"}],1)
   with self.assertRaisesRegex(ts.Reject,"duplicate_target_jobs"):ts.validate_jobs([GOOD_JOB,dict(GOOD_JOB,id=992)],2)
   with self.assertRaisesRegex(ts.Reject,"target_job_not_successful"):
@@ -165,7 +172,8 @@ class ValidationBehavior(unittest.TestCase):
    def scan_runner(self,args,**kwargs): return types.SimpleNamespace(returncode=0,stdout="SCAN PASS\\n",stderr="")
   with tempfile.TemporaryDirectory() as d:
    env={"EVENT_NAME":"repository_dispatch","DISPATCH_ACTOR":"Thabiso37","DISPATCH_RUN_ID":"42640933100",
-        "DISPATCH_SOURCE_SHA":GOOD_SHA,"EVENT_RUN_ID":"","EVENT_RUN_ATTEMPT":"0"}
+        "DISPATCH_SOURCE_SHA":GOOD_SHA,"EVENT_RUN_ID":"","EVENT_RUN_ATTEMPT":"0",
+        "GITHUB_REF":"refs/heads/main","GITHUB_SHA":"a"*40}
    with patch.dict(os.environ,env,clear=False),patch.object(ts.pathlib.Path,"cwd",return_value=pathlib.Path(d)):
     ts.execute(SuccessfulAdapter())
    evidence=pathlib.Path(d)/"trusted-evidence"
@@ -183,7 +191,8 @@ class ValidationBehavior(unittest.TestCase):
    def run_metadata(self,*a): raise AssertionError("must reject before API access")
   with tempfile.TemporaryDirectory() as d:
    env={"EVENT_NAME":"repository_dispatch","DISPATCH_ACTOR":"intruder","DISPATCH_RUN_ID":"42640933100",
-        "DISPATCH_SOURCE_SHA":GOOD_SHA,"EVENT_RUN_ID":"","EVENT_RUN_ATTEMPT":"0"}
+        "DISPATCH_SOURCE_SHA":GOOD_SHA,"EVENT_RUN_ID":"","EVENT_RUN_ATTEMPT":"0",
+        "GITHUB_REF":"refs/heads/main","GITHUB_SHA":"a"*40}
    with patch.dict(os.environ,env,clear=False),patch.object(ts.pathlib.Path,"cwd",return_value=pathlib.Path(d)):
     with self.assertRaisesRegex(ts.Reject,"unauthorized_dispatch_actor"):ts.execute(NeverCalled())
    summary=json.loads((pathlib.Path(d)/"trusted-evidence/summary.json").read_text())
