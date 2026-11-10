@@ -270,10 +270,10 @@ class StaticSafetyTests(unittest.TestCase):
 
 
  def _workflow_step(self, workflow, step_name):
-  marker = "      - name: " + step_name + "\\n"
+  marker = "      - name: " + step_name + "\n"
   start = workflow.find(marker)
   self.assertNotEqual(start, -1, "workflow step missing: " + step_name)
-  end = workflow.find("\\n      - name:", start + len(marker))
+  end = workflow.find("\n      - name:", start + len(marker))
   return workflow[start:] if end == -1 else workflow[start:end]
 
  def _workflow_condition(self, block):
@@ -300,7 +300,7 @@ class StaticSafetyTests(unittest.TestCase):
   workflow = self.scanner_workflow()
   block = self._workflow_step(workflow, "Enforce scanner and evidence final gate")
   self.assertEqual(self._workflow_condition(block), "always()")
-  run_marker = "        run: |\\n"
+  run_marker = "        run: |\n"
   offset = block.find(run_marker)
   self.assertNotEqual(offset, -1, "final gate must be an executable run block")
   script_lines = []
@@ -309,7 +309,7 @@ class StaticSafetyTests(unittest.TestCase):
     script_lines.append(line[10:])
    elif line.strip():
     break
-  script = "\\n".join(script_lines) + "\\n"
+  script = "\n".join(script_lines) + "\n"
   with tempfile.TemporaryDirectory() as tmp:
    script_path = pathlib.Path(tmp) / "final-gate.sh"
    script_path.write_text(script)
