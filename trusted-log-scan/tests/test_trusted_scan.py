@@ -130,7 +130,7 @@ class ValidationBehavior(unittest.TestCase):
   class FailedOpener:
    def open(self,request,timeout):
     raise urllib.error.HTTPError(request.full_url,503,"Unavailable",{},None)
-  with self.assertRaisesRegex(ts.Reject,"log_retrieval_http_failure"):
+  with self.assertRaisesRegex(ts.Reject,"log_retrieval_failure:HTTPError"):
    ts.fetch_job_log_text("owner/repo",991,"TOKEN",FailedOpener())
   request=urllib.request.Request("https://api.github.com/logs",headers={"Authorization":"Bearer TOKEN"})
   with self.assertRaisesRegex(ts.Reject,"unsafe_log_redirect_target"):
@@ -389,7 +389,6 @@ class RedirectTransportIntegration(unittest.TestCase):
     msg=Message()
     for k,v in headers.items():msg[k]=v
     response=addinfourl(io.BytesIO(body),msg,req.full_url,code=status)
-    response.status=status
     return response
   adapter=Adapter()
   return build_opener(ts.SafeRedirectHandler(),adapter)
