@@ -142,7 +142,7 @@ class ManualWorkflowRunEligibilityTests(unittest.TestCase):
         with self.assertRaisesRegex(ts.Reject, "incomplete_job_pagination"):
             ts.validate_jobs([job], 2)
         def missing_page(args):
-            return {"jobs": [job], "total_count": 2} if "page=1" in args[0] or "page=2" not in args[0] else {"jobs": [], "total_count": 2}
+            return {"jobs": [job], "total_count": 2} if not args[0].endswith("page=2") else {"jobs": [], "total_count": 2}
         with self.assertRaisesRegex(ts.Reject, "incomplete_job_pagination"):
             ts.fetch_all_jobs("Thabiso37/Nova-Ai", RUN_ID, missing_page)
         def changed_total(args):
@@ -184,10 +184,10 @@ class ManualWorkflowRunEligibilityTests(unittest.TestCase):
             with patch.dict(os.environ, env, clear=False), patch.object(ts.pathlib.Path, "cwd", return_value=pathlib.Path(d)):
                 with self.assertRaisesRegex(ts.Reject, "unauthorized_actor"):
                     ts.execute(adapter)
-        self.assertEqual(adapter.calls, ["metadata"])
-        summary = json.loads((pathlib.Path(d) / "trusted-evidence" / "summary.json").read_text())
-        self.assertEqual(summary["result"], "FAIL")
-        self.assertFalse(summary["raw_logs_uploaded"])
+            self.assertEqual(adapter.calls, ["metadata"])
+            summary = json.loads((pathlib.Path(d) / "trusted-evidence" / "summary.json").read_text())
+            self.assertEqual(summary["result"], "FAIL")
+            self.assertFalse(summary["raw_logs_uploaded"])
 
     def test_source_workflow_is_manual_only_and_actions_are_pinned(self):
         workflow = pathlib.Path(".github/workflows/phase2-metadata-inventory.yml").read_text()
