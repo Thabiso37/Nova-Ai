@@ -103,7 +103,7 @@ class ValidationBehavior(unittest.TestCase):
    def open(self,request,timeout):
     self.initial=request
     self.redirected=ts.SafeRedirectHandler().redirect_request(request,None,302,"Found",
-      {"Location":"https://download.example.blob.core.windows.net/log.txt"},"https://download.example/log.txt")
+      {"Location":"https://download.example.blob.core.windows.net/log.txt"},"https://download.example.blob.core.windows.net/log.txt")
     return Response()
   client=FakeOpener()
   result=ts.fetch_job_log_text("owner/repo",991,"SENSITIVE_GH_TOKEN",client)
