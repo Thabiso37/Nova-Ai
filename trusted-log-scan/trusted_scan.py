@@ -26,6 +26,12 @@ TARGET_JOB = "disposable-postgres-17"
 
 class Reject(ValueError): pass
 
+def validate_trusted_context(github_ref, github_sha):
+    if github_ref != "refs/heads/main": raise Reject("trusted_workflow_not_running_from_main")
+    if not isinstance(github_sha,str) or not re.fullmatch(r"[0-9a-f]{40}",github_sha):
+        raise Reject("invalid_trusted_workflow_commit")
+    return github_sha
+
 def validate_event(event_name, actor, payload, run_event=None):
     if event_name == "repository_dispatch":
         if actor != ALLOWED_ACTOR: raise Reject("unauthorized_dispatch_actor")
@@ -71,6 +77,8 @@ def validate_jobs(pages, total_count):
     if not isinstance(total_count,int) or total_count < 1: raise Reject("invalid_job_total_count")
     if not isinstance(pages,list) or len(pages) != total_count: raise Reject("incomplete_job_pagination")
     if any(not isinstance(j,dict) for j in pages): raise Reject("invalid_job_record")
+    ids=[j.get("id") for j in pages]
+    if any(not isinstance(i,int) for i in ids) or len(set(ids)) != len(ids): raise Reject("duplicate_or_invalid_job_ids")
     matches=[j for j in pages if j.get("name")==TARGET_JOB]
     if not matches: raise Reject("missing_target_job")
     if len(matches)!=1: raise Reject("duplicate_target_jobs")
@@ -139,6 +147,7 @@ def fetch_all_jobs(repo, run_id, api=gh_json):
     while len(jobs)<data["total_count"]:
         nxt=api([f"repos/{repo}/actions/runs/{run_id}/jobs?per_page=100&page={page}"])
         if not isinstance(nxt,dict) or not isinstance(nxt.get("jobs"),list): raise Reject("job_pagination_request_failed")
+        if nxt.get("total_count") != data["total_count"]: raise Reject("job_pagination_total_changed")
         if not nxt["jobs"]: raise Reject("incomplete_job_pagination")
         jobs.extend(nxt["jobs"]); page+=1
         if page>100: raise Reject("job_pagination_limit_exceeded")
@@ -197,6 +206,7 @@ def execute(adapter=None):
             "event":os.environ.get("EVENT_NAME",""),"dispatch_actor":os.environ.get("DISPATCH_ACTOR",""),
             "result":"FAIL","rejected_conditions":[],"raw_logs_uploaded":False}
     try:
+        status["trusted_workflow_commit"]=validate_trusted_context(os.environ.get("GITHUB_REF",""),os.environ.get("GITHUB_SHA",""))
         mode,run_id,requested_sha,attempt=validate_event(status["event"],status["dispatch_actor"],
           {"target_run_id":os.environ.get("DISPATCH_RUN_ID",""),"target_source_sha":os.environ.get("DISPATCH_SOURCE_SHA","")},
           {"id":os.environ.get("EVENT_RUN_ID",""),"run_attempt":int(os.environ.get("EVENT_RUN_ATTEMPT","0"))})
