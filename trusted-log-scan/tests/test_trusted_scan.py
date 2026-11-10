@@ -97,7 +97,9 @@ class ValidationBehavior(unittest.TestCase):
   class Response:
    status=200
    headers={"Content-Type":"text/plain; charset=utf-8","Content-Length":str(len(body))}
-   def read(self,n): return body[:n]
+   def __init__(self): self.offset=0
+   def read(self,n):
+    chunk=body[self.offset:self.offset+n];self.offset+=len(chunk);return chunk
    def close(self): pass
   class FakeOpener:
    def open(self,request,timeout):
