@@ -1,14 +1,19 @@
 import json
 import re
+import os
 import pathlib
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
+TRUSTED_SCAN_DIR=ROOT.parents[1]/"trusted-log-scan"
+sys.path.insert(0,str(TRUSTED_SCAN_DIR))
 from secret_patterns import PATTERNS
+import trusted_scan as ts
 SCRIPT=(ROOT/"inventory.py").read_text()
 FIXTURE=(ROOT/"fixtures"/"bootstrap.sql").read_text()
 DETECTOR=(ROOT/"detect_unsupported.py").read_text()
@@ -324,13 +329,44 @@ class StaticSafetyTests(unittest.TestCase):
   self.assertNotEqual(result.returncode, 0)
   self.assertIn("scanner_step_not_successful", result.stderr)
 
+ def _execute_expected_scanner_failure(self, failure_kind):
+  class Adapter:
+   def run_metadata(self, run_id):
+    meta = {"id":42640933100,"workflow_id":ts.WORKFLOW_ID,"name":ts.WORKFLOW_NAME,
+     "path":ts.WORKFLOW_PATH,"head_branch":ts.HISTORICAL_BRANCH,
+     "head_repository":{"full_name":ts.SOURCE_REPOSITORY},
+     "head_sha":"41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb","event":"push",
+     "status":"completed","conclusion":"success","run_attempt":1}
+    if failure_kind == "eligibility":
+     meta["path"] = "unauthorized-workflow.yml"
+    return meta
+   def jobs(self, run_id):
+    return ([{"id":9001,"name":ts.TARGET_JOB,"status":"completed","conclusion":"success"}],1)
+   def logs(self, job_id):
+    raise ts.Reject("simulated_log_retrieval_failure")
+  env = {"GITHUB_REF":"refs/heads/main","GITHUB_SHA":"a"*40,
+   "EVENT_NAME":"repository_dispatch","DISPATCH_ACTOR":"Thabiso37",
+   "DISPATCH_RUN_ID":"42640933100",
+   "DISPATCH_SOURCE_SHA":"41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb",
+   "EVENT_RUN_ID":"","EVENT_RUN_ATTEMPT":""}
+  with tempfile.TemporaryDirectory() as tmp:
+   with patch.dict(os.environ,env,clear=False), patch.object(pathlib.Path,"cwd",return_value=pathlib.Path(tmp)):
+    with self.assertRaises(ts.Reject):
+     ts.execute(Adapter())
+    evidence = pathlib.Path(tmp)/"trusted-evidence"
+    summary = json.loads((evidence/"summary.json").read_text())
+    self.assertEqual(summary["result"],"FAIL")
+    self.assertTrue((evidence/"failure-reason.txt").is_file())
+    expected = "workflow_path_mismatch" if failure_kind == "eligibility" else "simulated_log_retrieval_failure"
+    self.assertEqual(summary["rejected_conditions"],[expected])
+  result = self._run_final_gate("failure","success")
+  self.assertNotEqual(result.returncode,0)
+
  def test_workflow_final_gate_rejects_log_retrieval_failure(self):
-  result = self._run_final_gate("failure", "success")
-  self.assertNotEqual(result.returncode, 0)
+  self._execute_expected_scanner_failure("retrieval")
 
  def test_workflow_final_gate_rejects_eligibility_failure(self):
-  result = self._run_final_gate("failure", "success")
-  self.assertNotEqual(result.returncode, 0)
+  self._execute_expected_scanner_failure("eligibility")
 
  def test_workflow_final_gate_rejects_evidence_staging_failure(self):
   result = self._run_final_gate("success", "failure")
