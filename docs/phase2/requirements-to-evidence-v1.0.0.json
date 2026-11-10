@@ -1,0 +1,197 @@
+{
+  "document_id": "NOVAAI-PHASE2-REQ",
+  "version": "1.0.0",
+  "baseline_commit": "6506a966d39c41e7240186a3c392af9cd6eb423d",
+  "source_run": {
+    "id": 42800792137,
+    "url": "https://github.com/Thabiso37/Nova-Ai/actions/runs/42800792137",
+    "commit": "6506a966d39c41e7240186a3c392af9cd6eb423d",
+    "branch": "main",
+    "conclusion": "success"
+  },
+  "inventory_artifact": {
+    "id": 13756530949,
+    "name": "phase2-metadata-inventory-report",
+    "sha256": "99920e7263f5654922f901418dbf693c3b8313e4d93a203b882c9047bdd4fb7c",
+    "integrity": "independently verified before this closeout; original artifact is preserved"
+  },
+  "requirements": [
+    {
+      "id": "P2-01",
+      "requirement": "Disposable synthetic PostgreSQL 17.11 prototype",
+      "status": "COMPLETE",
+      "evidence": [
+        "Source workflow run 42800792137",
+        "server-version.txt in artifact",
+        "baseline-psql-client-version.txt and baseline-pgdump-client-version.txt in artifact"
+      ],
+      "notes": "Workflow is manual-only and main-only; localhost binding is 127.0.0.1:5432:5432."
+    },
+    {
+      "id": "P2-02",
+      "requirement": "Metadata inventory, classification and synthetic provenance",
+      "status": "COMPLETE",
+      "evidence": [
+        "inventory.json in artifact",
+        "provenance-verification.json in artifact",
+        "scope.json",
+        "provenance_registry.json"
+      ],
+      "notes": "23 inventory objects; provenance verification reports 111 checked objects, 3 migration files, 2 approved exclusions, 9 external prerequisites, no violations."
+    },
+    {
+      "id": "P2-03",
+      "requirement": "Strict restricted-inspector privilege boundary and runtime denial tests",
+      "status": "COMPLETE",
+      "evidence": [
+        "security-audit.json in artifact",
+        "runtime-security.json in artifact",
+        "45 static tests in source job log"
+      ],
+      "notes": "Runtime suite: 56/56 passed; sensitive option/value access denied; no RLS reliance for the data-access denial checks."
+    },
+    {
+      "id": "P2-04",
+      "requirement": "Dependency discovery and resolution",
+      "status": "COMPLETE",
+      "evidence": [
+        "baseline-dependencies.json in artifact",
+        "pg-dump comparison output"
+      ],
+      "notes": "98 resolved dependency edges; 79 inventory dependency nodes; zero cycles and zero missing nodes/edges."
+    },
+    {
+      "id": "P2-05",
+      "requirement": "Catalogue visibility and unsupported-family detection",
+      "status": "COMPLETE",
+      "evidence": [
+        "unsupported.json in artifact",
+        "unsupported-probe.json in artifact",
+        "security-label-provider-probe.json in artifact"
+      ],
+      "notes": "26/26 positive probe families detected; clean-state unsupported count 0; visibility failures 0; no unverified probe families."
+    },
+    {
+      "id": "P2-06",
+      "requirement": "Single exported snapshot and concurrency consistency",
+      "status": "COMPLETE",
+      "evidence": [
+        "snapshot-consistency.json in artifact",
+        "catalogue-baseline.json in artifact"
+      ],
+      "notes": "Old snapshot did not see later object; fresh snapshot did; snapshot test PASS."
+    },
+    {
+      "id": "P2-07",
+      "requirement": "Structured catalogue metadata comparison",
+      "status": "COMPLETE",
+      "evidence": [
+        "docs/phase2/evidence/source-run-42800792137/structured-catalogue-comparison.json",
+        "Source job log 129777441548 at 2026-11-10T10:38:36.1468449Z"
+      ],
+      "notes": "23 inventory objects vs 23 baseline objects; all required support sections passed; no unsupported comparisons."
+    },
+    {
+      "id": "P2-08",
+      "requirement": "Supplemental schema-only pg_dump comparison",
+      "status": "COMPLETE",
+      "evidence": [
+        "baseline.sql in artifact",
+        "baseline-pgdump-client-version.txt in artifact",
+        "docs/phase2/evidence/source-run-42800792137/pg-dump-comparison.json",
+        "Source job log 129777441548 at 2026-11-10T10:38:36.2216807Z"
+      ],
+      "notes": "Comparison PASS with empty failures. Explicitly not a restore test or restoration-equivalence claim."
+    },
+    {
+      "id": "P2-09",
+      "requirement": "Sensitive-data screening and limitation disclosure",
+      "status": "COMPLETE",
+      "evidence": [
+        "sensitive-scan-report.txt in artifact",
+        "Source job log 129777441548 at 2026-11-10T10:38:36.0947473Z"
+      ],
+      "notes": "SCAN PASS. Pattern-based screening cannot prove arbitrary, encoded, fragmented or obfuscated secrets absent."
+    },
+    {
+      "id": "P2-10",
+      "requirement": "Traceable source evidence and preserved artifact integrity",
+      "status": "COMPLETE",
+      "evidence": [
+        "Source run 42800792137",
+        "Artifact 13756530949",
+        "SHA-256 99920e7263f5654922f901418dbf693c3b8313e4d93a203b882c9047bdd4fb7c"
+      ],
+      "notes": "The original artifact is unchanged. Comparator outputs are separate closeout copies extracted from the original Actions job log, not changes to the original artifact."
+    },
+    {
+      "id": "P2-11",
+      "requirement": "Trusted workflow log scanner milestone",
+      "status": "COMPLETE",
+      "evidence": [
+        "F-02 status record docs/phase2/f02-acceptance-status.md",
+        "Source run 42800792137",
+        "Scanner run 42800891197",
+        "Approved scanner commit 294fa19fac21b5467b9cf2eb0acb428678395575"
+      ],
+      "notes": "F-02 CLOSED — ACCEPTED; implementation and historical evidence are immutable."
+    },
+    {
+      "id": "P2-LATER-RESTORE",
+      "requirement": "Clean-database restore and restoration equivalence",
+      "status": "NOT REQUIRED",
+      "evidence": [
+        "Phase roadmap approval dated 2026-11-09"
+      ],
+      "notes": "Later Phase 4/5 work; no restore was performed and no restoration-equivalence claim is made."
+    },
+    {
+      "id": "P2-LATER-SUPABASE",
+      "requirement": "Supabase non-production compatibility",
+      "status": "NOT REQUIRED",
+      "evidence": [
+        "Phase roadmap approval dated 2026-11-09",
+        "scope.json synthetic classification note"
+      ],
+      "notes": "Later Phase 6 work; synthetic supabase_managed_fixture does not establish compatibility."
+    },
+    {
+      "id": "P2-LATER-REVIEW",
+      "requirement": "Independent security review",
+      "status": "NOT REQUIRED",
+      "evidence": [
+        "Phase roadmap approval dated 2026-11-09"
+      ],
+      "notes": "Later Phase 7 work; no independent reviewer is claimed."
+    },
+    {
+      "id": "P2-REQ-PROVENANCE",
+      "requirement": "Verbatim original approved requirements document archived in repository",
+      "status": "UNVERIFIED",
+      "evidence": [
+        "Recovered user approval records from 2026-11-09 conversation",
+        "Contemporaneous README and scope files"
+      ],
+      "notes": "A canonical transcription is created, but no verbatim signed/original approval artifact was located. Owner confirmation of this transcription is required for exact approval provenance."
+    },
+    {
+      "id": "P2-EVIDENCE-JSON",
+      "requirement": "Separate machine-readable comparison outputs in closeout evidence",
+      "status": "COMPLETE",
+      "evidence": [
+        "structured-catalogue-comparison.json",
+        "pg-dump-comparison.json"
+      ],
+      "notes": "Both are extracted from exact stdout in source job logs; they were not present as separate files in the original artifact."
+    }
+  ],
+  "phase_2_acceptance_readiness": "READY FOR OWNER REVIEW OF REQUIREMENTS PROVENANCE AND CLOSEOUT PR; NOT AUTOMATICALLY ACCEPTED",
+  "mandatory_blockers": [
+    "Owner confirmation that requirements-v1.0.0.md accurately transcribes the original Phase 2 approval, because a verbatim approval artifact was not located."
+  ],
+  "optional_hardening": [
+    "Configure suitable main-branch protection/rulesets through a separately authorized governance change.",
+    "Pin PostgreSQL container image by immutable digest after verifying official image provenance and architecture.",
+    "Retain comparison JSON in a future approved workflow artifact upload; do not alter original run evidence."
+  ]
+}

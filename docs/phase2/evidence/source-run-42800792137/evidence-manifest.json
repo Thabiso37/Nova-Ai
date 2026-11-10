@@ -1,0 +1,13 @@
+{
+  "source_run_id": 42800792137,
+  "source_job_id": 129777441548,
+  "source_sha": "6506a966d39c41e7240186a3c392af9cd6eb423d",
+  "branch": "main",
+  "extraction_method": "Exact comparator stdout recovered from GitHub Actions source job log; timestamp prefixes removed; JSON parsed and re-serialized without changing parsed values.",
+  "source_log_structured_output_timestamp": "2026-11-10T10:38:36.1468449Z",
+  "source_log_pg_dump_output_timestamp": "2026-11-10T10:38:36.2216807Z",
+  "original_artifact_id": 13756530949,
+  "original_artifact_name": "phase2-metadata-inventory-report",
+  "original_artifact_sha256": "99920e7263f5654922f901418dbf693c3b8313e4d93a203b882c9047bdd4fb7c",
+  "note": "These are additional closeout evidence copies. They were not included in or inserted into the original uploaded artifact. No original artifact, log or F-02 evidence was altered."
+}

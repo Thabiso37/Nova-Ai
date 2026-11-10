@@ -1,0 +1,119 @@
+{
+  "checks": {
+    "inventory_completeness": {
+      "exporter_status": "PASS",
+      "status": "PASS",
+      "unclassified_count": 0,
+      "unresolved_dependency_count": 0,
+      "unsupported_dependency_count": 0,
+      "unsupported_object_count": 0
+    },
+    "objects": {
+      "baseline_count": 23,
+      "inventory_count": 23,
+      "status": "PASS"
+    },
+    "positive_probe_evidence": {
+      "discovered_family_count": 26,
+      "expected_family_count": 26,
+      "missing_families": [],
+      "status": "PASS",
+      "visibility_failures": []
+    },
+    "required_support_matrix_sections": {
+      "missing_required_from_baseline": [],
+      "section_set_mismatch": [],
+      "status": "PASS"
+    },
+    "section:column_acl": {
+      "baseline_count": 0,
+      "inventory_count": 0,
+      "status": "PASS"
+    },
+    "section:columns": {
+      "baseline_count": 28,
+      "inventory_count": 28,
+      "status": "PASS"
+    },
+    "section:constraints": {
+      "baseline_count": 7,
+      "inventory_count": 7,
+      "status": "PASS"
+    },
+    "section:default_privileges": {
+      "baseline_count": 0,
+      "inventory_count": 0,
+      "status": "PASS"
+    },
+    "section:enums": {
+      "baseline_count": 3,
+      "inventory_count": 3,
+      "status": "PASS"
+    },
+    "section:extensions": {
+      "baseline_count": 1,
+      "inventory_count": 1,
+      "status": "PASS"
+    },
+    "section:indexes": {
+      "baseline_count": 7,
+      "inventory_count": 7,
+      "status": "PASS"
+    },
+    "section:partitions": {
+      "baseline_count": 2,
+      "inventory_count": 2,
+      "status": "PASS"
+    },
+    "section:policies": {
+      "baseline_count": 1,
+      "inventory_count": 1,
+      "status": "PASS"
+    },
+    "section:relation_acl": {
+      "baseline_count": 23,
+      "inventory_count": 23,
+      "status": "PASS"
+    },
+    "section:routine_acl": {
+      "baseline_count": 3,
+      "inventory_count": 3,
+      "status": "PASS"
+    },
+    "section:routines": {
+      "baseline_count": 3,
+      "inventory_count": 3,
+      "status": "PASS"
+    },
+    "section:schema_acl": {
+      "baseline_count": 4,
+      "inventory_count": 4,
+      "status": "PASS"
+    },
+    "section:sequences": {
+      "baseline_count": 4,
+      "inventory_count": 4,
+      "status": "PASS"
+    },
+    "section:triggers": {
+      "baseline_count": 1,
+      "inventory_count": 1,
+      "status": "PASS"
+    },
+    "section:type_acl": {
+      "baseline_count": 14,
+      "inventory_count": 14,
+      "status": "PASS"
+    },
+    "section:types": {
+      "baseline_count": 2,
+      "inventory_count": 2,
+      "status": "PASS"
+    }
+  },
+  "limitation": "Structured metadata comparison only. Not DDL reconstruction, restore validation, production provenance, or restoration equivalence.",
+  "server_version_match": true,
+  "snapshot_match": true,
+  "status": "PASS",
+  "unsupported_comparisons": []
+}

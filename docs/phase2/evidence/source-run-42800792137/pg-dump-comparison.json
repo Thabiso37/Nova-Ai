@@ -1,0 +1,175 @@
+{
+  "categories": {
+    "acl_metadata": {
+      "baseline_grant_statements": 5,
+      "baseline_revoke_statements": 5,
+      "grant_mismatches": [],
+      "inventory_non_owner_acl_entries": 5,
+      "limitation": "Compares explicit non-owner grants and PUBLIC revocations; non-empty default-privilege metadata fails closed rather than being silently skipped.",
+      "revoke_violations": [],
+      "status": "PASS",
+      "unexpected_baseline_grants": []
+    },
+    "column_properties": {
+      "baseline_count": 24,
+      "inventory_count": 24,
+      "mismatches": [],
+      "status": "PASS"
+    },
+    "constraint_definitions": {
+      "compared_constraints": 7,
+      "mismatches": [],
+      "status": "PASS"
+    },
+    "constraints": {
+      "baseline_count": 7,
+      "inventory_count": 7,
+      "missing_from_baseline": [],
+      "missing_from_inventory": [],
+      "status": "PASS"
+    },
+    "default_privileges": {
+      "baseline_statement_count": 0,
+      "inventory_record_count": 0,
+      "limitation": "The disposable fixture currently requires an empty default-privilege set; any discovered default ACL fails closed pending a semantic parser.",
+      "status": "PASS"
+    },
+    "dependencies": {
+      "administrative_baseline_edges": 98,
+      "cycle_count": 0,
+      "cycle_review_required": false,
+      "inventory_dependency_nodes": 79,
+      "limitation": "Dependency edges are compared against the same imported exported snapshot. This remains a metadata graph comparison, not restoration equivalence.",
+      "missing_from_baseline_edges": [],
+      "missing_from_inventory_edges": [],
+      "missing_inventory_nodes": [],
+      "resolved_edges": 98,
+      "status": "PASS"
+    },
+    "dependency_snapshot": {
+      "administrative_snapshot_id": "0000000C-00000002-1",
+      "inventory_snapshot_id": "0000000C-00000002-1",
+      "status": "PASS"
+    },
+    "functions_and_procedures": {
+      "baseline_count": 3,
+      "duplicate_or_ambiguous_identities": [],
+      "identity": "schema + routine name + kind + identity argument signature",
+      "inventory_count": 3,
+      "missing_from_baseline": [],
+      "missing_from_inventory": [],
+      "status": "PASS"
+    },
+    "index_definitions": {
+      "compared_indexes": 7,
+      "mismatches": [],
+      "status": "PASS"
+    },
+    "indexes": {
+      "baseline_count": 7,
+      "inventory_count": 7,
+      "missing_from_baseline": [],
+      "missing_from_inventory": [],
+      "status": "PASS"
+    },
+    "ownership": {
+      "baseline_owner_records": 21,
+      "inventory_owner_records": 21,
+      "limitation": "Exact owners are compared for schemas, top-level relations, routines and explicit user-defined types; generated index/sequence/row-type ownership follows the owning relation or type and is validated by the provenance/owner preflight.",
+      "mismatched_owners": [],
+      "missing_from_baseline": [],
+      "missing_from_inventory": [],
+      "status": "PASS"
+    },
+    "partition_bounds": {
+      "compared_partitions": 2,
+      "mismatches": [],
+      "status": "PASS"
+    },
+    "partitions": {
+      "baseline_count": 2,
+      "inventory_count": 2,
+      "missing_from_baseline": [],
+      "missing_from_inventory": [],
+      "status": "PASS"
+    },
+    "relations_and_sequences": {
+      "baseline_count": 16,
+      "inventory_count": 16,
+      "missing_from_baseline": [],
+      "missing_from_inventory": [],
+      "status": "PASS"
+    },
+    "rls_configuration": {
+      "baseline_enabled_count": 1,
+      "baseline_forced_count": 0,
+      "enabled_missing_from_baseline": [],
+      "enabled_missing_from_inventory": [],
+      "forced_missing_from_baseline": [],
+      "forced_missing_from_inventory": [],
+      "inventory_enabled_count": 1,
+      "inventory_forced_count": 0,
+      "status": "PASS"
+    },
+    "rls_policies": {
+      "baseline_count": 1,
+      "inventory_count": 1,
+      "missing_from_baseline": [],
+      "missing_from_inventory": [],
+      "status": "PASS"
+    },
+    "rls_policy_properties": {
+      "compared_policies": 1,
+      "mismatches": [],
+      "status": "PASS"
+    },
+    "routine_properties": {
+      "compared_routines": 3,
+      "mismatches": [],
+      "source": "structured PostgreSQL catalogue definitions and properties",
+      "status": "PASS"
+    },
+    "table_columns": {
+      "baseline_count": 24,
+      "inventory_count": 24,
+      "missing_from_baseline": [],
+      "missing_from_inventory": [],
+      "status": "PASS"
+    },
+    "trigger_definitions": {
+      "compared_triggers": 1,
+      "mismatches": [],
+      "status": "PASS"
+    },
+    "triggers": {
+      "baseline_count": 1,
+      "inventory_count": 1,
+      "missing_from_baseline": [],
+      "missing_from_inventory": [],
+      "status": "PASS"
+    },
+    "type_properties": {
+      "domain_base_type_mismatches": [],
+      "domain_types_compared": 1,
+      "enum_label_mismatches": [],
+      "enum_types_compared": 1,
+      "status": "PASS"
+    },
+    "types_and_domains": {
+      "baseline_count": 2,
+      "inventory_count": 2,
+      "missing_from_baseline": [],
+      "missing_from_inventory": [],
+      "status": "PASS"
+    },
+    "unsupported_object_discovery": {
+      "status": "PASS",
+      "unsupported_count": 0,
+      "visibility_failure_count": 0
+    }
+  },
+  "failures": [],
+  "limitation": "This compares catalogue/DDL coverage only. It does not reconstruct DDL, execute a restore, or establish restoration equivalence.",
+  "restoration_equivalence": false,
+  "status": "PASS"
+}
