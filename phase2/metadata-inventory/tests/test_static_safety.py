@@ -1,4 +1,5 @@
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -160,36 +161,72 @@ class StaticSafetyTests(unittest.TestCase):
 
  def target_selection_block(self):
   workflow=self.scanner_workflow()
-  start=workflow.index('          if [[ "$EVENT_NAME" == "push" ]]')
-  end=workflow.index('          [[ "$target_run_id" == "$APPROVED_RUN_ID" ]]',start)
-  return workflow[start:end]+'          [[ "$target_run_id" == "$APPROVED_RUN_ID" ]]\n'
+  start=workflow.index("# BEGIN APPROVED_PAIR_SELECTOR")+len("# BEGIN APPROVED_PAIR_SELECTOR")
+  end=workflow.index("# END APPROVED_PAIR_SELECTOR",start)
+  return "\n".join(line[10:] if line.startswith("          ") else line for line in workflow[start:end].splitlines())
 
- def test_dispatch_input_is_explicitly_captured(self):
+ def run_selector(self,event,run_id="",source_sha=""):
+  with tempfile.TemporaryDirectory() as tmp:
+   output=pathlib.Path(tmp)/"github-output.txt"
+   output.write_text("")
+   result=self.run_shell(self.target_selection_block(),EVENT_NAME=event,
+                         DISPATCH_RUN_ID=run_id,DISPATCH_SOURCE_SHA=source_sha,
+                         GITHUB_OUTPUT=str(output))
+   values={}
+   for line in output.read_text().splitlines():
+    key,value=line.split("=",1);values[key]=value
+   return result,values
+
+ def test_push_always_selects_pair_b(self):
+  result,values=self.run_selector("push","42640933100","41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb")
+  self.assertEqual(result.returncode,0,result.stderr)
+  self.assertEqual(values,{"target_run_id":"42652510694","target_source_sha":"294fa19fac21b5467b9cf2eb0acb428678395575"})
+
+ def test_dispatch_accepts_both_exact_approved_pairs(self):
+  pairs=[("42640933100","41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb"),
+         ("42652510694","294fa19fac21b5467b9cf2eb0acb428678395575")]
+  for run_id,sha in pairs:
+   with self.subTest(run_id=run_id):
+    result,values=self.run_selector("workflow_dispatch",run_id,sha)
+    self.assertEqual(result.returncode,0,result.stderr)
+    self.assertEqual(values,{"target_run_id":run_id,"target_source_sha":sha})
+
+ def test_dispatch_rejects_crossed_pairs(self):
+  pairs=[("42640933100","294fa19fac21b5467b9cf2eb0acb428678395575"),
+         ("42652510694","41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb")]
+  for run_id,sha in pairs:
+   with self.subTest(run_id=run_id):
+    result,_=self.run_selector("workflow_dispatch",run_id,sha)
+    self.assertNotEqual(result.returncode,0)
+
+ def test_dispatch_rejects_malformed_unknown_and_missing_values(self):
+  cases=[("4264093310x","41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb"),
+         ("42640933100","41c91e5b8be9bb1648eba7ddedbc9ff27ebfabB"),
+         ("42640933100",""),("","41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb"),
+         ("42640933101","41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb"),
+         ("42640933100","not-a-sha")]
+  for run_id,sha in cases:
+   with self.subTest(run_id=run_id,sha=sha):
+    result,_=self.run_selector("workflow_dispatch",run_id,sha)
+    self.assertNotEqual(result.returncode,0)
+
+ def test_selector_rejects_unsupported_events(self):
+  result,_=self.run_selector("schedule","42652510694","294fa19fac21b5467b9cf2eb0acb428678395575")
+  self.assertNotEqual(result.returncode,0)
+
+ def test_dispatch_requires_both_inputs(self):
   workflow=self.scanner_workflow()
-  self.assertRegex(workflow,r"DISPATCH_RUN_ID:\s*\$\{\{\s*inputs\.target_run_id\s*\}\}")
+  self.assertIn("target_run_id:",workflow)
+  self.assertIn("target_source_sha:",workflow)
+  self.assertIn("inputs.target_run_id",workflow)
+  self.assertIn("inputs.target_source_sha",workflow)
 
- def test_push_selects_only_the_approved_run(self):
-  result=self.run_shell(self.target_selection_block()+"printf '%s' \"$target_run_id\"",
-                        EVENT_NAME="push",DISPATCH_RUN_ID="",APPROVED_RUN_ID="42640933100")
-  self.assertEqual(result.returncode,0,result.stderr)
-  self.assertEqual(result.stdout,"42640933100")
-
- def test_dispatch_accepts_approved_numeric_run(self):
-  result=self.run_shell(self.target_selection_block()+"printf '%s' \"$target_run_id\"",
-                        EVENT_NAME="workflow_dispatch",DISPATCH_RUN_ID="42640933100",
-                        APPROVED_RUN_ID="42640933100")
-  self.assertEqual(result.returncode,0,result.stderr)
-  self.assertEqual(result.stdout,"42640933100")
-
- def test_dispatch_rejects_non_numeric_run_id(self):
-  result=self.run_shell(self.target_selection_block(),EVENT_NAME="workflow_dispatch",
-                        DISPATCH_RUN_ID="42640933100x",APPROVED_RUN_ID="42640933100")
-  self.assertNotEqual(result.returncode,0)
-
- def test_both_trigger_paths_reject_unapproved_run_ids(self):
-  result=self.run_shell(self.target_selection_block(),EVENT_NAME="workflow_dispatch",
-                        DISPATCH_RUN_ID="42640933101",APPROVED_RUN_ID="42640933100")
-  self.assertNotEqual(result.returncode,0)
+ def test_selector_contains_only_exact_approved_pairs(self):
+  selector=self.target_selection_block()
+  self.assertIn("42640933100:41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb",selector)
+  self.assertIn("42652510694:294fa19fac21b5467b9cf2eb0acb428678395575",selector)
+  self.assertEqual(selector.count("42640933100:"),1)
+  self.assertEqual(selector.count("42652510694:"),1)
 
  def test_source_workflow_name_and_path_are_validated(self):
   workflow=self.scanner_workflow()
@@ -230,8 +267,8 @@ class StaticSafetyTests(unittest.TestCase):
  def test_log_retrieval_uses_validated_source_run_and_job_identifiers(self):
   workflow=self.scanner_workflow()
   self.assertIn('gh run view "$target_run_id" --repo "$GITHUB_REPOSITORY" --job "$job_id" --log',workflow)
-  self.assertIn('target_run_id="$APPROVED_RUN_ID"',workflow)
-  self.assertIn('[[ "$target_run_id" == "$APPROVED_RUN_ID" ]]',workflow)
+  self.assertIn('target_run_id="$TARGET_RUN_ID"',workflow)
+  self.assertIn('target_run_id="$TARGET_RUN_ID"',workflow)
 
  def test_retrieval_nonempty_hash_and_scan_share_one_log_path(self):
   workflow=self.scanner_workflow()
@@ -240,6 +277,14 @@ class StaticSafetyTests(unittest.TestCase):
   self.assertIn(f'test -s {path}',workflow)
   self.assertIn(f'sha256sum {path}',workflow)
   self.assertIn(f'scan_sensitive.py {path}',workflow)
+
+ def test_scanner_source_integrity_is_pinned_and_verified_before_retrieval(self):
+  workflow=self.scanner_workflow()
+  self.assertIn("806789ebbe64e39af537415718b6b142d9f94e383def200390e6cf075e4ac238",workflow)
+  self.assertIn("bc76e0af5047a093c093710621f85f1d89f3cb07a8622c6da51dc7088a470233",workflow)
+  self.assertIn("sha256sum --check --strict",workflow)
+  self.assertLess(workflow.index("Verify pinned scanner source integrity"),
+                  workflow.index("Initialize evidence and verify source run identity"))
 
  def test_raw_logs_are_excluded_from_uploaded_artifact(self):
   workflow=self.scanner_workflow()
