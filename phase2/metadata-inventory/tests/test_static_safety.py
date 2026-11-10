@@ -238,7 +238,7 @@ class StaticSafetyTests(unittest.TestCase):
  def test_source_branch_and_exact_commit_are_validated(self):
   workflow=self.scanner_workflow()
   self.assertRegex(workflow,r'--arg branch "\$APPROVED_BRANCH"')
-  self.assertRegex(workflow,r'--arg sha "\$APPROVED_SOURCE_SHA"')
+  self.assertRegex(workflow,r'--arg sha "\$target_source_sha"')
   self.assertRegex(workflow,r'\.head_branch == \$branch')
   self.assertRegex(workflow,r'\.head_sha == \$sha')
 
@@ -294,7 +294,7 @@ class StaticSafetyTests(unittest.TestCase):
  def test_scanner_failure_causes_final_gate_to_fail(self):
   workflow=self.scanner_workflow()
   start=workflow.index('          [[ "$RETRIEVAL_OUTCOME" == "success" ]]')
-  gate=workflow[start:workflow.index("\n",workflow.index('          [[ "$SCAN_OUTCOME" == "success" ]]',start))+1]
+  gate=workflow[start:workflow.index('\n\n',start)]
   result=self.run_shell(gate,RETRIEVAL_OUTCOME="success",SCAN_OUTCOME="failure")
   self.assertNotEqual(result.returncode,0)
   passed=self.run_shell(gate,RETRIEVAL_OUTCOME="success",SCAN_OUTCOME="success")
