@@ -1,4 +1,4 @@
-import io, json, os, pathlib, tempfile, unittest, zipfile, hashlib
+import io, json, os, pathlib, tempfile, unittest, zipfile, hashlib, subprocess
 from unittest.mock import patch
 import sys
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parents[1]))
