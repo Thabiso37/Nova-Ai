@@ -3,7 +3,7 @@ on:
   workflow_run:
     workflows: ["Phase 2 Metadata Inventory Prototype"]
     types: [completed]
-    branches: [feature/metadata-only-inventory-prototype]
+    branches: [main]
   repository_dispatch:
     types: [phase2-approved-log-scan]
 permissions:
@@ -47,6 +47,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Execute fail-closed trusted scanner
+        id: scan_evidence
         run: python trusted-orchestrator-source/trusted-log-scan/trusted_scan.py
       - name: Validate evidence allowlist and stage sanitized artifact
         id: stage_evidence
@@ -69,3 +70,19 @@ jobs:
             trusted-evidence-upload/
           if-no-files-found: error
           retention-days: 90
+      - name: Enforce scanner and evidence final gate
+        if: always()
+        env:
+          SCANNER_OUTCOME: ${{ steps.scan_evidence.outcome }}
+          STAGING_OUTCOME: ${{ steps.stage_evidence.outcome }}
+        run: |
+          python - <<'PY'
+          import os, sys
+          if os.environ.get("SCANNER_OUTCOME") != "success":
+              print("scanner_step_not_successful", file=sys.stderr)
+              sys.exit(1)
+          if os.environ.get("STAGING_OUTCOME") != "success":
+              print("evidence_staging_not_successful", file=sys.stderr)
+              sys.exit(1)
+          print("F-02 evidence final gate passed")
+          PY
