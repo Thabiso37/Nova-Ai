@@ -146,6 +146,38 @@ class ValidationBehavior(unittest.TestCase):
    self.assertNotIn(raw.name,ts.safe_artifact_manifest(e,raw))
    (e/"unexpected.bin").write_bytes(b"x")
    with self.assertRaisesRegex(ts.Reject,"unexpected_artifact_file"):ts.safe_artifact_manifest(e,raw)
+ def test_successful_execution_records_source_job_and_scanner_integrity(self):
+  import types, shutil
+  source_checkout=pathlib.Path.cwd()/"approved-scanner-source"
+  class SuccessfulAdapter:
+   def run_metadata(self,run_id): return GOOD_META
+   def jobs(self,run_id): return [GOOD_JOB],1
+   def logs(self,job_id): return archive(b"clean workflow log\\n")
+   def git(self,args):
+    if "rev-parse" in args and "HEAD" in args: return ts.SCANNER_SHA
+    if "--git-common-dir" in args: return ".git"
+    if "remote" in args: return ""
+    raise AssertionError(args)
+   def clone(self,source,dest,sha):
+    dest.mkdir(parents=True);(dest/".git/objects/info").mkdir(parents=True)
+    target=dest/"phase2/metadata-inventory";target.mkdir(parents=True)
+    for name in ts.HASHES: shutil.copyfile(source_checkout/"phase2/metadata-inventory"/name,target/name)
+   def scan_runner(self,args,**kwargs): return types.SimpleNamespace(returncode=0,stdout="SCAN PASS\\n",stderr="")
+  with tempfile.TemporaryDirectory() as d:
+   env={"EVENT_NAME":"repository_dispatch","DISPATCH_ACTOR":"Thabiso37","DISPATCH_RUN_ID":"42640933100",
+        "DISPATCH_SOURCE_SHA":GOOD_SHA,"EVENT_RUN_ID":"","EVENT_RUN_ATTEMPT":"0"}
+   with patch.dict(os.environ,env,clear=False),patch.object(ts.pathlib.Path,"cwd",return_value=pathlib.Path(d)):
+    ts.execute(SuccessfulAdapter())
+   evidence=pathlib.Path(d)/"trusted-evidence"
+   summary=json.loads((evidence/"summary.json").read_text())
+   self.assertEqual(summary["result"],"PASS")
+   self.assertEqual(summary["source_run_id"],"42640933100")
+   self.assertEqual(summary["source_sha"],GOOD_SHA)
+   self.assertEqual(summary["selected_job_id"],991)
+   self.assertEqual(summary["scanner_hashes"],{k:{"sha256":v,"expected":v,"match":True} for k,v in ts.HASHES.items()})
+   staged=pathlib.Path(d)/"staged"
+   files=ts.stage_sanitized_artifact(evidence,evidence/"raw-source-job-logs.txt",staged)
+   self.assertNotIn("raw-source-job-logs.txt",files)
  def test_execute_failure_writes_fail_closed_evidence(self):
   class NeverCalled:
    def run_metadata(self,*a): raise AssertionError("must reject before API access")
