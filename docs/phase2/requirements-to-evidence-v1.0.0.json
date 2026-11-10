@@ -139,22 +139,10 @@
         "Phase roadmap approval dated 2026-11-09"
       ],
       "notes": "Later Phase 7 work; no independent reviewer is claimed."
-    },
-    {
-      "id": "P2-EVIDENCE-JSON",
-      "requirement": "Separate machine-readable comparison outputs in closeout evidence",
-      "status": "COMPLETE",
-      "evidence": [
-        "structured-catalogue-comparison.json",
-        "pg-dump-comparison.json"
-      ],
-      "notes": "Both are extracted from exact stdout in source job logs; they were not present as separate files in the original artifact."
     }
   ],
-  "phase_2_acceptance_readiness": "READY FOR OWNER REVIEW OF REQUIREMENTS PROVENANCE AND CLOSEOUT PR; NOT AUTOMATICALLY ACCEPTED",
-  "mandatory_blockers": [
-    "Owner confirmation that requirements-v1.0.0.md accurately transcribes the original Phase 2 approval, because a verbatim approval artifact was not located."
-  ],
+  "phase_2_acceptance_readiness": "OWNER REQUIREMENTS CONFIRMATION RECEIVED; CLOSEOUT REVIEW PENDING; PHASE 2 NOT FORMALLY ACCEPTED",
+  "mandatory_blockers": [],
   "optional_hardening": [
     "Configure suitable main-branch protection/rulesets through a separately authorized governance change.",
     "Pin PostgreSQL container image by immutable digest after verifying official image provenance and architecture.",
@@ -175,6 +163,18 @@
       "notes": "This comparison passed with no failures. It is retained as supplemental implementation evidence; the recovered original Phase 2 approval does not establish it as a separate Phase 2 acceptance gate."
     },
     {
+      "id": "P2-EVIDENCE-JSON",
+      "name": "Separate machine-readable comparison outputs in closeout evidence",
+      "status": "COMPLETE",
+      "classification": "ADMINISTRATIVE_CLOSEOUT_DELIVERABLE",
+      "mandatory_phase2_gate": false,
+      "evidence": [
+        "structured-catalogue-comparison.json",
+        "pg-dump-comparison.json"
+      ],
+      "notes": "Administrative deliverable for the documentation/evidence closeout, not an approved Phase 2 requirement. Both are extracted from exact stdout in source job logs; they were not present as separate files in the original artifact."
+    },
+    {
       "id": "CROSS-MILESTONE-F02",
       "name": "F-02 Trusted Workflow Log Scanner",
       "status": "COMPLETE",
@@ -186,20 +186,19 @@
         "Scanner run 42800891197",
         "Approved scanner commit 294fa19fac21b5467b9cf2eb0acb428678395575"
       ],
-      "notes": "Recorded separately as an already accepted milestone. It is not used to expand the original Phase 2 inventory requirements."
+      "notes": "Recorded separately as an already accepted cross-milestone. It is not used to expand the original Phase 2 inventory requirements."
     }
   ],
   "administrative_closeout": [
     {
       "id": "ADMIN-REQ-PROVENANCE",
       "item": "Owner confirmation of canonical requirements transcription",
-      "status": "UNVERIFIED",
+      "status": "COMPLETE",
       "evidence": [
-        "Recovered user approval records from 2026-11-09 conversation",
-        "Contemporaneous README and scope files",
+        "Owner confirmation received 2026-11-10: requirements-v1.0.0.md accurately represents the original approved Phase 2 scope.",
         "docs/phase2/requirements-v1.0.0.md"
       ],
-      "notes": "No verbatim signed/original approval artifact was found in the repository. Owner review is required before final formal acceptance."
+      "notes": "The owner confirmed the controlled transcription. The absence of a verbatim signed/original approval file remains disclosed as a source limitation, but no longer blocks confirmation of the transcription."
     }
   ]
 }
