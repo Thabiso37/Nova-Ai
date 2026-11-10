@@ -14,6 +14,18 @@ def archive(data=b"ordinary workflow log\n"):
  return b.getvalue()
 
 class ValidationBehavior(unittest.TestCase):
+ def test_trusted_workflow_trigger_and_checkout_boundary(self):
+  workflow=pathlib.Path(".github/workflows/phase2-trusted-workflow-log-scan.yml").read_text()
+  self.assertIn("workflow_run:",workflow)
+  self.assertIn("repository_dispatch:",workflow)
+  self.assertNotIn("workflow_dispatch:",workflow)
+  self.assertIn("ref: ${{ github.sha }}",workflow)
+  self.assertIn("path: trusted-orchestrator-source",workflow)
+  self.assertIn("ref: 294fa19fac21b5467b9cf2eb0acb428678395575",workflow)
+  self.assertNotIn("actions/download-artifact",workflow)
+  self.assertIn("actions: read",workflow)
+  self.assertIn("contents: read",workflow)
+  self.assertNotIn("contents: write",workflow)
  def test_trusted_execution_requires_main_default_branch_context(self):
   self.assertEqual(ts.validate_trusted_context("refs/heads/main","a"*40),"a"*40)
   with self.assertRaisesRegex(ts.Reject,"trusted_workflow_not_running_from_main"):
@@ -199,6 +211,11 @@ class ValidationBehavior(unittest.TestCase):
    self.assertEqual(summary["result"],"FAIL")
    self.assertIn("unauthorized_dispatch_actor",summary["rejected_conditions"][0])
    self.assertFalse(summary["raw_logs_uploaded"])
+   cli_env=dict(os.environ,**env)
+   cli_env["GITHUB_WORKSPACE"]=d
+   result=subprocess.run([sys.executable,str(pathlib.Path(__file__).resolve().parents[1]/"trusted_scan.py")],
+                         cwd=d,env=cli_env,capture_output=True,text=True)
+   self.assertNotEqual(result.returncode,0,"scanner failure must propagate as a non-successful process exit")
 
  def test_untrusted_workflow_definition_is_not_executed(self):
   # Eligibility depends on an exact run/SHA allowlist; workflow text remains inert log data.
