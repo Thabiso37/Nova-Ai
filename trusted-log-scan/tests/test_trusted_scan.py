@@ -375,4 +375,72 @@ class ValidationBehavior(unittest.TestCase):
   self.assertEqual(workflow.count("actions/checkout@"),2)
   self.assertEqual(workflow.count("persist-credentials: false"),2)
 
+
+class RedirectTransportIntegration(unittest.TestCase):
+ def _opener(self,routes):
+  import io
+  from email.message import Message
+  from urllib.request import HTTPSHandler,build_opener
+  from urllib.response import addinfourl
+  class Adapter(HTTPSHandler):
+   def https_open(inner,req):
+    status,headers,body=routes(req)
+    msg=Message()
+    for k,v in headers.items():msg[k]=v
+    response=addinfourl(io.BytesIO(body),msg,req.full_url,code=status)
+    response.status=status
+    return response
+  adapter=Adapter()
+  return build_opener(ts.SafeRedirectHandler(),adapter)
+ def _redirect(self,location):
+  opener=self._opener(lambda req:(302,{"Location":location},b""))
+  with self.assertRaises(ts.Reject) as caught:
+   ts.fetch_job_log_text("o/r",42,"DO_NOT_LEAK_TOKEN",opener,max_bytes=1024)
+  self.assertNotIn("DO_NOT_LEAK_TOKEN",str(caught.exception))
+  self.assertNotIn("sig=SECRET",str(caught.exception))
+ def test_full_redirect_path_accepts_documented_blob_storage_domain(self):
+  body=b"complete log\n"
+  def route(req):
+   if req.full_url.startswith("https://api.github.com/"):
+    self.assertIn("DO_NOT_LEAK_TOKEN",req.get_header("Authorization"))
+    return 302,{"Location":"https://storage1.blob.core.windows.net/log?sig=SECRET"},b""
+   self.assertIsNone(req.get_header("Authorization"))
+   self.assertIsNone(req.get_header("Cookie"))
+   return 200,{"Content-Type":"text/plain; charset=utf-8","Content-Length":str(len(body))},body
+  self.assertEqual(ts.fetch_job_log_text("o/r",42,"DO_NOT_LEAK_TOKEN",self._opener(route),max_bytes=1024),body)
+ def test_unapproved_https_host_rejected(self): self._redirect("https://example.com/log?sig=SECRET")
+ def test_lookalike_hostname_rejected(self): self._redirect("https://blob.core.windows.net.attacker.example/log")
+ def test_http_scheme_rejected(self): self._redirect("http://storage.blob.core.windows.net/log")
+ def test_embedded_credentials_rejected(self): self._redirect("https://user:pass@storage.blob.core.windows.net/log")
+ def test_ip_literal_rejected(self): self._redirect("https://192.0.2.1/log")
+ def test_redirect_count_bounded_through_urllib(self):
+  requests=[]
+  def route(req):
+   requests.append(req)
+   return 302,{"Location":f"https://h{len(requests)}.blob.core.windows.net/log"},b""
+  with self.assertRaisesRegex(ts.Reject,"log_redirect_limit_exceeded"):
+   ts.fetch_job_log_text("o/r",42,"TOKEN",self._opener(route),max_bytes=1024)
+  self.assertEqual(len(requests),ts.MAX_LOG_REDIRECTS+1)
+ def test_missing_content_length_is_still_stream_bounded(self):
+  def route(req):
+   if req.full_url.startswith("https://api.github.com/"):
+    return 302,{"Location":"https://storage.blob.core.windows.net/log"},b""
+   return 200,{"Content-Type":"text/plain"},b"x"*40
+  with self.assertRaisesRegex(ts.Reject,"log_exceeds_size_limit"):
+   ts.fetch_job_log_text("o/r",42,"TOKEN",self._opener(route),max_bytes=10)
+ def test_invalid_utf8_binary_empty_and_length_mismatch(self):
+  cases=[(b"\xff",{"Content-Type":"text/plain"},"malformed_log_encoding"),
+         (b"\x00\x01",{"Content-Type":"text/plain"},"malformed_log_content"),
+         (b"",{"Content-Type":"text/plain"},"empty_log"),
+         (b"hello",{"Content-Type":"text/plain","Content-Length":"99"},"truncated_or_inconsistent_log_response")]
+  for body,headers,reason in cases:
+   def route(req,body=body,headers=headers):
+    if req.full_url.startswith("https://api.github.com/"):
+     return 302,{"Location":"https://storage.blob.core.windows.net/log"},b""
+    return 200,headers,body
+   with self.subTest(reason=reason),self.assertRaisesRegex(ts.Reject,reason):
+    ts.fetch_job_log_text("o/r",42,"TOKEN",self._opener(route),max_bytes=1024)
+ def test_failure_message_never_contains_signed_redirect_or_token(self):
+  self._redirect("https://evil.example/log?sig=SECRET")
+
 if __name__=="__main__":unittest.main(verbosity=2)
