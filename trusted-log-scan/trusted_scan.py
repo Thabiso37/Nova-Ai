@@ -220,6 +220,8 @@ def fetch_job_log_text(repo, job_id, token, opener=None, *, max_bytes=LOG_MAX_BY
         finally:
             response.close()
     except Reject: raise
+    except urllib.error.HTTPError as exc:
+        raise Reject("log_retrieval_http_failure:HTTPError")
     except Exception as exc:
         # Never include exception text: it may contain a signed redirect URL.
         raise Reject("log_retrieval_failure:"+type(exc).__name__)
