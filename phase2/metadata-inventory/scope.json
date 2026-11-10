@@ -1,0 +1,16 @@
+{
+  "format_version": 1,
+  "schemas": [
+    "novaai_app",
+    "novaai_private",
+    "supabase_managed_fixture",
+    "environment_specific_fixture"
+  ],
+  "note": "The schema list is the explicit synthetic fixture scope. Provenance is determined only by exact entries in provenance_registry.json backed by migration_history; this scope file does not classify objects by schema name or owner role. The Supabase-managed and environment-specific entries are synthetic classification probes, not claims about actual Supabase or NOVAAI production objects.",
+  "not_present_in_fixture_schemas": [
+    "auth",
+    "storage",
+    "realtime",
+    "vault"
+  ]
+}

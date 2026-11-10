@@ -3,11 +3,15 @@
 from __future__ import annotations
 import hashlib, json, os, pathlib, re, shutil, subprocess, sys, tempfile, http.client, urllib.error, urllib.parse, urllib.request
 
-BRANCH = "feature/metadata-only-inventory-prototype"
+BRANCH = "main"
+HISTORICAL_BRANCH = "feature/metadata-only-inventory-prototype"
 WORKFLOW_ID = 411977040
 WORKFLOW_NAME = "Phase 2 Metadata Inventory Prototype"
 WORKFLOW_PATH = ".github/workflows/phase2-metadata-inventory.yml"
 SOURCE_REPOSITORY = "Thabiso37/Nova-Ai"
+SOURCE_REPOSITORY_ID = 1436066881
+ALLOWED_ACTOR_ID = 150135093
+SOURCE_EVENT = "workflow_dispatch"
 SCANNER_SHA = "294fa19fac21b5467b9cf2eb0acb428678395575"
 HASHES = {
  "scan_sensitive.py":"806789ebbe64e39af537415718b6b142d9f94e383def200390e6cf075e4ac238",
@@ -17,9 +21,6 @@ HISTORICAL_PAIRS = {
  ("42640933100","41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb"),
  ("42652510694","294fa19fac21b5467b9cf2eb0acb428678395575"),
 }
-# Future runs are NEVER eligible by workflow name/ID alone. Add a pair only
-# through a reviewed change to this trusted default-branch file.
-FUTURE_APPROVED_PAIRS: set[tuple[str,str]] = set()
 ALLOWED_ACTOR = "Thabiso37"
 TARGET_JOB = "disposable-postgres-17"
 
@@ -42,34 +43,66 @@ def validate_event(event_name, actor, payload, run_event=None):
         if not isinstance(run_event, dict): raise Reject("missing_workflow_run_event")
         run_id = str(run_event.get("id", ""))
         attempt = run_event.get("run_attempt")
-        if not run_id.isdigit() or attempt != 1: raise Reject("invalid_or_unexpected_workflow_run_attempt")
-        return "future", run_id, None, 1
+        if not run_id.isdigit() or not run_id or type(attempt) is not int or attempt != 1:
+            raise Reject("invalid_or_unexpected_workflow_run_attempt")
+        return "future", run_id, None, attempt
     raise Reject("unsupported_event")
 
-def validate_run_metadata(meta, run_id, mode, requested_sha=None, future_pairs=None):
-    if not isinstance(meta, dict): raise Reject("invalid_run_metadata")
-    checks = [
-      (meta.get("id") == int(run_id), "run_id_mismatch"),
-      (meta.get("workflow_id") == WORKFLOW_ID, "workflow_id_mismatch"),
-      (meta.get("name") == WORKFLOW_NAME, "workflow_name_mismatch"),
-      (meta.get("path") in (WORKFLOW_PATH, WORKFLOW_PATH+"@refs/heads/"+BRANCH), "workflow_path_mismatch"),
-      (meta.get("head_branch") == BRANCH, "source_branch_mismatch"),
-      (isinstance(meta.get("head_repository"),dict) and meta["head_repository"].get("full_name") == SOURCE_REPOSITORY, "source_repository_mismatch"),
-      (meta.get("event") == "push", "source_event_mismatch"),
-      (meta.get("status") == "completed" and meta.get("conclusion") == "success", "source_run_not_successful"),
-      (meta.get("run_attempt") == 1, "unexpected_run_attempt"),
-    ]
-    for ok, reason in checks:
-        if not ok: raise Reject(reason)
-    sha = meta.get("head_sha")
-    if not isinstance(sha,str) or not re.fullmatch(r"[0-9a-f]{40}",sha): raise Reject("invalid_source_commit_sha")
+def _valid_sha(value):
+    return isinstance(value,str) and re.fullmatch(r"[0-9a-f]{40}",value) is not None
+
+def _validate_actor(meta, field):
+    user=meta.get(field)
+    if not isinstance(user,dict):
+        raise Reject("missing_"+field)
+    if user.get("login") != ALLOWED_ACTOR:
+        raise Reject("unauthorized_"+field)
+    if type(user.get("id")) is not int or user["id"] != ALLOWED_ACTOR_ID:
+        raise Reject("unauthorized_"+field+"_id")
+
+def validate_run_metadata(meta, run_id, mode, requested_sha=None, future_pairs=None, event_attempt=1):
+    if not isinstance(meta,dict): raise Reject("invalid_run_metadata")
+    if type(meta.get("id")) is not int or meta["id"] != int(run_id):
+        raise Reject("run_id_mismatch")
+    if type(meta.get("workflow_id")) is not int or meta["workflow_id"] != WORKFLOW_ID:
+        raise Reject("workflow_id_mismatch")
+    if meta.get("name") != WORKFLOW_NAME: raise Reject("workflow_name_mismatch")
+    if meta.get("path") != WORKFLOW_PATH: raise Reject("workflow_path_mismatch")
+    if mode == "historical":
+        if meta.get("head_branch") != HISTORICAL_BRANCH: raise Reject("source_branch_mismatch")
+        head=meta.get("head_repository")
+        if not isinstance(head,dict) or head.get("full_name") != SOURCE_REPOSITORY:
+            raise Reject("source_repository_mismatch")
+        if meta.get("event") != "push": raise Reject("source_event_mismatch")
+    elif mode == "future":
+        repo=meta.get("repository")
+        head=meta.get("head_repository")
+        if (not isinstance(repo,dict) or type(repo.get("id")) is not int
+            or repo.get("id") != SOURCE_REPOSITORY_ID
+            or repo.get("full_name") != SOURCE_REPOSITORY):
+            raise Reject("source_repository_mismatch")
+        if (not isinstance(head,dict) or type(head.get("id")) is not int
+            or head.get("id") != SOURCE_REPOSITORY_ID
+            or head.get("full_name") != SOURCE_REPOSITORY):
+            raise Reject("head_repository_mismatch")
+        if meta.get("head_branch") != BRANCH: raise Reject("source_branch_mismatch")
+        if meta.get("event") != SOURCE_EVENT: raise Reject("source_event_mismatch")
+        _validate_actor(meta,"actor")
+        _validate_actor(meta,"triggering_actor")
+    else:
+        raise Reject("unknown_validation_mode")
+    if meta.get("status") != "completed" or meta.get("conclusion") != "success":
+        raise Reject("source_run_not_successful")
+    if type(meta.get("run_attempt")) is not int or meta["run_attempt"] != 1:
+        raise Reject("unexpected_run_attempt")
+    if mode == "future" and (type(event_attempt) is not int or event_attempt != meta["run_attempt"]):
+        raise Reject("event_run_attempt_mismatch")
+    sha=meta.get("head_sha")
+    if not _valid_sha(sha): raise Reject("invalid_source_commit_sha")
     pair=(str(run_id),sha)
     if mode == "historical":
-        if pair not in HISTORICAL_PAIRS or sha != requested_sha: raise Reject("run_metadata_does_not_match_approved_pair")
-    elif mode == "future":
-        if pair not in (future_pairs if future_pairs is not None else FUTURE_APPROVED_PAIRS):
-            raise Reject("future_run_pair_not_explicitly_approved")
-    else: raise Reject("unknown_validation_mode")
+        if pair not in HISTORICAL_PAIRS or sha != requested_sha:
+            raise Reject("run_metadata_does_not_match_approved_pair")
     return sha
 
 def validate_jobs(pages, total_count):

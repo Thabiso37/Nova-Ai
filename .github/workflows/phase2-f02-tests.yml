@@ -1,16 +1,20 @@
 name: Phase 2 F-02 Trusted Scanner Tests
 on:
   push:
-    branches: [feature/phase2-f02-trusted-orchestrator]
+    branches: [feature/phase2-f02-manual-synthetic-run]
     paths:
       - "trusted-log-scan/**"
+      - "phase2/metadata-inventory/**"
       - ".github/workflows/phase2-trusted-workflow-log-scan.yml"
+      - ".github/workflows/phase2-metadata-inventory.yml"
       - ".github/workflows/phase2-f02-tests.yml"
   pull_request:
     branches: [main]
     paths:
       - "trusted-log-scan/**"
+      - "phase2/metadata-inventory/**"
       - ".github/workflows/phase2-trusted-workflow-log-scan.yml"
+      - ".github/workflows/phase2-metadata-inventory.yml"
       - ".github/workflows/phase2-f02-tests.yml"
 permissions:
   contents: read

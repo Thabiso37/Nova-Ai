@@ -6,7 +6,7 @@ import trusted_scan as ts
 
 GOOD_SHA="41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb"
 GOOD_META={"id":42640933100,"workflow_id":411977040,"name":ts.WORKFLOW_NAME,"path":ts.WORKFLOW_PATH,
- "head_branch":ts.BRANCH,"head_repository":{"full_name":"Thabiso37/Nova-Ai"},"head_sha":GOOD_SHA,"event":"push","status":"completed","conclusion":"success","run_attempt":1}
+ "head_branch":ts.HISTORICAL_BRANCH,"head_repository":{"full_name":"Thabiso37/Nova-Ai"},"head_sha":GOOD_SHA,"event":"push","status":"completed","conclusion":"success","run_attempt":1}
 GOOD_JOB={"id":991,"name":ts.TARGET_JOB,"status":"completed","conclusion":"success"}
 class ValidationBehavior(unittest.TestCase):
  def test_trusted_workflow_trigger_and_checkout_boundary(self):
@@ -65,13 +65,16 @@ class ValidationBehavior(unittest.TestCase):
    ts.validate_run_metadata(dict(GOOD_META,run_attempt=2),"42640933100","historical",GOOD_SHA)
   with self.assertRaises(ts.Reject):
    ts.validate_event("workflow_run","Thabiso37",{},{"id":"7","run_attempt":2})
- def test_future_run_requires_explicit_exact_pair_approval(self):
+ def test_manual_workflow_run_uses_authoritative_metadata(self):
   event={"id":"77","run_attempt":1}
-  mode,rid,_,_=ts.validate_event("workflow_run","Thabiso37",{},event)
-  future=dict(GOOD_META,id=77)
-  with self.assertRaisesRegex(ts.Reject,"future_run_pair_not_explicitly_approved"):
-   ts.validate_run_metadata(future,rid,mode)
-  self.assertEqual(ts.validate_run_metadata(future,rid,mode,future_pairs={("77",GOOD_SHA)}),GOOD_SHA)
+  mode,rid,_,attempt=ts.validate_event("workflow_run","Thabiso37",{},event)
+  future={"id":77,"workflow_id":ts.WORKFLOW_ID,"name":ts.WORKFLOW_NAME,"path":ts.WORKFLOW_PATH,
+   "repository":{"id":ts.SOURCE_REPOSITORY_ID,"full_name":ts.SOURCE_REPOSITORY},
+   "head_repository":{"id":ts.SOURCE_REPOSITORY_ID,"full_name":ts.SOURCE_REPOSITORY},
+   "head_branch":"main","event":"workflow_dispatch","actor":{"login":"Thabiso37","id":150135093},
+   "triggering_actor":{"login":"Thabiso37","id":150135093},"status":"completed","conclusion":"success",
+   "run_attempt":1,"head_sha":"a"*40}
+  self.assertEqual(ts.validate_run_metadata(future,rid,mode,event_attempt=attempt),"a"*40)
  def test_missing_duplicate_and_failed_jobs_rejected(self):
   with self.assertRaisesRegex(ts.Reject,"duplicate_or_invalid_job_ids"):ts.validate_jobs([GOOD_JOB,dict(GOOD_JOB,name="other")],2)
   with self.assertRaisesRegex(ts.Reject,"missing_target_job"):ts.validate_jobs([{"id":1,"name":"other"}],1)
@@ -254,8 +257,7 @@ class ValidationBehavior(unittest.TestCase):
 
  def test_untrusted_workflow_definition_is_not_executed(self):
   # Eligibility depends on an exact run/SHA allowlist; workflow text remains inert log data.
-  self.assertEqual(ts.FUTURE_APPROVED_PAIRS,set())
-  with self.assertRaisesRegex(ts.Reject,"future_run_pair_not_explicitly_approved"):
+  with self.assertRaisesRegex(ts.Reject,"source_repository_mismatch"):
    ts.validate_run_metadata(dict(GOOD_META,id=88),"88","future")
   scanner=pathlib.Path("approved-scanner-source/phase2/metadata-inventory/scan_sensitive.py")
   with tempfile.TemporaryDirectory() as d:

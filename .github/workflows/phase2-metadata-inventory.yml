@@ -1,0 +1,145 @@
+name: Phase 2 Metadata Inventory Prototype
+on:
+  workflow_dispatch:
+concurrency:
+  group: phase2-metadata-inventory-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  disposable-postgres-17:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - name: Install Python dependency
+        run: python -m pip install -r phase2/metadata-inventory/requirements.txt
+      - name: Start disposable PostgreSQL 17.11 with logical WAL
+        run: |
+          docker run -d --name phase2-postgres -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_DB=inventory_test -p 5432:5432 postgres:17.11 -c wal_level=logical
+          for attempt in $(seq 1 40); do
+            if docker exec phase2-postgres pg_isready -U postgres -d inventory_test; then exit 0; fi
+            sleep 2
+          done
+          docker logs phase2-postgres
+          exit 1
+      - name: Verify disposable PostgreSQL 17.11 server
+        run: |
+          set -o pipefail
+          docker exec phase2-postgres psql -X -U postgres -d inventory_test -v ON_ERROR_STOP=1 -Atc "SHOW server_version" | tee server-version.txt
+          grep -E '^17\.11([ -]|$)' server-version.txt
+      - name: Create synthetic database fixtures
+        run: set -o pipefail; docker exec -i phase2-postgres psql -X -U postgres -d inventory_test -v ON_ERROR_STOP=1 -f - < phase2/metadata-inventory/fixtures/bootstrap.sql 2>&1 | tee -a workflow-captured.log
+      - name: Run static safety tests
+        run: set -o pipefail; python -m unittest discover -s phase2/metadata-inventory/tests -v 2>&1 | tee -a workflow-captured.log
+      - name: Verify synthetic migration provenance against Git blob identities
+        run: set -o pipefail; python phase2/metadata-inventory/verify_provenance.py | tee provenance-verification.json | tee -a workflow-captured.log
+      - name: Demonstrate exported snapshot consistency under concurrent DDL
+        env:
+          BASELINE_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=postgres"
+        run: set -o pipefail; python phase2/metadata-inventory/snapshot_consistency_test.py | tee snapshot-consistency.json | tee -a workflow-captured.log
+      - name: Audit inspector role configuration and privilege boundaries
+        env:
+          INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector"
+        run: set -o pipefail; python phase2/metadata-inventory/security_audit.py | tee security-audit.json | tee -a workflow-captured.log
+
+      - name: Build disposable SECURITY LABEL provider for positive catalogue probes
+        if: always()
+        run: |
+          set -euo pipefail
+          docker run --rm --entrypoint bash -v "$GITHUB_WORKSPACE:/workspace" postgres:17.11 -lc '
+            apt-get update
+            apt-get install -y --no-install-recommends gcc postgresql-server-dev-17=17.11-1.pgdg13+2
+            test "$(pg_config --version)" = "PostgreSQL 17.11 (Debian 17.11-1.pgdg13+2)"
+            gcc -fPIC -shared -I"$(pg_config --includedir-server)" -I"$(pg_config --includedir)" \
+              -o /workspace/phase2/metadata-inventory/fixtures/phase2_dummy_seclabel.so \
+              /workspace/phase2/metadata-inventory/fixtures/phase2_dummy_seclabel.c
+          '
+          docker cp phase2/metadata-inventory/fixtures/phase2_dummy_seclabel.so phase2-postgres:/tmp/phase2_dummy_seclabel.so
+          test -s phase2/metadata-inventory/fixtures/phase2_dummy_seclabel.so
+      - name: Create unsupported-object positive probes
+        run: set -o pipefail; docker exec -i phase2-postgres psql -X -U postgres -d inventory_test -v ON_ERROR_STOP=1 -f - < phase2/metadata-inventory/fixtures/unsupported_probes.sql 2>&1 | tee -a workflow-captured.log
+      - name: Verify SECURITY LABEL and CREATE TRANSFORM DDL without reading label values
+        run: |
+          set -o pipefail
+          docker exec phase2-postgres psql -X -U postgres -d inventory_test -Atc "SELECT jsonb_build_object('provider_ddl_executed',true,'object_label_rows',(SELECT count(*) FROM pg_catalog.pg_seclabel WHERE provider='phase2_dummy' AND classoid='pg_class'::regclass AND objoid='novaai_app.orders'::regclass),'shared_label_rows',(SELECT count(*) FROM pg_catalog.pg_shseclabel WHERE provider='phase2_dummy' AND classoid='pg_database'::regclass AND objoid=(SELECT oid FROM pg_catalog.pg_database WHERE datname=current_database())),'label_values_read',false,'transform_ddl_executed',true,'transform_rows',(SELECT count(*) FROM pg_catalog.pg_transform t JOIN pg_catalog.pg_type ty ON ty.oid=t.trftype JOIN pg_catalog.pg_namespace n ON n.oid=ty.typnamespace JOIN pg_catalog.pg_language l ON l.oid=t.trflang WHERE n.nspname='novaai_app' AND ty.typname='unsupported_range_probe' AND l.lanname='plpgsql'))::text" | tee security-label-provider-probe.json
+          python phase2/metadata-inventory/tests/assert_security_label_probe.py security-label-provider-probe.json
+      - name: Verify positive unsupported-object discovery
+        env:
+          INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector"
+        run: |
+          set -o pipefail
+          set +e
+          python phase2/metadata-inventory/detect_unsupported.py > unsupported-probe.json 2>>workflow-captured.log
+          detector_status=$?
+          set -e
+          if [ "$detector_status" -eq 0 ]; then
+            echo "Detector unexpectedly accepted injected unsupported objects."
+            exit 1
+          fi
+          python phase2/metadata-inventory/tests/assert_unsupported_probe.py unsupported-probe.json 2>&1 | tee -a workflow-captured.log
+      - name: Remove every unsupported-object probe
+        if: always()
+        run: set -o pipefail; docker exec -i phase2-postgres psql -X -U postgres -d inventory_test -v ON_ERROR_STOP=1 -f - < phase2/metadata-inventory/fixtures/remove_unsupported_probes.sql 2>&1 | tee -a workflow-captured.log
+      - name: Generate inventory, dependency and structured baseline from one exported snapshot
+        env:
+          INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector"
+          BASELINE_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=postgres"
+        run: set -o pipefail; python phase2/metadata-inventory/snapshot_coordinator.py 2>&1 | tee -a workflow-captured.log
+      - name: Discover clean unsupported-object state and catalogue visibility
+        env:
+          INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector"
+        run: set -o pipefail; python phase2/metadata-inventory/detect_unsupported.py | tee unsupported.json | tee -a workflow-captured.log
+      - name: Run runtime negative security tests as restricted inspector
+        env:
+          INVENTORY_DSN: "host=127.0.0.1 port=5432 dbname=inventory_test user=novaai_inventory_inspector"
+        run: set -o pipefail; python phase2/metadata-inventory/runtime_security.py | tee runtime-security.json | tee -a workflow-captured.log
+      - name: Verify PostgreSQL 17.11 psql and pg_dump clients and generate schema-only SQL baseline
+        run: |
+          set -euo pipefail
+          docker exec phase2-postgres psql --version | tee baseline-psql-client-version.txt | tee -a workflow-captured.log
+          grep -E '^psql \(PostgreSQL\) 17\.11([ -]|$)' baseline-psql-client-version.txt
+          docker run --rm postgres:17.11 pg_dump --version | tee baseline-pgdump-client-version.txt | tee -a workflow-captured.log
+          grep -E '^pg_dump \(PostgreSQL\) 17\.11([ -]|$)' baseline-pgdump-client-version.txt
+          docker run --rm --network host postgres:17.11 pg_dump -h 127.0.0.1 -U postgres -d inventory_test --schema-only --schema=novaai_app --schema=novaai_private --schema=supabase_managed_fixture --schema=environment_specific_fixture > baseline.sql 2>>workflow-captured.log
+      - name: Scan evidence and captured command output
+        id: scan_evidence
+        if: always()
+        run: |
+          python phase2/metadata-inventory/scan_sensitive.py inventory.json baseline.sql baseline-dependencies.json runtime-security.json unsupported.json unsupported-probe.json security-label-provider-probe.json security-audit.json provenance-verification.json snapshot-consistency.json catalogue-baseline.json baseline-psql-client-version.txt baseline-pgdump-client-version.txt server-version.txt workflow-captured.log 2>&1 | tee sensitive-scan-report.txt
+      - name: Compare structured catalogue metadata
+        if: always()
+        run: python phase2/metadata-inventory/compare_catalogue.py inventory.json catalogue-baseline.json unsupported.json unsupported-probe.json
+      - name: Supplemental pg_dump identity and dependency comparison
+        if: always()
+        run: python phase2/metadata-inventory/compare_baseline.py inventory.json baseline.sql unsupported.json phase2/metadata-inventory/provenance_registry.json baseline-dependencies.json catalogue-baseline.json
+      - name: Upload test report
+        if: always() && steps.scan_evidence.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: phase2-metadata-inventory-report
+          path: |
+            inventory.json
+            baseline.sql
+            baseline-dependencies.json
+            runtime-security.json
+            unsupported.json
+            unsupported-probe.json
+            security-label-provider-probe.json
+            security-audit.json
+            provenance-verification.json
+            snapshot-consistency.json
+            catalogue-baseline.json
+            baseline-psql-client-version.txt
+            baseline-pgdump-client-version.txt
+            sensitive-scan-report.txt
+            server-version.txt
+            workflow-captured.log
+          if-no-files-found: warn
+
+      - name: Stop disposable PostgreSQL container
+        if: always()
+        run: docker rm -f phase2-postgres || true

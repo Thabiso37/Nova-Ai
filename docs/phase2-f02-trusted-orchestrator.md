@@ -2,7 +2,7 @@
 
 ## Sole-owner trust model
 
-The repository has one owner, `Thabiso37`. No independent reviewer or independent approval is claimed. This design is not an independent trust anchor against a malicious or compromised owner. F-02 remains OPEN until the workflow and evidence are independently assessed if a qualified independent reviewer becomes available.
+The repository has one owner, `Thabiso37`. Owner approval is not independent security review, and no independent reviewer or independent approval is claimed. This design is not an independent trust anchor against a malicious or compromised owner. F-02 remains OPEN until actual source execution, trusted scanning, artifact retrieval and digest verification are completed; independent assessment remains a separate desirable safeguard if a qualified reviewer becomes available.
 
 ## Trust and eligibility policy
 
@@ -12,11 +12,19 @@ Historical runs use a strict immutable pair allowlist:
 - `42640933100` — `41c91e5b8be9bb1648eba7ddedbc9ff27ebfabbb`
 - `42652510694` — `294fa19fac21b5467b9cf2eb0acb428678395575`
 
-The source workflow identity is checked against the source repository `Thabiso37/Nova-Ai`, ID `411977040`, name `Phase 2 Metadata Inventory Prototype`, path `.github/workflows/phase2-metadata-inventory.yml`, branch `feature/metadata-only-inventory-prototype`, event `push`, completed/success status and attempt 1. Job pagination must match a stable API total, contain unique job IDs, and match the API total, and exactly one completed/success `disposable-postgres-17` job must exist.
+The source workflow identity is checked using the GitHub REST workflow-run response: repository ID `1436066881` and full name `Thabiso37/Nova-Ai`; matching head repository identity; workflow ID `411977040`; exact name `Phase 2 Metadata Inventory Prototype`; canonical API path `.github/workflows/phase2-metadata-inventory.yml`; branch `main`; event `workflow_dispatch`; completed/success status; attempt 1; and a valid 40-character source SHA. Both `actor` and `triggering_actor` must be objects with login `Thabiso37` and numeric ID `150135093`. These fields are present in the documented REST workflow-run representation and were confirmed on a real historical run response. Event run ID and attempt must exactly match the REST response. Job pagination must match a stable API total, contain unique job IDs, and exactly one completed/success `disposable-postgres-17` job must exist.
 
 ### Future workflow_run policy
 
-A workflow name or workflow ID is NOT sufficient to trust a future run. The future-run path is separate from the historical allowlist and starts with an empty `FUTURE_APPROVED_PAIRS`. A future run is rejected unless its exact `(run_id, head_sha)` pair is explicitly added to that set by a reviewed change to this trusted default-branch implementation, after the source run has completed and its workflow identity, branch, event, conclusion, attempt, jobs and provenance have been inspected. Each pair is one-time and attempt 1 only. Do not automatically approve a run from the event itself. Updating the allowlist is a deliberate trust decision, not an automatic name match. This prevents candidate branch writers from gaining eligibility simply by producing another workflow_run event.
+The future-run path accepts only the manually dispatched synthetic workflow on `main`. It does not use a future run-ID/SHA pre-approval list: that design cannot be populated before the completed run automatically activates `workflow_run`. Instead, the completed run is eligible only after every authoritative REST metadata check listed above succeeds. The run ID and attempt from the workflow_run event must match the REST response exactly. No workflow name or ID alone can authorize a run.
+
+The REST workflow-run object exposes `repository`, `head_repository`, `actor`, `triggering_actor`, `workflow_id`, `path`, `head_branch`, `event`, `status`, `conclusion`, `run_attempt`, and `head_sha`. Actor checks use both `actor.login/id` and `triggering_actor.login/id`; they do not use the scanner workflow's `github.actor` as a substitute. Missing, malformed or mismatched fields reject the run before job listing or log retrieval.
+
+The source workflow on `main` is manual-dispatch only. It uses a disposable PostgreSQL 17.11 container, synthetic fixture DDL and localhost-only connection strings. Its complete 26-file `phase2/metadata-inventory/` dependency tree is included. The source workflow's checkout, Python setup and artifact upload actions are pinned to immutable commit SHAs. No production Supabase URL, database secret, production credential or deployment step is configured.
+
+The trusted scanner remains pinned to `294fa19fac21b5467b9cf2eb0acb428678395575`. It checks out only its own trusted main-branch source and that exact scanner source commit. It never checks out the source workflow's commit, downloads source artifacts, or executes source workflow code. Source logs are fetched through the read-only GitHub Actions API and treated as inert data. The scanner retains read-only `actions: read` and `contents: read` permissions, bounded HTTPS log retrieval, scanner integrity checks, raw-log exclusion, strict evidence manifests and atomic staging.
+
+Historical repository_dispatch remains separate and unchanged. It continues to require the exact historical run/SHA pairs listed above and the authorized dispatch actor. The new manual workflow_run path does not require a repository_dispatch credential.
 
 ## Dispatch credential
 
