@@ -53,7 +53,7 @@ jobs:
         run: |
           python - <<'PY'
           import pathlib,sys
-          sys.path.insert(0,"trusted-log-scan")
+          sys.path.insert(0,"trusted-orchestrator-source/trusted-log-scan")
           import trusted_scan
           e=pathlib.Path("trusted-evidence")
           raw=e/"raw-source-job-logs.txt"
