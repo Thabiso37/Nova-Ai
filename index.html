@@ -141,7 +141,7 @@ const groups=[
 ];
 const cars=items.filter(p=>['Auto','Motors & Vehicles'].includes(p.category)&&['car','suv'].includes(vehicleType(p))&&!['replacement part','accessory','car part','car accessory'].includes(listingType(p)));
 const parts=items.filter(p=>['Auto','Motors & Vehicles'].includes(p.category)&&['replacement part','accessory','car part','car accessory'].includes(listingType(p)));
-if(cars.length)groups.splice(2,0,{id:'cars',title:'Cars',items:cars});if(parts.length)groups.splice(cars.length?3:2,0,{id:'car-parts',title:'Car Parts & Accessories',items:parts});
+if(cars.length)groups.push({id:'cars',title:'Cars',items:cars});if(parts.length)groups.push({id:'car-parts',title:'Car Parts & Accessories',items:parts});
 return groups.filter(g=>g.items.length);
 }
 function renderCard(p,storesBySeller){
