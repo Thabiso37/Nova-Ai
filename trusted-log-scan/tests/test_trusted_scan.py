@@ -506,7 +506,9 @@ class RedirectLeakEvidenceTests(unittest.TestCase):
    def logs(self,job_id):
     class Routes:
      def open(inner,req,timeout):
-      raise ts.Reject("unsafe_log_redirect_target")
+      ts.SafeRedirectHandler().redirect_request(req,None,302,"Found",
+       {"Location":"https://evil.example/log?sig=DO_NOT_LEAK_SIGNATURE"},
+       "https://evil.example/log?sig=DO_NOT_LEAK_SIGNATURE")
     return ts.fetch_job_log_text("o/r",job_id,"DO_NOT_LEAK_TOKEN",Routes())
   with tempfile.TemporaryDirectory() as d:
    env={"EVENT_NAME":"repository_dispatch","DISPATCH_ACTOR":"Thabiso37",
@@ -523,5 +525,28 @@ class RedirectLeakEvidenceTests(unittest.TestCase):
     self.assertNotIn("DO_NOT_LEAK_SIGNATURE",content)
     self.assertNotIn("blob.core.windows.net",content)
    ts.safe_artifact_manifest(evidence,evidence/"raw-source-job-logs.txt")
+
+
+class ResponseFramingTests(unittest.TestCase):
+ def test_content_length_and_transfer_encoding_conflict_rejected(self):
+  class Response:
+   status=200
+   headers={"Content-Type":"text/plain","Content-Length":"4","Transfer-Encoding":"chunked"}
+   def read(self,n):return b"test"
+   def close(self):pass
+  class Opener:
+   def open(self,req,timeout):return Response()
+  with self.assertRaisesRegex(ts.Reject,"ambiguous_log_response_framing"):
+   ts.fetch_job_log_text("o/r",42,"TOKEN",Opener(),max_bytes=1024)
+ def test_unsupported_transfer_encoding_rejected(self):
+  class Response:
+   status=200
+   headers={"Content-Type":"text/plain","Transfer-Encoding":"gzip"}
+   def read(self,n):return b"test"
+   def close(self):pass
+  class Opener:
+   def open(self,req,timeout):return Response()
+  with self.assertRaisesRegex(ts.Reject,"unsupported_log_transfer_encoding"):
+   ts.fetch_job_log_text("o/r",42,"TOKEN",Opener(),max_bytes=1024)
 
 if __name__=="__main__":unittest.main(verbosity=2)
