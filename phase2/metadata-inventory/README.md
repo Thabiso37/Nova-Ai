@@ -10,7 +10,7 @@ One coordinator transaction exports a PostgreSQL snapshot. Inventory, dependency
 
 ## Provenance
 
-The Phase 1 specification is a versioned transcription and must be reconciled against any canonical original approval record before formal sign-off. The registry is synthetic only. Fixture migration entries include exact repository paths and Git blob SHA identities. The verifier rejects missing or changed files, duplicate migration IDs, duplicate object identities and missing references. PostgreSQL bootstrap and built-in catalogue prerequisites are separately identified. No production migration provenance is claimed.
+The Phase 1 specification is a versioned transcription. The Phase 2 requirements transcription is owner-confirmed as accurately representing the original approved Phase 2 scope (2026-11-10); this confirmation does not itself constitute formal Phase 2 acceptance. The registry is synthetic only. Fixture migration entries include exact repository paths and Git blob SHA identities. The verifier rejects missing or changed files, duplicate migration IDs, duplicate object identities and missing references. PostgreSQL bootstrap and built-in catalogue prerequisites are separately identified. No production migration provenance is claimed.
 
 ## Catalogue visibility and unsupported families
 
@@ -32,6 +32,9 @@ A shared scanner checks evidence artifacts and captured command output for synth
 
 A PARTIAL visibility result, unverified provider-dependent probe, unsupported object, visibility failure, snapshot mismatch, missing provenance evidence, security audit failure or metadata mismatch blocks acceptance. Passing CI does not establish production security, managed Supabase compatibility or restoration equivalence.
 
+## Main-branch synthetic execution status
+
+The synthetic PostgreSQL 17.11 source workflow completed successfully on `main` at commit `6506a966d39c41e7240186a3c392af9cd6eb423d`, run [42800792137](https://github.com/Thabiso37/Nova-Ai/actions/runs/42800792137). This is the successful main-branch synthetic operational run; any earlier statement that no such successful run had been accepted is superseded by this recorded result. The run's technical success is evidence of prototype execution, not a declaration of formal Phase 2 acceptance.
 
 ### Additional remediation evidence
 
@@ -39,8 +42,7 @@ The structured catalogue comparator is authoritative for supported metadata prop
 
 The shared `secret_patterns.py` policy is imported by both the inventory field scanner and the approved evidence/log scanner. The trusted `.github/workflows/phase2-trusted-workflow-log-scan.yml` runs from trusted `main` after a completion event from the manual-only synthetic source workflow. It validates the exact repository, workflow, source-run metadata and both REST actor identities, retrieves only the selected job log through the read-only Actions API, and scans it with the scanner pinned to the approved commit. Raw source logs remain runner-local and are excluded from uploaded evidence. The source workflow completed successfully on 2026-11-10 as run [42800792137](https://github.com/Thabiso37/Nova-Ai/actions/runs/42800792137) at commit `6506a966d39c41e7240186a3c392af9cd6eb423d`. The trusted scanner then completed automatically as run [42800891197](https://github.com/Thabiso37/Nova-Ai/actions/runs/42800891197). F-02 is CLOSED — ACCEPTED; its implementation and accepted evidence are preserved unchanged.
 
-The security-label probe compiles a disposable C provider against PostgreSQL 17.11, loads it in the fixture session, and uses actual \`SECURITY LABEL\` DDL for both an ordinary table and a shared database object. A separate assertion records only the two row counts and explicitly records that label values were not read; cleanup removes both labels through the same provider. The transform probe now uses actual \`CREATE TRANSFORM\` DDL with disposable C conversion functions. The functions are metadata-only stubs and are never invoked; cleanup drops the transform and both functions.
-
+The security-label probe compiles a disposable C provider against PostgreSQL 17.11, loads it in the fixture session, and uses actual `SECURITY LABEL` DDL for both an ordinary table and a shared database object. A separate assertion records only the two row counts and explicitly records that label values were not read; cleanup removes both labels through the same provider. The transform probe now uses actual `CREATE TRANSFORM` DDL with disposable C conversion functions. The functions are metadata-only stubs and are never invoked; cleanup drops the transform and both functions.
 
 ## Phase 2 live execution and closeout
 
