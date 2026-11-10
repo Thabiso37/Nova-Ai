@@ -274,21 +274,51 @@ def execute_scanner(scanner_path, raw_path, runner=subprocess.run):
     if "SCAN PASS" not in proc.stdout: raise Reject("scanner_did_not_report_pass")
     return {"returncode":proc.returncode,"stdout":proc.stdout,"stderr":proc.stderr}
 
+SUCCESS_EVIDENCE_REQUIRED = {"summary.json","scanner-integrity.json","scanner-output.txt"}
+FAILURE_EVIDENCE_REQUIRED = {"summary.json","failure-reason.txt"}
+ALLOWED_EVIDENCE_FILES = {"summary.json","source-run-metadata.json","source-run-jobs-sanitized.json",
+ "scanner-integrity.json","log-retrieval-exit-status.txt","scanner-output.txt",
+ "scanner-stderr-status.txt","failure-reason.txt"}
+
 def safe_artifact_manifest(evidence_dir, raw_path):
-    raw=raw_path.resolve()
+    evidence_dir=pathlib.Path(evidence_dir)
+    if evidence_dir.is_symlink() or not evidence_dir.is_dir():
+        raise Reject("invalid_artifact_evidence_directory")
+    raw=pathlib.Path(raw_path).resolve()
     manifest=[]
     for path in sorted(evidence_dir.rglob("*")):
         if path.is_symlink(): raise Reject("symlink_in_artifact_evidence")
         if path.is_dir(): continue
         if not path.is_file(): raise Reject("non_regular_artifact_file")
-        if path.resolve()==raw: continue  # present on runner, deliberately omitted from artifact
+        if path.resolve()==raw: continue
         rel=path.relative_to(evidence_dir).as_posix()
-        if rel not in {"summary.json","source-run-metadata.json","source-run-jobs-sanitized.json",
-                       "scanner-integrity.json","log-retrieval-exit-status.txt","scanner-output.txt",
-                       "scanner-stderr-status.txt","failure-reason.txt"}:
-            raise Reject("unexpected_artifact_file:"+rel)
+        if rel not in ALLOWED_EVIDENCE_FILES: raise Reject("unexpected_artifact_file:"+rel)
         manifest.append(rel)
-    return manifest
+    files=set(manifest)
+    if not files: raise Reject("empty_artifact_evidence")
+    if "summary.json" not in files: raise Reject("missing_mandatory_evidence:summary.json")
+    try:
+        summary=json.loads((evidence_dir/"summary.json").read_text(encoding="utf-8"))
+    except (OSError,UnicodeError,json.JSONDecodeError):
+        raise Reject("invalid_evidence_summary")
+    if not isinstance(summary,dict) or summary.get("result") not in ("PASS","FAIL"):
+        raise Reject("invalid_evidence_summary")
+    required=SUCCESS_EVIDENCE_REQUIRED if summary["result"]=="PASS" else FAILURE_EVIDENCE_REQUIRED
+    missing=required-files
+    if missing: raise Reject("missing_mandatory_evidence:"+",".join(sorted(missing)))
+    if summary["result"]=="PASS":
+        try:
+            integrity=json.loads((evidence_dir/"scanner-integrity.json").read_text(encoding="utf-8"))
+            output=(evidence_dir/"scanner-output.txt").read_text(encoding="utf-8")
+        except (OSError,UnicodeError,json.JSONDecodeError):
+            raise Reject("invalid_success_evidence_content")
+        if not isinstance(integrity,dict) or not integrity.get("commit") or "SCAN PASS" not in output:
+            raise Reject("invalid_success_evidence_content")
+    else:
+        try: reason=(evidence_dir/"failure-reason.txt").read_text(encoding="utf-8")
+        except (OSError,UnicodeError): raise Reject("invalid_failure_evidence_content")
+        if not reason.strip(): raise Reject("invalid_failure_evidence_content")
+    return sorted(manifest)
 
 def stage_sanitized_artifact(evidence_dir, raw_path, staging_dir):
     """Build and validate in a temp directory, then atomically publish."""
@@ -311,10 +341,10 @@ def stage_sanitized_artifact(evidence_dir, raw_path, staging_dir):
         if staged != set(manifest): raise Reject("staged_artifact_manifest_mismatch")
         if set(safe_artifact_manifest(candidate,candidate/"raw-source-job-logs.txt")) != set(manifest):
             raise Reject("staged_artifact_manifest_mismatch")
-        if staging_dir.is_symlink(): raise Reject("unsafe_staging_destination")
-        if staging_dir.exists():
-            if not staging_dir.is_dir(): raise Reject("unsafe_staging_destination")
-            shutil.rmtree(staging_dir)
+        if staging_dir.is_symlink() or staging_dir.exists():
+            # Atomic rename is guaranteed only when publishing to an absent
+            # destination on the same filesystem. Never delete-then-replace.
+            raise Reject("staging_destination_must_not_exist")
         os.replace(candidate,staging_dir)
         return sorted(staged)
     finally: shutil.rmtree(temp_root,ignore_errors=True)
