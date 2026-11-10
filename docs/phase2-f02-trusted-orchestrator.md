@@ -48,3 +48,7 @@ Configure `main` protection using available GitHub repository settings: require 
 ## Acceptance boundary
 
 F-02 remains OPEN until the trusted workflow is on `main`, repository protections and credential constraints are evidenced, historical and future trigger behavior has been exercised, sanitized artifacts independently checked, and a genuinely independent reviewer (if one becomes available) assesses the evidence. Passing automated tests alone is not acceptance. F-01 remains closed at `6e44e478536fccf235700cc6db85e97234f32ee7`.
+
+
+## Implementation note
+The pull-request test workflow is intentionally read-only and exercises the trusted scanner's fixed pair/hash policy and artifact/trigger boundaries. The actual orchestrator cannot execute historical scans until it is present on the default branch and a dispatch credential is available.
