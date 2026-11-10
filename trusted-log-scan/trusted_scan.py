@@ -43,7 +43,7 @@ def validate_event(event_name, actor, payload, run_event=None):
         if not isinstance(run_event, dict): raise Reject("missing_workflow_run_event")
         run_id = str(run_event.get("id", ""))
         attempt = run_event.get("run_attempt")
-        if not run_id.isdigit() or not run_id or type(attempt) is not int or attempt != 1:
+        if not run_id.isdigit() or not run_id or int(run_id) < 1 or type(attempt) is not int or attempt != 1:
             raise Reject("invalid_or_unexpected_workflow_run_attempt")
         return "future", run_id, None, attempt
     raise Reject("unsupported_event")
@@ -106,11 +106,11 @@ def validate_run_metadata(meta, run_id, mode, requested_sha=None, future_pairs=N
     return sha
 
 def validate_jobs(pages, total_count):
-    if not isinstance(total_count,int) or total_count < 1: raise Reject("invalid_job_total_count")
+    if type(total_count) is not int or total_count < 1: raise Reject("invalid_job_total_count")
     if not isinstance(pages,list) or len(pages) != total_count: raise Reject("incomplete_job_pagination")
     if any(not isinstance(j,dict) for j in pages): raise Reject("invalid_job_record")
     ids=[j.get("id") for j in pages]
-    if any(not isinstance(i,int) for i in ids) or len(set(ids)) != len(ids): raise Reject("duplicate_or_invalid_job_ids")
+    if any(type(i) is not int for i in ids) or len(set(ids)) != len(ids): raise Reject("duplicate_or_invalid_job_ids")
     matches=[j for j in pages if j.get("name")==TARGET_JOB]
     if not matches: raise Reject("missing_target_job")
     if len(matches)!=1: raise Reject("duplicate_target_jobs")
