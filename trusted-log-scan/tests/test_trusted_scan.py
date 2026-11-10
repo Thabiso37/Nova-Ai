@@ -1,6 +1,6 @@
 import io, json, os, pathlib, tempfile, unittest, zipfile, hashlib, subprocess
 from unittest.mock import patch
-import sys
+import sys, urllib.error, urllib.request, urllib.parse
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parents[1]))
 import trusted_scan as ts
 
@@ -97,15 +97,50 @@ class ValidationBehavior(unittest.TestCase):
    return {"jobs":[GOOD_JOB],"total_count":2}
   jobs,total=ts.fetch_all_jobs("o/r","1",api)
   self.assertEqual((len(jobs),total),(2,2));self.assertEqual(len(calls),2)
- def test_failed_log_retrieval_rejected(self):
-  from unittest.mock import patch
-  failed=type("Proc",(),{"returncode":1,"stdout":b"","stderr":b"API unavailable"})()
-  with patch.object(ts.subprocess,"run",return_value=failed):
-   with self.assertRaisesRegex(ts.Reject,"log_retrieval_failed"):
-    ts.fetch_job_log_zip("owner/repo",991,"not-a-real-token")
- def test_empty_truncated_and_invalid_logs_rejected(self):
-  for data in [b"",b"not a zip",archive(b"")[:-8]]:
-   with self.subTest(length=len(data)),self.assertRaises(ts.Reject):ts.validate_log_bytes(data)
+ def test_successful_plain_text_log_and_safe_302_redirect(self):
+  body=b"2026-11-09T15:04:37Z Runner started\\n##[group]Build\\nstep completed\\n"
+  class Response:
+   status=200
+   headers={"Content-Type":"text/plain; charset=utf-8","Content-Length":str(len(body))}
+   def read(self,n): return body[:n]
+   def close(self): pass
+  class FakeOpener:
+   def open(self,request,timeout):
+    self.initial=request
+    self.redirected=ts.SafeRedirectHandler().redirect_request(request,None,302,"Found",
+      {"Location":"https://download.example/log.txt"},"https://download.example/log.txt")
+    return Response()
+  client=FakeOpener()
+  result=ts.fetch_job_log_text("owner/repo",991,"SENSITIVE_GH_TOKEN",client)
+  self.assertEqual(result,body)
+  self.assertIn("SENSITIVE_GH_TOKEN",client.initial.get_header("Authorization"))
+  self.assertIsNone(client.redirected.get_header("Authorization"))
+  self.assertEqual(urllib.parse.urlsplit(client.redirected.full_url).scheme,"https")
+  self.assertEqual(hashlib.sha256(result).hexdigest(),hashlib.sha256(body).hexdigest())
+
+ def test_plain_text_log_rejects_empty_oversized_malformed_and_truncated(self):
+  cases=[(b"","text/plain",None,"empty_log"),
+         (b"12345","text/plain",None,"log_exceeds_size_limit"),
+         (b"\\xff","text/plain",None,"malformed_log_encoding"),
+         (b"hello","application/zip",None,"unexpected_log_content_type"),
+         (b"hello","text/plain","9","truncated_or_inconsistent_log_response"),
+         (b"\\x00binary","text/plain",None,"malformed_log_content")]
+  for data,ctype,length,reason in cases:
+   with self.subTest(reason=reason),self.assertRaisesRegex(ts.Reject,reason):
+    ts.validate_log_bytes(data,max_bytes=4 if reason=="log_exceeds_size_limit" else 100,
+                          content_type=ctype,content_length=length)
+
+ def test_log_http_failure_and_unsafe_redirect_rejected(self):
+  class FailedOpener:
+   def open(self,request,timeout):
+    raise urllib.error.HTTPError(request.full_url,503,"Unavailable",{},None)
+  with self.assertRaisesRegex(ts.Reject,"log_retrieval_http_failure"):
+   ts.fetch_job_log_text("owner/repo",991,"TOKEN",FailedOpener())
+  request=urllib.request.Request("https://api.github.com/logs",headers={"Authorization":"Bearer TOKEN"})
+  with self.assertRaisesRegex(ts.Reject,"unsafe_log_redirect_target"):
+   ts.SafeRedirectHandler().redirect_request(request,None,302,"Found",{},
+      "http://evil.example/log")
+
  def test_approved_scanner_source_hashes_match_trusted_values(self):
   root=pathlib.Path("approved-scanner-source/phase2/metadata-inventory")
   self.assertTrue(root.is_dir())
@@ -171,7 +206,7 @@ class ValidationBehavior(unittest.TestCase):
   class SuccessfulAdapter:
    def run_metadata(self,run_id): return GOOD_META
    def jobs(self,run_id): return [GOOD_JOB],1
-   def logs(self,job_id): return archive(b"clean workflow log\\n")
+   def logs(self,job_id): return b"2026-11-09T15:04:37Z clean workflow log\\n"
    def git(self,args):
     if "rev-parse" in args and "HEAD" in args: return ts.SCANNER_SHA
     if "--git-common-dir" in args: return ".git"
@@ -193,6 +228,7 @@ class ValidationBehavior(unittest.TestCase):
    self.assertEqual(summary["result"],"PASS")
    self.assertEqual(summary["source_run_id"],"42640933100")
    self.assertEqual(summary["source_sha"],GOOD_SHA)
+   self.assertEqual(summary["log_sha256"],hashlib.sha256(b"2026-11-09T15:04:37Z clean workflow log\\n").hexdigest())
    self.assertEqual(summary["selected_job_id"],991)
    self.assertEqual(summary["scanner_hashes"],{k:{"sha256":v,"expected":v,"match":True} for k,v in ts.HASHES.items()})
    staged=pathlib.Path(d)/"staged"
@@ -238,5 +274,97 @@ class ValidationBehavior(unittest.TestCase):
     if "HEAD" in args:return ts.SCANNER_SHA
     return ""
    with self.assertRaisesRegex(ts.Reject,"shared_git_metadata_detected"):ts.validate_scanner_checkout(p,git)
+
+ 
+ def test_artifact_staging_failure_never_publishes_partial_directory(self):
+  with tempfile.TemporaryDirectory() as d:
+   root=pathlib.Path(d);e=root/"evidence";e.mkdir()
+   (e/"summary.json").write_text("{}")
+   (e/"unexpected.txt").write_text("not allowed")
+   staged=root/"upload"
+   with self.assertRaisesRegex(ts.Reject,"unexpected_artifact_file"):
+    ts.stage_sanitized_artifact(e,e/"raw-source-job-logs.txt",staged)
+   self.assertFalse(staged.exists())
+   self.assertEqual(list(root.glob(".f02-stage-*")),[])
+
+ def test_artifact_staging_rejects_symlinked_directory(self):
+  with tempfile.TemporaryDirectory() as d:
+   root=pathlib.Path(d);e=root/"evidence";e.mkdir()
+   outside=root/"outside";outside.mkdir();(outside/"summary.json").write_text("{}")
+   (e/"linked-dir").symlink_to(outside,target_is_directory=True)
+   with self.assertRaisesRegex(ts.Reject,"symlink_in_artifact_evidence"):
+    ts.stage_sanitized_artifact(e,e/"raw-source-job-logs.txt",root/"upload")
+
+ def test_scanner_checkout_rejects_symlinks(self):
+  with tempfile.TemporaryDirectory() as d:
+   p=pathlib.Path(d);(p/".git/objects/info").mkdir(parents=True)
+   (p/"phase2/metadata-inventory").mkdir(parents=True)
+   (p/"escape").symlink_to(p/"phase2",target_is_directory=True)
+   def git(args):
+    if "HEAD" in args:return ts.SCANNER_SHA
+    if "--git-common-dir" in args:return ".git"
+    return ""
+   with self.assertRaisesRegex(ts.Reject,"scanner_checkout_symlinks_detected"):
+    ts.validate_scanner_checkout(p,git)
+
+ def test_scanner_checkout_rejects_git_alternates(self):
+  with tempfile.TemporaryDirectory() as d:
+   p=pathlib.Path(d);(p/".git/objects/info").mkdir(parents=True)
+   (p/".git/objects/info/alternates").write_text("/tmp/objects")
+   (p/"phase2/metadata-inventory").mkdir(parents=True)
+   def git(args):
+    if "HEAD" in args:return ts.SCANNER_SHA
+    if "--git-common-dir" in args:return ".git"
+    return ""
+   with self.assertRaisesRegex(ts.Reject,"git_symlink_or_alternates_detected"):
+    ts.validate_scanner_checkout(p,git)
+
+ def test_scanner_checkout_rejects_remaining_remote(self):
+  with tempfile.TemporaryDirectory() as d:
+   p=pathlib.Path(d);(p/".git/objects/info").mkdir(parents=True)
+   (p/"phase2/metadata-inventory").mkdir(parents=True)
+   def git(args):
+    if "HEAD" in args:return ts.SCANNER_SHA
+    if "--git-common-dir" in args:return ".git"
+    if "remote" in args:return "origin"
+    return ""
+   with self.assertRaisesRegex(ts.Reject,"scanner_remote_not_removed"):
+    ts.validate_scanner_checkout(p,git)
+
+ def test_scanner_checkout_rejects_wrong_exact_commit(self):
+  with tempfile.TemporaryDirectory() as d:
+   p=pathlib.Path(d);(p/".git/objects/info").mkdir(parents=True)
+   (p/"phase2/metadata-inventory").mkdir(parents=True)
+   with self.assertRaisesRegex(ts.Reject,"scanner_source_commit_mismatch"):
+    ts.validate_scanner_checkout(p,lambda args:"0"*40 if "HEAD" in args else ".git")
+
+ def test_both_historical_pairs_and_both_crossed_pairs(self):
+  pairs=sorted(ts.HISTORICAL_PAIRS)
+  self.assertEqual(len(pairs),2)
+  for rid,sha in pairs:
+   mode,got_id,got_sha,_=ts.validate_event("repository_dispatch","Thabiso37",{"target_run_id":rid,"target_source_sha":sha})
+   self.assertEqual((mode,got_id,got_sha),("historical",rid,sha))
+   meta=dict(GOOD_META,id=int(rid),head_sha=sha)
+   self.assertEqual(ts.validate_run_metadata(meta,rid,mode,sha),sha)
+  for rid,sha in [(pairs[0][0],pairs[1][1]),(pairs[1][0],pairs[0][1])]:
+   with self.subTest(crossed=(rid,sha)),self.assertRaisesRegex(ts.Reject,"unapproved_historical_run_sha_pair"):
+    ts.validate_event("repository_dispatch","Thabiso37",{"target_run_id":rid,"target_source_sha":sha})
+
+ def test_real_isolated_clone_of_approved_scanner_commit(self):
+  source=pathlib.Path("approved-scanner-source").resolve()
+  self.assertTrue((source/".git").exists())
+  with tempfile.TemporaryDirectory() as d:
+   dest=pathlib.Path(d)/"isolated"
+   ts.RuntimeAdapter().clone(source,dest,ts.SCANNER_SHA)
+   records=ts.validate_scanner_checkout(dest,ts.run_command)
+   self.assertEqual(records["commit"],ts.SCANNER_SHA)
+   self.assertTrue(records["isolated_clone"])
+   self.assertFalse(records["alternates"])
+   self.assertTrue(records["remote_removed"])
+
+ def test_test_workflow_disables_persisted_checkout_credentials(self):
+  workflow=pathlib.Path(".github/workflows/phase2-f02-tests.yml").read_text()
+  self.assertEqual(workflow.count("actions/checkout@"),2)
+  self.assertEqual(workflow.count("persist-credentials: false"),2)
 
 if __name__=="__main__":unittest.main(verbosity=2)
