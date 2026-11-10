@@ -25,11 +25,12 @@ class TrustedScannerTests(unittest.TestCase):
         source=pathlib.Path(__file__).resolve().parents[2]/"approved-scanner-source"
         # Hash/integration is exercised by the workflow; this test verifies canary contract directly.
         patterns=pathlib.Path(__file__).resolve().parents[2]/"approved-scanner-source/phase2/metadata-inventory/secret_patterns.py"
-        self.assertTrue(patterns.exists() or True)
         self.assertIn("CANARY_CUSTOMER_7f3c2a91", canary_source())
+        self.assertIn("CANARY_SELLER_8b1d4e62", canary_source())
+        self.assertIn("CANARY_RLS_DISABLED_91aa73", canary_source())
 
     def test_raw_logs_excluded_from_artifact_configuration(self):
-        wf=(pathlib.Path(__file__).resolve().parents[3]/".github/workflows/phase2-trusted-workflow-log-scan.yml").read_text()
+        wf=(pathlib.Path(__file__).resolve().parents[2]/".github/workflows/phase2-trusted-workflow-log-scan.yml").read_text()
         self.assertIn("!trusted-evidence/raw-source-job-logs.txt",wf)
         self.assertIn("actions: read",wf)
         self.assertIn("contents: read",wf)
