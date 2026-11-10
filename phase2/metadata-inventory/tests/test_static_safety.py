@@ -377,6 +377,10 @@ class StaticSafetyTests(unittest.TestCase):
       ROOT.parents[1] / "phase2",
       target_is_directory=True,
   )
+  (root / ".git").symlink_to(
+      ROOT.parents[1] / ".git",
+      target_is_directory=True,
+  )
   bindir=root/"bin"; bindir.mkdir()
   mock=bindir/"gh"
   mock.write_text("""#!/usr/bin/env python3
