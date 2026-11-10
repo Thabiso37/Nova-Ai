@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fail-closed trusted Phase 2 log scanner. Retrieved logs are inert data."""
 from __future__ import annotations
-import hashlib, json, os, pathlib, re, shutil, subprocess, sys, zipfile, io, tempfile, urllib.error, urllib.parse, urllib.request
+import hashlib, json, os, pathlib, re, shutil, subprocess, sys, zipfile, io, tempfile, http.client, urllib.error, urllib.parse, urllib.request
 from dataclasses import dataclass
 
 BRANCH = "feature/metadata-only-inventory-prototype"
@@ -282,7 +282,7 @@ class RuntimeAdapter:
         return fetch_all_jobs(os.environ["GITHUB_REPOSITORY"],run_id)
     def logs(self,job_id):
         return fetch_job_log_text(os.environ["GITHUB_REPOSITORY"],job_id,os.environ["GH_TOKEN"])
-    def git(self,args): return run_command(args)
+    def git(self,args): return run_command(["git",*args])
     def clone(self,source,dest,sha):
         run_command(["git","clone","--no-hardlinks","--no-local",str(source),str(dest)])
         run_command(["git","-C",str(dest),"checkout","--detach",sha])
