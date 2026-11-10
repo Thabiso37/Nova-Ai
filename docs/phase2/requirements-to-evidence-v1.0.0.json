@@ -141,16 +141,6 @@
       "notes": "Later Phase 7 work; no independent reviewer is claimed."
     },
     {
-      "id": "P2-REQ-PROVENANCE",
-      "requirement": "Verbatim original approved requirements document archived in repository",
-      "status": "UNVERIFIED",
-      "evidence": [
-        "Recovered user approval records from 2026-11-09 conversation",
-        "Contemporaneous README and scope files"
-      ],
-      "notes": "A canonical transcription is created, but no verbatim signed/original approval artifact was located. Owner confirmation of this transcription is required for exact approval provenance."
-    },
-    {
       "id": "P2-EVIDENCE-JSON",
       "requirement": "Separate machine-readable comparison outputs in closeout evidence",
       "status": "COMPLETE",
@@ -197,6 +187,19 @@
         "Approved scanner commit 294fa19fac21b5467b9cf2eb0acb428678395575"
       ],
       "notes": "Recorded separately as an already accepted milestone. It is not used to expand the original Phase 2 inventory requirements."
+    }
+  ],
+  "administrative_closeout": [
+    {
+      "id": "ADMIN-REQ-PROVENANCE",
+      "item": "Owner confirmation of canonical requirements transcription",
+      "status": "UNVERIFIED",
+      "evidence": [
+        "Recovered user approval records from 2026-11-09 conversation",
+        "Contemporaneous README and scope files",
+        "docs/phase2/requirements-v1.0.0.md"
+      ],
+      "notes": "No verbatim signed/original approval artifact was found in the repository. Owner review is required before final formal acceptance."
     }
   ]
 }

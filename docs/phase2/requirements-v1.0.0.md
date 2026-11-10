@@ -36,12 +36,15 @@ Deliver a metadata-inventory prototype using **synthetic PostgreSQL 17.11 only**
 | P2-05 | Detect catalogue visibility failures and unsupported object families; positively exercise probes where feasible and fail closed on partial/unverified detection. | Visibility report, positive probe evidence and clean-state unsupported-object report. |
 | P2-06 | Generate inventory and baselines from one exported PostgreSQL snapshot and demonstrate snapshot consistency under concurrent DDL. | Snapshot coordinator metadata and snapshot consistency test output. |
 | P2-07 | Compare structured catalogue metadata against the administrative baseline for supported metadata properties. | Structured catalogue comparator output and matching snapshot/server identity. |
-| P2-08 | No separate mandatory `pg_dump` gate is inferred for Phase 2 from the recovered approval. A supplemental schema-only `pg_dump` comparison was nevertheless implemented and run as corroborating coverage. | PostgreSQL 17.11 `pg_dump` version, schema-only SQL baseline and supplemental comparison output; classified as an additional completed check, not a new Phase 2 acceptance gate. |
 | P2-09 | Screen generated evidence and captured command output for sensitive-data patterns; retain the stated limits of pattern-based screening. | Sensitive-scan report and documented limitations. |
 | P2-10 | Produce traceable evidence tied to the source run and commit; preserve original uploaded evidence. | GitHub run metadata, artifact ID/digest and independently verified downloaded artifact digest. |
 | P2-11 | Complete the trusted workflow log scanner milestone separately, with its own strict trust boundary and acceptance evidence. | F-02 accepted status record and preserved scanner/source run evidence. F-02 is immutable for this closeout. |
 
 The structured catalogue comparison is part of the implemented metadata-inventory validation and passed in the live Phase 2 run. The separate `pg_dump` comparison also passed, but is recorded as supplemental corroborating evidence only; this closeout does not assert that the recovered Phase 2 approval made it a standalone acceptance gate. The broader roadmap places independent comparison work in a later separately approved phase.
+
+### Additional implementation check (not a separate Phase 2 approval gate)
+
+A schema-only `pg_dump` baseline and supplemental comparison were run and passed. Their exact output is preserved under `docs/phase2/evidence/source-run-42800792137/`. This is recorded as a completed additional check, not an extra mandatory Phase 2 requirement.
 
 ## 5. Phase roadmap boundary — not Phase 2 gates
 
