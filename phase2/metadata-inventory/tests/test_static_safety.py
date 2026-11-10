@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import pathlib
@@ -372,15 +373,42 @@ class StaticSafetyTests(unittest.TestCase):
 
  def run_mock_retrieval(self, mode):
   tmp=tempfile.TemporaryDirectory()
-  root=pathlib.Path(tmp.name)
-  (root / "phase2").symlink_to(
-      ROOT.parents[1] / "phase2",
-      target_is_directory=True,
-  )
-  (root / ".git").symlink_to(
-      ROOT.parents[1] / ".git",
-      target_is_directory=True,
-  )
+  temp_root=pathlib.Path(tmp.name)
+  source_checkout=pathlib.Path(os.environ["GITHUB_WORKSPACE"]).resolve()
+  approved_sha="294fa19fac21b5467b9cf2eb0acb428678395575"
+  expected_hashes={
+   "phase2/metadata-inventory/scan_sensitive.py":
+    "806789ebbe64e39af537415718b6b142d9f94e383def200390e6cf075e4ac238",
+   "phase2/metadata-inventory/secret_patterns.py":
+    "bc76e0af5047a093c093710621f85f1d89f3cb07a8622c6da51dc7088a470233",
+  }
+  source_head=subprocess.run(["git","-C",str(source_checkout),"rev-parse","HEAD"],
+                             capture_output=True,text=True,check=True).stdout.strip()
+  self.assertEqual(source_head,approved_sha)
+  root=temp_root/"scanner-checkout"
+  clone=subprocess.run(["git","clone","--no-hardlinks","--no-checkout",str(source_checkout),str(root)],
+                       capture_output=True,text=True)
+  self.assertEqual(clone.returncode,0,clone.stdout+clone.stderr)
+  checkout=subprocess.run(["git","-C",str(root),"checkout","--detach",approved_sha],
+                          capture_output=True,text=True)
+  self.assertEqual(checkout.returncode,0,checkout.stdout+checkout.stderr)
+  actual_head=subprocess.run(["git","-C",str(root),"rev-parse","HEAD"],
+                             capture_output=True,text=True,check=True).stdout.strip()
+  self.assertEqual(actual_head,approved_sha)
+  git_common=subprocess.run(["git","-C",str(root),"rev-parse","--git-common-dir"],
+                            capture_output=True,text=True,check=True).stdout.strip()
+  git_common_path=(root/git_common).resolve() if not pathlib.Path(git_common).is_absolute() else pathlib.Path(git_common).resolve()
+  self.assertTrue(git_common_path.is_relative_to((root/".git").resolve()),str(git_common_path))
+  self.assertFalse((root/".git").is_symlink())
+  self.assertFalse((root/"phase2").is_symlink())
+  for relative,expected in expected_hashes.items():
+   scanner_file=root/relative
+   self.assertTrue(scanner_file.is_file(),str(scanner_file))
+   self.assertFalse(scanner_file.is_symlink(),str(scanner_file))
+   actual=hashlib.sha256(scanner_file.read_bytes()).hexdigest()
+   self.assertEqual(actual,expected,relative)
+  self.assertFalse(root.is_relative_to(source_checkout))
+  self.assertFalse(source_checkout.is_relative_to(root))
   bindir=root/"bin"; bindir.mkdir()
   mock=bindir/"gh"
   mock.write_text("""#!/usr/bin/env python3
@@ -413,7 +441,8 @@ print("unexpected gh invocation: "+repr(args),file=sys.stderr); sys.exit(90)
    **os.environ,"PATH":str(bindir)+os.pathsep+os.environ.get("PATH",""),
    "MOCK_GH_MODE":mode,"GH_TOKEN":"mock-token","GITHUB_REPOSITORY":"Thabiso37/Nova-Ai",
    "GITHUB_SHA":"c31553f1d1d46e147415e7ffae26d7abed149928",
-   "TARGET_RUN_ID":"42652510694","TARGET_SOURCE_SHA":"294fa19fac21b5467b9cf2eb0acb428678395575",
+   "GITHUB_WORKSPACE":str(source_checkout),
+   "TARGET_RUN_ID":"42652510694","TARGET_SOURCE_SHA":approved_sha,
    "APPROVED_BRANCH":"feature/metadata-only-inventory-prototype",
    "APPROVED_WORKFLOW_NAME":"Phase 2 Metadata Inventory Prototype",
    "APPROVED_WORKFLOW_PATH":".github/workflows/phase2-metadata-inventory.yml",
@@ -421,6 +450,11 @@ print("unexpected gh invocation: "+repr(args),file=sys.stderr); sys.exit(90)
   evidence.mkdir()
   result=subprocess.run(["bash","-euo","pipefail","-c",self.workflow_step("Initialize evidence and verify source run identity")],
                         cwd=root,env=env,capture_output=True,text=True)
+  if result.returncode==0:
+   recorded=(evidence/"checked-out-scanner-commit.txt").read_text().strip()
+   self.assertEqual(recorded,approved_sha)
+   for relative,expected in expected_hashes.items():
+    self.assertEqual(hashlib.sha256((root/relative).read_bytes()).hexdigest(),expected,relative)
   return tmp,root,evidence,result,env
 
  def assert_mock_failure(self, mode, expected_evidence):
