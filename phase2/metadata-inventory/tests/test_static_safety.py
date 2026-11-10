@@ -305,7 +305,7 @@ class StaticSafetyTests(unittest.TestCase):
   self.assertRegex(workflow,r"if: steps\.retrieve\.outcome == 'success'")
   self.assertIn('if [[ "${{ steps.retrieve.outcome }}" != "success" ]]',workflow)
   start=workflow.index('          [[ "$RETRIEVAL_OUTCOME" == "success" ]]')
-  gate=workflow[start:workflow.index("\n",workflow.index('          [[ "$SCAN_OUTCOME" == "success" ]]',start))+1]
+  gate=workflow[start:workflow.index("\n\n",start)]
   for outcome in ("failure","skipped"):
    with self.subTest(outcome=outcome):
     result=self.run_shell(gate,RETRIEVAL_OUTCOME=outcome,SCAN_OUTCOME="skipped")
