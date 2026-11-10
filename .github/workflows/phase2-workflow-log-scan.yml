@@ -79,6 +79,19 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Run selector regression tests
+        run: |
+          set -euo pipefail
+          python -m unittest \
+            test_static_safety.StaticSafetyTests.test_push_always_selects_pair_b \
+            test_static_safety.StaticSafetyTests.test_dispatch_accepts_both_exact_approved_pairs \
+            test_static_safety.StaticSafetyTests.test_dispatch_rejects_crossed_pairs \
+            test_static_safety.StaticSafetyTests.test_dispatch_rejects_malformed_unknown_and_missing_values \
+            test_static_safety.StaticSafetyTests.test_selector_rejects_unsupported_events \
+            test_static_safety.StaticSafetyTests.test_dispatch_requires_both_inputs \
+            test_static_safety.StaticSafetyTests.test_selector_contains_only_exact_approved_pairs
+        working-directory: candidate-tests/phase2/metadata-inventory/tests
+
       - name: Run complete candidate static test suite
         id: static_tests
         run: |
