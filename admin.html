@@ -1315,7 +1315,7 @@ async function loadMarketplacePermissions(){
      !storeMatches ? "Cannot review: the store's primary marketplace does not match this application." :
      "Cannot review: the linked seller store is not pending.";
     actionMarkup='<p class="notice">'+escapeHTML(reason)+'</p>';
-   } else if(r.status==="approved" || (r.status==="rejected" && st?.status==="approved")){
+   } else if(r.status==="approved" || (r.status==="rejected" && !!st && st.status!=="rejected")){
     actionMarkup='<div class="actions"><button class="reject" onclick="revokeSellerMarketplaceAccess(\''+escapeHTML(r.id)+'\')">Revoke marketplace access</button></div>';
    }
    return '<div class="record"><strong>'+escapeHTML(st?.store_name||"Seller")+' · '+escapeHTML(String(r.marketplace).toUpperCase())+'</strong>'+
