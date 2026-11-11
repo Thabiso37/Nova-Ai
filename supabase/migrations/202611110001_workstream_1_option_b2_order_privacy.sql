@@ -41,8 +41,6 @@ create table if not exists private.seller_fulfillment_historical_items (
   product_id bigint not null,
   product_name text,
   quantity integer,
-  unit_price numeric,
-  line_total numeric,
   order_created_at timestamptz,
   recorded_at timestamptz not null default now(),
   primary key (revocation_event_id, fulfillment_id, order_item_id),
@@ -400,14 +398,6 @@ declare
   v_permission_status text;
 begin
   if new.seller_id is not distinct from old.seller_id then return new; end if;
-  if exists (select 1 from public.order_items oi where oi.product_id=old.id)
-     or exists (
-       select 1 from private.seller_fulfillment_historical_items hi
-       where hi.product_id=old.id
-     ) then
-    raise exception 'Product ownership cannot be transferred after an order item exists'
-      using errcode='23514';
-  end if;
   if new.seller_id is null then
     raise exception 'Product ownership cannot be transferred to an unassigned seller'
       using errcode='23514';
@@ -430,6 +420,15 @@ begin
     pg_catalog.hashtextextended('novaai-seller-marketplace:'||v_second::text,0)
   ) then
     raise exception 'Seller marketplace access is changing concurrently; retry ownership transfer' using errcode='40001';
+  end if;
+
+  if exists (select 1 from public.order_items oi where oi.product_id=old.id)
+     or exists (
+       select 1 from private.seller_fulfillment_historical_items hi
+       where hi.product_id=old.id
+     ) then
+    raise exception 'Product ownership cannot be transferred after an order item exists'
+      using errcode='23514';
   end if;
 
   v_market:=case
@@ -641,10 +640,10 @@ begin
 
       insert into private.seller_fulfillment_historical_items (
         revocation_event_id,fulfillment_id,order_item_id,order_id,seller_id,
-        product_id,product_name,quantity,unit_price,line_total,order_created_at
+        product_id,product_name,quantity,order_created_at
       )
       select v_event_id,v_f.id,oi.id,oi.order_id,oi.seller_id,oi.product_id,
-             oi.product_name,oi.quantity,oi.unit_price,oi.line_total,o.created_at
+             oi.product_name,oi.quantity,o.created_at
       from public.order_items oi join public.orders o on o.id=oi.order_id
       where oi.order_id=v_f.order_id and oi.seller_id=v_f.seller_id
         and (oi.fulfillment_id is null or oi.fulfillment_id=v_f.id);
@@ -912,6 +911,13 @@ declare
   v_store_id uuid;
   v_store_status text;
   v_reviewed_at timestamptz;
+  v_event private.seller_fulfillment_revocation_events%rowtype;
+  v_event_found boolean := false;
+  v_evidence_verified boolean := false;
+  v_manifest_rows integer := 0;
+  v_manifest_complete integer := 0;
+  v_manifest_quarantined integer := 0;
+  v_historical_access_status text := 'unavailable';
 begin
   if v_admin_id is null or not private.is_novaai_admin() then
     raise exception 'Only NOVAAI administrators can revoke seller marketplace access' using errcode = '42501';
@@ -968,9 +974,80 @@ begin
 
   v_reviewed_at := coalesce(v_reviewed_at, pg_catalog.now());
 
+  -- A partially revoked seller may have lost effective access before this RPC
+  -- was called. Never manufacture a later snapshot: report only the latest
+  -- immutable revocation event already created by an effective revocation path.
+  select e.* into v_event
+  from private.seller_fulfillment_revocation_events e
+  where e.seller_id=v_user_id
+  order by e.revoked_at desc,e.event_id desc
+  limit 1;
+  v_event_found := found;
+
+  if v_event_found then
+    select count(*)::integer,
+           count(*) filter (where ha.manifest_status='complete')::integer,
+           count(*) filter (where ha.manifest_status='quarantined')::integer
+      into v_manifest_rows,v_manifest_complete,v_manifest_quarantined
+    from private.seller_fulfillment_historical_access ha
+    where ha.revocation_event_id=v_event.event_id;
+
+    v_evidence_verified :=
+      v_manifest_rows=v_event.fulfillment_count
+      and v_manifest_complete=v_event.complete_fulfillment_count
+      and v_manifest_quarantined=v_event.quarantined_fulfillment_count
+      and v_event.fulfillment_count=v_event.complete_fulfillment_count+v_event.quarantined_fulfillment_count
+      and v_event.manifest_status=case
+        when v_event.fulfillment_count=0 then 'none'
+        when v_event.complete_fulfillment_count=v_event.fulfillment_count then 'complete'
+        when v_event.complete_fulfillment_count>0 then 'partial'
+        else 'none'
+      end
+      and not exists (
+        select 1
+        from private.seller_fulfillment_historical_access ha
+        where ha.revocation_event_id=v_event.event_id
+          and (
+            (ha.manifest_status='complete' and (
+              ha.expected_item_count<=0
+              or ha.snapshot_item_count<>ha.expected_item_count
+              or ha.snapshot_item_count<>(
+                select count(*) from private.seller_fulfillment_historical_items hi
+                where hi.revocation_event_id=ha.revocation_event_id
+                  and hi.fulfillment_id=ha.fulfillment_id
+                  and hi.order_id=ha.order_id and hi.seller_id=ha.seller_id
+              )
+            ))
+            or
+            (ha.manifest_status='quarantined' and (
+              ha.snapshot_item_count<>0
+              or exists (
+                select 1 from private.seller_fulfillment_historical_items hi
+                where hi.revocation_event_id=ha.revocation_event_id
+                  and hi.fulfillment_id=ha.fulfillment_id
+              )
+            ))
+          )
+      );
+
+    if v_evidence_verified and v_manifest_complete>0 then
+      if v_manifest_complete=v_event.fulfillment_count and v_manifest_quarantined=0 then
+        v_historical_access_status := 'recorded';
+      else
+        v_historical_access_status := 'partially_recorded';
+      end if;
+    end if;
+  end if;
+
   return pg_catalog.jsonb_build_object(
     'store_id',v_store_id,'user_id',v_user_id,'marketplace',v_marketplace,
-    'status','rejected','revoked_by',v_admin_id,'revoked_at',v_reviewed_at
+    'status','rejected','revoked_by',v_admin_id,'revoked_at',v_reviewed_at,
+    'historical_access_status',v_historical_access_status,
+    'historical_evidence_verified',v_evidence_verified,
+    'historical_event_id',case when v_event_found then v_event.event_id else null end,
+    'fulfillment_count',case when v_event_found then v_event.fulfillment_count else 0 end,
+    'complete_fulfillment_count',case when v_event_found then v_manifest_complete else 0 end,
+    'quarantined_fulfillment_count',case when v_event_found then v_manifest_quarantined else 0 end
   );
 end;
 $function$;
@@ -1004,7 +1081,7 @@ begin
     and private.product_marketplace_access_allowed(p.seller_id,p.category)
   union all
   select history.order_id,history.order_created_at,history.order_item_id,history.product_id,
-         history.product_name,history.quantity,history.unit_price,history.line_total
+         history.product_name,history.quantity,null::numeric,null::numeric
   from (
     select distinct on (hi.order_item_id)
            hi.order_id,hi.order_created_at,hi.order_item_id,hi.product_id,
@@ -1191,7 +1268,7 @@ as $function$
       and private.product_marketplace_access_allowed(p.seller_id,p.category)
     union all
     select history.order_id,history.order_created_at,history.order_item_id,history.product_id,
-           history.product_name,history.quantity,history.unit_price,history.line_total
+           history.product_name,history.quantity,null::numeric,null::numeric
     from (
       select distinct on (hi.order_item_id)
              hi.order_id,hi.order_created_at,hi.order_item_id,hi.product_id,
@@ -1241,7 +1318,11 @@ revoke update (
   courier_name,delivery_date,fulfillment_status,tracking_number,updated_at
 ) on table public.seller_fulfillments from public, anon, authenticated;
 
--- Explicit client execution grants. The legacy seller RPC keeps its existing ACL.
+-- Explicit client execution grants. Normalize the retained legacy seller RPC
+-- to authenticated-only execution rather than relying on an unverified old ACL.
+revoke all on function public.get_my_seller_orders() from public, anon;
+grant execute on function public.get_my_seller_orders() to authenticated;
+
 revoke all on function public.get_my_seller_order_items() from public, anon;
 revoke all on function public.get_my_seller_fulfillments() from public, anon;
 revoke all on function public.get_my_customer_order_fulfillments() from public, anon;
