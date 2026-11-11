@@ -949,11 +949,6 @@ begin
   where s.user_id=v_user_id
   for update;
 
-  if v_permission_status = 'rejected'
-     and (v_store_status is null or v_store_status = 'rejected') then
-    raise exception 'Seller marketplace access is already revoked' using errcode = '22023';
-  end if;
-
   if v_permission_status = 'approved' then
     update public.seller_marketplace_permissions
     set status='rejected',reviewed_at=pg_catalog.now(),reviewed_by=v_admin_id
@@ -1094,7 +1089,7 @@ begin
       and private.seller_fulfillment_historical_access_allowed(ha.fulfillment_id,ha.order_id,ha.seller_id)
     order by hi.order_item_id,e.revoked_at desc,e.event_id desc
   ) history
-  order by history.order_created_at desc;
+  order by 2 desc;
 end;
 $function$;
 
