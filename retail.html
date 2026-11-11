@@ -1868,7 +1868,7 @@ console.log("NOVAAI CUSTOMER ID:", customerId);
 // Retrieve customer's orders
 const { data: orders, error: ordersError } = await sb
   .from("orders")
-  .select("*")
+  .select("id,created_at,total_amount,payment_status,order_status")
   .eq("customer_id", customerId)
   .order("created_at", { ascending: false });
 
@@ -1884,7 +1884,7 @@ const orderIds = orders.map(order => order.id);
 // Retrieve order products
 const { data: items, error: itemsError } = await sb
   .from("order_items")
-  .select("*")
+  .select("id,order_id,product_id,product_name,quantity,unit_price,line_total")
   .in("order_id", orderIds);
 
 if (itemsError) throw itemsError;
