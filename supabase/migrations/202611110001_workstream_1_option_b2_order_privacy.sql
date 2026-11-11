@@ -1000,6 +1000,12 @@ begin
       end
       and not exists (
         select 1
+        from private.seller_fulfillment_historical_access ha_identity
+        where ha_identity.revocation_event_id=v_event.event_id
+          and ha_identity.seller_id is distinct from v_event.seller_id
+      )
+      and not exists (
+        select 1
         from private.seller_fulfillment_historical_access ha
         where ha.revocation_event_id=v_event.event_id
           and (
