@@ -1251,9 +1251,17 @@ async function loadSellerOrders() {
     return;
   }
 
-  const fulfillmentMap = new Map(
-    (fulfillments || []).map(f => [String(f.order_id), f])
-  );
+  const fulfillmentMap = new Map();
+  for (const fulfillment of (fulfillments || [])) {
+    const key = String(fulfillment.order_id);
+    if (fulfillmentMap.has(key)) {
+      msgEl.textContent = "Security/data-integrity error: multiple fulfilments were returned for one seller order. Please contact NOVAAI support.";
+      list.innerHTML = "";
+      console.error("Duplicate seller fulfilment order_id returned by RPC:", key);
+      return;
+    }
+    fulfillmentMap.set(key, fulfillment);
+  }
   const groupedOrders = new Map();
 
   (items || []).forEach(item => {
