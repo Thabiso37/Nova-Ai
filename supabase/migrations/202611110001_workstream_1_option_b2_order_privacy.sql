@@ -146,6 +146,18 @@ as $function$
       and e.fulfillment_count = e.complete_fulfillment_count + e.quarantined_fulfillment_count
       and e.complete_fulfillment_count > 0
       and (
+        select count(*) from private.seller_fulfillment_historical_access ha_count
+        where ha_count.revocation_event_id=e.event_id
+      ) = e.fulfillment_count
+      and (
+        select count(*) from private.seller_fulfillment_historical_access ha_count
+        where ha_count.revocation_event_id=e.event_id and ha_count.manifest_status='complete'
+      ) = e.complete_fulfillment_count
+      and (
+        select count(*) from private.seller_fulfillment_historical_access ha_count
+        where ha_count.revocation_event_id=e.event_id and ha_count.manifest_status='quarantined'
+      ) = e.quarantined_fulfillment_count
+      and (
         select count(*) from private.seller_fulfillment_historical_items hi
         where hi.revocation_event_id=ha.revocation_event_id
           and hi.fulfillment_id=ha.fulfillment_id
@@ -470,8 +482,10 @@ begin
   end if;
 
   if tg_op = 'UPDATE' then
-    if new.order_id is distinct from old.order_id or new.seller_id is distinct from old.seller_id then
-      raise exception 'Fulfilment order and seller identity are immutable' using errcode = '55000';
+    if new.id is distinct from old.id
+       or new.order_id is distinct from old.order_id
+       or new.seller_id is distinct from old.seller_id then
+      raise exception 'Fulfilment identity (id, order, seller) is immutable' using errcode = '55000';
     end if;
     return new;
   end if;
@@ -563,7 +577,7 @@ revoke all on function private.validate_seller_fulfillment_item_set_after_insert
 
 drop trigger if exists a_guard_seller_fulfillment_creation on public.seller_fulfillments;
 create trigger a_guard_seller_fulfillment_creation
-before insert or update of order_id, seller_id or delete on public.seller_fulfillments
+before insert or update of id, order_id, seller_id or delete on public.seller_fulfillments
 for each row execute function private.guard_seller_fulfillment_creation();
 
 drop trigger if exists validate_seller_fulfillment_item_set_after_insert on public.seller_fulfillments;
@@ -985,14 +999,21 @@ begin
     )
     and private.product_marketplace_access_allowed(p.seller_id,p.category)
   union all
-  select hi.order_id,hi.order_created_at,hi.order_item_id,hi.product_id,
-         hi.product_name,hi.quantity,hi.unit_price,hi.line_total
-  from private.seller_fulfillment_historical_access ha
-  join private.seller_fulfillment_historical_items hi
-    on hi.revocation_event_id=ha.revocation_event_id and hi.fulfillment_id=ha.fulfillment_id
-  where ha.seller_id=v_user_id
-    and private.seller_fulfillment_historical_access_allowed(ha.fulfillment_id,ha.order_id,ha.seller_id)
-  order by 2 desc;
+  select history.order_id,history.order_created_at,history.order_item_id,history.product_id,
+         history.product_name,history.quantity,history.unit_price,history.line_total
+  from (
+    select distinct on (hi.order_item_id)
+           hi.order_id,hi.order_created_at,hi.order_item_id,hi.product_id,
+           hi.product_name,hi.quantity,hi.unit_price,hi.line_total,e.revoked_at,e.event_id
+    from private.seller_fulfillment_historical_access ha
+    join private.seller_fulfillment_revocation_events e on e.event_id=ha.revocation_event_id
+    join private.seller_fulfillment_historical_items hi
+      on hi.revocation_event_id=ha.revocation_event_id and hi.fulfillment_id=ha.fulfillment_id
+    where ha.seller_id=v_user_id
+      and private.seller_fulfillment_historical_access_allowed(ha.fulfillment_id,ha.order_id,ha.seller_id)
+    order by hi.order_item_id,e.revoked_at desc,e.event_id desc
+  ) history
+  order by history.order_created_at desc;
 end;
 $function$;
 
@@ -1165,13 +1186,20 @@ as $function$
       )
       and private.product_marketplace_access_allowed(p.seller_id,p.category)
     union all
-    select hi.order_id,hi.order_created_at,hi.order_item_id,hi.product_id,
-           hi.product_name,hi.quantity,hi.unit_price,hi.line_total
-    from private.seller_fulfillment_historical_access ha
-    join private.seller_fulfillment_historical_items hi
-      on hi.revocation_event_id=ha.revocation_event_id and hi.fulfillment_id=ha.fulfillment_id
-    where ha.seller_id=auth.uid()
-      and private.seller_fulfillment_historical_access_allowed(ha.fulfillment_id,ha.order_id,ha.seller_id)
+    select history.order_id,history.order_created_at,history.order_item_id,history.product_id,
+           history.product_name,history.quantity,history.unit_price,history.line_total
+    from (
+      select distinct on (hi.order_item_id)
+             hi.order_id,hi.order_created_at,hi.order_item_id,hi.product_id,
+             hi.product_name,hi.quantity,hi.unit_price,hi.line_total,e.revoked_at,e.event_id
+      from private.seller_fulfillment_historical_access ha
+      join private.seller_fulfillment_revocation_events e on e.event_id=ha.revocation_event_id
+      join private.seller_fulfillment_historical_items hi
+        on hi.revocation_event_id=ha.revocation_event_id and hi.fulfillment_id=ha.fulfillment_id
+      where ha.seller_id=auth.uid()
+        and private.seller_fulfillment_historical_access_allowed(ha.fulfillment_id,ha.order_id,ha.seller_id)
+      order by hi.order_item_id,e.revoked_at desc,e.event_id desc
+    ) history
   ) q
   order by q.order_created_at desc;
 $function$;
