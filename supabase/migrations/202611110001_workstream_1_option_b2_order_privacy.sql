@@ -13,7 +13,11 @@ create table if not exists private.seller_fulfillment_revocation_events (
   source_table text not null check (source_table in ('seller_stores','seller_marketplace_permissions')),
   source_record_id uuid not null,
   previous_status text not null,
-  new_status text
+  new_status text,
+  manifest_status text not null check (manifest_status in ('complete','partial','none')),
+  fulfillment_count integer not null default 0 check (fulfillment_count >= 0),
+  complete_fulfillment_count integer not null default 0 check (complete_fulfillment_count >= 0),
+  quarantined_fulfillment_count integer not null default 0 check (quarantined_fulfillment_count >= 0)
 );
 
 create table if not exists private.seller_fulfillment_historical_access (
@@ -21,6 +25,9 @@ create table if not exists private.seller_fulfillment_historical_access (
   fulfillment_id uuid not null,
   order_id uuid not null,
   seller_id uuid not null,
+  manifest_status text not null check (manifest_status in ('complete','quarantined')),
+  expected_item_count integer not null check (expected_item_count >= 0),
+  snapshot_item_count integer not null check (snapshot_item_count >= 0),
   recorded_at timestamptz not null default now(),
   primary key (revocation_event_id, fulfillment_id)
 );
@@ -32,6 +39,11 @@ create table if not exists private.seller_fulfillment_historical_items (
   order_id uuid not null,
   seller_id uuid not null,
   product_id bigint not null,
+  product_name text,
+  quantity integer,
+  unit_price numeric,
+  line_total numeric,
+  order_created_at timestamptz,
   recorded_at timestamptz not null default now(),
   primary key (revocation_event_id, fulfillment_id, order_item_id),
   foreign key (revocation_event_id, fulfillment_id)
@@ -126,41 +138,19 @@ as $function$
     join private.seller_fulfillment_revocation_events e
       on e.event_id = ha.revocation_event_id and e.seller_id = ha.seller_id
     where ha.fulfillment_id = p_fulfillment_id
-      and ha.order_id = p_order_id
-      and ha.seller_id = p_seller_id
-      and private.seller_fulfillment_item_set_valid(ha.fulfillment_id, ha.order_id, ha.seller_id)
-      and not exists (
-        select 1
-        from public.order_items oi
-        where oi.order_id = ha.order_id
-          and oi.seller_id = ha.seller_id
-          and (oi.fulfillment_id is null or oi.fulfillment_id = ha.fulfillment_id)
-          and not exists (
-            select 1
-            from private.seller_fulfillment_historical_items hi
-            where hi.revocation_event_id = ha.revocation_event_id
-              and hi.fulfillment_id = ha.fulfillment_id
-              and hi.order_item_id = oi.id
-              and hi.order_id = oi.order_id
-              and hi.seller_id = oi.seller_id
-              and hi.product_id = oi.product_id
-          )
-      )
-      and not exists (
-        select 1
-        from private.seller_fulfillment_historical_items hi
-        where hi.revocation_event_id = ha.revocation_event_id
-          and hi.fulfillment_id = ha.fulfillment_id
-          and not exists (
-            select 1
-            from public.order_items oi
-            where oi.id = hi.order_item_id
-              and oi.order_id = hi.order_id
-              and oi.seller_id = hi.seller_id
-              and oi.product_id = hi.product_id
-              and (oi.fulfillment_id is null or oi.fulfillment_id = ha.fulfillment_id)
-          )
-      )
+      and ha.order_id = p_order_id and ha.seller_id = p_seller_id
+      and ha.manifest_status = 'complete'
+      and ha.expected_item_count > 0
+      and ha.snapshot_item_count = ha.expected_item_count
+      and e.manifest_status in ('complete','partial')
+      and e.fulfillment_count = e.complete_fulfillment_count + e.quarantined_fulfillment_count
+      and e.complete_fulfillment_count > 0
+      and (
+        select count(*) from private.seller_fulfillment_historical_items hi
+        where hi.revocation_event_id=ha.revocation_event_id
+          and hi.fulfillment_id=ha.fulfillment_id
+          and hi.order_id=ha.order_id and hi.seller_id=ha.seller_id
+      ) = ha.snapshot_item_count
   );
 $function$;
 
@@ -381,6 +371,82 @@ begin
 end;
 $function$;
 
+-- Product seller ownership transfer uses only try-locks because the UPDATE
+-- already holds the product row lock. Contention aborts immediately (40001),
+-- avoiding a wait cycle with checkout's seller-lock-before-product protocol.
+create or replace function private.guard_product_seller_transfer()
+returns trigger
+language plpgsql security definer
+set search_path = '' set row_security = off
+as $function$
+declare
+  v_first uuid;
+  v_second uuid;
+  v_market text;
+  v_store_market text;
+  v_store_status text;
+  v_permission_status text;
+begin
+  if new.seller_id is not distinct from old.seller_id then return new; end if;
+  if exists (select 1 from public.order_items oi where oi.product_id=old.id) then
+    raise exception 'Product ownership cannot be transferred after an order item exists'
+      using errcode='23514';
+  end if;
+  if new.seller_id is null then
+    raise exception 'Product ownership cannot be transferred to an unassigned seller'
+      using errcode='23514';
+  end if;
+
+  if old.seller_id is null then
+    v_first:=new.seller_id;
+  elsif old.seller_id::text<new.seller_id::text then
+    v_first:=old.seller_id; v_second:=new.seller_id;
+  else
+    v_first:=new.seller_id; v_second:=old.seller_id;
+  end if;
+
+  if v_first is not null and not pg_catalog.pg_try_advisory_xact_lock(
+    pg_catalog.hashtextextended('novaai-seller-marketplace:'||v_first::text,0)
+  ) then
+    raise exception 'Seller marketplace access is changing concurrently; retry ownership transfer' using errcode='40001';
+  end if;
+  if v_second is not null and not pg_catalog.pg_try_advisory_xact_lock(
+    pg_catalog.hashtextextended('novaai-seller-marketplace:'||v_second::text,0)
+  ) then
+    raise exception 'Seller marketplace access is changing concurrently; retry ownership transfer' using errcode='40001';
+  end if;
+
+  v_market:=case
+    when new.category=any(array['Auto','Motors & Vehicles']::text[]) then 'motors'
+    when new.category=any(array['Property For Sale','Property To Rent']::text[]) then 'property'
+    else 'retail' end;
+  select s.primary_marketplace into v_store_market
+  from public.seller_stores s where s.user_id=new.seller_id;
+  if v_store_market is null then raise exception 'New owner has no seller store' using errcode='42501'; end if;
+
+  select mp.status into v_permission_status
+  from public.seller_marketplace_permissions mp
+  where mp.user_id=new.seller_id and mp.marketplace=v_store_market
+  for share;
+  select s.status,s.primary_marketplace into v_store_status,v_store_market
+  from public.seller_stores s where s.user_id=new.seller_id for share;
+
+  if v_store_status is distinct from 'approved'
+     or v_permission_status is distinct from 'approved'
+     or v_store_market is distinct from v_market
+     or not private.product_marketplace_access_allowed(new.seller_id,new.category) then
+    raise exception 'New owner is not approved for this product marketplace' using errcode='42501';
+  end if;
+  return new;
+end;
+$function$;
+
+revoke all on function private.guard_product_seller_transfer() from public,anon,authenticated,service_role;
+drop trigger if exists guard_product_seller_transfer on public."Products";
+create trigger guard_product_seller_transfer
+before update of seller_id on public."Products"
+for each row execute function private.guard_product_seller_transfer();
+
 -- Direct service-role fulfilment inserts also require the same seller lock and
 -- approved seller state; an AFTER trigger validates their complete item set.
 create or replace function private.guard_seller_fulfillment_creation()
@@ -396,6 +462,13 @@ declare
   v_store_status text;
   v_store_marketplace text;
 begin
+  if tg_op = 'DELETE' then
+    if exists (select 1 from private.seller_fulfillment_historical_access ha where ha.fulfillment_id=old.id) then
+      raise exception 'A fulfilment with historical access evidence cannot be deleted' using errcode = '55000';
+    end if;
+    return old;
+  end if;
+
   if tg_op = 'UPDATE' then
     if new.order_id is distinct from old.order_id or new.seller_id is distinct from old.seller_id then
       raise exception 'Fulfilment order and seller identity are immutable' using errcode = '55000';
@@ -414,14 +487,21 @@ begin
       using errcode = '40001';
   end if;
 
-  select mp.status, mp.marketplace into v_permission_status, v_permission_marketplace
+  -- Resolve marketplace first, then lock its exact permission row, followed by
+  -- the store row. This preserves the checkout/review permission-before-store order.
+  select s.primary_marketplace into v_store_marketplace
+  from public.seller_stores s where s.user_id=new.seller_id;
+  if v_store_marketplace is null then
+    raise exception 'Seller store marketplace is not configured' using errcode = '42501';
+  end if;
+
+  select mp.status,mp.marketplace into v_permission_status,v_permission_marketplace
   from public.seller_marketplace_permissions mp
-  where mp.user_id = new.seller_id
+  where mp.user_id=new.seller_id and mp.marketplace=v_store_marketplace
   for share;
 
-  select s.status, s.primary_marketplace into v_store_status, v_store_marketplace
-  from public.seller_stores s
-  where s.user_id = new.seller_id
+  select s.status,s.primary_marketplace into v_store_status,v_store_marketplace
+  from public.seller_stores s where s.user_id=new.seller_id
   for share;
 
   if v_permission_status is distinct from 'approved'
@@ -436,12 +516,22 @@ begin
     join public."Products" p on p.id = oi.product_id
     where oi.order_id = new.order_id and oi.seller_id = new.seller_id
       and p.seller_id = new.seller_id
+      and (case
+        when p.category = any(array['Auto','Motors & Vehicles']::text[]) then 'motors'
+        when p.category = any(array['Property For Sale','Property To Rent']::text[]) then 'property'
+        else 'retail'
+      end) = v_store_marketplace
       and private.product_marketplace_access_allowed(p.seller_id, p.category)
   ) or exists (
     select 1 from public.order_items oi
     join public."Products" p on p.id = oi.product_id
     where oi.order_id = new.order_id and oi.seller_id = new.seller_id
       and (p.seller_id is distinct from new.seller_id
+        or (case
+          when p.category = any(array['Auto','Motors & Vehicles']::text[]) then 'motors'
+          when p.category = any(array['Property For Sale','Property To Rent']::text[]) then 'property'
+          else 'retail'
+        end) is distinct from v_store_marketplace
         or not private.product_marketplace_access_allowed(p.seller_id, p.category))
   ) then
     raise exception 'Fulfilment items do not match an approved seller marketplace'
@@ -473,7 +563,7 @@ revoke all on function private.validate_seller_fulfillment_item_set_after_insert
 
 drop trigger if exists a_guard_seller_fulfillment_creation on public.seller_fulfillments;
 create trigger a_guard_seller_fulfillment_creation
-before insert or update of order_id, seller_id on public.seller_fulfillments
+before insert or update of order_id, seller_id or delete on public.seller_fulfillments
 for each row execute function private.guard_seller_fulfillment_creation();
 
 drop trigger if exists validate_seller_fulfillment_item_set_after_insert on public.seller_fulfillments;
@@ -493,37 +583,64 @@ as $function$
 declare
   v_event_id uuid;
   v_f record;
+  v_total integer := 0;
+  v_complete integer := 0;
+  v_quarantined integer := 0;
+  v_expected integer := 0;
+  v_inserted integer := 0;
+  v_status text;
 begin
+  select count(*)::integer,
+         count(*) filter (where private.seller_fulfillment_item_set_valid(f.id,f.order_id,f.seller_id))::integer
+    into v_total,v_complete
+  from public.seller_fulfillments f where f.seller_id=p_seller_id;
+  v_quarantined := v_total-v_complete;
+  v_status := case when v_total=0 then 'none'
+                   when v_quarantined=0 then 'complete'
+                   when v_complete=0 then 'none' else 'partial' end;
+
   insert into private.seller_fulfillment_revocation_events (
-    seller_id, source_table, source_record_id, previous_status, new_status
-  )
-  values (p_seller_id, p_source_table, p_source_record_id, p_previous_status, p_new_status)
-  returning event_id into v_event_id;
+    seller_id,source_table,source_record_id,previous_status,new_status,
+    manifest_status,fulfillment_count,complete_fulfillment_count,quarantined_fulfillment_count
+  ) values (
+    p_seller_id,p_source_table,p_source_record_id,p_previous_status,p_new_status,
+    v_status,v_total,v_complete,v_quarantined
+  ) returning event_id into v_event_id;
 
   for v_f in
-    select f.id, f.order_id, f.seller_id
-    from public.seller_fulfillments f
-    where f.seller_id = p_seller_id
-    order by f.id
+    select f.id,f.order_id,f.seller_id from public.seller_fulfillments f
+    where f.seller_id=p_seller_id order by f.id
   loop
-    if not private.seller_fulfillment_item_set_valid(v_f.id, v_f.order_id, v_f.seller_id) then
-      raise exception 'Cannot revoke seller access: fulfilment % has inconsistent order/item relationships', v_f.id
-        using errcode = '23514';
-    end if;
-
-    insert into private.seller_fulfillment_historical_access (
-      revocation_event_id, fulfillment_id, order_id, seller_id
-    ) values (v_event_id, v_f.id, v_f.order_id, v_f.seller_id);
-
-    insert into private.seller_fulfillment_historical_items (
-      revocation_event_id, fulfillment_id, order_item_id, order_id, seller_id, product_id
-    )
-    select v_event_id, v_f.id, oi.id, oi.order_id, oi.seller_id, oi.product_id
+    select count(*)::integer into v_expected
     from public.order_items oi
-    where oi.order_id = v_f.order_id and oi.seller_id = v_f.seller_id
-      and (oi.fulfillment_id is null or oi.fulfillment_id = v_f.id);
-  end loop;
+    where oi.order_id=v_f.order_id and oi.seller_id=v_f.seller_id
+      and (oi.fulfillment_id is null or oi.fulfillment_id=v_f.id);
 
+    if private.seller_fulfillment_item_set_valid(v_f.id,v_f.order_id,v_f.seller_id) then
+      insert into private.seller_fulfillment_historical_access (
+        revocation_event_id,fulfillment_id,order_id,seller_id,manifest_status,expected_item_count,snapshot_item_count
+      ) values (v_event_id,v_f.id,v_f.order_id,v_f.seller_id,'complete',v_expected,v_expected);
+
+      insert into private.seller_fulfillment_historical_items (
+        revocation_event_id,fulfillment_id,order_item_id,order_id,seller_id,
+        product_id,product_name,quantity,unit_price,line_total,order_created_at
+      )
+      select v_event_id,v_f.id,oi.id,oi.order_id,oi.seller_id,oi.product_id,
+             oi.product_name,oi.quantity,oi.unit_price,oi.line_total,o.created_at
+      from public.order_items oi join public.orders o on o.id=oi.order_id
+      where oi.order_id=v_f.order_id and oi.seller_id=v_f.seller_id
+        and (oi.fulfillment_id is null or oi.fulfillment_id=v_f.id);
+      get diagnostics v_inserted = row_count;
+      if v_inserted<>v_expected then
+        raise exception 'Historical snapshot count changed during revocation for fulfilment %',v_f.id
+          using errcode='40001';
+      end if;
+    else
+      insert into private.seller_fulfillment_historical_access (
+        revocation_event_id,fulfillment_id,order_id,seller_id,manifest_status,expected_item_count,snapshot_item_count
+      ) values (v_event_id,v_f.id,v_f.order_id,v_f.seller_id,'quarantined',v_expected,0);
+    end if;
+  end loop;
   return v_event_id;
 end;
 $function$;
@@ -854,38 +971,28 @@ as $function$
 declare v_user_id uuid := auth.uid();
 begin
   if v_user_id is null then raise exception 'Authentication required' using errcode = '28000'; end if;
-
   return query
   select o.id,o.created_at,oi.id,oi.product_id,oi.product_name,oi.quantity,oi.unit_price,oi.line_total
   from public.order_items oi
   join public.orders o on o.id=oi.order_id
   join public."Products" p on p.id=oi.product_id
   where oi.seller_id=v_user_id and p.seller_id=v_user_id
-    and (
-      (
-        exists (
-          select 1 from public.seller_stores s
-          join public.seller_marketplace_permissions mp
-            on mp.user_id=s.user_id and mp.marketplace=s.primary_marketplace
-          where s.user_id=v_user_id and s.status='approved' and mp.status='approved'
-        )
-        and private.product_marketplace_access_allowed(p.seller_id,p.category)
-      )
-      or exists (
-        select 1
-        from private.seller_fulfillment_historical_access ha
-        join private.seller_fulfillment_historical_items hi
-          on hi.revocation_event_id=ha.revocation_event_id
-         and hi.fulfillment_id=ha.fulfillment_id
-         and hi.order_item_id=oi.id
-         and hi.order_id=oi.order_id
-         and hi.seller_id=oi.seller_id
-         and hi.product_id=oi.product_id
-        where ha.seller_id=v_user_id
-          and private.seller_fulfillment_historical_access_allowed(ha.fulfillment_id,ha.order_id,ha.seller_id)
-      )
+    and exists (
+      select 1 from public.seller_stores s
+      join public.seller_marketplace_permissions mp
+        on mp.user_id=s.user_id and mp.marketplace=s.primary_marketplace
+      where s.user_id=v_user_id and s.status='approved' and mp.status='approved'
     )
-  order by o.created_at desc;
+    and private.product_marketplace_access_allowed(p.seller_id,p.category)
+  union all
+  select hi.order_id,hi.order_created_at,hi.order_item_id,hi.product_id,
+         hi.product_name,hi.quantity,hi.unit_price,hi.line_total
+  from private.seller_fulfillment_historical_access ha
+  join private.seller_fulfillment_historical_items hi
+    on hi.revocation_event_id=ha.revocation_event_id and hi.fulfillment_id=ha.fulfillment_id
+  where ha.seller_id=v_user_id
+    and private.seller_fulfillment_historical_access_allowed(ha.fulfillment_id,ha.order_id,ha.seller_id)
+  order by 2 desc;
 end;
 $function$;
 
@@ -1042,41 +1149,39 @@ returns table (
 language sql stable security definer
 set search_path = '' set row_security = off
 as $function$
-  select o.id,null::text,null::text,null::text,null::text,null::text,o.created_at,
-         oi.id,oi.product_id,oi.product_name,oi.quantity,oi.unit_price,oi.line_total
-  from public.orders o
-  join public.order_items oi on oi.order_id=o.id
-  join public."Products" p on p.id=oi.product_id
-  where oi.seller_id=auth.uid() and p.seller_id=auth.uid()
-    and (
-      (
-        exists (
-          select 1 from public.seller_stores s
-          join public.seller_marketplace_permissions mp
-            on mp.user_id=s.user_id and mp.marketplace=s.primary_marketplace
-          where s.user_id=auth.uid() and s.status='approved' and mp.status='approved'
-        )
-        and private.product_marketplace_access_allowed(p.seller_id,p.category)
+  select q.order_id,null::text,null::text,null::text,null::text,null::text,
+         q.order_created_at,q.order_item_id,q.product_id,q.product_name,q.quantity,q.unit_price,q.line_total
+  from (
+    select o.id as order_id,o.created_at as order_created_at,oi.id as order_item_id,
+           oi.product_id,oi.product_name,oi.quantity,oi.unit_price,oi.line_total
+    from public.orders o join public.order_items oi on oi.order_id=o.id
+    join public."Products" p on p.id=oi.product_id
+    where oi.seller_id=auth.uid() and p.seller_id=auth.uid()
+      and exists (
+        select 1 from public.seller_stores s
+        join public.seller_marketplace_permissions mp
+          on mp.user_id=s.user_id and mp.marketplace=s.primary_marketplace
+        where s.user_id=auth.uid() and s.status='approved' and mp.status='approved'
       )
-      or exists (
-        select 1
-        from private.seller_fulfillment_historical_access ha
-        join private.seller_fulfillment_historical_items hi
-          on hi.revocation_event_id=ha.revocation_event_id
-         and hi.fulfillment_id=ha.fulfillment_id
-         and hi.order_item_id=oi.id
-         and hi.order_id=oi.order_id
-         and hi.seller_id=oi.seller_id
-         and hi.product_id=oi.product_id
-        where ha.seller_id=auth.uid()
-          and private.seller_fulfillment_historical_access_allowed(ha.fulfillment_id,ha.order_id,ha.seller_id)
-      )
-    )
-  order by o.created_at desc;
+      and private.product_marketplace_access_allowed(p.seller_id,p.category)
+    union all
+    select hi.order_id,hi.order_created_at,hi.order_item_id,hi.product_id,
+           hi.product_name,hi.quantity,hi.unit_price,hi.line_total
+    from private.seller_fulfillment_historical_access ha
+    join private.seller_fulfillment_historical_items hi
+      on hi.revocation_event_id=ha.revocation_event_id and hi.fulfillment_id=ha.fulfillment_id
+    where ha.seller_id=auth.uid()
+      and private.seller_fulfillment_historical_access_allowed(ha.fulfillment_id,ha.order_id,ha.seller_id)
+  ) q
+  order by q.order_created_at desc;
 $function$;
 
 -- 7. RLS: seller access to orders/items is through narrow RPCs, not base rows.
 drop policy if exists "Secure customers and sellers view orders" on public.orders;
+drop policy if exists "Customers view own orders" on public.orders;
+create policy "Customers view own orders"
+on public.orders for select to authenticated
+using (customer_id = (select auth.uid()));
 
 drop policy if exists "Sellers and customers view marketplace-scoped order items" on public.order_items;
 create policy "Customers view own order items"
