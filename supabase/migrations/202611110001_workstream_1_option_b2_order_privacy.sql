@@ -300,7 +300,7 @@ revoke all on function private.guard_order_item_seller_lock() from public, anon,
 
 drop trigger if exists a_lock_order_item_seller on public.order_items;
 create trigger a_lock_order_item_seller
-before insert or update of order_id, seller_id, product_id, fulfillment_id or delete
+before insert or update or delete
 on public.order_items
 for each row execute function private.guard_order_item_seller_lock();
 
@@ -400,7 +400,11 @@ declare
   v_permission_status text;
 begin
   if new.seller_id is not distinct from old.seller_id then return new; end if;
-  if exists (select 1 from public.order_items oi where oi.product_id=old.id) then
+  if exists (select 1 from public.order_items oi where oi.product_id=old.id)
+     or exists (
+       select 1 from private.seller_fulfillment_historical_items hi
+       where hi.product_id=old.id
+     ) then
     raise exception 'Product ownership cannot be transferred after an order item exists'
       using errcode='23514';
   end if;
