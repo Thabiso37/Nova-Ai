@@ -1218,17 +1218,11 @@ async function loadSellerOrders() {
     return;
   }
 
-  if (!hasMarketplaceAccess(selectedMarket)) {
-    msgEl.textContent = "Your store and marketplace permission must both be approved to view orders.";
-    list.innerHTML = "";
-    return;
-  }
-
   msgEl.textContent = "Loading orders...";
   list.innerHTML = "";
 
   const { data: sellerOrderRows, error: itemsError } = await sb
-    .rpc("get_my_seller_orders");
+    .rpc("get_my_seller_order_items");
 
   if (currentVersion !== authVersion || user !== targetUser) return;
 
@@ -1243,60 +1237,23 @@ async function loadSellerOrders() {
     product_name: row.product_name,
     quantity: row.quantity,
     unit_price: row.unit_price,
+    line_total: row.line_total,
     created_at: row.order_created_at
   }));
 
-  const orderIds = [...new Set(items.map(item => String(item.order_id)))];
-  let fulfillments = [];
-  let fulfillmentError = null;
-  if (orderIds.length) {
-    const result = await sb
-      .from("seller_fulfillments")
-      .select(`
-        id,
-        order_id,
-        fulfillment_status,
-        item_subtotal,
-        tracking_number,
-        courier_name,
-        delivery_date
-      `)
-      .eq("seller_id", targetUser.id)
-      .in("order_id", orderIds);
-    fulfillments = result.data || [];
-    fulfillmentError = result.error;
-  }
+  const { data: fulfillments, error: fulfillmentError } = await sb
+    .rpc("get_my_seller_fulfillments");
 
   if (currentVersion !== authVersion || user !== targetUser) return;
 
   if (fulfillmentError) {
-    msgEl.textContent = "Unable to load primary-marketplace fulfillment records: " + fulfillmentError.message;
+    msgEl.textContent = "Unable to load seller fulfilment records: " + fulfillmentError.message;
     return;
   }
 
   const fulfillmentMap = new Map(
-    fulfillments.map(f => [String(f.order_id), f])
+    (fulfillments || []).map(f => [String(f.order_id), f])
   );
-
-const { data: orders, error: ordersError } = await sb
-  .from("orders")
-  .select("id, buyer_selected_location")
-  .in("id", orderIds);
-
-if (currentVersion !== authVersion || user !== targetUser) return;
-
-if (ordersError) {
-  msgEl.textContent =
-    "Unable to load buyer locations: " + ordersError.message;
-  return;
-}
-
-const orderLocationMap = new Map(
-  (orders || []).map(order => [
-    String(order.id),
-    order.buyer_selected_location
-  ])
-);
   const groupedOrders = new Map();
 
   (items || []).forEach(item => {
@@ -1331,9 +1288,6 @@ const orderLocationMap = new Map(
 
       const fulfillment = fulfillmentMap.get(orderId);
 
-     const buyerLocation =
-  orderLocationMap.get(orderId) || "Not provided";
-      
       const currentStatus = fulfillment
         ? String(fulfillment.fulfillment_status || "pending").toLowerCase()
         : null;
@@ -1385,7 +1339,7 @@ const orderLocationMap = new Map(
 
             <button
               type="button"
-              onclick="saveShippingDetails('${orderId}')"
+              onclick="saveShippingDetails('${orderId}','${fulfillment.id}')"
               style="padding:10px 16px;"
             >
               Save Shipping Details
@@ -1415,7 +1369,7 @@ const orderLocationMap = new Map(
 
             <button
               type="button"
-              onclick="updateFulfillmentStatus('${orderId}')"
+              onclick="updateFulfillmentStatus('${orderId}','${fulfillment.id}')"
               style="margin-top:10px;padding:10px 16px;"
               ${validStatus ? "" : "disabled"}
             >
@@ -1431,11 +1385,6 @@ const orderLocationMap = new Map(
           border:1px solid var(--line);border-radius:8px;">
 
           <h3>Order #${escapeHTML(orderId.slice(0, 8))}</h3>
-
-   <p>
-     <b>Buyer's Selected Location:</b>
-     ${escapeHTML(buyerLocation)}
-   </p>
 
          ${productsHTML}
           ${statusHTML}
@@ -1455,18 +1404,13 @@ if (refreshOrdersBtn) {
 }
 
   
-async function saveShippingDetails(orderId) {
+async function saveShippingDetails(orderId, fulfillmentId) {
 
   const targetUser = user;
   const currentVersion = authVersion;
 
   if (!targetUser) {
     alert("Please sign in again.");
-    return;
-  }
-
-  if (!hasMarketplaceAccess(selectedMarket)) {
-    alert("Your store and marketplace permission must both be approved.");
     return;
   }
 
@@ -1485,20 +1429,17 @@ async function saveShippingDetails(orderId) {
     return;
   }
 
-  const { data, error } = await sb
-    .from("seller_fulfillments")
-    .update({
-      courier_name: courierName || null,
-      tracking_number: trackingNumber || null,
-      delivery_date: deliveryDate
+  const { data, error } = await sb.rpc(
+    "update_my_seller_fulfillment_shipping",
+    {
+      p_fulfillment_id: fulfillmentId,
+      p_courier_name: courierName || null,
+      p_tracking_number: trackingNumber || null,
+      p_delivery_date: deliveryDate
         ? new Date(deliveryDate + "T12:00:00").toISOString()
-        : null,
-      updated_at: new Date().toISOString()
-    })
-    .eq("order_id", orderId)
-    .eq("seller_id", targetUser.id)
-    .select("id")
-    .maybeSingle();
+        : null
+    }
+  );
 
   if (currentVersion !== authVersion || user !== targetUser) return;
 
@@ -1519,18 +1460,13 @@ async function saveShippingDetails(orderId) {
 
 
 // UPDATE FULFILLMENT STATUS
-async function updateFulfillmentStatus(orderId) {
+async function updateFulfillmentStatus(orderId, fulfillmentId) {
 
   const targetUser = user;
   const currentVersion = authVersion;
 
   if (!targetUser) {
     alert("Please sign in again.");
-    return;
-  }
-
-  if (!hasMarketplaceAccess(selectedMarket)) {
-    alert("Your store and marketplace permission must both be approved.");
     return;
   }
 
@@ -1555,16 +1491,13 @@ async function updateFulfillmentStatus(orderId) {
     return;
   }
 
-  const { data, error } = await sb
-    .from("seller_fulfillments")
-    .update({
-      fulfillment_status: newStatus,
-      updated_at: new Date().toISOString()
-    })
-    .eq("order_id", orderId)
-    .eq("seller_id", targetUser.id)
-    .select("id")
-    .maybeSingle();
+  const { data, error } = await sb.rpc(
+    "update_my_seller_fulfillment_status",
+    {
+      p_fulfillment_id: fulfillmentId,
+      p_status: newStatus
+    }
+  );
 
   if (currentVersion !== authVersion || user !== targetUser) return;
 
