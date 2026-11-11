@@ -1306,7 +1306,7 @@ async function loadSellerOrders() {
         <div style="padding:8px 0;border-bottom:1px solid var(--line);">
           <div><b>Product:</b> ${escapeHTML(item.product_name || "Item")}</div>
           <div><b>Quantity:</b> ${Number(item.quantity || 0)}</div>
-          <div><b>Unit Price:</b> R${Number(item.unit_price || 0).toFixed(2)}</div>
+          <div><b>Unit Price:</b> ${item.unit_price == null ? "Not available for historical records" : "R" + Number(item.unit_price).toFixed(2)}</div>
         </div>
       `).join("");
 
