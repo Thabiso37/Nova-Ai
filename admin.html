@@ -1315,6 +1315,8 @@ async function loadMarketplacePermissions(){
      !storeMatches ? "Cannot review: the store's primary marketplace does not match this application." :
      "Cannot review: the linked seller store is not pending.";
     actionMarkup='<p class="notice">'+escapeHTML(reason)+'</p>';
+   } else if(r.status==="approved"){
+    actionMarkup='<div class="actions"><button class="reject" onclick="revokeSellerMarketplaceAccess(\''+escapeHTML(r.id)+'\')">Revoke marketplace access</button></div>';
    }
    return '<div class="record"><strong>'+escapeHTML(st?.store_name||"Seller")+' · '+escapeHTML(String(r.marketplace).toUpperCase())+'</strong>'+
     '<p>Seller ID: '+escapeHTML(r.user_id)+'</p>'+
@@ -1362,6 +1364,29 @@ async function reviewMarketplacePermission(id,status){
  }
 }
 window.reviewMarketplacePermission=reviewMarketplacePermission;
+
+async function revokeSellerMarketplaceAccess(id){
+ if(!currentAdmin || reviewingSellerApplications.has(id))return;
+ if(!confirm("Revoke this seller's marketplace approval? Existing fulfilments will be snapshotted for limited historical access."))return;
+ const msg=document.getElementById("marketplacePermissionMessage");
+ const buttons=[...document.querySelectorAll("#marketplacePermissionRecords button")];
+ reviewingSellerApplications.add(id);
+ buttons.forEach(button=>button.disabled=true);
+ msg.textContent="Revoking marketplace access and recording historical fulfilments…";
+ try{
+  const {data,error}=await sb.rpc("revoke_seller_marketplace_access",{p_permission_id:id});
+  if(error)throw error;
+  msg.textContent="Marketplace access revoked. Historical fulfilment access was recorded. Refreshing records…";
+  await loadMarketplacePermissions();
+ }catch(error){
+  console.error("NOVAAI seller revocation error:",error);
+  msg.textContent="Revocation failed: "+(error?.message||"Unexpected error. No success was reported.");
+ }finally{
+  reviewingSellerApplications.delete(id);
+  buttons.forEach(button=>button.disabled=false);
+ }
+}
+window.revokeSellerMarketplaceAccess=revokeSellerMarketplaceAccess;
 
 async function loadSellerLocationReviews() {
   if (!currentAdmin) return;
@@ -1574,22 +1599,7 @@ async function loadPaymentData() {
     if (orderError) throw orderError;
 
     const { data: fulfillments, error: fulfillmentError } = await sb
-      .from("seller_fulfillments")
-      .select(`
-        id,
-        order_id,
-        seller_id,
-        item_subtotal,
-        platform_commission,
-        payout_amount,
-        fulfillment_status,
-        settlement_status,
-        courier_name,
-        tracking_number,
-        delivery_date,
-        created_at
-      `)
-      .order("created_at", { ascending: false });
+      .rpc("admin_get_seller_fulfillment_financials");
 
     if (fulfillmentError) throw fulfillmentError;
 
