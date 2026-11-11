@@ -1660,20 +1660,31 @@ document.getElementById("checkoutForm").addEventListener("submit", async e => {
       throw new Error("Please complete all delivery details.");
     }
 
-    // Create the real order in Supabase
-const { data: orderId, error: orderError } = await sb.rpc(
-  "place_order",
-  {
-    p_customer_name: customerName,
-    p_customer_phone: customerPhone,
-    p_delivery_address: deliveryAddress,
-    p_items: items,
-    p_buyer_selected_location:
-      ""
-  }
-);
+    // Create the real order in Supabase. The seller lock protocol returns
+    // SQLSTATE 40001 on a concurrent approval/revocation race; only that
+    // definite transaction rollback is retried (never ambiguous network errors).
+    let orderResult;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      orderResult = await sb.rpc(
+        "place_order",
+        {
+          p_customer_name: customerName,
+          p_customer_phone: customerPhone,
+          p_delivery_address: deliveryAddress,
+          p_items: items,
+          p_buyer_selected_location: ""
+        }
+      );
 
-if (orderError) throw orderError;
+      if (!orderResult.error || orderResult.error.code !== "40001" || attempt === 2) {
+        break;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 150 * (attempt + 1)));
+    }
+
+    const { data: orderId, error: orderError } = orderResult;
+    if (orderError) throw orderError;
 
 if (!orderId) {
   throw new Error("Supabase did not return an order number.");
