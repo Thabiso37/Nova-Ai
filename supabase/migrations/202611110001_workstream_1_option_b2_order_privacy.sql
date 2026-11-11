@@ -10,7 +10,7 @@ create table if not exists private.seller_fulfillment_revocation_events (
   event_id uuid primary key default gen_random_uuid(),
   seller_id uuid not null,
   store_id uuid,
-  marketplace text not null check (marketplace in ('retail','motors','property')),
+  marketplace text check (marketplace is null or marketplace in ('retail','motors','property')),
   revoked_at timestamptz not null default now(),
   source_table text not null check (source_table in ('seller_stores','seller_marketplace_permissions')),
   source_record_id uuid not null,
@@ -68,6 +68,9 @@ create table if not exists private.product_order_use (
 -- Existing products start UNKNOWN: the current database rows cannot prove that
 -- deleted legacy order items never existed. Only products created after this
 -- tracker is installed receive COMPLETE coverage automatically.
+create index if not exists product_order_use_product_idx
+  on private.product_order_use(product_id);
+
 create table if not exists private.product_order_history_coverage (
   product_id bigint primary key,
   coverage_status text not null check (coverage_status in ('unknown','complete')),
@@ -170,6 +173,9 @@ for each row execute function private.reject_historical_registry_mutation();
 create trigger product_order_use_immutable
 before update or delete on private.product_order_use
 for each row execute function private.reject_historical_registry_mutation();
+create trigger product_order_use_no_truncate
+before truncate on private.product_order_use
+for each statement execute function private.reject_historical_registry_mutation();
 
 -- 2. Exact seller/order/item relationship validation.
 create or replace function private.seller_fulfillment_item_set_valid(
@@ -759,6 +765,15 @@ create trigger a_guard_seller_fulfillment_creation
 before insert or update of id, order_id, seller_id or delete on public.seller_fulfillments
 for each row execute function private.guard_seller_fulfillment_creation();
 
+-- Two-session concurrency regression (use disposable fixtures only):
+-- A) Session A begins and takes the seller advisory xact lock. Session B's
+--    fulfilment DELETE must fail immediately with SQLSTATE 40001 and leave the
+--    row intact; Session A can then perform the revocation/snapshot and commit.
+-- B) Reverse the order: let Session B DELETE and acquire the lock first. Session
+--    A's revocation must wait for B's transaction; after B commits, A snapshots
+--    the post-delete state. No interleaving can delete a row after its revocation
+--    snapshot has started. Run this regression only in an isolated test database.
+
 drop trigger if exists validate_seller_fulfillment_item_set_after_insert on public.seller_fulfillments;
 create trigger validate_seller_fulfillment_item_set_after_insert
 after insert on public.seller_fulfillments
@@ -1171,7 +1186,7 @@ begin
   from private.seller_fulfillment_revocation_events e
   where e.seller_id=v_user_id
     and e.store_id is not distinct from v_store_id
-    and e.marketplace=v_marketplace
+    and e.marketplace is not distinct from v_marketplace
     and (
       (e.source_table='seller_marketplace_permissions'
        and e.source_record_id=p_permission_id)
