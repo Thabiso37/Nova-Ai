@@ -866,6 +866,7 @@ declare
   v_old_status text;
   v_new_status text;
   v_store_id uuid;
+  v_store_count integer := 0;
   v_marketplace text;
   v_was_approved boolean := false;
 begin
@@ -899,9 +900,11 @@ begin
 
   elsif tg_table_name = 'seller_marketplace_permissions' then
     v_marketplace := old.marketplace;
-    select s.id into v_store_id
+    select count(*)::integer,(array_agg(s.id order by s.id))[1]
+      into v_store_count,v_store_id
     from public.seller_stores s
     where s.user_id=old.user_id and s.primary_marketplace=old.marketplace;
+    if v_store_count<>1 then v_store_id:=null; end if;
     if tg_op = 'UPDATE' then
       if new.user_id is not distinct from old.user_id
          and new.marketplace is not distinct from old.marketplace
@@ -1117,6 +1120,7 @@ declare
   v_permission_status text;
   v_store_id uuid;
   v_store_status text;
+  v_store_count integer := 0;
   v_reviewed_at timestamptz;
   v_event private.seller_fulfillment_revocation_events%rowtype;
   v_event_found boolean := false;
@@ -1151,10 +1155,24 @@ begin
     raise exception 'Only an approved or partially revoked seller permission can be completed' using errcode = '22023';
   end if;
 
-  select s.id,s.status into v_store_id,v_store_status
+  -- Resolve only a unique store for this exact marketplace. If legacy data is
+  -- ambiguous, revoke the permission without guessing which store to mutate.
+  select count(*)::integer,
+         (array_agg(s.id order by s.id))[1],
+         (array_agg(s.status order by s.id))[1]
+    into v_store_count,v_store_id,v_store_status
   from public.seller_stores s
-  where s.user_id=v_user_id
-  for update;
+  where s.user_id=v_user_id and s.primary_marketplace=v_marketplace;
+
+  if v_store_count<>1 then
+    v_store_id:=null;
+    v_store_status:=null;
+  else
+    perform 1 from public.seller_stores s
+    where s.id=v_store_id and s.user_id=v_user_id
+      and s.primary_marketplace=v_marketplace
+    for update;
+  end if;
 
   if v_permission_status = 'approved' then
     update public.seller_marketplace_permissions
@@ -1177,8 +1195,8 @@ begin
   v_reviewed_at := coalesce(v_reviewed_at, pg_catalog.now());
 
   -- A partially revoked seller may have lost effective access before this RPC
-  -- was called. Never manufacture a later snapshot: report only the latest
-  -- immutable revocation event already created by an effective revocation path.
+  -- was called. Never manufacture a later snapshot: report only evidence tied
+  -- to this exact permission or its uniquely identified store and marketplace.
   -- Prefer the exact permission event; if a prior partial transition was
   -- recorded through the linked store, accept only that exact store identity.
   -- Never borrow another marketplace's or another store's latest seller event.
