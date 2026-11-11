@@ -1384,8 +1384,10 @@ async function revokeSellerMarketplaceAccess(id){
    msg.textContent="Marketplace access revoked. Verified historical access recorded for "+complete+" fulfilment(s). Refreshing records…";
   } else if(status==="partially_recorded" && verified){
    msg.textContent="Marketplace access revoked. Historical access partially recorded: "+complete+" complete snapshot(s); "+quarantined+" fulfilment(s) quarantined. Refreshing records…";
+  } else if(verified){
+   msg.textContent="Marketplace access revoked. Historical access is unavailable. No complete snapshot was recorded; "+quarantined+" fulfilment(s) were quarantined. Refreshing records…";
   } else {
-   msg.textContent="Marketplace access revoked. Historical access is unavailable. Complete snapshots verified: 0; quarantined fulfilments: "+quarantined+". Refreshing records…";
+   msg.textContent="Marketplace access revoked. Historical access is unavailable because snapshot evidence could not be verified. Reported quarantine entries: "+quarantined+". Refreshing records…";
   }
   await loadMarketplacePermissions();
  }catch(error){
