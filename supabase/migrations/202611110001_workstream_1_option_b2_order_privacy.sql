@@ -9,6 +9,8 @@ begin;
 create table if not exists private.seller_fulfillment_revocation_events (
   event_id uuid primary key default gen_random_uuid(),
   seller_id uuid not null,
+  store_id uuid,
+  marketplace text not null check (marketplace in ('retail','motors','property')),
   revoked_at timestamptz not null default now(),
   source_table text not null check (source_table in ('seller_stores','seller_marketplace_permissions')),
   source_record_id uuid not null,
@@ -44,10 +46,91 @@ create table if not exists private.seller_fulfillment_historical_items (
   order_created_at timestamptz,
   recorded_at timestamptz not null default now(),
   primary key (revocation_event_id, fulfillment_id, order_item_id),
+  -- An order-item identity may occur only once in a revocation event,
+  -- even when malformed source data associates it with multiple fulfilments.
+  unique (revocation_event_id, order_item_id),
   foreign key (revocation_event_id, fulfillment_id)
     references private.seller_fulfillment_historical_access(revocation_event_id, fulfillment_id)
     on delete restrict
 );
+
+-- Permanent product/order-item association history. No FK to mutable order,
+-- fulfilment or product rows: deleting/reassigning source rows cannot erase use.
+create table if not exists private.product_order_use (
+  order_item_id uuid not null,
+  product_id bigint not null,
+  order_id uuid not null,
+  seller_id uuid,
+  first_recorded_at timestamptz not null default now(),
+  primary key (order_item_id, product_id)
+);
+
+-- Existing products start UNKNOWN: the current database rows cannot prove that
+-- deleted legacy order items never existed. Only products created after this
+-- tracker is installed receive COMPLETE coverage automatically.
+create table if not exists private.product_order_history_coverage (
+  product_id bigint primary key,
+  coverage_status text not null check (coverage_status in ('unknown','complete')),
+  coverage_basis text not null,
+  recorded_at timestamptz not null default now()
+);
+
+insert into private.product_order_history_coverage(product_id,coverage_status,coverage_basis)
+select p.id,'unknown','legacy_at_tracker_installation_unverified'
+from public."Products" p
+on conflict (product_id) do nothing;
+
+alter table private.product_order_use enable row level security;
+alter table private.product_order_history_coverage enable row level security;
+revoke all privileges on table private.product_order_use,
+  private.product_order_history_coverage
+from public,anon,authenticated,service_role;
+
+create or replace function private.record_product_order_use()
+returns trigger
+language plpgsql security definer
+set search_path = '' set row_security = off
+as $function$
+begin
+  if tg_op = 'UPDATE' and (
+       old.id is distinct from new.id
+       or old.product_id is distinct from new.product_id
+     ) then
+    insert into private.product_order_use(order_item_id,product_id,order_id,seller_id)
+    values(old.id,old.product_id,old.order_id,old.seller_id)
+    on conflict (order_item_id,product_id) do nothing;
+  end if;
+
+  insert into private.product_order_use(order_item_id,product_id,order_id,seller_id)
+  values(new.id,new.product_id,new.order_id,new.seller_id)
+  on conflict (order_item_id,product_id) do nothing;
+  return null;
+end;
+$function$;
+
+create or replace function private.initialize_product_order_history_coverage()
+returns trigger
+language plpgsql security definer
+set search_path = '' set row_security = off
+as $function$
+begin
+  insert into private.product_order_history_coverage(product_id,coverage_status,coverage_basis)
+  values(new.id,'complete','created_after_order_history_tracker_installation')
+  on conflict (product_id) do nothing;
+  return null;
+end;
+$function$;
+
+revoke all on function private.record_product_order_use() from public,anon,authenticated,service_role;
+revoke all on function private.initialize_product_order_history_coverage() from public,anon,authenticated,service_role;
+
+create trigger record_product_order_use
+after insert or update of id,product_id on public.order_items
+for each row execute function private.record_product_order_use();
+
+create trigger initialize_product_order_history_coverage
+after insert on public."Products"
+for each row execute function private.initialize_product_order_history_coverage();
 
 create index if not exists seller_fulfillment_historical_access_seller_idx
   on private.seller_fulfillment_historical_access (seller_id, fulfillment_id);
@@ -83,6 +166,9 @@ before update or delete on private.seller_fulfillment_historical_access
 for each row execute function private.reject_historical_registry_mutation();
 create trigger seller_fulfillment_historical_items_immutable
 before update or delete on private.seller_fulfillment_historical_items
+for each row execute function private.reject_historical_registry_mutation();
+create trigger product_order_use_immutable
+before update or delete on private.product_order_use
 for each row execute function private.reject_historical_registry_mutation();
 
 -- 2. Exact seller/order/item relationship validation.
@@ -123,6 +209,89 @@ as $function$
     );
 $function$;
 
+create or replace function private.seller_fulfillment_revocation_manifest_valid(
+  p_event_id uuid
+)
+returns boolean
+language sql stable security definer
+set search_path = '' set row_security = off
+as $function$
+  select exists (
+    select 1
+    from private.seller_fulfillment_revocation_events e
+    where e.event_id=p_event_id
+      and e.fulfillment_count=e.complete_fulfillment_count+e.quarantined_fulfillment_count
+      and e.manifest_status=case
+        when e.fulfillment_count=0 then 'none'
+        when e.quarantined_fulfillment_count=0 then 'complete'
+        when e.complete_fulfillment_count=0 then 'none'
+        else 'partial'
+      end
+      and (select count(*) from private.seller_fulfillment_historical_access ha
+           where ha.revocation_event_id=e.event_id)=e.fulfillment_count
+      and (select count(*) from private.seller_fulfillment_historical_access ha
+           where ha.revocation_event_id=e.event_id and ha.manifest_status='complete')
+          =e.complete_fulfillment_count
+      and (select count(*) from private.seller_fulfillment_historical_access ha
+           where ha.revocation_event_id=e.event_id and ha.manifest_status='quarantined')
+          =e.quarantined_fulfillment_count
+      -- Every parent identity must belong to this event's seller.
+      and not exists (
+        select 1 from private.seller_fulfillment_historical_access ha
+        where ha.revocation_event_id=e.event_id
+          and ha.seller_id is distinct from e.seller_id
+      )
+      -- Complete rows require an exact, non-empty item manifest. Quarantined
+      -- rows carry no item data at all.
+      and not exists (
+        select 1
+        from private.seller_fulfillment_historical_access ha
+        where ha.revocation_event_id=e.event_id
+          and (
+            (ha.manifest_status='complete' and (
+              ha.expected_item_count<=0
+              or ha.snapshot_item_count<>ha.expected_item_count
+              or (select count(*) from private.seller_fulfillment_historical_items hi
+                  where hi.revocation_event_id=ha.revocation_event_id
+                    and hi.fulfillment_id=ha.fulfillment_id)<>ha.snapshot_item_count
+              or exists (
+                select 1 from private.seller_fulfillment_historical_items hi
+                where hi.revocation_event_id=ha.revocation_event_id
+                  and hi.fulfillment_id=ha.fulfillment_id
+                  and (hi.order_id is distinct from ha.order_id
+                       or hi.seller_id is distinct from ha.seller_id)
+              )
+            ))
+            or
+            (ha.manifest_status='quarantined' and (
+              ha.snapshot_item_count<>0
+              or exists (
+                select 1 from private.seller_fulfillment_historical_items hi
+                where hi.revocation_event_id=ha.revocation_event_id
+                  and hi.fulfillment_id=ha.fulfillment_id
+              )
+            ))
+          )
+      )
+      -- No orphan, extra, cross-seller or cross-fulfilment item is accepted.
+      and not exists (
+        select 1
+        from private.seller_fulfillment_historical_items hi
+        where hi.revocation_event_id=e.event_id
+          and not exists (
+            select 1
+            from private.seller_fulfillment_historical_access ha
+            where ha.revocation_event_id=hi.revocation_event_id
+              and ha.fulfillment_id=hi.fulfillment_id
+              and ha.order_id=hi.order_id
+              and ha.seller_id=hi.seller_id
+              and ha.seller_id=e.seller_id
+              and ha.manifest_status='complete'
+          )
+      )
+  );
+$function$;
+
 create or replace function private.seller_fulfillment_historical_access_allowed(
   p_fulfillment_id uuid, p_order_id uuid, p_seller_id uuid
 )
@@ -134,33 +303,11 @@ as $function$
     select 1
     from private.seller_fulfillment_historical_access ha
     join private.seller_fulfillment_revocation_events e
-      on e.event_id = ha.revocation_event_id and e.seller_id = ha.seller_id
-    where ha.fulfillment_id = p_fulfillment_id
-      and ha.order_id = p_order_id and ha.seller_id = p_seller_id
-      and ha.manifest_status = 'complete'
-      and ha.expected_item_count > 0
-      and ha.snapshot_item_count = ha.expected_item_count
-      and e.manifest_status in ('complete','partial')
-      and e.fulfillment_count = e.complete_fulfillment_count + e.quarantined_fulfillment_count
-      and e.complete_fulfillment_count > 0
-      and (
-        select count(*) from private.seller_fulfillment_historical_access ha_count
-        where ha_count.revocation_event_id=e.event_id
-      ) = e.fulfillment_count
-      and (
-        select count(*) from private.seller_fulfillment_historical_access ha_count
-        where ha_count.revocation_event_id=e.event_id and ha_count.manifest_status='complete'
-      ) = e.complete_fulfillment_count
-      and (
-        select count(*) from private.seller_fulfillment_historical_access ha_count
-        where ha_count.revocation_event_id=e.event_id and ha_count.manifest_status='quarantined'
-      ) = e.quarantined_fulfillment_count
-      and (
-        select count(*) from private.seller_fulfillment_historical_items hi
-        where hi.revocation_event_id=ha.revocation_event_id
-          and hi.fulfillment_id=ha.fulfillment_id
-          and hi.order_id=ha.order_id and hi.seller_id=ha.seller_id
-      ) = ha.snapshot_item_count
+      on e.event_id=ha.revocation_event_id and e.seller_id=ha.seller_id
+    where ha.fulfillment_id=p_fulfillment_id
+      and ha.order_id=p_order_id and ha.seller_id=p_seller_id
+      and ha.manifest_status='complete'
+      and private.seller_fulfillment_revocation_manifest_valid(e.event_id)
   );
 $function$;
 
@@ -201,6 +348,7 @@ as $function$
 $function$;
 
 revoke all on function private.seller_fulfillment_item_set_valid(uuid,uuid,uuid) from public, anon, authenticated, service_role;
+revoke all on function private.seller_fulfillment_revocation_manifest_valid(uuid) from public, anon, authenticated, service_role;
 revoke all on function private.seller_fulfillment_historical_access_allowed(uuid,uuid,uuid) from public, anon, authenticated, service_role;
 revoke all on function private.seller_fulfillment_current_access_allowed(uuid,uuid,uuid) from public, anon, authenticated, service_role;
 
@@ -381,6 +529,11 @@ begin
 end;
 $function$;
 
+-- Trigger-only SECURITY DEFINER function: callers need no EXECUTE privilege
+-- and must not receive direct access to the private schema for this trigger.
+revoke all on function private.enforce_order_item_marketplace_access()
+  from public,anon,authenticated,service_role;
+
 -- Product seller ownership transfer uses only try-locks because the UPDATE
 -- already holds the product row lock. Contention aborts immediately (40001),
 -- avoiding a wait cycle with checkout's seller-lock-before-product protocol.
@@ -422,12 +575,14 @@ begin
     raise exception 'Seller marketplace access is changing concurrently; retry ownership transfer' using errcode='40001';
   end if;
 
-  if exists (select 1 from public.order_items oi where oi.product_id=old.id)
-     or exists (
-       select 1 from private.seller_fulfillment_historical_items hi
-       where hi.product_id=old.id
+  if exists (
+       select 1 from private.product_order_use pou where pou.product_id=old.id
+     )
+     or not exists (
+       select 1 from private.product_order_history_coverage c
+       where c.product_id=old.id and c.coverage_status='complete'
      ) then
-    raise exception 'Product ownership cannot be transferred after an order item exists'
+    raise exception 'Product ownership cannot be transferred: order history exists or legacy coverage is unverified'
       using errcode='23514';
   end if;
 
@@ -477,24 +632,45 @@ declare
   v_store_status text;
   v_store_marketplace text;
 begin
-  if tg_op = 'DELETE' then
-    if exists (select 1 from private.seller_fulfillment_historical_access ha where ha.fulfillment_id=old.id) then
-      raise exception 'A fulfilment with historical access evidence cannot be deleted' using errcode = '55000';
+  -- DELETE, identity UPDATE and INSERT all serialize on the exact same
+  -- seller-scoped transaction lock used by checkout and revocation.
+  if tg_op='DELETE' then
+    if old.seller_id is null then
+      raise exception 'Fulfilment seller is required for protected deletion' using errcode='23502';
+    end if;
+    if not pg_catalog.pg_try_advisory_xact_lock(
+      pg_catalog.hashtextextended('novaai-seller-marketplace:'||old.seller_id::text,0)
+    ) then
+      raise exception 'Seller marketplace access is being changed concurrently; retry this operation'
+        using errcode='40001';
+    end if;
+    if exists (
+      select 1 from private.seller_fulfillment_historical_access ha
+      where ha.fulfillment_id=old.id
+    ) then
+      raise exception 'A fulfilment with historical access evidence cannot be deleted' using errcode='55000';
     end if;
     return old;
   end if;
 
-  if tg_op = 'UPDATE' then
+  if tg_op='UPDATE' then
+    if old.seller_id is null
+       or not pg_catalog.pg_try_advisory_xact_lock(
+         pg_catalog.hashtextextended('novaai-seller-marketplace:'||old.seller_id::text,0)
+       ) then
+      raise exception 'Seller marketplace access is being changed concurrently; retry this operation'
+        using errcode='40001';
+    end if;
     if new.id is distinct from old.id
        or new.order_id is distinct from old.order_id
        or new.seller_id is distinct from old.seller_id then
-      raise exception 'Fulfilment identity (id, order, seller) is immutable' using errcode = '55000';
+      raise exception 'Fulfilment identity (id, order, seller) is immutable' using errcode='55000';
     end if;
     return new;
   end if;
 
   if new.seller_id is null or new.order_id is null then
-    raise exception 'Fulfilment seller and order are required' using errcode = '23502';
+    raise exception 'Fulfilment seller and order are required' using errcode='23502';
   end if;
 
   if not pg_catalog.pg_try_advisory_xact_lock(
@@ -590,7 +766,8 @@ for each row execute function private.validate_seller_fulfillment_item_set_after
 
 -- 4. Immutable snapshot at every transition away from approved access.
 create or replace function private.record_seller_fulfillment_revocation(
-  p_seller_id uuid, p_source_table text, p_source_record_id uuid,
+  p_seller_id uuid, p_store_id uuid, p_marketplace text,
+  p_source_table text, p_source_record_id uuid,
   p_previous_status text, p_new_status text
 )
 returns uuid
@@ -617,11 +794,12 @@ begin
                    when v_complete=0 then 'none' else 'partial' end;
 
   insert into private.seller_fulfillment_revocation_events (
-    seller_id,source_table,source_record_id,previous_status,new_status,
-    manifest_status,fulfillment_count,complete_fulfillment_count,quarantined_fulfillment_count
+    seller_id,store_id,marketplace,source_table,source_record_id,
+    previous_status,new_status,manifest_status,fulfillment_count,
+    complete_fulfillment_count,quarantined_fulfillment_count
   ) values (
-    p_seller_id,p_source_table,p_source_record_id,p_previous_status,p_new_status,
-    v_status,v_total,v_complete,v_quarantined
+    p_seller_id,p_store_id,p_marketplace,p_source_table,p_source_record_id,
+    p_previous_status,p_new_status,v_status,v_total,v_complete,v_quarantined
   ) returning event_id into v_event_id;
 
   for v_f in
@@ -672,6 +850,8 @@ declare
   v_record_id uuid;
   v_old_status text;
   v_new_status text;
+  v_store_id uuid;
+  v_marketplace text;
   v_was_approved boolean := false;
 begin
   v_seller_id := old.user_id;
@@ -679,6 +859,8 @@ begin
   v_old_status := old.status;
 
   if tg_table_name = 'seller_stores' then
+    v_store_id := old.id;
+    v_marketplace := old.primary_marketplace;
     if tg_op = 'UPDATE' then
       if new.user_id is not distinct from old.user_id
          and new.primary_marketplace is not distinct from old.primary_marketplace
@@ -701,6 +883,10 @@ begin
     into v_was_approved;
 
   elsif tg_table_name = 'seller_marketplace_permissions' then
+    v_marketplace := old.marketplace;
+    select s.id into v_store_id
+    from public.seller_stores s
+    where s.user_id=old.user_id and s.primary_marketplace=old.marketplace;
     if tg_op = 'UPDATE' then
       if new.user_id is not distinct from old.user_id
          and new.marketplace is not distinct from old.marketplace
@@ -727,7 +913,8 @@ begin
 
   if v_was_approved then
     perform private.record_seller_fulfillment_revocation(
-      v_seller_id, tg_table_name, v_record_id, v_old_status, v_new_status
+      v_seller_id,v_store_id,v_marketplace,tg_table_name,v_record_id,
+      v_old_status,v_new_status
     );
   end if;
 
@@ -736,7 +923,8 @@ begin
 end;
 $function$;
 
-revoke all on function private.record_seller_fulfillment_revocation(uuid,text,uuid,text,text) from public, anon, authenticated, service_role;
+revoke all on function private.record_seller_fulfillment_revocation(uuid,uuid,text,text,uuid,text,text)
+  from public,anon,authenticated,service_role;
 revoke all on function private.snapshot_seller_fulfillment_revocation() from public, anon, authenticated, service_role;
 
 drop trigger if exists snapshot_seller_fulfillment_access_on_store_revocation on public.seller_stores;
@@ -976,10 +1164,23 @@ begin
   -- A partially revoked seller may have lost effective access before this RPC
   -- was called. Never manufacture a later snapshot: report only the latest
   -- immutable revocation event already created by an effective revocation path.
+  -- Prefer the exact permission event; if a prior partial transition was
+  -- recorded through the linked store, accept only that exact store identity.
+  -- Never borrow another marketplace's or another store's latest seller event.
   select e.* into v_event
   from private.seller_fulfillment_revocation_events e
   where e.seller_id=v_user_id
-  order by e.revoked_at desc,e.event_id desc
+    and e.store_id is not distinct from v_store_id
+    and e.marketplace=v_marketplace
+    and (
+      (e.source_table='seller_marketplace_permissions'
+       and e.source_record_id=p_permission_id)
+      or
+      (e.source_table='seller_stores'
+       and e.source_record_id=v_store_id)
+    )
+  order by case when e.source_table='seller_marketplace_permissions' then 0 else 1 end,
+           e.revoked_at desc,e.event_id desc
   limit 1;
   v_event_found := found;
 
@@ -995,45 +1196,7 @@ begin
       v_manifest_rows=v_event.fulfillment_count
       and v_manifest_complete=v_event.complete_fulfillment_count
       and v_manifest_quarantined=v_event.quarantined_fulfillment_count
-      and v_event.fulfillment_count=v_event.complete_fulfillment_count+v_event.quarantined_fulfillment_count
-      and v_event.manifest_status=case
-        when v_event.fulfillment_count=0 then 'none'
-        when v_event.complete_fulfillment_count=v_event.fulfillment_count then 'complete'
-        when v_event.complete_fulfillment_count>0 then 'partial'
-        else 'none'
-      end
-      and not exists (
-        select 1
-        from private.seller_fulfillment_historical_access ha_identity
-        where ha_identity.revocation_event_id=v_event.event_id
-          and ha_identity.seller_id is distinct from v_event.seller_id
-      )
-      and not exists (
-        select 1
-        from private.seller_fulfillment_historical_access ha
-        where ha.revocation_event_id=v_event.event_id
-          and (
-            (ha.manifest_status='complete' and (
-              ha.expected_item_count<=0
-              or ha.snapshot_item_count<>ha.expected_item_count
-              or ha.snapshot_item_count<>(
-                select count(*) from private.seller_fulfillment_historical_items hi
-                where hi.revocation_event_id=ha.revocation_event_id
-                  and hi.fulfillment_id=ha.fulfillment_id
-                  and hi.order_id=ha.order_id and hi.seller_id=ha.seller_id
-              )
-            ))
-            or
-            (ha.manifest_status='quarantined' and (
-              ha.snapshot_item_count<>0
-              or exists (
-                select 1 from private.seller_fulfillment_historical_items hi
-                where hi.revocation_event_id=ha.revocation_event_id
-                  and hi.fulfillment_id=ha.fulfillment_id
-              )
-            ))
-          )
-      );
+      and private.seller_fulfillment_revocation_manifest_valid(v_event.event_id);
 
     if v_evidence_verified and v_manifest_complete>0 then
       if v_manifest_complete=v_event.fulfillment_count and v_manifest_quarantined=0 then
