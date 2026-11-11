@@ -555,9 +555,31 @@ begin
   end if;
 
   if v_old_status = 'approved' then
-    perform private.record_seller_fulfillment_revocation(
-      v_seller_id, tg_table_name, v_record_id, v_old_status, v_new_status
-    );
+    -- When both approval records are changed in one transaction, snapshot once:
+    -- the first transition sees the counterpart still approved; the second does not.
+    if tg_table_name = 'seller_stores' then
+      if exists (
+        select 1 from public.seller_marketplace_permissions mp
+        where mp.user_id = v_seller_id
+          and mp.marketplace = old.primary_marketplace
+          and mp.status = 'approved'
+      ) then
+        perform private.record_seller_fulfillment_revocation(
+          v_seller_id, tg_table_name, v_record_id, v_old_status, v_new_status
+        );
+      end if;
+    elsif tg_table_name = 'seller_marketplace_permissions' then
+      if exists (
+        select 1 from public.seller_stores s
+        where s.user_id = v_seller_id
+          and s.primary_marketplace = old.marketplace
+          and s.status = 'approved'
+      ) then
+        perform private.record_seller_fulfillment_revocation(
+          v_seller_id, tg_table_name, v_record_id, v_old_status, v_new_status
+        );
+      end if;
+    end if;
   end if;
 
   if tg_op = 'DELETE' then return old; end if;
@@ -755,36 +777,45 @@ begin
     pg_catalog.hashtextextended('novaai-seller-marketplace:' || v_prelock_user_id::text, 0)
   );
 
-  select mp.user_id,mp.marketplace,mp.status
-    into v_user_id,v_marketplace,v_permission_status
+  select mp.user_id,mp.marketplace,mp.status,mp.reviewed_at
+    into v_user_id,v_marketplace,v_permission_status,v_reviewed_at
   from public.seller_marketplace_permissions mp
   where mp.id=p_permission_id
   for update;
 
-  if v_user_id is distinct from v_prelock_user_id or v_permission_status is distinct from 'approved' then
-    raise exception 'Only an approved seller marketplace permission can be revoked' using errcode = '22023';
+  if v_user_id is distinct from v_prelock_user_id
+     or v_permission_status not in ('approved','rejected') then
+    raise exception 'Only an approved or partially revoked seller permission can be completed' using errcode = '22023';
   end if;
 
   select s.id,s.status into v_store_id,v_store_status
   from public.seller_stores s
   where s.user_id=v_user_id and s.primary_marketplace=v_marketplace
   for update;
-  if v_store_id is null or v_store_status is distinct from 'approved' then
-    raise exception 'The approved seller store could not be verified' using errcode = '23514';
+  if v_store_id is null or v_store_status not in ('approved','rejected') then
+    raise exception 'The seller store could not be verified for revocation' using errcode = '23514';
   end if;
 
-  update public.seller_marketplace_permissions
-  set status='rejected',reviewed_at=pg_catalog.now(),reviewed_by=v_admin_id
-  where id=p_permission_id and user_id=v_user_id and marketplace=v_marketplace and status='approved'
-  returning reviewed_at into v_reviewed_at;
-  if v_reviewed_at is null then
-    raise exception 'Marketplace permission changed during revocation' using errcode = '40001';
+  if v_permission_status = 'approved' then
+    update public.seller_marketplace_permissions
+    set status='rejected',reviewed_at=pg_catalog.now(),reviewed_by=v_admin_id
+    where id=p_permission_id and user_id=v_user_id and marketplace=v_marketplace and status='approved'
+    returning reviewed_at into v_reviewed_at;
+    if v_reviewed_at is null then
+      raise exception 'Marketplace permission changed during revocation' using errcode = '40001';
+    end if;
   end if;
 
-  update public.seller_stores set status='rejected'
-  where id=v_store_id and user_id=v_user_id and status='approved';
-  if not found then
-    raise exception 'Seller store changed during revocation' using errcode = '40001';
+  if v_store_status = 'approved' then
+    update public.seller_stores set status='rejected'
+    where id=v_store_id and user_id=v_user_id and status='approved';
+    if not found then
+      raise exception 'Seller store changed during revocation' using errcode = '40001';
+    end if;
+  end if;
+
+  if v_permission_status = 'rejected' and v_store_status = 'rejected' then
+    raise exception 'Seller marketplace access is already revoked' using errcode = '22023';
   end if;
 
   return pg_catalog.jsonb_build_object(
