@@ -1081,15 +1081,15 @@ drop policy if exists "Sellers update own primary marketplace fulfillments" on p
 -- Remove every direct client privilege, including table-level TRUNCATE/TRIGGER
 -- and prior column-level financial SELECT/operational UPDATE grants. service_role
 -- and postgres grants are deliberately untouched.
-revoke all privileges on table public.seller_fulfillments from anon, authenticated;
+revoke all privileges on table public.seller_fulfillments from public, anon, authenticated;
 revoke select (
   id,order_id,seller_id,item_subtotal,platform_commission,payout_amount,
   fulfillment_status,settlement_status,created_at,updated_at,
   tracking_number,courier_name,delivery_date
-) on table public.seller_fulfillments from anon, authenticated;
+) on table public.seller_fulfillments from public, anon, authenticated;
 revoke update (
   courier_name,delivery_date,fulfillment_status,tracking_number,updated_at
-) on table public.seller_fulfillments from anon, authenticated;
+) on table public.seller_fulfillments from public, anon, authenticated;
 
 -- Explicit client execution grants. The legacy seller RPC keeps its existing ACL.
 revoke all on function public.get_my_seller_order_items() from public, anon;
