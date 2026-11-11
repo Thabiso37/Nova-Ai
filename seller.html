@@ -1227,7 +1227,7 @@ async function loadSellerOrders() {
   if (currentVersion !== authVersion || user !== targetUser) return;
 
   if (itemsError) {
-    msgEl.textContent = "Unable to load primary-marketplace orders: " + itemsError.message;
+    msgEl.textContent = "Unable to load seller order items: " + itemsError.message;
     return;
   }
 
