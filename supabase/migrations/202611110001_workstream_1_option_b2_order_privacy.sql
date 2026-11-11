@@ -805,10 +805,12 @@ begin
 
   select s.id,s.status into v_store_id,v_store_status
   from public.seller_stores s
-  where s.user_id=v_user_id and s.primary_marketplace=v_marketplace
+  where s.user_id=v_user_id
   for update;
-  if v_store_id is null or v_store_status not in ('approved','rejected') then
-    raise exception 'The seller store could not be verified for revocation' using errcode = '23514';
+
+  if v_permission_status = 'rejected'
+     and (v_store_status is null or v_store_status = 'rejected') then
+    raise exception 'Seller marketplace access is already revoked' using errcode = '22023';
   end if;
 
   if v_permission_status = 'approved' then
@@ -821,16 +823,12 @@ begin
     end if;
   end if;
 
-  if v_store_status = 'approved' then
+  if v_store_id is not null and v_store_status is distinct from 'rejected' then
     update public.seller_stores set status='rejected'
-    where id=v_store_id and user_id=v_user_id and status='approved';
+    where id=v_store_id and user_id=v_user_id and status is distinct from 'rejected';
     if not found then
       raise exception 'Seller store changed during revocation' using errcode = '40001';
     end if;
-  end if;
-
-  if v_permission_status = 'rejected' and v_store_status = 'rejected' then
-    raise exception 'Seller marketplace access is already revoked' using errcode = '22023';
   end if;
 
   v_reviewed_at := coalesce(v_reviewed_at, pg_catalog.now());
