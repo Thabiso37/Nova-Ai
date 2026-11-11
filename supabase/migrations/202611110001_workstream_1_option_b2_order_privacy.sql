@@ -900,7 +900,11 @@ end;
 $function$;
 
 create or replace function public.revoke_seller_marketplace_access(p_permission_id uuid)
-returns jsonb language plpgsql set search_path = ''
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+set row_security = off
 as $function$
 declare
   v_admin_id uuid := (select auth.uid());
