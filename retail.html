@@ -1878,11 +1878,9 @@ const { data: items, error: itemsError } = await sb
 
 if (itemsError) throw itemsError;
 
-// Retrieve fulfilment information
+// Retrieve only the customer's operational fulfilment fields.
 const { data: fulfillments, error: fulfillmentError } = await sb
-  .from("seller_fulfillments")
-  .select("*")
-  .in("order_id", orderIds);
+  .rpc("get_my_customer_order_fulfillments");
 
 if (fulfillmentError) throw fulfillmentError;
 
