@@ -1376,7 +1376,17 @@ async function revokeSellerMarketplaceAccess(id){
  try{
   const {data,error}=await sb.rpc("revoke_seller_marketplace_access",{p_permission_id:id});
   if(error)throw error;
-  msg.textContent="Marketplace access revoked. Historical fulfilment access was recorded. Refreshing records…";
+  const status=data?.historical_access_status;
+  const verified=data?.historical_evidence_verified===true;
+  const complete=Number(data?.complete_fulfillment_count||0);
+  const quarantined=Number(data?.quarantined_fulfillment_count||0);
+  if(status==="recorded" && verified){
+   msg.textContent="Marketplace access revoked. Verified historical access recorded for "+complete+" fulfilment(s). Refreshing records…";
+  } else if(status==="partially_recorded" && verified){
+   msg.textContent="Marketplace access revoked. Historical access partially recorded: "+complete+" complete snapshot(s); "+quarantined+" fulfilment(s) quarantined. Refreshing records…";
+  } else {
+   msg.textContent="Marketplace access revoked. Historical access is unavailable. Complete snapshots verified: 0; quarantined fulfilments: "+quarantined+". Refreshing records…";
+  }
   await loadMarketplacePermissions();
  }catch(error){
   console.error("NOVAAI seller revocation error:",error);
