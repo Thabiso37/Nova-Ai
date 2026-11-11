@@ -538,48 +538,63 @@ declare
   v_record_id uuid;
   v_old_status text;
   v_new_status text;
+  v_was_approved boolean := false;
 begin
-  if tg_op = 'DELETE' then
-    v_seller_id := old.user_id;
-    v_record_id := old.id;
-    v_old_status := old.status;
-    v_new_status := null;
-  else
-    if old.status is distinct from 'approved' or new.status is not distinct from 'approved' then
-      return new;
+  v_seller_id := old.user_id;
+  v_record_id := old.id;
+  v_old_status := old.status;
+
+  if tg_table_name = 'seller_stores' then
+    if tg_op = 'UPDATE' then
+      if new.user_id is not distinct from old.user_id
+         and new.primary_marketplace is not distinct from old.primary_marketplace
+         and new.status = 'approved' then
+        return new;
+      end if;
+      v_new_status := new.status;
+    else
+      v_new_status := null;
     end if;
-    v_seller_id := old.user_id;
-    v_record_id := old.id;
-    v_old_status := old.status;
-    v_new_status := new.status;
+
+    -- The old store approval was effective only if its matching permission
+    -- was also approved immediately before this store change.
+    select exists (
+      select 1 from public.seller_marketplace_permissions mp
+      where mp.user_id = old.user_id
+        and mp.marketplace = old.primary_marketplace
+        and mp.status = 'approved'
+    ) and old.status = 'approved'
+    into v_was_approved;
+
+  elsif tg_table_name = 'seller_marketplace_permissions' then
+    if tg_op = 'UPDATE' then
+      if new.user_id is not distinct from old.user_id
+         and new.marketplace is not distinct from old.marketplace
+         and new.status = 'approved' then
+        return new;
+      end if;
+      v_new_status := new.status;
+    else
+      v_new_status := null;
+    end if;
+
+    -- The old permission approval was effective only if its matching store
+    -- was also approved immediately before this permission change.
+    select exists (
+      select 1 from public.seller_stores s
+      where s.user_id = old.user_id
+        and s.primary_marketplace = old.marketplace
+        and s.status = 'approved'
+    ) and old.status = 'approved'
+    into v_was_approved;
+  else
+    raise exception 'Unexpected seller revocation trigger table: %', tg_table_name;
   end if;
 
-  if v_old_status = 'approved' then
-    -- When both approval records are changed in one transaction, snapshot once:
-    -- the first transition sees the counterpart still approved; the second does not.
-    if tg_table_name = 'seller_stores' then
-      if exists (
-        select 1 from public.seller_marketplace_permissions mp
-        where mp.user_id = v_seller_id
-          and mp.marketplace = old.primary_marketplace
-          and mp.status = 'approved'
-      ) then
-        perform private.record_seller_fulfillment_revocation(
-          v_seller_id, tg_table_name, v_record_id, v_old_status, v_new_status
-        );
-      end if;
-    elsif tg_table_name = 'seller_marketplace_permissions' then
-      if exists (
-        select 1 from public.seller_stores s
-        where s.user_id = v_seller_id
-          and s.primary_marketplace = old.marketplace
-          and s.status = 'approved'
-      ) then
-        perform private.record_seller_fulfillment_revocation(
-          v_seller_id, tg_table_name, v_record_id, v_old_status, v_new_status
-        );
-      end if;
-    end if;
+  if v_was_approved then
+    perform private.record_seller_fulfillment_revocation(
+      v_seller_id, tg_table_name, v_record_id, v_old_status, v_new_status
+    );
   end if;
 
   if tg_op = 'DELETE' then return old; end if;
@@ -592,12 +607,12 @@ revoke all on function private.snapshot_seller_fulfillment_revocation() from pub
 
 drop trigger if exists snapshot_seller_fulfillment_access_on_store_revocation on public.seller_stores;
 create trigger snapshot_seller_fulfillment_access_on_store_revocation
-after update of status or delete on public.seller_stores
+after update of status, primary_marketplace, user_id or delete on public.seller_stores
 for each row execute function private.snapshot_seller_fulfillment_revocation();
 
 drop trigger if exists snapshot_seller_fulfillment_access_on_permission_revocation on public.seller_marketplace_permissions;
 create trigger snapshot_seller_fulfillment_access_on_permission_revocation
-after update of status or delete on public.seller_marketplace_permissions
+after update of status, marketplace, user_id or delete on public.seller_marketplace_permissions
 for each row execute function private.snapshot_seller_fulfillment_revocation();
 
 -- 5. Seller application and review functions acquire the shared advisory lock
