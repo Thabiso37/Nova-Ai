@@ -1085,7 +1085,7 @@ begin
   from (
     select distinct on (hi.order_item_id)
            hi.order_id,hi.order_created_at,hi.order_item_id,hi.product_id,
-           hi.product_name,hi.quantity,hi.unit_price,hi.line_total,e.revoked_at,e.event_id
+           hi.product_name,hi.quantity,e.revoked_at,e.event_id
     from private.seller_fulfillment_historical_access ha
     join private.seller_fulfillment_revocation_events e on e.event_id=ha.revocation_event_id
     join private.seller_fulfillment_historical_items hi
@@ -1272,7 +1272,7 @@ as $function$
     from (
       select distinct on (hi.order_item_id)
              hi.order_id,hi.order_created_at,hi.order_item_id,hi.product_id,
-             hi.product_name,hi.quantity,hi.unit_price,hi.line_total,e.revoked_at,e.event_id
+             hi.product_name,hi.quantity,e.revoked_at,e.event_id
       from private.seller_fulfillment_historical_access ha
       join private.seller_fulfillment_revocation_events e on e.event_id=ha.revocation_event_id
       join private.seller_fulfillment_historical_items hi
