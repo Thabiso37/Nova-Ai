@@ -307,7 +307,7 @@ create or replace function private.enforce_order_item_marketplace_access()
 returns trigger
 language plpgsql
 security definer
-set search_path = 'pg_catalog', 'public', 'auth'
+set search_path = ''
 set row_security = off
 as $function$
 declare
@@ -817,6 +817,8 @@ begin
   if v_permission_status = 'rejected' and v_store_status = 'rejected' then
     raise exception 'Seller marketplace access is already revoked' using errcode = '22023';
   end if;
+
+  v_reviewed_at := coalesce(v_reviewed_at, pg_catalog.now());
 
   return pg_catalog.jsonb_build_object(
     'store_id',v_store_id,'user_id',v_user_id,'marketplace',v_marketplace,
