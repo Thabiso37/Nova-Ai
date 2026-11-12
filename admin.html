@@ -814,88 +814,27 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
 <section class="panel" id="reportsAnalytics"><h2>Reports & Analytics</h2><p class="muted">Live read-only totals calculated from records already retrieved by this dashboard.</p><div class="financial-grid"><div class="stat"><div class="stat-label">Products loaded</div><strong id="reportProductCount">—</strong></div><div class="stat"><div class="stat-label">Orders loaded</div><strong id="reportOrderCount">—</strong></div><div class="stat"><div class="stat-label">Fulfilment records</div><strong id="reportFulfilmentCount">—</strong></div><div class="stat"><div class="stat-label">Ad clicks recorded</div><strong id="reportAdClicks">—</strong></div></div><div class="capability-note"><strong>Reporting scope</strong>These figures reflect the rows returned by existing admin queries. This dashboard does not claim to provide a complete accounting ledger, verified cash receipts, fraud-resistant ad analytics, or historical exports.</div></section>
 <section class="panel" id="adminSettings"><h2>Administrator Settings</h2><p class="muted">Session and access information for the currently authenticated administrator.</p><div class="record"><strong>Administrator account</strong><p id="settingsAdminEmail">Not signed in</p><p>Authorization: <strong>Supabase Auth + is_novaai_admin() + existing administrator ID check</strong></p><p>Security configuration changes are not exposed here.</p></div><button class="logout" type="button" id="settingsLogoutBtn">Sign Out</button></section>
     <section class="panel" id="ordersFulfilment">
-      <h2>Orders & Fulfilment</h2>
-      <p class="muted">Existing order records and their recorded order statuses. Seller fulfilment and calculated entitlement records are shown separately under Seller Financial Records.</p>
-      <label for="paymentFilter" class="muted">Filter payment records</label>
-      <select id="paymentFilter">
-        <option value="all">All Payments</option>
-        <option value="pending">Pending Payments</option>
-        <option value="paid">Recorded Paid Payments</option>
-        <option value="failed">Failed Payments</option>
-        <option value="refunded">Refunded Orders</option>
-      </select>
+  <h2>Orders & Fulfilment</h2>
+  <p class="muted">
+    Order history, collection arrangements and fulfilment tracking.
+  </p>
+  <div class="capability-note">
+    <strong>Operational tracking</strong>
+    The Admin order-tracking connection is not yet available.
+    Existing order and fulfilment records remain preserved.
+  </div>
+</section>
 
-      <p id="paymentMessage" class="muted">Financial data will appear here.</p>
-      <div id="paymentRecords"></div>
-    </section>
-    <section class="panel" id="paymentCentre">
-      <h2>🛡️ Payment Control Centre</h2>
-      <p class="muted">Marketplace financial monitoring and reconciliation.</p>
-
-      <div class="notice">
-        Accounting information is not proof that money has been received,
-        secured, held in trust or made available for settlement.
-        Recorded seller payout amounts are not confirmed payouts.
-      </div>
-
-      <div class="financial-grid">
-        <div class="stat">
-          <div class="stat-label">Total Order Value</div>
-          <strong id="totalVolume">R0.00</strong>
-        </div>
-        <div class="stat green">
-          <div class="stat-label">Recorded Paid</div>
-          <strong id="paidTotal">R0.00</strong>
-        </div>
-        <div class="stat amber">
-          <div class="stat-label">Pending</div>
-          <strong id="pendingTotal">R0.00</strong>
-        </div>
-        <div class="stat red">
-          <div class="stat-label">Failed</div>
-          <strong id="failedTotal">R0.00</strong>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Recorded Refunded</div>
-          <strong id="refundTotal">R0.00</strong>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Calculated NOVAAI Commission</div>
-          <strong id="commissionTotal">R0.00</strong>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Calculated Seller Entitlements</div>
-          <strong id="payoutTotal">R0.00</strong>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Orders in Retrieved Records</div>
-          <strong id="paymentOrderCount">0</strong>
-        </div>
-      </div>
-
-      <button class="primary" id="refreshFinancialBtn">Refresh Financial Data</button>
-
-
-
-    </section>
-    <section class="panel" id="sellerFinancialRecords">
-      <h2>Seller Commissions & Financial Records</h2>
-      <p class="muted">Calculated seller entitlements and settlement records.</p>
-      <div id="sellerFinancialRecordsList"></div>
-    </section>
-
-  </main>
+</main>
 </div>
 
 <nav class="mobile-nav">
   <a href="#overview"><span>⌂</span>Home</a>
   <a href="#productsSection"><span>▦</span>Products</a>
-  <a href="#paymentCentre"><span class="central">＋</span>Admin</a>
-  <a href="#paymentCentre"><span>▤</span>Payments</a>
-  <a href="#sellerFinancialRecords"><span>◈</span>More</a>
+  <a href="#ordersFulfilment"><span class="central">＋</span>Orders</a>
+  <a href="#advertisementManagement"><span>▤</span>Ads</a>
+  <a href="#adminSettings"><span>◈</span>Settings</a>
 </nav>
-
-</section>
 
 <div id="imageModal" onclick="closeImage()">
   <button id="closeImage" onclick="event.stopPropagation();closeImage()">✕</button>
