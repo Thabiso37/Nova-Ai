@@ -349,6 +349,10 @@
     slot.querySelectorAll('img[data-nova-ad-image],video[data-nova-ad-video]').forEach(media=>{if(media.tagName==='VIDEO')media.pause();media.remove();});
     slot.querySelectorAll('.nova-ad-media-host').forEach(host=>{const savedHost=host.__novaAdMediaFallback;if(savedHost){if(savedHost.style===null)host.removeAttribute('style');else host.setAttribute('style',savedHost.style);if(savedHost.ariaHidden===null)host.removeAttribute('aria-hidden');else host.setAttribute('aria-hidden',savedHost.ariaHidden);delete host.dataset.novaManagedImage;if(!savedHost.hadClass)host.classList.remove('nova-ad-media-host');delete host.__novaAdMediaFallback;}});
     delete slot.dataset.novaCampaignCode;
+    delete slot.dataset.productName;
+    delete slot.dataset.productDescription;
+    delete slot.dataset.productUrl;
+    delete slot.dataset.campaignCode;
     slot.removeAttribute('data-nova-managed-campaign');
     slot.removeAttribute('data-nova-managed-layout');
     slot.removeAttribute('data-nova-original-width');
