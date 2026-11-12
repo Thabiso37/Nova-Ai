@@ -67,10 +67,10 @@ begin
     return false;
   end if;
 
-  insert into private.novaai_ad_campaign_share_counts (campaign_code, share_count, updated_at)
+  insert into private.novaai_ad_campaign_share_counts as counts (campaign_code, share_count, updated_at)
   values (v_campaign_code, 1, now())
   on conflict (campaign_code) do update
-    set share_count = private.novaai_ad_campaign_share_counts.share_count + 1,
+    set share_count = counts.share_count + 1,
         updated_at = now();
 
   return true;
