@@ -859,6 +859,7 @@ let allSellerStores = [];
 let allMarketplacePermissions = [];
 let sellerEligibilityLoadError = null;
 let allAdminOrders = [];
+let allAdminOrderItems = [];
 let allAdminFulfillments = [];
 
 function escapeHTML(value) {
@@ -1200,6 +1201,7 @@ async function logout() {
   currentAdmin = null;
   allProducts = [];
   allAdminOrders = [];
+  allAdminOrderItems = [];
   allAdminFulfillments = [];
 
   document.getElementById("dashboard").classList.add("hidden");
@@ -1489,21 +1491,26 @@ async function loadOperationalOrderData() {
   if (refresh) refresh.disabled = true;
   try {
     // Operational projections exclude all payment and accounting fields.
-    const [ordersResult, fulfilmentsResult] = await Promise.all([
+    const [ordersResult, orderItemsResult, fulfilmentsResult] = await Promise.all([
       sb.from("orders")
         .select("id,customer_name,customer_email,buyer_selected_location,order_status,created_at")
         .order("created_at", { ascending: false }),
+      sb.from("order_items")
+        .select("order_id,product_name,quantity"),
       sb.from("seller_fulfillments")
         .select("id,order_id,seller_id,fulfillment_status,courier_name,tracking_number,delivery_date,created_at")
         .order("created_at", { ascending: false })
     ]);
     if (ordersResult.error) throw ordersResult.error;
+    if (orderItemsResult.error) throw orderItemsResult.error;
     if (fulfilmentsResult.error) throw fulfilmentsResult.error;
     allAdminOrders = ordersResult.data || [];
+    allAdminOrderItems = orderItemsResult.data || [];
     allAdminFulfillments = fulfilmentsResult.data || [];
     renderOperationalOrders();
     updateAdminOverview();
     msg.textContent = allAdminOrders.length + " order(s) · " +
+      allAdminOrderItems.length + " order item(s) · " +
       allAdminFulfillments.length + " seller fulfilment record(s) loaded.";
   } catch (error) {
     console.error("NOVAAI operational order load error:", error);
@@ -1530,9 +1537,9 @@ function renderOperationalOrders() {
         escapeHTML(value) + '</option>').join("");
     statusSelect.value = knownStatuses.includes(selectedStatus) ? selectedStatus : "all";
   }
-  const status = statusSelect?.value || "all";
+  const status = (statusSelect?.value || "all").trim().toLowerCase();
   const orders = allAdminOrders.filter(order => {
-    const orderStatus = String(order.order_status || "").toLowerCase();
+    const orderStatus = String(order.order_status || "").trim().toLowerCase();
     const searchable = [
       order.id, order.customer_name, order.customer_email,
       order.buyer_selected_location, order.order_status
@@ -1547,6 +1554,15 @@ function renderOperationalOrders() {
     const related = allAdminFulfillments.filter(record =>
       String(record.order_id) === String(order.id)
     );
+    const orderItems = allAdminOrderItems.filter(item =>
+      String(item.order_id) === String(order.id)
+    );
+    const orderItemsHTML = orderItems.length ? orderItems.map(item => `
+      <div class="record">
+        <strong>${escapeHTML(item.product_name || "Unnamed product")}</strong>
+        <p>Quantity: ${escapeHTML(item.quantity)}</p>
+      </div>
+    `).join("") : "<p class='muted'>No order-item details are available for this order.</p>";
     const fulfilmentHTML = related.length ? related.map(record => `
       <div class="record">
         <strong>Seller fulfilment record</strong>
@@ -1560,12 +1576,14 @@ function renderOperationalOrders() {
     `).join("") : "<p class='muted'>No seller fulfilment record is currently linked to this order.</p>";
     return `
       <article class="record">
-        <strong>Order reference: ${escapeHTML(order.id)}</strong>
+        <strong>Order ID: ${escapeHTML(order.id)}</strong>
         <p>Customer: ${escapeHTML(order.customer_name || "Not provided")}</p>
         <p>Customer email: ${escapeHTML(order.customer_email || "Not provided")}</p>
         <p>Buyer-selected location: ${escapeHTML(order.buyer_selected_location || "Not provided")}</p>
         <p>Order status: <span class="status">${escapeHTML(order.order_status || "Not recorded")}</span></p>
         <small>Order created: ${escapeHTML(order.created_at || "Not recorded")}</small>
+        <h3>Order items</h3>
+        ${orderItemsHTML}
         <h3>Seller fulfilment</h3>
         ${fulfilmentHTML}
       </article>
