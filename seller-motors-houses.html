@@ -683,6 +683,15 @@ let approvedStoreIdsCache = null;
 let approvedStoreIdsCacheAt = 0;
 let approvedStoreIdsPending = null;
 const MARKET_DATA_TTL = 30000;
+let publicSellerLocationsById=Object.create(null);
+function marketShareButton(item,market){
+  const id=String(item&&item.id||"");
+  if(!/^\d{1,18}$/.test(id))return "";
+  const url=new URL("./seller-motors-houses.html?market="+encodeURIComponent(market)+"&product="+encodeURIComponent(id),window.location.href).toString();
+  const place=publicSellerLocationsById[String(item.seller_id)]||"";
+  const attrs=' data-nova-product-share data-share-title="'+esc(item.name||"Listing")+'" data-share-price="'+esc(cash(item.price))+'" data-share-location="'+esc(place)+'" data-share-url="'+esc(url)+'"';
+  return '<button type="button" class="nova-product-share-button nova-product-share-card"'+attrs+'><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"></path></svg>Share</button>';
+}
 
 async function loadListings(marketType, searchQuery = '') {
   const runId = ++listingLoadRun;
@@ -727,6 +736,11 @@ async function loadListings(marketType, searchQuery = '') {
       approvedSellerIds = await approvedStoreIdsPending;
     }
     if (runId !== listingLoadRun) return;
+    const sellerIds=Array.from(approvedSellerIds);
+    if(sellerIds.length){
+      const locations=await sb.from("seller_public_locations").select("user_id,province,city,suburb").in("user_id",sellerIds).eq("public_location_enabled",true).eq("approval_status","approved");
+      if(!locations.error){publicSellerLocationsById=Object.create(null);(locations.data||[]).forEach(row=>{publicSellerLocationsById[String(row.user_id)]=[row.suburb,row.city,row.province].filter(Boolean).join(", ");});}
+    }
     let filtered = (data || []).filter(item => item.seller_id && approvedSellerIds.has(String(item.seller_id)));
     if (marketType === 'retail') {
       filtered = filtered.filter(item =>
