@@ -598,6 +598,27 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
 @media(max-width:520px){.header-actions{gap:7px}.header-pill{font-size:10px;padding:8px}.brand{gap:9px}.brand h1{font-size:16px}.brand p{font-size:9px}.brand-mark{width:36px;height:36px}.welcome-panel{display:block}.welcome-panel h2{font-size:22px}.welcome-panel .date-label{display:inline-block;margin-top:13px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.financial-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 .phase1-listing-card{display:grid;grid-template-columns:90px minmax(0,1fr);gap:13px;border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0;background:#fff}.phase1-listing-card img{width:90px;height:90px;object-fit:cover;border-radius:10px;background:#f1f4f8}.phase1-listing-card h3{margin:0 0 8px}.phase1-listing-card p{font-size:12px;line-height:1.5;overflow-wrap:anywhere;margin:6px 0}.phase1-eligibility{padding:9px 11px;border-radius:9px;font-size:12px;line-height:1.5;margin:9px 0}.phase1-eligibility.warning{background:#fff5e5;border:1px solid #f0d9a9;color:#79520f}.phase1-eligibility.good{background:#eaf7ef;border:1px solid #c8e9d4;color:#176b45}@media(max-width:600px){.phase1-listing-card{grid-template-columns:68px minmax(0,1fr);gap:9px;padding:10px}.phase1-listing-card img{width:68px;height:68px}.phase1-listing-card .actions{gap:6px;flex-wrap:wrap}.phase1-listing-card .actions button{min-height:40px;flex:1 1 42%;padding:8px 6px;font-size:11px}}
+
+/* NOVAAI advertisement share analytics */
+.admin-share-analytics{margin-top:22px;padding:20px;border:1px solid var(--line);border-radius:15px;background:#fbfcff}
+.admin-share-analytics .section-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:17px}
+.admin-share-analytics .section-heading h2{margin:0 0 6px}
+.admin-share-analytics .section-heading p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+.share-analytics-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
+.share-analytics-stats .analytics-card{min-width:0;padding:16px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.share-analytics-stats .analytics-card span{display:block;color:var(--muted);font-size:12px}
+.share-analytics-stats .analytics-card strong{display:block;margin-top:9px;color:var(--blue-dark);font-size:23px;overflow-wrap:anywhere}
+.share-analytics-table{margin-top:17px}
+.share-analytics-table h3{font-size:15px;margin:0 0 12px}
+.share-analytics-table .table-responsive{width:100%;overflow-x:auto}
+.share-analytics-table table{width:100%;border-collapse:collapse;background:#fff;font-size:12px}
+.share-analytics-table th,.share-analytics-table td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.share-analytics-table th{background:#f3f6fb;color:#526078;font-size:11px}
+#lastAdShareTime{margin:10px 0;color:var(--muted);font-size:12px}
+#refreshShareAnalytics{background:var(--blue);color:#fff;min-height:42px}
+#shareAnalyticsStatus{min-height:18px;margin:9px 0;color:var(--muted);font-size:12px}
+@media(max-width:600px){.admin-share-analytics{padding:14px}.admin-share-analytics .section-heading{align-items:flex-start}.share-analytics-stats{grid-template-columns:1fr 1fr}.share-analytics-stats .analytics-card:last-child{grid-column:1/-1}.share-analytics-stats .analytics-card strong{font-size:20px}}
+
 </style>
 </head>
 
@@ -805,7 +826,32 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
       <div id="adCampaignRecords"></div>
     </section>
 
-<section class="panel" id="reportsAnalytics"><h2>Reports & Analytics</h2><p class="muted">Live read-only operational totals calculated from records retrieved by this dashboard.</p><div class="stats"><div class="stat"><div class="stat-label">Products loaded</div><strong id="reportProductCount">—</strong></div><div class="stat"><div class="stat-label">Orders loaded</div><strong id="reportOrderCount">—</strong></div><div class="stat"><div class="stat-label">Fulfilment records</div><strong id="reportFulfilmentCount">—</strong></div><div class="stat"><div class="stat-label">Ad clicks recorded</div><strong id="reportAdClicks">—</strong></div></div><div class="capability-note"><strong>Reporting scope</strong>These figures reflect rows returned by existing administrator queries. They are operational counts, not payment verification or accounting records.</div></section>
+<section class="panel" id="reportsAnalytics"><h2>Reports & Analytics</h2><p class="muted">Live read-only operational totals calculated from records retrieved by this dashboard.</p><div class="stats"><div class="stat"><div class="stat-label">Products loaded</div><strong id="reportProductCount">—</strong></div><div class="stat"><div class="stat-label">Orders loaded</div><strong id="reportOrderCount">—</strong></div><div class="stat"><div class="stat-label">Fulfilment records</div><strong id="reportFulfilmentCount">—</strong></div><div class="stat"><div class="stat-label">Ad clicks recorded</div><strong id="reportAdClicks">—</strong></div></div><div class="capability-note"><strong>Reporting scope</strong>These figures reflect rows returned by existing administrator queries. They are operational counts, not payment verification or accounting records.</div>
+<div class="admin-share-analytics" aria-labelledby="shareAnalyticsHeading">
+  <div class="section-heading">
+    <div>
+      <h2 id="shareAnalyticsHeading">Advertisement Share Analytics</h2>
+      <p>Track advertisement sharing performance across NOVAAI campaigns.</p>
+    </div>
+    <button type="button" id="refreshShareAnalytics">Refresh</button>
+  </div>
+  <div class="share-analytics-stats">
+    <article class="analytics-card"><span>Total Shares</span><strong id="totalAdShares">0</strong></article>
+    <article class="analytics-card"><span>Campaigns Shared</span><strong id="campaignsShared">0</strong></article>
+    <article class="analytics-card"><span>Most Shared Campaign</span><strong id="mostSharedCampaign">—</strong></article>
+  </div>
+  <p id="lastAdShareTime">Last recorded share: —</p>
+  <p id="shareAnalyticsStatus" role="status" aria-live="polite">Share analytics will load when this workspace opens.</p>
+  <div class="share-analytics-table">
+    <h3>Campaign Share Performance</h3>
+    <div class="table-responsive">
+      <table>
+        <thead><tr><th>Campaign</th><th>Advertisement</th><th>Total Shares</th><th>Last Shared</th></tr></thead>
+        <tbody id="shareAnalyticsRecords"><tr><td colspan="4">Open Reports &amp; Analytics to load share analytics.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div></section>
 <section class="panel" id="adminSettings"><h2>Administrator Settings</h2><p class="muted">Session and access information for the currently authenticated administrator.</p><div class="record"><strong>Administrator account</strong><p id="settingsAdminEmail">Not signed in</p><p>Authorization: <strong>Supabase Auth + is_novaai_admin() + existing administrator ID check</strong></p><p>Security configuration changes are not exposed here.</p></div><button class="logout" type="button" id="settingsLogoutBtn">Sign Out</button></section>
     <section class="panel" id="ordersFulfilment">
       <h2>Orders & Fulfilment</h2>
@@ -1753,6 +1799,86 @@ async function changeStatus(id, newStatus) {
 }
 
 
+
+async function loadNovaAIShareAnalytics() {
+  const records = document.getElementById("shareAnalyticsRecords");
+  const status = document.getElementById("shareAnalyticsStatus");
+  if (!records || !status) return;
+
+  records.innerHTML = '<tr><td colspan="4">Loading share analytics…</td></tr>';
+  status.textContent = "Loading campaign share totals…";
+
+  try {
+    if (!currentAdmin || currentAdmin.id !== ADMIN_ID) {
+      throw new Error("Administrator session is not verified.");
+    }
+
+    const { data, error } = await sb.rpc("get_novaai_ad_share_analytics_v1");
+    if (error) throw error;
+
+    const campaigns = Array.isArray(data) ? data : [];
+    const totalShares = campaigns.reduce(
+      (total, campaign) => total + Number(campaign.share_count || 0), 0
+    );
+    const sharedCampaigns = campaigns.filter(
+      campaign => Number(campaign.share_count || 0) > 0
+    );
+    const mostShared = [...campaigns].sort(
+      (a, b) => Number(b.share_count || 0) - Number(a.share_count || 0)
+    )[0];
+
+    document.getElementById("totalAdShares").textContent = totalShares.toLocaleString();
+    document.getElementById("campaignsShared").textContent = String(sharedCampaigns.length);
+    document.getElementById("mostSharedCampaign").textContent =
+      mostShared && Number(mostShared.share_count || 0) > 0
+        ? mostShared.campaign_code
+        : "—";
+
+    const timestamps = campaigns
+      .map(campaign => campaign.updated_at ? new Date(campaign.updated_at) : null)
+      .filter(date => date && !Number.isNaN(date.getTime()))
+      .sort((a, b) => b.getTime() - a.getTime());
+    document.getElementById("lastAdShareTime").textContent =
+      "Last recorded share: " + (timestamps.length ? timestamps[0].toLocaleString() : "Never");
+
+    if (!campaigns.length) {
+      records.innerHTML = '<tr><td colspan="4">No campaigns found.</td></tr>';
+      status.textContent = "No campaign records were returned.";
+      return;
+    }
+
+    records.innerHTML = campaigns.map(campaign => {
+      const count = Number(campaign.share_count || 0);
+      const lastShared = campaign.updated_at
+        ? new Date(campaign.updated_at).toLocaleString()
+        : "Never";
+      return `
+        <tr>
+          <td>${escapeShareHTML(campaign.campaign_code)}</td>
+          <td>${escapeShareHTML(campaign.title)}</td>
+          <td><strong>${count.toLocaleString()}</strong></td>
+          <td>${escapeShareHTML(lastShared)}</td>
+        </tr>
+      `;
+    }).join("");
+    status.textContent = "Loaded " + campaigns.length + " campaign(s).";
+  } catch (error) {
+    console.error("Share analytics error:", error);
+    records.innerHTML = '<tr><td colspan="4">Unable to load share analytics.</td></tr>';
+    status.textContent = "Unable to load share analytics. Check administrator access and refresh.";
+  }
+}
+
+function escapeShareHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[character]);
+}
+
 const ADMIN_WORKSPACES = {
   overview: { title: "Overview", sections: ["overview"] },
   marketplacePermissions: { title: "Seller Management", sections: ["marketplacePermissions", "sellerLocationReviews"] },
@@ -1837,6 +1963,9 @@ function showAdminWorkspace(workspaceId, updateHash = false) {
     history.pushState({ adminWorkspace: selected }, "", "#" + selected);
   }
   closeAdminDrawer();
+  if (selected === "reportsAnalytics" && currentAdmin?.id === ADMIN_ID) {
+    loadNovaAIShareAnalytics();
+  }
 }
 
 function resolveAdminWorkspaceFromHash() {
@@ -1905,6 +2034,7 @@ document.getElementById("refreshSellerLocationReviews").onclick = loadSellerLoca
 document.getElementById("adCampaignForm").addEventListener("submit",saveAdCampaign);
 document.getElementById("resetAdCampaignBtn").onclick=resetAdCampaignForm;
 document.getElementById("refreshAdCampaignsBtn").onclick=loadAdCampaigns;
+document.getElementById("refreshShareAnalytics")?.addEventListener("click", loadNovaAIShareAnalytics);
 
 sb.auth.getSession().then(({ data, error }) => {
   if (error) {
