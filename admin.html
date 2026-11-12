@@ -1578,52 +1578,6 @@ async function loadProducts() {
   }
 }
 
-async function loadPaymentData() {
-  if (!currentAdmin) return;
-
-  const msg = document.getElementById("paymentMessage");
-  msg.textContent = "Loading financial records...";
-
-  try {
-    const { data: orders, error: orderError } = await sb
-      .from("orders")
-      .select(`
-        id,
-        customer_name,
-        customer_email,
-        payment_status,
-        total_amount,
-        gateway_provider,
-        gateway_transaction_reference,
-        paid_at,
-        refunded_at,
-        order_status,
-        created_at
-      `)
-      .order("created_at", { ascending: false });
-
-    if (orderError) throw orderError;
-
-    const { data: fulfillments, error: fulfillmentError } = await sb
-      .rpc("admin_get_seller_fulfillment_financials");
-
-    if (fulfillmentError) throw fulfillmentError;
-
-    allPaymentOrders = orders || [];
-    allSellerFinancials = fulfillments || [];
-
-    updateFinancialOverview();
-    renderPaymentRecords();
-    renderSellerFinancials();
-
-    msg.textContent = allPaymentOrders.length +
-      " order(s) loaded successfully.";
-
-  } catch (error) {
-    console.error("Payment data error:", error);
-    msg.textContent = "Financial data error: " + error.message;
-  }
-}
 
 function marketplaceForProduct(product) {
   const category = String(product.category || "");
@@ -1904,8 +1858,22 @@ document.getElementById("mobileMenuToggle")?.addEventListener("click",()=>{const
 document.getElementById("sidebarBackdrop")?.addEventListener("click",closeAdminDrawer);
 document.querySelectorAll(".sidebar nav a").forEach(a=>a.addEventListener("click",()=>{document.querySelectorAll(".sidebar nav a").forEach(n=>n.classList.toggle("active",n===a));closeAdminDrawer();}));
 document.getElementById("settingsLogoutBtn")?.addEventListener("click",logout);
-function updateAdminOverview(){const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=String(v);};set("overviewOrderCount",allPaymentOrders.length);set("overviewSellerCount",document.querySelectorAll("#marketplacePermissionRecords .record").length);set("overviewCampaignCount",adCampaignRows.length);set("overviewAdImpressions",adCampaignRows.reduce((n,c)=>n+Number(c.impression_count||0),0).toLocaleString());set("reportProductCount",allProducts.length);set("reportOrderCount",allPaymentOrders.length);set("reportFulfilmentCount",allSellerFinancials.length);set("reportAdClicks",adCampaignRows.reduce((n,c)=>n+Number(c.click_count||0),0).toLocaleString());set("settingsAdminEmail",currentAdmin?.email||"Not signed in");}
+function updateAdminOverview(){
+  const set=(id,v)=>{
+    const e=document.getElementById(id);
+    if(e)e.textContent=String(v);
+  };
 
+  set("overviewOrderCount","Not connected");
+  set("overviewSellerCount",document.querySelectorAll("#marketplacePermissionRecords .record").length);
+  set("overviewCampaignCount",adCampaignRows.length);
+  set("overviewAdImpressions",adCampaignRows.reduce((n,c)=>n+Number(c.impression_count||0),0).toLocaleString());
+  set("reportProductCount",allProducts.length);
+  set("reportOrderCount","Not connected");
+  set("reportFulfilmentCount","Not connected");
+  set("reportAdClicks",adCampaignRows.reduce((n,c)=>n+Number(c.click_count||0),0).toLocaleString());
+  set("settingsAdminEmail",currentAdmin?.email||"Not signed in");
+}
 document.getElementById("adminLoginForm").addEventListener("submit", (event) => {
   event.preventDefault();
   event.stopPropagation();
@@ -1923,8 +1891,7 @@ document.getElementById("globalMarketplaceFilter").onchange = renderProducts;
   document.getElementById(key+"Search").addEventListener("input",renderMarketplaceWorkspaces);
   document.getElementById(key+"Status").addEventListener("change",renderMarketplaceWorkspaces);
 });
-document.getElementById("paymentFilter").onchange = renderPaymentRecords;
-document.getElementById("refreshFinancialBtn").onclick = loadPaymentData;
+
 document.getElementById("refreshMarketplacePermissions").onclick = loadMarketplacePermissions;
 document.getElementById("refreshSellerLocationReviews").onclick = loadSellerLocationReviews;
 document.getElementById("adCampaignForm").addEventListener("submit",saveAdCampaign);
