@@ -921,8 +921,6 @@ let allProducts = [];
 let allSellerStores = [];
 let allMarketplacePermissions = [];
 let sellerEligibilityLoadError = null;
-let allPaymentOrders = [];
-let allSellerFinancials = [];
 
 function escapeHTML(value) {
   return String(value ?? "").replace(/[&<>"']/g, c => ({
@@ -1741,8 +1739,6 @@ const ADMIN_WORKSPACES = {
   advertisementManagement: { title: "Advertising Management", sections: ["advertisementManagement"] },
   productsSection: { title: "Products & Listings", sections: ["productsSection"] },
   ordersFulfilment: { title: "Orders & Fulfilment", sections: ["ordersFulfilment"] },
-  paymentCentre: { title: "Payments & Settlements", sections: ["paymentCentre"] },
-  sellerFinancialRecords: { title: "Seller Financial Records", sections: ["sellerFinancialRecords"] },
   reportsAnalytics: { title: "Reports & Analytics", sections: ["reportsAnalytics"] },
   adminSettings: { title: "Admin Settings", sections: ["adminSettings"] }
 };
