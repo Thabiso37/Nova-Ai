@@ -216,10 +216,11 @@ document.getElementById("callSeller").addEventListener("click",function(){if(lis
 document.getElementById("whatsappSeller").addEventListener("click",function(){if(listing)contact("whatsapp")});
 document.getElementById("showEnquiry").addEventListener("click",function(){const form=document.getElementById("enquiryForm");form.classList.toggle("open");if(form.classList.contains("open"))document.getElementById("buyerName").focus()});
 document.getElementById("enquiryForm").addEventListener("submit",function(event){event.preventDefault();if(!listing)return;const values={name:document.getElementById("buyerName").value.trim(),phone:document.getElementById("buyerPhone").value.trim(),message:document.getElementById("buyerMessage").value.trim()};if(!values.name||!values.phone||!values.message)return;contact("enquiry",values)});
-document.getElementById("shareListing").addEventListener("click",async function(){if(!listing)return;const data={title:listing.name||"NOVAAI Property",text:cash(listing.price)+" · "+(listing.category||"Property"),url:location.href};try{if(navigator.share)await navigator.share(data);else if(navigator.clipboard){await navigator.clipboard.writeText(location.href);document.getElementById("contactStatus").textContent="Listing link copied."}else window.prompt("Copy this listing link",location.href)}catch(error){if(error.name!=="AbortError")document.getElementById("contactStatus").textContent="Sharing is unavailable on this browser."}});
+document.getElementById("shareListing").addEventListener("click",function(){if(!listing||!window.NOVAAIProductShare)return;window.NOVAAIProductShare.share({title:listing.name||"NOVAAI Property",price:cash(listing.price)+(listing.category==="Property To Rent"?" / month":""),location:publicLocation?[publicLocation.suburb,publicLocation.city,publicLocation.province].filter(Boolean).join(", "):"",url:location.href,button:this,status:document.getElementById("contactStatus")});});
 loadListing();
 if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("./service-worker.js").catch(function(error){console.warn("[NOVAAI] Property PWA registration failed",error)})})}
 </script>
 <script src="./novaai-share-visits.js?v=20261113-share-visits-1" defer></script>
+<script src="./novaai-product-sharing.js?v=1" defer></script>
 </body>
 </html>
