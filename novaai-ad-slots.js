@@ -794,7 +794,10 @@
     const linkNode=selectors.link?card.querySelector(selectors.link):null;
     const candidate=card.dataset.productUrl||
       (linkNode&&linkNode.tagName==='A'?linkNode.href:'')||
-      ((id==='motors_banner'||id==='property_banner')?window.location.href:NOVA_SHARE_BASE);
+      (id==='motors_banner'?new URL('seller-motors-houses.html?market=motors',NOVA_SHARE_BASE).toString():
+       id==='property_banner'?new URL('seller-motors-houses.html?market=property',NOVA_SHARE_BASE).toString():
+       id==='motors_footer'?new URL('seller-motors-houses.html?market=motors',NOVA_SHARE_BASE).toString():
+       id==='property_footer'?new URL('seller-motors-houses.html?market=property',NOVA_SHARE_BASE).toString():NOVA_SHARE_BASE);
 
     let url;
     try{
