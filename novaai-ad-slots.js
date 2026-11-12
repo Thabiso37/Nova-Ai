@@ -718,7 +718,6 @@
     const placement=placements.find(p=>p.slot_id===id);
     if(placement){el.setAttribute('data-nova-ad-status','ready_for_admin_management');el.setAttribute('data-nova-ad-contract-version','1');}
   });
-}
   /* ==========================================
      NOVAAI ADVERTISEMENT SHARING
   ========================================== */
