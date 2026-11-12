@@ -169,7 +169,7 @@ main{max-width:1240px;padding:24px 24px 54px}.detail-shell{border:0;border-radiu
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 "use strict";
-const sb=window.supabase?window.supabase.createClient("https://nxplffvklkopwfjaqexo.supabase.co","sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ"):null;
+const sb=window.supabase?window.supabase.createClient("https://nxplffvklkopwfjaqexo.supabase.co","sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ"):null;window.NOVAAI_SUPABASE_CLIENT=sb;
 const CONTACT_ENDPOINT="https://nxplffvklkopwfjaqexo.supabase.co/functions/v1/property-contact-action";
 const params=new URLSearchParams(location.search),listingId=(params.get("id")||"").trim();
 let listing=null,photos=[],photoIndex=0,publicLocation=null;
