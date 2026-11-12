@@ -157,7 +157,7 @@ grid.querySelectorAll('[data-add-product]').forEach(button=>button.addEventListe
 async function loadHomeProducts(){
 const requestedId=new URLSearchParams(window.location.search).get('product');
 try{
-if(!window.supabase)throw new Error('Marketplace service is unavailable.');const client=window.supabase.createClient('https://nxplffvklkopwfjaqexo.supabase.co','sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ');
+if(!window.supabase)throw new Error('Marketplace service is unavailable.');const client=window.supabase.createClient('https://nxplffvklkopwfjaqexo.supabase.co','sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ');window.NOVAAI_SUPABASE_CLIENT=client;
 if(requestedId){
 document.body.classList.add('product-view-active');const {data:detail,error:detailError}=await client.from('Products').select('id,name,description,price,category,image_url,images,seller_name,seller_id,status').eq('id',requestedId).eq('status','approved').maybeSingle();if(detailError)throw detailError;
 let store=null;if(detail&&detail.seller_id){const {data:storeRow,error:storeError}=await client.from('seller_stores').select('user_id,store_name,store_slug,description,status').eq('user_id',detail.seller_id).eq('status','approved').maybeSingle();if(storeError)throw storeError;store=storeRow;}
