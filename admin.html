@@ -1491,22 +1491,32 @@ async function loadOperationalOrderData() {
   if (refresh) refresh.disabled = true;
   try {
     // Operational projections exclude all payment and accounting fields.
-    const [ordersResult, orderItemsResult, fulfilmentsResult] = await Promise.all([
-      sb.from("orders")
-        .select("id,customer_name,customer_email,buyer_selected_location,order_status,created_at")
-        .order("created_at", { ascending: false }),
-      sb.from("order_items")
-        .select("order_id,product_name,quantity"),
-      sb.from("seller_fulfillments")
-        .select("id,order_id,seller_id,fulfillment_status,courier_name,tracking_number,delivery_date,created_at")
-        .order("created_at", { ascending: false })
-    ]);
+    const ordersResult = await sb.from("orders")
+      .select("id,customer_name,customer_email,buyer_selected_location,order_status,created_at")
+      .order("created_at", { ascending: false });
     if (ordersResult.error) throw ordersResult.error;
-    if (orderItemsResult.error) throw orderItemsResult.error;
-    if (fulfilmentsResult.error) throw fulfilmentsResult.error;
     allAdminOrders = ordersResult.data || [];
-    allAdminOrderItems = orderItemsResult.data || [];
-    allAdminFulfillments = fulfilmentsResult.data || [];
+
+    // Restrict related operational reads to the orders returned above.
+    const orderIds = allAdminOrders.map(order => order.id).filter(Boolean);
+    if (orderIds.length) {
+      const [orderItemsResult, fulfilmentsResult] = await Promise.all([
+        sb.from("order_items")
+          .select("order_id,product_name,quantity")
+          .in("order_id", orderIds),
+        sb.from("seller_fulfillments")
+          .select("id,order_id,seller_id,fulfillment_status,courier_name,tracking_number,delivery_date,created_at")
+          .in("order_id", orderIds)
+          .order("created_at", { ascending: false })
+      ]);
+      if (orderItemsResult.error) throw orderItemsResult.error;
+      if (fulfilmentsResult.error) throw fulfilmentsResult.error;
+      allAdminOrderItems = orderItemsResult.data || [];
+      allAdminFulfillments = fulfilmentsResult.data || [];
+    } else {
+      allAdminOrderItems = [];
+      allAdminFulfillments = [];
+    }
     renderOperationalOrders();
     updateAdminOverview();
     msg.textContent = allAdminOrders.length + " order(s) · " +
