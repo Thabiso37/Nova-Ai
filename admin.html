@@ -719,7 +719,6 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
         <a class="module" href="#propertyManagement"><div class="module-icon">⌂</div><h3>Property Management</h3><p>Marketplace-specific controls are not exposed separately.</p></a>
         <a class="module" href="#advertisementManagement"><div class="module-icon">▣</div><h3>Advertising Management</h3><p>Manage campaigns across all nine existing boards.</p></a>
         <a class="module" href="#ordersFulfilment"><div class="module-icon">▤</div><h3>Orders & Fulfilment</h3><p>Review existing order and fulfilment records.</p></a>
-        <a class="module" href="#paymentCentre"><div class="module-icon">◈</div><h3>Payments & Settlements</h3><p>Review recorded statuses and calculated entitlements.</p></a>
         <a class="module" href="#reportsAnalytics"><div class="module-icon">▥</div><h3>Reports & Analytics</h3><p>Read-only live totals from loaded marketplace data.</p></a>
         <a class="module" href="#adminSettings"><div class="module-icon">⚙</div><h3>Settings</h3><p>View the current secure administrator session.</p></a>
       </div>
@@ -991,10 +990,9 @@ async function checkAdmin(user) {
       document.getElementById("adminEmail").textContent = user.email || "";
       document.getElementById("loginMessage").textContent = "Administrator access verified.";
       await Promise.all([
-        loadProducts(),
-        loadPaymentData(),
-        loadMarketplacePermissions(),
-        loadSellerLocationReviews()
+      loadProducts(),
+      loadMarketplacePermissions(),
+      loadSellerLocationReviews()
       ]);
       loadAdCampaigns().catch(error=>adCampaignMessage("Campaign manager error: "+(error?.message||"Unknown error")));
       if (authVersionAtStart !== adminAuthVersion) {
