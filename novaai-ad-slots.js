@@ -822,8 +822,33 @@
     return {
       title,
       text:description+'\n\nDiscover more on NOVAAI MARKET.',
-      url:url.toString()
+      url:url.toString(),
+      campaignCode
     };
+  }
+
+  function recordNovaAIAdShare(campaignCode){
+    if(!campaignCode||campaignCode==='advertisement')return;
+    const apiUrl='https://nxplffvklkopwfjaqexo.supabase.co/functions/v1/record-novaai-ad-event';
+    const publishableKey='sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ';
+    if(!window.crypto||typeof window.crypto.getRandomValues!=='function')return;
+    let eventId;
+    if(typeof window.crypto.randomUUID==='function'){
+      eventId=window.crypto.randomUUID();
+    }else{
+      const bytes=new Uint8Array(16);
+      window.crypto.getRandomValues(bytes);
+      bytes[6]=(bytes[6]&15)|64;
+      bytes[8]=(bytes[8]&63)|128;
+      const hex=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+      eventId=hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);
+    }
+    fetch(apiUrl,{
+      method:'POST',
+      headers:{'apikey':publishableKey,'Content-Type':'application/json'},
+      body:JSON.stringify({event_id:eventId,campaign_code:campaignCode,event_type:'share'}),
+      keepalive:true
+    }).catch(()=>{});
   }
 
   async function shareAdvertisement(button){
@@ -836,6 +861,7 @@
     try{
       if(typeof navigator.share==='function'){
         await navigator.share(details);
+        recordNovaAIAdShare(details.campaignCode);
         button.classList.add('nova-share-complete');
         button.setAttribute('aria-label','Advertisement shared');
         window.setTimeout(()=>{
@@ -847,6 +873,7 @@
 
       if(navigator.clipboard&&window.isSecureContext){
         await navigator.clipboard.writeText(details.url);
+        recordNovaAIAdShare(details.campaignCode);
         button.classList.add('nova-share-complete');
         button.setAttribute('aria-label','Advertisement link copied');
         window.setTimeout(()=>{
