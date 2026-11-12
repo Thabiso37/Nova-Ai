@@ -28,11 +28,9 @@
 
   // Reuse the already-initialized public Supabase client on each destination page.
   const trackingClient =
-    typeof sb !== "undefined" && sb
-      ? sb
-      : typeof client !== "undefined" && client
-        ? client
-        : null;
+    window.NOVAAI_SUPABASE_CLIENT ||
+    (typeof sb !== "undefined" && sb ? sb : null) ||
+    (typeof client !== "undefined" && client ? client : null);
 
   if (
     !trackingClient ||
