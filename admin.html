@@ -1261,9 +1261,7 @@ async function logout() {
   verifiedAdminId = null;
   currentAdmin = null;
   allProducts = [];
-  allPaymentOrders = [];
-  allSellerFinancials = [];
-
+  
   document.getElementById("dashboard").classList.add("hidden");
   document.getElementById("loginPanel").classList.remove("hidden");
   document.getElementById("loginMessage").textContent = "Signed out.";
@@ -1626,108 +1624,6 @@ async function loadPaymentData() {
     msg.textContent = "Financial data error: " + error.message;
   }
 }
-
-function updateFinancialOverview() {
-  const orders = allPaymentOrders;
-  const financials = allSellerFinancials;
-
-  const totalValue = orders.reduce(
-    (sum, order) => sum + Number(order.total_amount || 0), 0
-  );
-
-  const paid = orders
-    .filter(o => o.payment_status === "paid")
-    .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
-
-  const pending = orders
-    .filter(o => o.payment_status === "pending")
-    .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
-
-  const failed = orders
-    .filter(o => o.payment_status === "failed")
-    .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
-
-  const refunded = orders
-    .filter(o => o.payment_status === "refunded" || o.refunded_at)
-    .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
-
-  const commission = financials.reduce(
-    (sum, f) => sum + Number(f.platform_commission || 0), 0
-  );
-
-  const payouts = financials.reduce(
-    (sum, f) => sum + Number(f.payout_amount || 0), 0
-  );
-
-  document.getElementById("totalVolume").textContent = money(totalValue);
-  document.getElementById("paidTotal").textContent = money(paid);
-  document.getElementById("pendingTotal").textContent = money(pending);
-  document.getElementById("failedTotal").textContent = money(failed);
-  document.getElementById("refundTotal").textContent = money(refunded);
-  document.getElementById("commissionTotal").textContent = money(commission);
-  document.getElementById("payoutTotal").textContent = money(payouts);
-  document.getElementById("paymentOrderCount").textContent = orders.length;
-}
-
-function renderPaymentRecords() {
-  const container = document.getElementById("paymentRecords");
-  const filter = document.getElementById("paymentFilter").value;
-
-  const records = allPaymentOrders.filter(order => {
-    if (filter === "all") return true;
-
-    if (filter === "refunded") {
-      return order.payment_status === "refunded" || !!order.refunded_at;
-    }
-
-    return order.payment_status === filter;
-  });
-
-  if (!records.length) {
-    container.innerHTML =
-      "<p class='muted'>No matching payment records.</p>";
-    return;
-  }
-
-  container.innerHTML = records.map(order => `
-    <div class="record">
-      <strong>Order: ${escapeHTML(order.id)}</strong>
-      <p>Customer: ${escapeHTML(order.customer_name || "Not provided")}</p>
-      <p>Email: ${escapeHTML(order.customer_email || "Not provided")}</p>
-      <p>Amount: <strong>${money(order.total_amount)}</strong></p>
-      <p>Payment status: ${escapeHTML(order.payment_status || "Unknown")}</p>
-      <p>Gateway: ${escapeHTML(order.gateway_provider || "Not recorded")}</p>
-      <p>Transaction reference: ${escapeHTML(order.gateway_transaction_reference || "Not recorded")}</p>
-      <p>Order status: ${escapeHTML(order.order_status || "Unknown")}</p>
-      <small>Created: ${escapeHTML(order.created_at || "")}</small>
-    </div>
-  `).join("");
-}
-
-function renderSellerFinancials() {
-  const container = document.getElementById("sellerFinancialRecordsList");
-
-  if (!allSellerFinancials.length) {
-    container.innerHTML =
-      "<p class='muted'>No seller financial records found.</p>";
-    return;
-  }
-
-  container.innerHTML = allSellerFinancials.map(record => `
-    <div class="record">
-      <strong>Seller: ${escapeHTML(record.seller_id)}</strong>
-      <p>Order: ${escapeHTML(record.order_id)}</p>
-      <p>Item subtotal: ${money(record.item_subtotal)}</p>
-      <p>NOVAAI commission: ${money(record.platform_commission)}</p>
-      <p>Calculated seller entitlement: <strong>${money(record.payout_amount)}</strong></p>
-      <p>Fulfilment: ${escapeHTML(record.fulfillment_status || "Unknown")}</p>
-      <p>Settlement: ${escapeHTML(record.settlement_status || "Unknown")}</p>
-      <p>Courier: ${escapeHTML(record.courier_name || "Not assigned")}</p>
-      <p>Tracking: ${escapeHTML(record.tracking_number || "Not available")}</p>
-    </div>
-  `).join("");
-}
-
 
 function marketplaceForProduct(product) {
   const category = String(product.category || "");
