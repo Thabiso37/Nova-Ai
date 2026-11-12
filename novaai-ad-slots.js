@@ -470,6 +470,7 @@
           slot.style.setProperty('max-height',originalBoardSize.height+'px','important');
         }
         slot.dataset.novaCampaignCode=c.campaign_id||'';
+        updateAdShareButton(slot,c,id);
         recordDisplayedImpression(slot,c.campaign_id);
         slot.setAttribute('data-nova-ad-status','management_campaign_active');
         slot.setAttribute('aria-label','Featured advertisement: '+title);
@@ -717,4 +718,176 @@
     const placement=placements.find(p=>p.slot_id===id);
     if(placement){el.setAttribute('data-nova-ad-status','ready_for_admin_management');el.setAttribute('data-nova-ad-contract-version','1');}
   });
+}
+  /* ==========================================
+     NOVAAI ADVERTISEMENT SHARING
+  ========================================== */
+  const NOVA_SHARE_BASE='https://thabiso37.github.io/Nova-Ai/';
+  const novaShareSlots={
+    home_hero:{title:'.nova-hero-slide.active .nova-hero-copy h1',description:'.nova-hero-slide.active .nova-hero-copy p',link:'.nova-hero-slide.active .nova-hero-copy a'},
+    shop_tv:{title:'.shop-tv-slide.is-active .shop-tv-copy h2',description:'.shop-tv-slide.is-active .shop-tv-copy p',link:'.shop-tv-slide.is-active .shop-tv-copy a'},
+    cart_banner:{title:'strong',description:'span',link:'[data-nova-ad-slot="cart_banner"]'},
+    motors_banner:{title:'.motors-hero-copy h1',description:'.motors-hero-copy p',link:'.motors-explore'},
+    property_banner:{title:'.property-promo-copy h2',description:'.property-promo-copy p',link:'.property-promo-link'},
+    shop_footer:{title:'.nova-footer-ad-copy strong',description:'.nova-footer-ad-copy small',link:'.nova-footer-ad-copy a'},
+    motors_footer:{title:'.nova-footer-ad-copy strong',description:'.nova-footer-ad-copy small',link:'.nova-footer-ad-copy a'},
+    property_footer:{title:'.nova-footer-ad-copy strong',description:'.nova-footer-ad-copy small',link:'.nova-footer-ad-copy a'},
+    wishlist_banner:{title:'.nova-footer-ad-copy strong',description:'.nova-footer-ad-copy small',link:'.nova-footer-ad-copy a'}
+  };
+
+  function updateAdShareButton(slot,campaign,id){
+    if(!slot)return;
+    id=id||slot.getAttribute('data-nova-ad-slot')||'';
+    slot.setAttribute('data-nova-ad-card','');
+    if(campaign){
+      slot.dataset.productName=String(campaign.title||'Discover this advertisement on NOVAAI').slice(0,150);
+      slot.dataset.productDescription=String(campaign.description||'Discover this offer on NOVAAI MARKET.').slice(0,500);
+      slot.dataset.productUrl=String(campaign.destination_url||'');
+      slot.dataset.campaignCode=String(campaign.campaign_code||campaign.campaign_id||'');
+    }
+    let button=slot.__novaAdShareButton;
+    if(button&&button.isConnected)return button;
+
+    button=document.createElement('button');
+    button.type='button';
+    button.className='nova-ad-share-button';
+    button.setAttribute('data-nova-ad-share','');
+    button.setAttribute('aria-label','Share advertisement');
+    button.setAttribute('title','Share advertisement');
+    button.innerHTML='<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="M8.7 10.7l6.6-4.4M8.7 13.3l6.6 4.4"></path></svg>';
+    button.__novaAdCard=slot;
+
+    // Cart's ad board is itself an anchor. Mount beside it, not inside it.
+    if(id==='cart_banner'){
+      const mount=slot.parentElement;
+      if(!mount)return null;
+      mount.appendChild(button);
+      button.classList.add('nova-ad-share-cart');
+    }else{
+      slot.appendChild(button);
+    }
+    slot.__novaAdShareButton=button;
+    return button;
+  }
+
+  function getAdvertisementDetails(button){
+    const card=button.__novaAdCard||
+      button.closest('[data-nova-ad-card]')||
+      button.closest('.nova-ad-card');
+    if(!card)return null;
+
+    const id=card.getAttribute('data-nova-ad-slot')||'';
+    const selectors=novaShareSlots[id]||{};
+    const readText=selector=>{
+      if(!selector)return '';
+      const node=card.querySelector(selector);
+      return node?String(node.textContent||'').replace(/\s+/g,' ').trim():'';
+    };
+
+    const title=card.dataset.productName||
+      readText(selectors.title)||
+      'Discover this advertisement on NOVAAI';
+
+    const description=card.dataset.productDescription||
+      readText(selectors.description)||
+      'Discover this offer on NOVAAI MARKET.';
+
+    const linkNode=selectors.link?card.querySelector(selectors.link):null;
+    const candidate=card.dataset.productUrl||
+      (linkNode&&linkNode.tagName==='A'?linkNode.href:'')||
+      ((id==='motors_banner'||id==='property_banner')?window.location.href:NOVA_SHARE_BASE);
+
+    let url;
+    try{
+      url=new URL(candidate||NOVA_SHARE_BASE,NOVA_SHARE_BASE);
+      if(!['https:','http:'].includes(url.protocol))url=new URL(NOVA_SHARE_BASE);
+    }catch(error){
+      url=new URL(NOVA_SHARE_BASE);
+    }
+
+    const campaignCode=card.dataset.campaignCode||
+      card.dataset.novaCampaignCode||
+      'advertisement';
+
+    url.searchParams.set('utm_source','novaai_share');
+    url.searchParams.set('utm_medium','social');
+    url.searchParams.set('utm_campaign',campaignCode);
+
+    return {
+      title,
+      text:description+'\n\nDiscover more on NOVAAI MARKET.',
+      url:url.toString()
+    };
+  }
+
+  async function shareAdvertisement(button){
+    const details=getAdvertisementDetails(button);
+    if(!details){
+      console.warn('NOVAAI: Advertisement details unavailable.');
+      return;
+    }
+
+    try{
+      if(typeof navigator.share==='function'){
+        await navigator.share(details);
+        button.classList.add('nova-share-complete');
+        button.setAttribute('aria-label','Advertisement shared');
+        window.setTimeout(()=>{
+          button.classList.remove('nova-share-complete');
+          button.setAttribute('aria-label','Share advertisement');
+        },1200);
+        return;
+      }
+
+      if(navigator.clipboard&&window.isSecureContext){
+        await navigator.clipboard.writeText(details.url);
+        button.classList.add('nova-share-complete');
+        button.setAttribute('aria-label','Advertisement link copied');
+        window.setTimeout(()=>{
+          button.classList.remove('nova-share-complete');
+          button.setAttribute('aria-label','Share advertisement');
+        },1800);
+        return;
+      }
+
+      window.prompt('Copy this NOVAAI advertisement link:',details.url);
+    }catch(error){
+      if(error&&error.name!=='AbortError'){
+        console.error('NOVAAI sharing error:',error);
+      }
+    }
+  }
+
+  document.addEventListener('click',event=>{
+    const target=event.target;
+    const button=target instanceof Element?target.closest('[data-nova-ad-share]'):null;
+    if(!button)return;
+    event.preventDefault();
+    event.stopPropagation();
+    shareAdvertisement(button);
+  });
+
+  const novaAdShareStyle=document.createElement('style');
+  novaAdShareStyle.textContent=
+    '.nova-ad-share-button{position:absolute!important;top:8px!important;left:8px!important;z-index:30!important;display:grid!important;place-items:center!important;width:38px!important;height:38px!important;min-width:38px!important;padding:0!important;border:1px solid rgba(255,255,255,.72)!important;border-radius:50%!important;background:rgba(16,40,75,.9)!important;color:#fff!important;box-shadow:0 3px 12px rgba(0,0,0,.25)!important;cursor:pointer!important;touch-action:manipulation!important}' +
+    '.nova-ad-share-button svg{display:block!important;width:21px!important;height:21px!important}' +
+    '.nova-ad-share-button:focus-visible{outline:3px solid #f5b900!important;outline-offset:3px!important}' +
+    '.nova-ad-share-button.nova-share-complete{background:#f5b900!important;color:#10284b!important}' +
+    '#cartModal .nova-ad-share-cart{top:10px!important;left:auto!important;right:8px!important;z-index:20!important}';
+  document.head.appendChild(novaAdShareStyle);
+
+  function initializeNovaAdSharing(){
+    Object.keys(novaShareSlots).forEach(id=>{
+      const slot=document.querySelector('[data-nova-ad-slot="'+id+'"]')||
+        document.getElementById(({
+          home_hero:'novaHeroCarousel',shop_tv:'shopTvAds',cart_banner:'cartAdBoard',
+          wishlist_banner:'wishlistAdSlot',motors_banner:'motorsWelcomeAd',
+          property_banner:'propertyAdSlot',shop_footer:'shopFooterAd',
+          motors_footer:'motorsFooterAd',property_footer:'propertyFooterAd'
+        })[id]);
+      if(slot)updateAdShareButton(slot,null,id);
+    });
+  }
+  initializeNovaAdSharing();
+
 })();
