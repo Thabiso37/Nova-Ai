@@ -1868,7 +1868,7 @@ console.log("NOVAAI CUSTOMER ID:", customerId);
 // Retrieve customer's orders
 const { data: orders, error: ordersError } = await sb
   .from("orders")
-  .select("id,created_at,total_amount,payment_status,order_status")
+  .select("id,created_at,total_amount,order_status")
   .eq("customer_id", customerId)
   .order("created_at", { ascending: false });
 
@@ -1942,11 +1942,6 @@ container.innerHTML = orders.map(order => {
       <h3>
         Total: R${Number(order.total_amount).toFixed(2)}
       </h3>
-
-      <p>
-        Payment:
-        ${escapeHTML(order.payment_status)}
-      </p>
 
       <p>
         Order status:
