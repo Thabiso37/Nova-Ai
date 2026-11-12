@@ -1,0 +1,88 @@
+name: Production schema export (encrypted)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: production-schema-export
+  cancel-in-progress: false
+jobs:
+  export:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    environment: production-schema-export
+    timeout-minutes: 30
+    container:
+      image: postgres:17.11-bookworm
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      AGE_RECIPIENT: ${{ vars.AGE_RECIPIENT }}
+    steps:
+      - name: Enforce manual main dispatch
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ "$GITHUB_EVENT_NAME" == workflow_dispatch && "$GITHUB_REF" == refs/heads/main ]]
+      - name: Checkout main without persisted token
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Install and verify pinned tools
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          apt-get update
+          apt-get install -y --no-install-recommends age=1.1.1-1+b3 jq
+          pg_dump --version | grep -Eq '^pg_dump \(PostgreSQL\) 17\.11([[:space:]]|$)'
+          psql --version | grep -Eq '^psql \(PostgreSQL\) 17\.11([[:space:]]|$)'
+          age --version | grep -Fx '1.1.1'
+      - name: Fail closed on missing credentials
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ -n "${SUPABASE_DB_URL:-}" ]]
+          [[ "$SUPABASE_DB_URL" == postgres://* || "$SUPABASE_DB_URL" == postgresql://* ]]
+          [[ -n "${AGE_RECIPIENT:-}" ]]
+          [[ "$AGE_RECIPIENT" =~ ^age1[023456789acdefghjklmnpqrstuvwxyz]{58}$ ]]
+      - name: Prove connected role is read-only
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f scripts/schema-export/assert-read-only-role.sql
+      - name: Export, validate, encrypt, and erase plaintext
+        id: pack
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          W="$(mktemp -d "$RUNNER_TEMP/novaai-schema.XXXXXXXX")"
+          trap 'find "$W/plain" -type f -exec shred -u -- {} + 2>/dev/null || true; rm -rf -- "$W/plain"' EXIT INT TERM
+          mkdir -m 700 "$W/plain" "$W/out"
+          bash scripts/schema-export/export-consistent.sh "$SUPABASE_DB_URL" "$W/plain"
+          bash scripts/schema-export/validate-export.sh "$W/plain"
+          (cd "$W/plain" && sha256sum schema.sql manifests.json > SHA256SUMS)
+          tar -C "$W/plain" -czf "$W/plain/export.tar.gz" schema.sql manifests.json SHA256SUMS
+          age -r "$AGE_RECIPIENT" -o "$W/out/novaai-production-schema.tar.gz.age" "$W/plain/export.tar.gz"
+          test -s "$W/out/novaai-production-schema.tar.gz.age"
+          (cd "$W/out" && sha256sum novaai-production-schema.tar.gz.age > SHA256SUMS)
+          [[ "$(find "$W/out" -maxdepth 1 -type f | wc -l)" -eq 2 ]]
+          ! find "$W/out" -type f \( -name '*.sql' -o -name '*.json' -o -name '*.tar' -o -name '*.gz' \) | grep -q .
+          find "$W/plain" -type f -exec shred -u -- {} +
+          rmdir "$W/plain"
+          echo "artifact_dir=$W/out" >> "$GITHUB_OUTPUT"
+      - name: Upload ciphertext and ciphertext checksum only
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: novaai-production-schema-encrypted
+          path: |
+            ${{ steps.pack.outputs.artifact_dir }}/novaai-production-schema.tar.gz.age
+            ${{ steps.pack.outputs.artifact_dir }}/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 3
+          compression-level: 0
+      - name: Defensive temporary-directory cleanup
+        if: always()
+        shell: bash
+        run: find "$RUNNER_TEMP" -maxdepth 1 -type d -name 'novaai-schema.*' -exec rm -rf -- {} +
