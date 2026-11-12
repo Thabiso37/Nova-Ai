@@ -814,11 +814,6 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
         <input id="orderSearch" type="search" placeholder="Search order reference, customer or location">
         <select id="orderStatusFilter" aria-label="Filter by order status">
           <option value="all">All order statuses</option>
-          <option value="pending">Pending</option>
-          <option value="processing">Processing</option>
-          <option value="shipped">Shipped</option>
-          <option value="delivered">Delivered</option>
-          <option value="cancelled">Cancelled</option>
         </select>
       </div>
       <div class="actions"><button class="primary" id="refreshOrdersBtn" type="button">Refresh Orders & Fulfilment</button></div>
@@ -1524,7 +1519,18 @@ function renderOperationalOrders() {
   const container = document.getElementById("operationalOrdersList");
   if (!container) return;
   const term = (document.getElementById("orderSearch")?.value || "").trim().toLowerCase();
-  const status = document.getElementById("orderStatusFilter")?.value || "all";
+  const statusSelect = document.getElementById("orderStatusFilter");
+  const selectedStatus = statusSelect?.value || "all";
+  const knownStatuses = [...new Set(allAdminOrders
+    .map(order => String(order.order_status || "").trim())
+    .filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  if (statusSelect) {
+    statusSelect.innerHTML = '<option value="all">All order statuses</option>' +
+      knownStatuses.map(value => '<option value="' + escapeHTML(value) + '">' +
+        escapeHTML(value) + '</option>').join("");
+    statusSelect.value = knownStatuses.includes(selectedStatus) ? selectedStatus : "all";
+  }
+  const status = statusSelect?.value || "all";
   const orders = allAdminOrders.filter(order => {
     const orderStatus = String(order.order_status || "").toLowerCase();
     const searchable = [
