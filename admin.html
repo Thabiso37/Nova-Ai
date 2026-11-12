@@ -439,11 +439,7 @@ button {
 
 .record strong { overflow-wrap:anywhere; }
 
-.financial-grid {
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:12px;
-}
+
 
 #imageModal {
   display:none;
@@ -485,7 +481,6 @@ button {
 @media(max-width:1050px) {
   .stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .module-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .financial-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
 
 @media(max-width:850px) {
@@ -560,7 +555,6 @@ button {
   .product { grid-template-columns:75px minmax(0,1fr);gap:10px; }
   .product img { width:75px;height:75px; }
   .panel { padding:15px; }
-  .financial-grid { grid-template-columns:1fr 1fr; }
 }
 
 .ad-campaign-form{display:grid;gap:8px;max-width:760px;margin:18px 0 24px}
@@ -665,8 +659,6 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
 <a href="#propertyManagement"><span class="nav-icon">⌂</span>Property Management</a>
 <a href="#advertisementManagement"><span class="nav-icon">▣</span>Advertising Management</a>
 <a href="#ordersFulfilment"><span class="nav-icon">▤</span>Orders & Fulfilment</a>
-<a href="#paymentCentre"><span class="nav-icon">◈</span>Payments & Settlements</a>
-<a href="#sellerFinancialRecords"><span class="nav-icon">◉</span>Seller Financial Records</a>
 <a href="#reportsAnalytics"><span class="nav-icon">▥</span>Reports & Analytics</a>
 <a href="#adminSettings"><span class="nav-icon">⚙</span>Settings</a></nav>
 
@@ -720,8 +712,7 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
         <a class="module" href="#motorsManagement"><div class="module-icon">▰</div><h3>Motors Management</h3><p>Marketplace-specific controls are not exposed separately.</p></a>
         <a class="module" href="#propertyManagement"><div class="module-icon">⌂</div><h3>Property Management</h3><p>Marketplace-specific controls are not exposed separately.</p></a>
         <a class="module" href="#advertisementManagement"><div class="module-icon">▣</div><h3>Advertising Management</h3><p>Manage campaigns across all nine existing boards.</p></a>
-        <a class="module" href="#ordersFulfilment"><div class="module-icon">▤</div><h3>Orders & Fulfilment</h3><p>Review existing order and fulfilment records.</p></a>
-        <a class="module" href="#paymentCentre"><div class="module-icon">◈</div><h3>Payments & Settlements</h3><p>Review recorded statuses and calculated entitlements.</p></a>
+        <a class="module" href="#ordersFulfilment"><div class="module-icon">▤</div><h3>Orders & Fulfilment</h3><p>Review order history, buyer-selected locations and seller fulfilment records.</p></a>
         <a class="module" href="#reportsAnalytics"><div class="module-icon">▥</div><h3>Reports & Analytics</h3><p>Read-only live totals from loaded marketplace data.</p></a>
         <a class="module" href="#adminSettings"><div class="module-icon">⚙</div><h3>Settings</h3><p>View the current secure administrator session.</p></a>
       </div>
@@ -814,77 +805,25 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
       <div id="adCampaignRecords"></div>
     </section>
 
-<section class="panel" id="reportsAnalytics"><h2>Reports & Analytics</h2><p class="muted">Live read-only totals calculated from records already retrieved by this dashboard.</p><div class="financial-grid"><div class="stat"><div class="stat-label">Products loaded</div><strong id="reportProductCount">—</strong></div><div class="stat"><div class="stat-label">Orders loaded</div><strong id="reportOrderCount">—</strong></div><div class="stat"><div class="stat-label">Fulfilment records</div><strong id="reportFulfilmentCount">—</strong></div><div class="stat"><div class="stat-label">Ad clicks recorded</div><strong id="reportAdClicks">—</strong></div></div><div class="capability-note"><strong>Reporting scope</strong>These figures reflect the rows returned by existing admin queries. This dashboard does not claim to provide a complete accounting ledger, verified cash receipts, fraud-resistant ad analytics, or historical exports.</div></section>
+<section class="panel" id="reportsAnalytics"><h2>Reports & Analytics</h2><p class="muted">Live read-only operational totals calculated from records retrieved by this dashboard.</p><div class="stats"><div class="stat"><div class="stat-label">Products loaded</div><strong id="reportProductCount">—</strong></div><div class="stat"><div class="stat-label">Orders loaded</div><strong id="reportOrderCount">—</strong></div><div class="stat"><div class="stat-label">Fulfilment records</div><strong id="reportFulfilmentCount">—</strong></div><div class="stat"><div class="stat-label">Ad clicks recorded</div><strong id="reportAdClicks">—</strong></div></div><div class="capability-note"><strong>Reporting scope</strong>These figures reflect rows returned by existing administrator queries. They are operational counts, not payment verification or accounting records.</div></section>
 <section class="panel" id="adminSettings"><h2>Administrator Settings</h2><p class="muted">Session and access information for the currently authenticated administrator.</p><div class="record"><strong>Administrator account</strong><p id="settingsAdminEmail">Not signed in</p><p>Authorization: <strong>Supabase Auth + is_novaai_admin() + existing administrator ID check</strong></p><p>Security configuration changes are not exposed here.</p></div><button class="logout" type="button" id="settingsLogoutBtn">Sign Out</button></section>
     <section class="panel" id="ordersFulfilment">
       <h2>Orders & Fulfilment</h2>
-      <p class="muted">Existing order records and their recorded order statuses. Seller fulfilment and calculated entitlement records are shown separately under Seller Financial Records.</p>
-      <label for="paymentFilter" class="muted">Filter payment records</label>
-      <select id="paymentFilter">
-        <option value="all">All Payments</option>
-        <option value="pending">Pending Payments</option>
-        <option value="paid">Recorded Paid Payments</option>
-        <option value="failed">Failed Payments</option>
-        <option value="refunded">Refunded Orders</option>
-      </select>
-
-      <p id="paymentMessage" class="muted">Financial data will appear here.</p>
-      <div id="paymentRecords"></div>
-    </section>
-    <section class="panel" id="paymentCentre">
-      <h2>🛡️ Payment Control Centre</h2>
-      <p class="muted">Marketplace financial monitoring and reconciliation.</p>
-
-      <div class="notice">
-        Accounting information is not proof that money has been received,
-        secured, held in trust or made available for settlement.
-        Recorded seller payout amounts are not confirmed payouts.
+      <p class="muted">Read-only operational order history and seller fulfilment information. Financial and settlement information is not displayed.</p>
+      <div class="toolbar">
+        <input id="orderSearch" type="search" placeholder="Search order reference, customer or location">
+        <select id="orderStatusFilter" aria-label="Filter by order status">
+          <option value="all">All order statuses</option>
+          <option value="pending">Pending</option>
+          <option value="processing">Processing</option>
+          <option value="shipped">Shipped</option>
+          <option value="delivered">Delivered</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
       </div>
-
-      <div class="financial-grid">
-        <div class="stat">
-          <div class="stat-label">Total Order Value</div>
-          <strong id="totalVolume">R0.00</strong>
-        </div>
-        <div class="stat green">
-          <div class="stat-label">Recorded Paid</div>
-          <strong id="paidTotal">R0.00</strong>
-        </div>
-        <div class="stat amber">
-          <div class="stat-label">Pending</div>
-          <strong id="pendingTotal">R0.00</strong>
-        </div>
-        <div class="stat red">
-          <div class="stat-label">Failed</div>
-          <strong id="failedTotal">R0.00</strong>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Recorded Refunded</div>
-          <strong id="refundTotal">R0.00</strong>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Calculated NOVAAI Commission</div>
-          <strong id="commissionTotal">R0.00</strong>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Calculated Seller Entitlements</div>
-          <strong id="payoutTotal">R0.00</strong>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Orders in Retrieved Records</div>
-          <strong id="paymentOrderCount">0</strong>
-        </div>
-      </div>
-
-      <button class="primary" id="refreshFinancialBtn">Refresh Financial Data</button>
-
-
-
-    </section>
-    <section class="panel" id="sellerFinancialRecords">
-      <h2>Seller Commissions & Financial Records</h2>
-      <p class="muted">Calculated seller entitlements and settlement records.</p>
-      <div id="sellerFinancialRecordsList"></div>
+      <div class="actions"><button class="primary" id="refreshOrdersBtn" type="button">Refresh Orders & Fulfilment</button></div>
+      <p id="ordersMessage" class="muted" role="status" aria-live="polite">Order and fulfilment records will appear here.</p>
+      <div id="operationalOrdersList"></div>
     </section>
 
   </main>
@@ -893,9 +832,9 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
 <nav class="mobile-nav">
   <a href="#overview"><span>⌂</span>Home</a>
   <a href="#productsSection"><span>▦</span>Products</a>
-  <a href="#paymentCentre"><span class="central">＋</span>Admin</a>
-  <a href="#paymentCentre"><span>▤</span>Payments</a>
-  <a href="#sellerFinancialRecords"><span>◈</span>More</a>
+  <a href="#ordersFulfilment"><span class="central">▤</span>Orders</a>
+  <a href="#advertisementManagement"><span>▣</span>Ads</a>
+  <a href="#adminSettings"><span>⚙</span>Settings</a>
 </nav>
 
 </section>
@@ -924,8 +863,8 @@ let allProducts = [];
 let allSellerStores = [];
 let allMarketplacePermissions = [];
 let sellerEligibilityLoadError = null;
-let allPaymentOrders = [];
-let allSellerFinancials = [];
+let allAdminOrders = [];
+let allAdminFulfillments = [];
 
 function escapeHTML(value) {
   return String(value ?? "").replace(/[&<>"']/g, c => ({
@@ -994,7 +933,7 @@ async function checkAdmin(user) {
       document.getElementById("loginMessage").textContent = "Administrator access verified.";
       await Promise.all([
         loadProducts(),
-        loadPaymentData(),
+        loadOperationalOrderData(),
         loadMarketplacePermissions(),
         loadSellerLocationReviews()
       ]);
@@ -1265,8 +1204,8 @@ async function logout() {
   verifiedAdminId = null;
   currentAdmin = null;
   allProducts = [];
-  allPaymentOrders = [];
-  allSellerFinancials = [];
+  allAdminOrders = [];
+  allAdminFulfillments = [];
 
   document.getElementById("dashboard").classList.add("hidden");
   document.getElementById("loginPanel").classList.remove("hidden");
@@ -1547,169 +1486,86 @@ async function loadProducts() {
   }
 }
 
-async function loadPaymentData() {
-  if (!currentAdmin) return;
-
-  const msg = document.getElementById("paymentMessage");
-  msg.textContent = "Loading financial records...";
-
+async function loadOperationalOrderData() {
+  if (!currentAdmin || currentAdmin.id !== ADMIN_ID) return;
+  const msg = document.getElementById("ordersMessage");
+  const refresh = document.getElementById("refreshOrdersBtn");
+  msg.textContent = "Loading operational order and fulfilment records…";
+  if (refresh) refresh.disabled = true;
   try {
-    const { data: orders, error: orderError } = await sb
-      .from("orders")
-      .select(`
-        id,
-        customer_name,
-        customer_email,
-        payment_status,
-        total_amount,
-        gateway_provider,
-        gateway_transaction_reference,
-        paid_at,
-        refunded_at,
-        order_status,
-        created_at
-      `)
-      .order("created_at", { ascending: false });
-
-    if (orderError) throw orderError;
-
-    const { data: fulfillments, error: fulfillmentError } = await sb
-      .from("seller_fulfillments")
-      .select(`
-        id,
-        order_id,
-        seller_id,
-        item_subtotal,
-        platform_commission,
-        payout_amount,
-        fulfillment_status,
-        settlement_status,
-        courier_name,
-        tracking_number,
-        delivery_date,
-        created_at
-      `)
-      .order("created_at", { ascending: false });
-
-    if (fulfillmentError) throw fulfillmentError;
-
-    allPaymentOrders = orders || [];
-    allSellerFinancials = fulfillments || [];
-
-    updateFinancialOverview();
-    renderPaymentRecords();
-    renderSellerFinancials();
-
-    msg.textContent = allPaymentOrders.length +
-      " order(s) loaded successfully.";
-
+    // Operational projections exclude all payment and accounting fields.
+    const [ordersResult, fulfilmentsResult] = await Promise.all([
+      sb.from("orders")
+        .select("id,customer_name,customer_email,buyer_selected_location,order_status,created_at")
+        .order("created_at", { ascending: false }),
+      sb.from("seller_fulfillments")
+        .select("id,order_id,seller_id,fulfillment_status,courier_name,tracking_number,delivery_date,created_at")
+        .order("created_at", { ascending: false })
+    ]);
+    if (ordersResult.error) throw ordersResult.error;
+    if (fulfilmentsResult.error) throw fulfilmentsResult.error;
+    allAdminOrders = ordersResult.data || [];
+    allAdminFulfillments = fulfilmentsResult.data || [];
+    renderOperationalOrders();
+    updateAdminOverview();
+    msg.textContent = allAdminOrders.length + " order(s) · " +
+      allAdminFulfillments.length + " seller fulfilment record(s) loaded.";
   } catch (error) {
-    console.error("Payment data error:", error);
-    msg.textContent = "Financial data error: " + error.message;
+    console.error("NOVAAI operational order load error:", error);
+    msg.textContent = "Could not load operational order or fulfilment records: " +
+      (error?.message || "Unexpected error.");
+    document.getElementById("operationalOrdersList").replaceChildren();
+  } finally {
+    if (refresh) refresh.disabled = false;
   }
 }
 
-function updateFinancialOverview() {
-  const orders = allPaymentOrders;
-  const financials = allSellerFinancials;
-
-  const totalValue = orders.reduce(
-    (sum, order) => sum + Number(order.total_amount || 0), 0
-  );
-
-  const paid = orders
-    .filter(o => o.payment_status === "paid")
-    .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
-
-  const pending = orders
-    .filter(o => o.payment_status === "pending")
-    .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
-
-  const failed = orders
-    .filter(o => o.payment_status === "failed")
-    .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
-
-  const refunded = orders
-    .filter(o => o.payment_status === "refunded" || o.refunded_at)
-    .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
-
-  const commission = financials.reduce(
-    (sum, f) => sum + Number(f.platform_commission || 0), 0
-  );
-
-  const payouts = financials.reduce(
-    (sum, f) => sum + Number(f.payout_amount || 0), 0
-  );
-
-  document.getElementById("totalVolume").textContent = money(totalValue);
-  document.getElementById("paidTotal").textContent = money(paid);
-  document.getElementById("pendingTotal").textContent = money(pending);
-  document.getElementById("failedTotal").textContent = money(failed);
-  document.getElementById("refundTotal").textContent = money(refunded);
-  document.getElementById("commissionTotal").textContent = money(commission);
-  document.getElementById("payoutTotal").textContent = money(payouts);
-  document.getElementById("paymentOrderCount").textContent = orders.length;
-}
-
-function renderPaymentRecords() {
-  const container = document.getElementById("paymentRecords");
-  const filter = document.getElementById("paymentFilter").value;
-
-  const records = allPaymentOrders.filter(order => {
-    if (filter === "all") return true;
-
-    if (filter === "refunded") {
-      return order.payment_status === "refunded" || !!order.refunded_at;
-    }
-
-    return order.payment_status === filter;
+function renderOperationalOrders() {
+  const container = document.getElementById("operationalOrdersList");
+  if (!container) return;
+  const term = (document.getElementById("orderSearch")?.value || "").trim().toLowerCase();
+  const status = document.getElementById("orderStatusFilter")?.value || "all";
+  const orders = allAdminOrders.filter(order => {
+    const orderStatus = String(order.order_status || "").toLowerCase();
+    const searchable = [
+      order.id, order.customer_name, order.customer_email,
+      order.buyer_selected_location, order.order_status
+    ].join(" ").toLowerCase();
+    return (status === "all" || orderStatus === status) && searchable.includes(term);
   });
-
-  if (!records.length) {
-    container.innerHTML =
-      "<p class='muted'>No matching payment records.</p>";
+  if (!orders.length) {
+    container.innerHTML = "<p class='muted'>No orders match the selected search and status filter.</p>";
     return;
   }
-
-  container.innerHTML = records.map(order => `
-    <div class="record">
-      <strong>Order: ${escapeHTML(order.id)}</strong>
-      <p>Customer: ${escapeHTML(order.customer_name || "Not provided")}</p>
-      <p>Email: ${escapeHTML(order.customer_email || "Not provided")}</p>
-      <p>Amount: <strong>${money(order.total_amount)}</strong></p>
-      <p>Payment status: ${escapeHTML(order.payment_status || "Unknown")}</p>
-      <p>Gateway: ${escapeHTML(order.gateway_provider || "Not recorded")}</p>
-      <p>Transaction reference: ${escapeHTML(order.gateway_transaction_reference || "Not recorded")}</p>
-      <p>Order status: ${escapeHTML(order.order_status || "Unknown")}</p>
-      <small>Created: ${escapeHTML(order.created_at || "")}</small>
-    </div>
-  `).join("");
+  container.innerHTML = orders.map(order => {
+    const related = allAdminFulfillments.filter(record =>
+      String(record.order_id) === String(order.id)
+    );
+    const fulfilmentHTML = related.length ? related.map(record => `
+      <div class="record">
+        <strong>Seller fulfilment record</strong>
+        <p>Seller ID: ${escapeHTML(record.seller_id || "Not recorded")}</p>
+        <p>Fulfilment status: <span class="status">${escapeHTML(record.fulfillment_status || "Not recorded")}</span></p>
+        <p>Courier: ${escapeHTML(record.courier_name || "Not assigned")}</p>
+        <p>Tracking number: ${escapeHTML(record.tracking_number || "Not recorded")}</p>
+        <p>Delivery date: ${escapeHTML(record.delivery_date || "Not recorded")}</p>
+        <small>Fulfilment record created: ${escapeHTML(record.created_at || "Not recorded")}</small>
+      </div>
+    `).join("") : "<p class='muted'>No seller fulfilment record is currently linked to this order.</p>";
+    return `
+      <article class="record">
+        <strong>Order reference: ${escapeHTML(order.id)}</strong>
+        <p>Customer: ${escapeHTML(order.customer_name || "Not provided")}</p>
+        <p>Customer email: ${escapeHTML(order.customer_email || "Not provided")}</p>
+        <p>Buyer-selected location: ${escapeHTML(order.buyer_selected_location || "Not provided")}</p>
+        <p>Order status: <span class="status">${escapeHTML(order.order_status || "Not recorded")}</span></p>
+        <small>Order created: ${escapeHTML(order.created_at || "Not recorded")}</small>
+        <h3>Seller fulfilment</h3>
+        ${fulfilmentHTML}
+      </article>
+    `;
+  }).join("");
 }
-
-function renderSellerFinancials() {
-  const container = document.getElementById("sellerFinancialRecordsList");
-
-  if (!allSellerFinancials.length) {
-    container.innerHTML =
-      "<p class='muted'>No seller financial records found.</p>";
-    return;
-  }
-
-  container.innerHTML = allSellerFinancials.map(record => `
-    <div class="record">
-      <strong>Seller: ${escapeHTML(record.seller_id)}</strong>
-      <p>Order: ${escapeHTML(record.order_id)}</p>
-      <p>Item subtotal: ${money(record.item_subtotal)}</p>
-      <p>NOVAAI commission: ${money(record.platform_commission)}</p>
-      <p>Calculated seller entitlement: <strong>${money(record.payout_amount)}</strong></p>
-      <p>Fulfilment: ${escapeHTML(record.fulfillment_status || "Unknown")}</p>
-      <p>Settlement: ${escapeHTML(record.settlement_status || "Unknown")}</p>
-      <p>Courier: ${escapeHTML(record.courier_name || "Not assigned")}</p>
-      <p>Tracking: ${escapeHTML(record.tracking_number || "Not available")}</p>
-    </div>
-  `).join("");
-}
-
 
 function marketplaceForProduct(product) {
   const category = String(product.category || "");
@@ -1873,8 +1729,6 @@ const ADMIN_WORKSPACES = {
   advertisementManagement: { title: "Advertising Management", sections: ["advertisementManagement"] },
   productsSection: { title: "Products & Listings", sections: ["productsSection"] },
   ordersFulfilment: { title: "Orders & Fulfilment", sections: ["ordersFulfilment"] },
-  paymentCentre: { title: "Payments & Settlements", sections: ["paymentCentre"] },
-  sellerFinancialRecords: { title: "Seller Financial Records", sections: ["sellerFinancialRecords"] },
   reportsAnalytics: { title: "Reports & Analytics", sections: ["reportsAnalytics"] },
   adminSettings: { title: "Admin Settings", sections: ["adminSettings"] }
 };
@@ -1990,7 +1844,7 @@ document.getElementById("mobileMenuToggle")?.addEventListener("click",()=>{const
 document.getElementById("sidebarBackdrop")?.addEventListener("click",closeAdminDrawer);
 document.querySelectorAll(".sidebar nav a").forEach(a=>a.addEventListener("click",()=>{document.querySelectorAll(".sidebar nav a").forEach(n=>n.classList.toggle("active",n===a));closeAdminDrawer();}));
 document.getElementById("settingsLogoutBtn")?.addEventListener("click",logout);
-function updateAdminOverview(){const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=String(v);};set("overviewOrderCount",allPaymentOrders.length);set("overviewSellerCount",document.querySelectorAll("#marketplacePermissionRecords .record").length);set("overviewCampaignCount",adCampaignRows.length);set("overviewAdImpressions",adCampaignRows.reduce((n,c)=>n+Number(c.impression_count||0),0).toLocaleString());set("reportProductCount",allProducts.length);set("reportOrderCount",allPaymentOrders.length);set("reportFulfilmentCount",allSellerFinancials.length);set("reportAdClicks",adCampaignRows.reduce((n,c)=>n+Number(c.click_count||0),0).toLocaleString());set("settingsAdminEmail",currentAdmin?.email||"Not signed in");}
+function updateAdminOverview(){const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=String(v);};set("overviewOrderCount",allAdminOrders.length);set("overviewSellerCount",document.querySelectorAll("#marketplacePermissionRecords .record").length);set("overviewCampaignCount",adCampaignRows.length);set("overviewAdImpressions",adCampaignRows.reduce((n,c)=>n+Number(c.impression_count||0),0).toLocaleString());set("reportProductCount",allProducts.length);set("reportOrderCount",allAdminOrders.length);set("reportFulfilmentCount",allAdminFulfillments.length);set("reportAdClicks",adCampaignRows.reduce((n,c)=>n+Number(c.click_count||0),0).toLocaleString());set("settingsAdminEmail",currentAdmin?.email||"Not signed in");}
 
 document.getElementById("adminLoginForm").addEventListener("submit", (event) => {
   event.preventDefault();
@@ -2009,8 +1863,9 @@ document.getElementById("globalMarketplaceFilter").onchange = renderProducts;
   document.getElementById(key+"Search").addEventListener("input",renderMarketplaceWorkspaces);
   document.getElementById(key+"Status").addEventListener("change",renderMarketplaceWorkspaces);
 });
-document.getElementById("paymentFilter").onchange = renderPaymentRecords;
-document.getElementById("refreshFinancialBtn").onclick = loadPaymentData;
+document.getElementById("orderSearch").addEventListener("input",renderOperationalOrders);
+document.getElementById("orderStatusFilter").addEventListener("change",renderOperationalOrders);
+document.getElementById("refreshOrdersBtn").onclick = loadOperationalOrderData;
 document.getElementById("refreshMarketplacePermissions").onclick = loadMarketplacePermissions;
 document.getElementById("refreshSellerLocationReviews").onclick = loadSellerLocationReviews;
 document.getElementById("adCampaignForm").addEventListener("submit",saveAdCampaign);
