@@ -617,7 +617,22 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
 #lastAdShareTime{margin:10px 0;color:var(--muted);font-size:12px}
 #refreshShareAnalytics{background:var(--blue);color:#fff;min-height:42px}
 #shareAnalyticsStatus{min-height:18px;margin:9px 0;color:var(--muted);font-size:12px}
-@media(max-width:600px){.admin-share-analytics{padding:14px}.admin-share-analytics .section-heading{align-items:flex-start}.share-analytics-stats{grid-template-columns:1fr 1fr}.share-analytics-stats .analytics-card:last-child{grid-column:1/-1}.share-analytics-stats .analytics-card strong{font-size:20px}}
+.admin-visit-analytics{margin-top:22px;padding:20px;border:1px solid var(--line);border-radius:15px;background:#fbfcff}
+.admin-visit-analytics .section-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:17px}
+.admin-visit-analytics .section-heading h2{margin:0 0 6px}
+.admin-visit-analytics .section-heading p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+.visit-analytics-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
+.visit-analytics-stats .analytics-card{min-width:0;padding:16px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.visit-analytics-stats .analytics-card span{display:block;color:var(--muted);font-size:12px}
+.visit-analytics-stats .analytics-card strong{display:block;margin-top:9px;color:var(--blue-dark);font-size:21px;overflow-wrap:anywhere}
+.admin-visit-analytics .table-responsive{width:100%;overflow-x:auto}
+.admin-visit-analytics table{width:100%;border-collapse:collapse;background:#fff;font-size:12px}
+.admin-visit-analytics th,.admin-visit-analytics td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.admin-visit-analytics th{background:#f3f6fb;color:#526078;font-size:11px}
+#lastAdVisitTime,#visitAnalyticsStatus{margin:10px 0;color:var(--muted);font-size:12px}
+#refreshVisitAnalytics{background:var(--blue);color:#fff;min-height:42px}
+@media(max-width:850px){.visit-analytics-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.admin-visit-analytics{padding:14px}.admin-visit-analytics .section-heading{align-items:flex-start}.visit-analytics-stats .analytics-card strong{font-size:19px}}
 
 </style>
 </head>
@@ -848,6 +863,32 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
       <table>
         <thead><tr><th>Campaign</th><th>Advertisement</th><th>Total Shares</th><th>Last Shared</th></tr></thead>
         <tbody id="shareAnalyticsRecords"><tr><td colspan="4">Open Reports &amp; Analytics to load share analytics.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div class="admin-visit-analytics" aria-labelledby="visitAnalyticsHeading">
+  <div class="section-heading">
+    <div>
+      <h2 id="visitAnalyticsHeading">Shared Advertisement Visit Analytics</h2>
+      <p>Recorded landing-page loads attributed to shared campaign links. Visits are not unique-person or purchase counts.</p>
+    </div>
+    <button type="button" id="refreshVisitAnalytics">Refresh</button>
+  </div>
+  <div class="visit-analytics-stats">
+    <article class="analytics-card"><span>Total Shared Visits</span><strong id="totalSharedVisits">0</strong></article>
+    <article class="analytics-card"><span>Campaigns Generating Visits</span><strong id="campaignsGeneratingVisits">0</strong></article>
+    <article class="analytics-card"><span>Most Visited Campaign</span><strong id="mostVisitedCampaign">—</strong></article>
+    <article class="analytics-card"><span>Best Performing Board</span><strong id="bestPerformingBoard">—</strong></article>
+  </div>
+  <p id="lastAdVisitTime">Last recorded visit: —</p>
+  <p id="visitAnalyticsStatus" role="status" aria-live="polite">Visit analytics will load when this workspace opens.</p>
+  <div class="share-analytics-table">
+    <h3>Campaign Visit Performance</h3>
+    <div class="table-responsive">
+      <table>
+        <thead><tr><th>Campaign</th><th>Shares</th><th>Visits</th></tr></thead>
+        <tbody id="visitAnalyticsRecords"><tr><td colspan="3">Open Reports &amp; Analytics to load visit analytics.</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -1869,6 +1910,73 @@ async function loadNovaAIShareAnalytics() {
   }
 }
 
+async function loadNovaAIAdVisitAnalytics() {
+  const records = document.getElementById("visitAnalyticsRecords");
+  const status = document.getElementById("visitAnalyticsStatus");
+  if (!records || !status) return;
+
+  records.innerHTML = '<tr><td colspan="3">Loading visit analytics…</td></tr>';
+  status.textContent = "Loading attributed visit totals…";
+
+  try {
+    if (!currentAdmin || currentAdmin.id !== ADMIN_ID) {
+      throw new Error("Administrator session is not verified.");
+    }
+
+    const { data, error } = await sb.rpc("get_novaai_ad_visit_analytics_v1");
+    if (error) throw error;
+
+    const report = data && typeof data === "object" ? data : {};
+    const campaigns = Array.isArray(report.campaigns) ? report.campaigns : [];
+    const totalVisits = Number(report.total_visits || 0);
+    const generating = Number(report.campaigns_generating_visits || 0);
+    const mostVisited = report.most_visited_campaign || null;
+    const bestBoard = report.best_performing_board || null;
+
+    document.getElementById("totalSharedVisits").textContent = totalVisits.toLocaleString();
+    document.getElementById("campaignsGeneratingVisits").textContent = generating.toLocaleString();
+    document.getElementById("mostVisitedCampaign").textContent =
+      mostVisited && Number(mostVisited.visit_count || 0) > 0
+        ? String(mostVisited.campaign_code || "—")
+        : "—";
+    document.getElementById("bestPerformingBoard").textContent =
+      bestBoard && Number(bestBoard.visit_count || 0) > 0
+        ? String(bestBoard.board_id || "—")
+        : "—";
+
+    const lastVisit = report.last_visit_at ? new Date(report.last_visit_at) : null;
+    document.getElementById("lastAdVisitTime").textContent =
+      "Last recorded visit: " +
+      (lastVisit && !Number.isNaN(lastVisit.getTime())
+        ? lastVisit.toLocaleString()
+        : "Never");
+
+    if (!campaigns.length) {
+      records.innerHTML = '<tr><td colspan="3">No campaign records found.</td></tr>';
+      status.textContent = "No campaign records were returned.";
+      return;
+    }
+
+    records.innerHTML = campaigns.map(campaign => {
+      const shares = Number(campaign.share_count || 0);
+      const visits = Number(campaign.visit_count || 0);
+      return `
+        <tr>
+          <td>${escapeShareHTML(campaign.campaign_code)}</td>
+          <td><strong>${shares.toLocaleString()}</strong></td>
+          <td><strong>${visits.toLocaleString()}</strong></td>
+        </tr>
+      `;
+    }).join("");
+    status.textContent =
+      "Loaded " + campaigns.length + " campaign(s). Counts are recorded landing-page loads.";
+  } catch (error) {
+    console.error("Visit analytics error:", error);
+    records.innerHTML = '<tr><td colspan="3">Unable to load visit analytics.</td></tr>';
+    status.textContent = "Unable to load visit analytics. Check administrator access and refresh.";
+  }
+}
+
 function escapeShareHTML(value) {
   return String(value ?? "").replace(/[&<>"']/g, character => ({
     "&": "&amp;",
@@ -1965,6 +2073,7 @@ function showAdminWorkspace(workspaceId, updateHash = false) {
   closeAdminDrawer();
   if (selected === "reportsAnalytics" && currentAdmin?.id === ADMIN_ID) {
     loadNovaAIShareAnalytics();
+    loadNovaAIAdVisitAnalytics();
   }
 }
 
@@ -2035,6 +2144,7 @@ document.getElementById("adCampaignForm").addEventListener("submit",saveAdCampai
 document.getElementById("resetAdCampaignBtn").onclick=resetAdCampaignForm;
 document.getElementById("refreshAdCampaignsBtn").onclick=loadAdCampaigns;
 document.getElementById("refreshShareAnalytics")?.addEventListener("click", loadNovaAIShareAnalytics);
+document.getElementById("refreshVisitAnalytics")?.addEventListener("click", loadNovaAIAdVisitAnalytics);
 
 sb.auth.getSession().then(({ data, error }) => {
   if (error) {

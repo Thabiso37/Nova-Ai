@@ -773,6 +773,22 @@
     return button;
   }
 
+  function addNovaAIShareTracking(destination,campaignCode,boardId){
+    const url=new URL(destination,window.location.origin);
+    const validCampaign=/^[A-Za-z0-9_-]{1,150}$/.test(String(campaignCode||''));
+    const validBoard=Object.prototype.hasOwnProperty.call(novaShareSlots,boardId);
+    if(!validCampaign||!validBoard)return url.toString();
+
+    url.searchParams.set('utm_source','novaai');
+    url.searchParams.set('utm_medium','share');
+    url.searchParams.set('utm_campaign',campaignCode);
+    url.searchParams.set('nova_share','1');
+    url.searchParams.set('nova_campaign',campaignCode);
+    url.searchParams.set('nova_board',boardId);
+
+    return url.toString();
+  }
+
   function getAdvertisementDetails(button){
     const card=button.__novaAdCard||
       button.closest('[data-nova-ad-card]')||
@@ -813,17 +829,15 @@
 
     const campaignCode=card.dataset.campaignCode||
       card.dataset.novaCampaignCode||
-      'advertisement';
-
-    url.searchParams.set('utm_source','novaai_share');
-    url.searchParams.set('utm_medium','social');
-    url.searchParams.set('utm_campaign',campaignCode);
+      '';
+    const trackedUrl=addNovaAIShareTracking(url.toString(),campaignCode,id);
 
     return {
       title,
       text:description+'\n\nDiscover more on NOVAAI MARKET.',
-      url:url.toString(),
-      campaignCode
+      url:trackedUrl,
+      campaignCode,
+      boardId:id
     };
   }
 
