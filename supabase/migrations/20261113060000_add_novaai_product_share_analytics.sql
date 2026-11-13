@@ -60,11 +60,12 @@ BEGIN
 END;$function$;
 REVOKE ALL ON FUNCTION public.record_novaai_product_share_v1(UUID,BIGINT,TEXT,TEXT) FROM PUBLIC,anon,authenticated,service_role;
 GRANT EXECUTE ON FUNCTION public.record_novaai_product_share_v1(UUID,BIGINT,TEXT,TEXT) TO service_role;
+-- Same explicit administrator UUID gate as the existing advertisement reporting RPCs.
 CREATE OR REPLACE FUNCTION public.get_novaai_product_share_analytics_v1()
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public,private,auth AS $function$
 DECLARE result JSONB;
 BEGIN
- IF NOT public.is_novaai_admin() THEN RAISE EXCEPTION 'Administrator access required' USING ERRCODE='42501'; END IF;
+ IF auth.uid() IS DISTINCT FROM '2fc320e9-40b6-407f-9e71-e8a1999956a7'::UUID THEN RAISE EXCEPTION 'Administrator access required' USING ERRCODE='42501'; END IF;
  WITH grouped_events AS(SELECT e.product_id,e.marketplace,COUNT(*)::BIGINT share_count,MAX(e.created_at) last_share_at
  FROM private.novaai_product_share_events e GROUP BY e.product_id,e.marketplace),
  product_rows AS(SELECT g.product_id,g.marketplace,p.name product_name,g.share_count,g.last_share_at
