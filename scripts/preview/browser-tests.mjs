@@ -54,6 +54,7 @@ try{
   {file:"index.html",query:""},
   {file:"retail.html",query:""},
   {file:"seller-motors-houses.html",query:"?market=motors"},
+  {file:"seller-motors-houses.html",query:"?market=property"},
   {file:"property-details.html",query:"?id=910003"}
  ];
  const pages=[];
@@ -65,7 +66,7 @@ try{
   assert(response&&response.ok(),item.file+" did not return HTTP success");
   await page.waitForFunction(()=>document.readyState==="complete",null,{timeout:10000});
   await page.waitForFunction(()=>window.__NOVAAI_PREVIEW__===true&&!!window.supabase,null,{timeout:10000});
-  if(item.file!=="index.html")await page.waitForFunction(()=>!!window.NOVAAIProductShare,null,{timeout:10000});
+  await page.waitForFunction(()=>!!window.NOVAAIProductShare,null,{timeout:10000});
   assert.equal(await page.locator("#novaai-preview-banner").count(),1,item.file+" missing isolated preview banner");
   assert.equal(new URL(page.url()).origin,origin,"Page did not use the local preview origin");
   const mutations=await page.evaluate(async()=>{
@@ -90,6 +91,48 @@ try{
   pages.push({page,file:item.file});
   console.log("PASS page load + isolated fixture + mutation denial: "+item.file);
  }
+ const homePage=pages.find(x=>x.file==="index.html").page;
+ await homePage.waitForFunction(()=>!!document.querySelector(".home-product-card .home-product-share"),null,{timeout:10000});
+ const homeLayout=await homePage.evaluate(()=>{
+  const share=document.querySelector(".home-product-card .home-product-share");
+  const cart=document.querySelector(".home-product-card .home-add-cart");
+  if(!share||!cart)return null;
+  const a=share.getBoundingClientRect(),b=cart.getBoundingClientRect();
+  return {shareBeforeCart:!!(share.compareDocumentPosition(cart)&Node.DOCUMENT_POSITION_FOLLOWING),sameRow:Math.abs(a.top-b.top)<3,shareX:a.left,cartX:b.left};
+ });
+ assert(homeLayout&&homeLayout.shareBeforeCart&&homeLayout.sameRow&&homeLayout.shareX<homeLayout.cartX,"Home/Retail Share must sit immediately before the unchanged cart control on the same row");
+ console.log("PASS Home/Retail card Share is immediately left of Cart");
+
+ const retailCardPage=pages.find(x=>x.file==="retail.html").page;
+ await retailCardPage.waitForFunction(()=>!!document.querySelector("#products .product-open-card .actions .nova-product-share-card"),null,{timeout:10000});
+ const retailLayout=await retailCardPage.evaluate(()=>{
+  const card=document.querySelector("#products .product-open-card"),share=card&&card.querySelector(".actions .nova-product-share-card"),cart=card&&card.querySelector(".actions .shop-card-cart");
+  if(!share||!cart)return null;const a=share.getBoundingClientRect(),b=cart.getBoundingClientRect();
+  return {shareBeforeCart:!!(share.compareDocumentPosition(cart)&Node.DOCUMENT_POSITION_FOLLOWING),sameRow:Math.abs(a.top-b.top)<3,shareX:a.left,cartX:b.left};
+ });
+ assert(retailLayout&&retailLayout.shareBeforeCart&&retailLayout.sameRow&&retailLayout.shareX<retailLayout.cartX,"Retail Share must sit immediately left of Cart on the same row");
+ console.log("PASS Retail listing-card Share is immediately left of Cart");
+
+ const motorsCardPage=pages.find(x=>x.file==="seller-motors-houses.html"&&x.page.url().includes("market=motors")).page;
+ await motorsCardPage.waitForFunction(()=>!!document.querySelector(".vehicle-card .motor-gallery .nova-product-share-card"),null,{timeout:10000});
+ const motorsLayout=await motorsCardPage.evaluate(()=>{
+  const share=document.querySelector(".vehicle-card .motor-gallery .nova-product-share-card"),gallery=document.querySelector(".vehicle-card .motor-gallery");
+  if(!share||!gallery)return null;const s=getComputedStyle(share),r=share.getBoundingClientRect(),g=gallery.getBoundingClientRect();
+  return {insidePhoto:gallery.contains(share),absolute:s.position==="absolute",top:Math.round(r.top-g.top),left:Math.round(r.left-g.left)};
+ });
+ assert(motorsLayout&&motorsLayout.insidePhoto&&motorsLayout.absolute&&motorsLayout.top<=9&&motorsLayout.left<=9,"Motors Share must sit at the top-left inside the listing photo");
+ console.log("PASS Motors listing-card Share is at the top-left of the photo");
+
+ const propertyCardPage=pages.find(x=>x.file==="seller-motors-houses.html"&&x.page.url().includes("market=property")).page;
+ await propertyCardPage.waitForFunction(()=>!!document.querySelector(".property-card .property-card-gallery .nova-product-share-card"),null,{timeout:10000});
+ const propertyLayout=await propertyCardPage.evaluate(()=>{
+  const share=document.querySelector(".property-card .property-card-gallery .nova-product-share-card"),gallery=document.querySelector(".property-card .property-card-gallery");
+  if(!share||!gallery)return null;const s=getComputedStyle(share),r=share.getBoundingClientRect(),g=gallery.getBoundingClientRect();
+  return {insidePhoto:gallery.contains(share),absolute:s.position==="absolute",top:Math.round(r.top-g.top),left:Math.round(r.left-g.left)};
+ });
+ assert(propertyLayout&&propertyLayout.insidePhoto&&propertyLayout.absolute&&propertyLayout.top<=9&&propertyLayout.left<=9,"Property Share must sit at the top-left inside the listing photo");
+ console.log("PASS Property listing-card Share is at the top-left of the photo");
+
  const sharePage=pages.find(x=>x.file==="retail.html").page;
  const shareData=await sharePage.evaluate(()=>{
   if(typeof window.retailShareButton!=="function")throw new Error("Retail share URL builder is not available");
