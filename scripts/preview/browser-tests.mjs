@@ -85,6 +85,7 @@ try{
    ];
    return results.map(x=>x&&x.error&&x.error.code);
   });
+  assert.equal(mutations.length,11,item.file+" did not exercise every guarded mutation/auth/storage operation");
   assert(mutations.every(code=>code==="PREVIEW_DISABLED"),item.file+" exposed a database/auth/storage mutation path");
   pages.push({page,file:item.file});
   console.log("PASS page load + isolated fixture + mutation denial: "+item.file);
@@ -155,7 +156,7 @@ try{
  assert.equal(attempts.size,0,"Production Supabase/analytics request attempts detected: "+[...attempts].join(", "));
  assert.deepEqual(failures,[],"Browser page JavaScript errors: "+failures.join(" | "));
  console.log("PASS network isolation: zero attempted production Supabase REST/Auth/Storage/Functions/Realtime or analytics requests.");
- console.log("PASS browser isolation suite: 4 pages, 9 mutation/auth/storage denials per page, native share, clipboard fallback.");
+ console.log("PASS browser isolation suite: 4 pages, 11 mutation/auth/storage denials per page, native share, clipboard fallback.");
 }finally{
  if(browser)await browser.close();
  await new Promise(resolve=>server.close(resolve));

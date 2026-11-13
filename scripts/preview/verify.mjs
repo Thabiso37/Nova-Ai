@@ -43,7 +43,10 @@ for(const result of [
  await mock.rpc("place_order"),
  await mock.auth.signInWithPassword({email:"x",password:"x"}),
  await mock.auth.signUp({email:"x",password:"x"}),
- await mock.storage.from("listing-images").upload("x",new Blob(["x"]))
+ await mock.auth.updateUser({email:"x"}),
+ await mock.auth.resetPasswordForEmail("x"),
+ await mock.storage.from("listing-images").upload("x",new Blob(["x"])),
+ await mock.storage.from("listing-images").remove(["x"])
 ])assert.equal(result.error.code,"PREVIEW_DISABLED","A production-capable mutation/auth method was not rejected");
 assert.equal((await mock.auth.getSession()).data.session,null,"Preview unexpectedly has an authenticated session");
 console.log("PASS: generated-file credential/endpoint scan; four-page fixture/CSP checks; synthetic query; database writes, RPC, storage and authentication rejection; native share and clipboard code retained; analytics disabled.");
