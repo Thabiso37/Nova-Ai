@@ -1,22 +1,21 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import { execFileSync } from "node:child_process";
 
 const root = process.cwd();
 const out = path.join(root, "preview-dist");
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
 
-const APPROVED_BASELINE_COMMIT = "ae424b41f73ef6bd704b7f4018ab69c70a38e0aa";
-const HISTORICAL_HOME_VISUAL_COMMIT = "0851cf99f7ecfe78b381340b3a2d7317b9dbb2fd";
-const EXPECTED_HISTORICAL_HOME_BLOB = "b76c6014c1264548e600fe4961210c2c8e5a611b";
+const IMPLEMENTATION_COMMIT = "b8328d4fb43018452725132e64d859e45d82af57";
+const IMPLEMENTATION_BRANCH = "fix/approved-preview2-home-layout";
+const EXPECTED_IMPLEMENTATION_HOME_BLOB = "82380f7172f0cd1699ea5da113de9f4945276cd7";
 const expectedBaselineBlobs = {
- "index.html":"bd54ed3e3322bc1262589e66f30d65f5050eb363",
+ "index.html":"82380f7172f0cd1699ea5da113de9f4945276cd7",
  "retail.html":"38277fef4c9a9226da1d9f43736ae78a46fd1f6a",
  "seller-motors-houses.html":"79dbca93afd3852471df8f3fa9bf06f83b33b4d7",
  "property-details.html":"4742bb9372941f388aadf4fe3c4280e008ec8462",
- "novaai-product-sharing.js":"daed2fbbe87344753f23f89635608475063f8742",
+ "novaai-product-sharing.js":"db7b7db7fd5d011a15dbf2687b23e162cdc85a76",
  "nearby-search.js":"9b95cb2c9f4c58909c8c00d2100916b904710147",
  "novaai-ad-slots.js":"da652ad2ece5d6ec833b189650c9cc74b84fead5",
  "novaai-share-visits.js":"2e7bb419b3ce0f7d83c7017737bb65bb551c1d59",
@@ -30,20 +29,19 @@ for (const [file,expected] of Object.entries(expectedBaselineBlobs)) {
  const actual=gitBlobSha(fs.readFileSync(path.join(root,file)));
  if(actual!==expected) throw new Error("Approved baseline source hash mismatch for "+file+": "+actual);
 }
-const historicalHomeIndex = execFileSync("curl",["-fsSL","https://raw.githubusercontent.com/Thabiso37/Nova-Ai/"+HISTORICAL_HOME_VISUAL_COMMIT+"/index.html"],{encoding:"utf8",maxBuffer:8*1024*1024});
-/* Actual rendered Preview 2 is the Home visual authority. Use its complete source,
-   not a newer design index that merely shares selected CSS fragments. */
-const historicalHomeVisualBlob=gitBlobSha(historicalHomeIndex);
-if(historicalHomeVisualBlob!==EXPECTED_HISTORICAL_HOME_BLOB) throw new Error("Historical Preview 2 source hash mismatch: "+historicalHomeVisualBlob);
-if(!historicalHomeIndex.includes(".home-product-info{display:flex;flex:1;flex-direction:column")) throw new Error("Historical Preview 2 information-panel source could not be verified.");
-if(!historicalHomeIndex.includes('data-home-category-tile="retail"')||!historicalHomeIndex.includes('data-home-category-tile="motors"')||!historicalHomeIndex.includes('data-home-category-tile="property"')) throw new Error("Historical Preview 2 marketplace category tiles are incomplete.");
-const previewHomeIndex=historicalHomeIndex;
+const branchHomeIndex = fs.readFileSync(path.join(root,"index.html"),"utf8");
+const branchHomeBlob = gitBlobSha(branchHomeIndex);
+if(branchHomeBlob!==EXPECTED_IMPLEMENTATION_HOME_BLOB) throw new Error("Accepted branch Home source hash mismatch: "+branchHomeBlob);
+if(!branchHomeIndex.includes("The Future is <em>Here</em>")||!branchHomeIndex.includes("Great finds. Local businesses.")||!branchHomeIndex.includes("Your products deserve a marketplace.")) throw new Error("Accepted branch promotional carousel content is incomplete.");
+if(!branchHomeIndex.includes('data-home-category-tile="retail"')||!branchHomeIndex.includes('data-home-category-tile="motors"')||!branchHomeIndex.includes('data-home-category-tile="property"')||!branchHomeIndex.includes('data-home-category-tile="more"')) throw new Error("Accepted branch Home navigation tiles are incomplete.");
+if(!branchHomeIndex.includes("title:'Premium Properties'")||!branchHomeIndex.includes("title:'Featured Products'")) throw new Error("Accepted branch Home category groups are incomplete.");
+const previewHomeIndex=branchHomeIndex;
 fs.writeFileSync(path.join(out,".source-manifest.json"),JSON.stringify({
- source:"actual-rendered-preview2",
- baselineCommit:APPROVED_BASELINE_COMMIT,
-  historicalHomeVisualCommit:HISTORICAL_HOME_VISUAL_COMMIT,
- historicalHomeVisualBlob,
- files:{...expectedBaselineBlobs,"index.html@actual-preview2":historicalHomeVisualBlob}
+ source:"accepted-branch-index",
+ implementationCommit:IMPLEMENTATION_COMMIT,
+ implementationBranch:IMPLEMENTATION_BRANCH,
+ implementationHomeBlob:branchHomeBlob,
+ files:{...expectedBaselineBlobs,"index.html@accepted-branch":branchHomeBlob}
 },null,2)+"\n");
 
 const pages = ["index.html", "retail.html", "seller-motors-houses.html", "property-details.html"];
@@ -133,8 +131,7 @@ for (const page of pages) {
 
   if(page==="index.html"){
     html=html.replace('<html lang="en" class="nova-ads-pending">','<html lang="en">');
-    const approvedHero="<div class=\"nova-hero-slide active\"><div class=\"nova-hero-copy\"><span class=\"nova-hero-kicker\"><span class=\"brand-novaai\"><span>NOVA</span><span>AI</span></span> MARKET</span><h1>Browse fashion, tech and home essentials.</h1><p>Discover great finds from South African sellers.</p><a href=\"./retail.html\">Explore Retail <span aria-hidden=\"true\">→</span></a></div><div class=\"nova-hero-art\" style=\"background-image:linear-gradient(90deg,rgba(16,40,75,.08),rgba(16,40,75,.02)),url(https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85);background-size:cover;background-position:center\" aria-hidden=\"true\"></div></div>";
-    html=html.replace(new RegExp('<div class="nova-hero-slide active">[\\s\\S]*?</div></div>(?=\\s*<div class="nova-hero-slide">)'),approvedHero);
+    // Preserve the accepted branch's three hero slides without substitution.
   }
  html=html.replace(/<script[^>]+novaai-ad-slots\.js[^>]*><\/script>/gi,"");
  html=html.replace(/<script[^>]+novaai-share-visits\.js[^>]*><\/script>/gi,"");
