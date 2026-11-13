@@ -495,6 +495,96 @@ body:not(.product-view-active) .home-carousel::-webkit-scrollbar{display:none}
  body:not(.product-view-active) .home-add-cart{width:38px;height:38px;min-height:38px;flex-basis:38px}
 }
 
+
+/* Product-card dimensions only: match category-tile width and extend tile height by 20%. */
+body:not(.product-view-active) .home-product-card{
+ flex:0 0 calc((100% - 3 * clamp(12px,1.45vw,22px))/4);
+ width:calc((100% - 3 * clamp(12px,1.45vw,22px))/4);
+ max-width:none;
+ aspect-ratio:1.183/1;
+ min-height:0;
+}
+body:not(.product-view-active) .home-product-photo{
+ flex:0 0 56%;
+ min-height:0;
+ aspect-ratio:auto;
+}
+body:not(.product-view-active) .home-product-info{
+ flex:1 1 44%;
+ min-height:0;
+ padding:11px 12px 12px;
+}
+body:not(.product-view-active) .home-product-heading{min-height:35px}
+body:not(.product-view-active) .home-product-info h3{
+ margin:0 0 5px;
+ font-size:clamp(14px,1.25vw,17px);
+ line-height:1.2;
+}
+body:not(.product-view-active) .home-product-seller-block{
+ min-height:0;
+ gap:4px;
+ margin:0 0 7px;
+}
+body:not(.product-view-active) .home-card-seller{font-size:10px}
+body:not(.product-view-active) .home-trust-label{
+ max-width:100%;
+ margin:0;
+ padding:3px 6px;
+ font-size:7px;
+}
+body:not(.product-view-active) .home-product-buy-row{
+ grid-template-columns:minmax(0,1fr) 34px 36px;
+ gap:7px;
+}
+body:not(.product-view-active) .home-product-price{font-size:clamp(15px,1.55vw,19px)}
+body:not(.product-view-active) .home-product-share{
+ width:34px!important;min-width:34px!important;height:34px!important
+}
+body:not(.product-view-active) .home-add-cart{
+ width:36px;height:36px;min-height:36px;flex-basis:36px
+}
+body:not(.product-view-active) .home-property-card{flex-basis:calc((100% - 3 * clamp(12px,1.45vw,22px))/4)}
+body:not(.product-view-active) .home-property-card .home-product-photo{aspect-ratio:auto;min-height:0}
+body:not(.product-view-active) .home-property-card .home-product-info{padding:11px 12px 12px}
+@media(max-width:760px){
+ body:not(.product-view-active) .home-product-card,
+ body:not(.product-view-active) .home-property-card{
+  flex:0 0 calc((100% - 11px)/2);
+  width:calc((100% - 11px)/2);
+  max-width:none;
+  aspect-ratio:.933/1;
+ }
+ body:not(.product-view-active) .home-product-photo{flex-basis:47%}
+ body:not(.product-view-active) .home-product-info{
+  flex:1 1 53%;
+  padding:9px 10px 10px;
+ }
+ body:not(.product-view-active) .home-product-heading{min-height:31px}
+ body:not(.product-view-active) .home-product-info h3{font-size:12px;line-height:1.2;margin-bottom:4px}
+ body:not(.product-view-active) .home-product-seller-block{gap:3px;margin-bottom:5px}
+ body:not(.product-view-active) .home-card-seller{font-size:9px}
+ body:not(.product-view-active) .home-trust-label{font-size:6px;padding:2px 5px}
+ body:not(.product-view-active) .home-product-buy-row{grid-template-columns:minmax(0,1fr) 30px 32px;gap:5px}
+ body:not(.product-view-active) .home-product-price{font-size:clamp(13px,3.6vw,16px)}
+ body:not(.product-view-active) .home-product-share{width:30px!important;min-width:30px!important;height:30px!important}
+ body:not(.product-view-active) .home-add-cart{width:32px;height:32px;min-height:32px;flex-basis:32px}
+ body:not(.product-view-active) .home-property-card .home-product-info{padding:9px 10px 10px}
+}
+@media(max-width:380px){
+ body:not(.product-view-active) .home-product-card,
+ body:not(.product-view-active) .home-property-card{
+  flex-basis:calc((100% - 11px)/2);
+  width:calc((100% - 11px)/2);
+  aspect-ratio:.833/1;
+ }
+ body:not(.product-view-active) .home-product-photo{flex-basis:43%}
+ body:not(.product-view-active) .home-product-info{flex-basis:57%;padding:8px}
+ body:not(.product-view-active) .home-product-heading{min-height:29px}
+ body:not(.product-view-active) .home-product-info h3{font-size:11px}
+ body:not(.product-view-active) .home-product-buy-row{grid-template-columns:minmax(0,1fr) 28px 30px;gap:4px}
+ body:not(.product-view-active) .home-product-share{width:28px!important;min-width:28px!important;height:28px!important}
+ body:not(.product-view-active) .home-add-cart{width:30px;height:30px;min-height:30px;flex-basis:30px}
+}
 </style>
 </head>
 <body>
