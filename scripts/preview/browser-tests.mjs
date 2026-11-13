@@ -178,7 +178,7 @@ try{
  const desktopPhotoChecks=await homePage.locator(".home-product-card").evaluateAll(cards=>cards.map(card=>{const img=card.querySelector(".home-product-photo img");if(!img)return null;const p=card.querySelector(".home-product-photo").getBoundingClientRect(),c=card.getBoundingClientRect();return {loaded:img.complete&&img.naturalWidth>0,fit:getComputedStyle(img).objectFit,photoWidth:p.width,photoHeight:p.height,cardWidth:c.width,cardHeight:c.height}}).filter(Boolean));
  assert(desktopPhotoChecks.length>0&&desktopPhotoChecks.every(x=>x.loaded&&x.fit==="cover"&&Math.abs(x.photoWidth-x.cardWidth)<=2&&Math.abs(x.photoHeight-x.cardHeight)<=2),"Desktop synthetic photographs must load, cover the full card and use cover cropping");
  const desktopTrust=await homePage.locator(".home-trust-label").first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
- assert(desktopTrust>=8,"Desktop Trust Shield label must remain readable; measured "+desktopTrust+"px");
+ assert(desktopTrust>=9,"Desktop Trust Shield label must remain readable; measured "+desktopTrust+"px");
  const desktopShot=await homePage.screenshot({path:"preview-screenshots/home-desktop.png",fullPage:true});
  const mobileContext=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
  const mobilePage=await mobileContext.newPage();
@@ -217,7 +217,7 @@ try{
  const tabletPhotoChecks=await tabletPage.locator(".home-product-card").evaluateAll(cards=>cards.map(card=>{const img=card.querySelector(".home-product-photo img");if(!img)return null;const p=card.querySelector(".home-product-photo").getBoundingClientRect(),c=card.getBoundingClientRect();return {loaded:img.complete&&img.naturalWidth>0,fit:getComputedStyle(img).objectFit,photoWidth:p.width,photoHeight:p.height,cardWidth:c.width,cardHeight:c.height}}).filter(Boolean));
  assert(tabletPhotoChecks.length>0&&tabletPhotoChecks.every(x=>x.loaded&&x.fit==="cover"&&Math.abs(x.photoWidth-x.cardWidth)<=2&&Math.abs(x.photoHeight-x.cardHeight)<=2),"Tablet synthetic photographs must load, cover the full card and use cover cropping");
  const tabletTrust=await tabletPage.locator(".home-trust-label").first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
- assert(tabletTrust>=8,"Tablet Trust Shield label must remain readable; measured "+tabletTrust+"px");
+ assert(tabletTrust>=9,"Tablet Trust Shield label must remain readable; measured "+tabletTrust+"px");
  await tabletPage.screenshot({path:"preview-screenshots/home-tablet.png",fullPage:true});
  await mobilePage.close();await tabletPage.close();await mobileContext.close();await tabletContext.close();
  const homeLayout=await homePage.evaluate(()=>{
