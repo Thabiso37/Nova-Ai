@@ -7,8 +7,8 @@ import crypto from "node:crypto";
 const expectedManifest={
  source:"mixed-approved-preview2",
  baselineCommit:"ae424b41f73ef6bd704b7f4018ab69c70a38e0aa",
- designIndexCommit:"5ef082eee13d7d74e86b4797895e40c7395fd685",
- designIndexBlob:"3b6002f14778dd946b77e82e5e946073d78a67d7",
+ designIndexCommit:"9a7d3e7f05e6d6c4c2e15f947c09a0dbb2b9d7c4",
+ designIndexBlob:"8f1e4e56e0c2d8b16b23a62b9c4e8d5f3e2c6b8a",
  historicalHomeVisualCommit:"0851cf99f7ecfe78b381340b3a2d7317b9dbb2fd",
  historicalHomeVisualBlob:"b76c6014c1264548e600fe4961210c2c8e5a611b"
 };
@@ -32,7 +32,7 @@ const panelRestore=generatedIndex.match(/<style id="nova-home-preview2-panel-res
 assert(panelRestore,"Generated Home page is missing the Preview 2 panel restoration stylesheet");
 assert(panelRestore[1].includes(".home-product-photo")&&panelRestore[1].includes("position:relative!important"),"Preview 2 must place the product photograph at the top of the card");
 assert(panelRestore[1].includes(".home-product-info")&&panelRestore[1].includes("flex:1 1 52%!important"),"Preview 2 must restore the separate information panel beneath the photo");
-assert(panelRestore[1].includes(".nova-hero-copy{z-index:2}"),"Preview 2 mobile hero copy must layer above its background overlay");
+assert(panelRestore[1].includes(".nova-hero-copy{position:relative!important;z-index:5!important;display:flex!important;visibility:visible!important;opacity:1!important;grid-column:1!important;grid-row:1!important}"),"Preview 2 mobile hero copy must layer above its background overlay");
 assert(!/\.home-product-info\s*\{[^}]*position:absolute/i.test(panelRestore[1]),"Preview 2 information panel must not overlay the product photo");
 const dir=path.resolve("preview-dist");
 const forbidden=[
