@@ -633,6 +633,7 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
 #refreshVisitAnalytics{background:var(--blue);color:#fff;min-height:42px}
 @media(max-width:850px){.visit-analytics-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.admin-visit-analytics{padding:14px}.admin-visit-analytics .section-heading{align-items:flex-start}.visit-analytics-stats .analytics-card strong{font-size:19px}}
+.admin-product-share-analytics{margin-top:22px;padding:20px;border:1px solid #dce7f5;border-radius:15px;background:#f8fbff}.admin-product-share-analytics .section-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:17px}.admin-product-share-analytics .section-heading h2{margin:0 0 6px}.admin-product-share-analytics .section-heading p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}.admin-product-share-analytics .share-analytics-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}.admin-product-share-analytics .analytics-card{min-width:0;padding:16px;border:1px solid var(--line);border-radius:12px;background:#fff}.admin-product-share-analytics .analytics-card span{display:block;color:var(--muted);font-size:11px;font-weight:700}.admin-product-share-analytics .analytics-card strong{display:block;margin-top:7px;color:var(--navy);font-size:23px;overflow-wrap:anywhere}.admin-product-share-analytics table{width:100%;border-collapse:collapse;background:#fff;font-size:12px}.admin-product-share-analytics th,.admin-product-share-analytics td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}.admin-product-share-analytics th{background:#f3f6fb;color:#526078;font-size:11px}#lastProductShareTime,#productShareAnalyticsStatus{margin:10px 0;color:var(--muted);font-size:12px}@media(max-width:850px){.admin-product-share-analytics .share-analytics-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.admin-product-share-analytics{padding:14px}.admin-product-share-analytics .section-heading{align-items:flex-start}.admin-product-share-analytics .analytics-card strong{font-size:19px}}
 
 </style>
 </head>
@@ -892,6 +893,12 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
       </table>
     </div>
   </div>
+</div><div class="admin-product-share-analytics" aria-labelledby="productShareAnalyticsHeading">
+<div class="section-heading"><div><h2 id="productShareAnalyticsHeading">Product Sharing Analytics</h2><p>Successful product-share actions across Retail, Motors and Property. Advertisement events are reported separately above.</p></div><button type="button" id="refreshProductShareAnalytics">Refresh</button></div>
+<div class="share-analytics-stats"><article class="analytics-card"><span>Total Product Shares</span><strong id="totalProductShares">0</strong></article><article class="analytics-card"><span>Products Shared</span><strong id="productsSharedCount">0</strong></article><article class="analytics-card"><span>Most-shared Product</span><strong id="mostSharedProduct">—</strong></article></div>
+<p id="lastProductShareTime">Last product share: —</p><p id="productShareAnalyticsStatus" role="status" aria-live="polite">Product sharing analytics will load when Reports &amp; Analytics opens.</p>
+<div class="share-analytics-table"><h3>Shares by Marketplace</h3><div class="table-responsive"><table><thead><tr><th>Marketplace</th><th>Total Shares</th></tr></thead><tbody id="productShareMarketplaceRecords"><tr><td colspan="2">Open Reports &amp; Analytics to load product share analytics.</td></tr></tbody></table></div></div>
+<div class="share-analytics-table"><h3>Individual Product Shares</h3><div class="table-responsive"><table><thead><tr><th>Product</th><th>Product ID</th><th>Marketplace</th><th>Shares</th><th>Last Shared</th></tr></thead><tbody id="productShareRecords"><tr><td colspan="5">Open Reports &amp; Analytics to load product share analytics.</td></tr></tbody></table></div></div>
 </div></section>
 <section class="panel" id="adminSettings"><h2>Administrator Settings</h2><p class="muted">Session and access information for the currently authenticated administrator.</p><div class="record"><strong>Administrator account</strong><p id="settingsAdminEmail">Not signed in</p><p>Authorization: <strong>Supabase Auth + is_novaai_admin() + existing administrator ID check</strong></p><p>Security configuration changes are not exposed here.</p></div><button class="logout" type="button" id="settingsLogoutBtn">Sign Out</button></section>
     <section class="panel" id="ordersFulfilment">
@@ -2074,7 +2081,22 @@ function showAdminWorkspace(workspaceId, updateHash = false) {
   if (selected === "reportsAnalytics" && currentAdmin?.id === ADMIN_ID) {
     loadNovaAIShareAnalytics();
     loadNovaAIAdVisitAnalytics();
+    loadNovaAIProductShareAnalytics();
   }
+}
+
+async function loadNovaAIProductShareAnalytics(){
+const productsBody=document.getElementById("productShareRecords"),marketplaceBody=document.getElementById("productShareMarketplaceRecords"),status=document.getElementById("productShareAnalyticsStatus");if(!productsBody||!marketplaceBody||!status)return;
+productsBody.innerHTML='<tr><td colspan="5">Loading product share analytics…</td></tr>';marketplaceBody.innerHTML='<tr><td colspan="2">Loading…</td></tr>';status.textContent="Loading product sharing totals…";
+try{if(!currentAdmin||currentAdmin.id!==ADMIN_ID)throw new Error("Administrator session is not verified.");const {data,error}=await sb.rpc("get_novaai_product_share_analytics_v1");if(error)throw error;
+const report=data&&typeof data==="object"?data:{},products=Array.isArray(report.products)?report.products:[],marketplaces=Array.isArray(report.marketplaces)?report.marketplaces:[];
+document.getElementById("totalProductShares").textContent=Number(report.total_shares||0).toLocaleString();document.getElementById("productsSharedCount").textContent=Number(report.products_shared||0).toLocaleString();
+const most=report.most_shared_product||null;document.getElementById("mostSharedProduct").textContent=most&&Number(most.share_count||0)>0?String(most.product_name||("Product #"+most.product_id)):"—";
+const last=report.last_share_at?new Date(report.last_share_at):null;document.getElementById("lastProductShareTime").textContent="Last product share: "+(last&&!Number.isNaN(last.getTime())?last.toLocaleString():"Never");
+marketplaceBody.innerHTML=marketplaces.length?marketplaces.map(row=>'<tr><td>'+escapeShareHTML(String(row.marketplace||""))+'</td><td><strong>'+Number(row.share_count||0).toLocaleString()+'</strong></td></tr>').join(""):'<tr><td colspan="2">No marketplace share events recorded.</td></tr>';
+productsBody.innerHTML=products.length?products.map(row=>{const d=row.last_share_at?new Date(row.last_share_at):null,t=d&&!Number.isNaN(d.getTime())?d.toLocaleString():"—";return '<tr><td>'+escapeShareHTML(String(row.product_name||"Product unavailable"))+'</td><td>'+escapeShareHTML(String(row.product_id||""))+'</td><td>'+escapeShareHTML(String(row.marketplace||""))+'</td><td><strong>'+Number(row.share_count||0).toLocaleString()+'</strong></td><td>'+escapeShareHTML(t)+'</td></tr>'}).join(""):'<tr><td colspan="5">No product share events recorded.</td></tr>';
+status.textContent="Loaded "+products.length+" product / marketplace record(s). Product analytics are separate from advertisement analytics.";
+}catch(error){console.error("Product share analytics error:",error);productsBody.innerHTML='<tr><td colspan="5">Unable to load product share analytics.</td></tr>';marketplaceBody.innerHTML='<tr><td colspan="2">Unable to load product share analytics.</td></tr>';status.textContent="Unable to load product share analytics. Check administrator access and refresh."}
 }
 
 function resolveAdminWorkspaceFromHash() {
@@ -2145,6 +2167,7 @@ document.getElementById("resetAdCampaignBtn").onclick=resetAdCampaignForm;
 document.getElementById("refreshAdCampaignsBtn").onclick=loadAdCampaigns;
 document.getElementById("refreshShareAnalytics")?.addEventListener("click", loadNovaAIShareAnalytics);
 document.getElementById("refreshVisitAnalytics")?.addEventListener("click", loadNovaAIAdVisitAnalytics);
+document.getElementById("refreshProductShareAnalytics")?.addEventListener("click", loadNovaAIProductShareAnalytics);
 
 sb.auth.getSession().then(({ data, error }) => {
   if (error) {
