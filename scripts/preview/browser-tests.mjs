@@ -126,6 +126,7 @@ try{
  });
  const propertyGeometry=await measure(propertyCard),retailGeometry=await measure(retailCard);
  assert(Math.abs(propertyGeometry.width-225)<=2&&Math.abs(retailGeometry.width-225)<=2,"Desktop card widths do not match original Preview 2 dimensions");
+ assert.equal(await propertyCard.locator(".home-add-cart").evaluate(el=>el.getBoundingClientRect().width),40,"Desktop cart control must retain the original 40px size");
  assert(Math.abs(propertyGeometry.photoHeight/propertyGeometry.photoWidth-1)<.015,"Premium Properties image ratio must match original 16:9");
  assert(Math.abs(retailGeometry.photoHeight/retailGeometry.photoWidth-1)<.015,"Featured Products image ratio must match original 16:10");
  for(const g of [propertyGeometry,retailGeometry]){
@@ -199,7 +200,7 @@ try{
  await property.waitForFunction(()=>!!document.querySelector(".property-card .property-card-gallery .nova-product-share-card"),null,{timeout:15000});
  const detail=pages.find(x=>x.file==="property-details.html").page;
  await detail.waitForFunction(()=>typeof window.propertyDetailShareButton==="function"&&window.propertyDetailShareButton().length>0,null,{timeout:15000});
- console.log("PASS Retail, Motors, Property listing and Property detail Share controls");
+ console.log("PASS Retail and Property rendered Share controls; Property detail Share control; Motors share helper tested with actual Auto listing 49 (no complete vehicle card to render)");
 
  const mobileContext=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
  await mobileContext.route("**/*",async route=>{
@@ -227,6 +228,7 @@ try{
  const mobileRetail=mobile.locator('[data-home-category="featured-products"] .home-product-card').first();
  const mobilePropertyGeometry=await measure(mobileProperty),mobileRetailGeometry=await measure(mobileRetail);
  assert(Math.abs(mobilePropertyGeometry.width-163.8)<=2&&Math.abs(mobileRetailGeometry.width-163.8)<=2,"Android card widths do not match original Preview 2 dimensions");
+ assert.equal(await mobileProperty.locator(".home-add-cart").evaluate(el=>el.getBoundingClientRect().width),34,"Android cart control must retain the original 34px size");
  assert(Math.abs(mobilePropertyGeometry.photoHeight/mobilePropertyGeometry.photoWidth-1)<.02,"Android Premium Properties image ratio must be 16:9");
  assert(Math.abs(mobileRetailGeometry.photoHeight/mobileRetailGeometry.photoWidth-1)<.02,"Android Featured Products image ratio must be 16:10");
  for(const g of [mobilePropertyGeometry,mobileRetailGeometry])assert(g.infoTop>=g.photoBottom-2&&g.infoHeight>=150,"Android information panel is not separate below its image");
