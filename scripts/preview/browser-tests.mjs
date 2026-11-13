@@ -28,6 +28,19 @@ const productionPattern=url=>{
 };
 const attempts=new Set();
 const failures=[];
+async function auditHomeSections(page,label){
+ const sections=await page.locator("[data-home-category]").evaluateAll(nodes=>nodes.map(section=>{const carousel=section.querySelector(".home-carousel"),cards=carousel?[...carousel.querySelectorAll(".home-product-card")]:[];return {id:section.dataset.homeCategory,hasCarousel:!!carousel,count:cards.length,overflow:carousel?getComputedStyle(carousel).overflowX:null,scrollWidth:carousel?carousel.scrollWidth:0,clientWidth:carousel?carousel.clientWidth:0};}));
+ assert.equal(sections.length,9,label+" must contain all nine Home marketplace sections");
+ for(const item of sections){
+  if(!item.hasCarousel){assert.equal(item.count,0,label+" empty section unexpectedly contains cards: "+item.id);continue;}
+  assert.equal(item.overflow,"auto",label+" section does not preserve horizontal scrolling: "+item.id);
+  if(item.count>1&&item.scrollWidth>item.clientWidth){
+   const moved=await page.locator('[data-home-category="'+item.id+'"] .home-carousel').evaluate(el=>{el.scrollLeft=el.scrollWidth;return el.scrollLeft;});
+   assert(moved>0,label+" carousel could not move horizontally: "+item.id);
+  }
+ }
+ console.log("PASS "+label+" all nine sections and horizontal carousel overflow/scroll behavior");
+}
 let browser;
 try{
  browser=await chromium.launch({headless:true});
@@ -136,6 +149,7 @@ try{
 
  const brandColors=await homePage.locator(".brand-novaai").first().evaluate(el=>({nova:getComputedStyle(el.querySelector("span:first-child")).color,ai:getComputedStyle(el.querySelector("span:last-child")).color}));
  assert.notEqual(brandColors.nova,brandColors.ai,"NOVA blue and final AI yellow brand treatment must remain distinct");
+ await auditHomeSections(homePage,"Desktop");
  const desktopStyle=await homePage.locator(".home-carousel").first().evaluate(el=>({overflow:getComputedStyle(el).overflowX,snap:getComputedStyle(el).scrollSnapType,scrollbar:getComputedStyle(el).scrollbarWidth}));
  assert.equal(desktopStyle.overflow,"auto","Product sections must preserve horizontal scrolling");
  assert.match(desktopStyle.snap,/x/,"Product sections must retain horizontal snap behaviour");
@@ -159,6 +173,7 @@ try{
  mobilePage.on("pageerror",err=>failures.push("mobile Home: "+err.message));
  await mobilePage.goto(origin+"/index.html",{waitUntil:"domcontentloaded",timeout:15000});
  await mobilePage.waitForFunction(()=>document.readyState==="complete"&&!!document.querySelector('[data-home-category="property-sale"] .home-property-card'),null,{timeout:10000});
+ await auditHomeSections(mobilePage,"Phone");
  const mobilePeek=await mobilePage.locator('[data-home-category="property-sale"] .home-carousel').evaluate(el=>{
   const cards=[...el.querySelectorAll(".home-product-card")],box=el.getBoundingClientRect(),a=cards[0]?.getBoundingClientRect();
   const tile=document.querySelector(".home-category-tile")?.getBoundingClientRect();
@@ -183,6 +198,7 @@ try{
  tabletPage.on("request",req=>{if(productionPattern(req.url()))attempts.add(req.url())});
  await tabletPage.goto(origin+"/index.html",{waitUntil:"domcontentloaded",timeout:15000});
  await tabletPage.waitForFunction(()=>document.readyState==="complete"&&!!document.querySelector(".home-category-tile"),null,{timeout:10000});
+ await auditHomeSections(tabletPage,"Tablet");
  await tabletPage.locator(".home-product-card .home-product-photo img").evaluateAll(imgs=>imgs.forEach(img=>{img.loading="eager";}));
  await tabletPage.waitForFunction(()=>[...document.querySelectorAll(".home-product-card .home-product-photo img")].length>0&&[...document.querySelectorAll(".home-product-card .home-product-photo img")].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:20000});
  const tabletPhotoChecks=await tabletPage.locator(".home-product-card").evaluateAll(cards=>cards.map(card=>{const img=card.querySelector(".home-product-photo img");if(!img)return null;const p=card.querySelector(".home-product-photo").getBoundingClientRect(),c=card.getBoundingClientRect();return {loaded:img.complete&&img.naturalWidth>0,fit:getComputedStyle(img).objectFit,photoWidth:p.width,photoHeight:p.height,cardWidth:c.width,cardHeight:c.height}}).filter(Boolean));
