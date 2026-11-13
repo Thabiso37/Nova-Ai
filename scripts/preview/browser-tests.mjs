@@ -114,6 +114,8 @@ try{
   ["motors-featured","Featured Cars and Vehicles"],["motors-nearby","Nearby Motors Listings"],["motors-new","Recently Added Vehicles"],
   ["property-sale","Featured Properties for Sale"],["property-rent","Featured Properties for Rent"],["property-nearby","Nearby Properties"]
  ];
+ assert.equal(await homePage.locator('[data-home-category="property-sale"]').count(),1,"Canonical Property sale selector must be property-sale");
+ assert.equal(await homePage.locator('[data-home-category="premium-properties"]').count(),0,"Stale premium-properties selector must not be used");
  for(const [id,title] of requiredSections){
   const section=homePage.locator('[data-home-category="'+id+'"]');
   assert.equal(await section.count(),1,"Missing Home marketplace section: "+title);
