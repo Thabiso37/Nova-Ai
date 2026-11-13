@@ -44,7 +44,7 @@ async function auditHomeSections(page,label){
 let browser;
 try{
  browser=await chromium.launch({headless:true});
- const context=await browser.newContext();
+ const context=await browser.newContext({viewport:{width:1280,height:900},deviceScaleFactor:1});
  await context.route("**/*",async route=>{
   const url=route.request().url();
   if(productionPattern(url)){attempts.add(url);await route.abort("blockedbyclient");return}
@@ -136,15 +136,42 @@ try{
  assert.equal(await productCard.locator(".home-product-share[data-nova-product-share]").count(),1,"Existing share hook missing");
  assert.equal(await productCard.locator(".home-add-cart[data-add-product]").count(),1,"Existing cart hook missing");
  assert.equal(await productCard.locator(".home-wishlist-toggle[data-home-wishlist]").count(),1,"Existing wishlist hook missing");
- const overlayGeometry=await productCard.evaluate(el=>{
-  const card=el.getBoundingClientRect(),photo=el.querySelector(".home-product-photo"),info=el.querySelector(".home-product-info"),img=photo.getBoundingClientRect(),ir=info.getBoundingClientRect();
-  return {width:card.width,height:card.height,photoPosition:getComputedStyle(photo).position,photoWidth:img.width,photoHeight:img.height,infoPosition:getComputedStyle(info).position,infoBottom:ir.bottom,cardBottom:card.bottom,imageFit:photo.querySelector("img")?getComputedStyle(photo.querySelector("img")).objectFit:"fixture-placeholder"};
+ const panelGeometry=await productCard.evaluate(el=>{
+  const card=el.getBoundingClientRect(),photo=el.querySelector(".home-product-photo"),info=el.querySelector(".home-product-info"),pr=photo.getBoundingClientRect(),ir=info.getBoundingClientRect();
+  return {width:card.width,height:card.height,photoPosition:getComputedStyle(photo).position,photoWidth:pr.width,photoHeight:pr.height,photoBottom:pr.bottom,infoPosition:getComputedStyle(info).position,infoTop:ir.top,infoBottom:ir.bottom,cardBottom:card.bottom,imageFit:photo.querySelector("img")?getComputedStyle(photo.querySelector("img")).objectFit:"fixture-placeholder"};
  });
- assert.equal(overlayGeometry.photoPosition,"absolute","Product photo must cover the card surface");
- assert.equal(overlayGeometry.infoPosition,"absolute","Product information must overlay the photo");
- assert(Math.abs(overlayGeometry.photoWidth-overlayGeometry.width)<=2&&Math.abs(overlayGeometry.photoHeight-overlayGeometry.height)<=2,"Photo background must fill the full card");
- assert(Math.abs(overlayGeometry.infoBottom-overlayGeometry.cardBottom)<=2,"Product information overlay must sit inside the photo at the card bottom");
- assert(["cover","fixture-placeholder"].includes(overlayGeometry.imageFit),"Product photo or honest synthetic placeholder must fill the photo region");
+ assert.equal(panelGeometry.photoPosition,"relative","Preview 2 product photograph must remain in normal card flow at the top");
+ assert.notEqual(panelGeometry.infoPosition,"absolute","Preview 2 product information must be a separate panel, not a photo overlay");
+ assert(Math.abs(panelGeometry.photoWidth-panelGeometry.width)<=2&&panelGeometry.photoHeight<panelGeometry.height,"Product photograph must occupy the top portion of the card, not cover the entire card");
+ assert(panelGeometry.infoTop>=panelGeometry.photoBottom-2,"Product information panel must begin below the photograph");
+ assert(Math.abs(panelGeometry.infoBottom-panelGeometry.cardBottom)<=2,"Product information panel must extend to the card bottom");
+ assert(["cover","fixture-placeholder"].includes(panelGeometry.imageFit),"Product photo or honest synthetic placeholder must fill its photo region");
+ const wishlistButton=productCard.locator(".home-wishlist-toggle[data-home-wishlist]");
+ await wishlistButton.click();
+ assert.equal(await wishlistButton.getAttribute("aria-pressed"),"true","Home wishlist action did not save the selected product");
+ assert((await homePage.evaluate(()=>JSON.parse(localStorage.getItem("novaWishlist")||"[]"))).includes("910001"),"Home wishlist action did not persist its product ID");
+ await wishlistButton.click();
+ assert.equal(await wishlistButton.getAttribute("aria-pressed"),"false","Home wishlist removal did not clear the saved state");
+ assert(!(await homePage.evaluate(()=>JSON.parse(localStorage.getItem("novaWishlist")||"[]"))).includes("910001"),"Home wishlist removal did not persist");
+ const cartButton=productCard.locator(".home-add-cart[data-add-product]");
+ await cartButton.click();
+ assert.equal((await homePage.locator("#homeCartCount").innerText()).trim(),"1","Home Add to Cart did not update the cart count");
+ const savedCart=await homePage.evaluate(()=>JSON.parse(localStorage.getItem("novaMarketplaceCartV1")||"[]"));
+ assert.equal(savedCart[0]?.product?.dbId,910001,"Home Add to Cart did not persist the correct product");
+ const searchInput=homePage.locator("#homeSearchInput");
+ await searchInput.fill("Preview Cotton T-Shirt");
+ assert.equal(await homePage.locator('[data-home-category="retail-featured"] .home-product-card:visible').count(),1,"Home search did not filter to the matching product");
+ await searchInput.fill("");
+ assert.equal(await homePage.locator('[data-home-category="retail-featured"] .home-product-card:visible').count(),4,"Clearing Home search did not restore all featured products");
+ await homePage.evaluate(()=>localStorage.removeItem("novaMarketplaceCartV1"));
+ await homePage.reload({waitUntil:"domcontentloaded"});
+ await homePage.waitForFunction(()=>window.__NOVAAI_PREVIEW__===true&&!!document.querySelector(".home-product-card .home-product-share"),null,{timeout:10000});
+ console.log("PASS Home cart persistence/count, wishlist save/remove, and live product search");
+
+ assert.equal(await productCard.locator(".home-product-info .home-product-heading h3").count(),1,"Product name must remain inside the information panel");
+ assert.equal(await productCard.locator(".home-product-info .home-product-seller-block .home-card-seller").count(),1,"Seller name must remain inside the information panel");
+ assert.equal(await productCard.locator(".home-product-info .home-product-seller-block .home-trust-label").count(),1,"NOVAAI Trust Shield must remain inside the information panel");
+ assert.equal(await productCard.locator(".home-product-info .home-product-buy-row .home-product-price").count(),1,"Product price must remain inside the information panel");
  const approvedDimensions=await homePage.locator(".home-category-tile").first().evaluate(el=>{const r=el.getBoundingClientRect();return {width:r.width,height:r.height}});
  assert(Math.abs(overlayGeometry.width-approvedDimensions.width)<=4,"Product card width must retain the approved category-tile match");
  assert(Math.abs(overlayGeometry.height/approvedDimensions.height-1.2)<=.04,"Product card height must retain the approved approximately 20% extension");
@@ -178,13 +205,13 @@ try{
  await homePage.locator(".home-product-card .home-product-photo img").evaluateAll(imgs=>imgs.forEach(img=>{img.loading="eager";}));
  await homePage.waitForFunction(()=>[...document.querySelectorAll(".home-product-card .home-product-photo img")].length>0&&[...document.querySelectorAll(".home-product-card .home-product-photo img")].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:20000});
  const desktopPhotoChecks=await homePage.locator(".home-product-card").evaluateAll(cards=>cards.map(card=>{const img=card.querySelector(".home-product-photo img");if(!img)return null;const p=card.querySelector(".home-product-photo").getBoundingClientRect(),c=card.getBoundingClientRect();return {loaded:img.complete&&img.naturalWidth>0,fit:getComputedStyle(img).objectFit,photoWidth:p.width,photoHeight:p.height,cardWidth:c.width,cardHeight:c.height}}).filter(Boolean));
- assert(desktopPhotoChecks.length>0&&desktopPhotoChecks.every(x=>x.loaded&&x.fit==="cover"&&Math.abs(x.photoWidth-x.cardWidth)<=2&&Math.abs(x.photoHeight-x.cardHeight)<=2),"Desktop synthetic photographs must load, cover the full card and use cover cropping");
+ assert(desktopPhotoChecks.length>0&&desktopPhotoChecks.every(x=>x.loaded&&x.fit==="cover"&&Math.abs(x.photoWidth-x.cardWidth)<=2&&x.photoHeight<x.cardHeight),"Desktop synthetic photographs must load, cover the top photo region and use cover cropping");
  const desktopTextSpacing=await productCard.locator(".home-product-info").evaluate(el=>{const s=getComputedStyle(el);return {paddingLeft:parseFloat(s.paddingLeft),paddingRight:parseFloat(s.paddingRight),width:el.getBoundingClientRect().width,scrollWidth:el.scrollWidth,clientWidth:el.clientWidth};});
  assert(desktopTextSpacing.paddingLeft>=18&&desktopTextSpacing.paddingRight>=18,"Desktop product text must have comfortable 18px side insets");
  assert(desktopTextSpacing.scrollWidth<=desktopTextSpacing.clientWidth+1,"Desktop product text must not overflow its overlay");
  const desktopTrust=await homePage.locator(".home-trust-label").first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
  assert(desktopTrust>=9,"Desktop Trust Shield label must remain readable; measured "+desktopTrust+"px");
- const desktopShot=await homePage.screenshot({path:"preview-screenshots/home-desktop.png",fullPage:true});
+ const desktopShot=await homePage.screenshot({path:"preview-screenshots/home-desktop-1280.png",fullPage:true});
  const mobileContext=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
  const mobilePage=await mobileContext.newPage();
  mobilePage.on("request",req=>{if(productionPattern(req.url()))attempts.add(req.url())});
@@ -206,14 +233,14 @@ try{
  await mobilePage.waitForFunction(()=>[...document.querySelectorAll(".home-product-card .home-product-photo img")].length>0&&[...document.querySelectorAll(".home-product-card .home-product-photo img")].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:20000});
  const mobileSpacing=await mobilePage.locator(".home-product-info").first().evaluate(el=>{const s=getComputedStyle(el);return {left:parseFloat(s.paddingLeft),right:parseFloat(s.paddingRight),width:el.clientWidth,scrollWidth:el.scrollWidth};});
  assert(mobileSpacing.left>=14&&mobileSpacing.right>=14,"Android product text must have at least 14px side insets");
- assert(mobileSpacing.scrollWidth<=mobileSpacing.width+1,"Android product text must not overflow its overlay");
+ assert(mobileSpacing.scrollWidth<=mobileSpacing.width+1,"Android product text must not overflow its separate information panel");
  const mobileTrust=await mobilePage.locator(".home-trust-label").first().evaluate(el=>({fontSize:parseFloat(getComputedStyle(el).fontSize),text:el.innerText.trim()}));
  assert(mobileTrust.fontSize>=10,"Android Trust Shield must be at least 10px; measured "+mobileTrust.fontSize+"px");
  const photoChecks=await mobilePage.locator(".home-product-card").evaluateAll(cards=>cards.map(card=>{const img=card.querySelector(".home-product-photo img");if(!img)return null;const p=card.querySelector(".home-product-photo").getBoundingClientRect(),c=card.getBoundingClientRect();return {loaded:img.complete&&img.naturalWidth>0,naturalWidth:img.naturalWidth,naturalHeight:img.naturalHeight,fit:getComputedStyle(img).objectFit,photoWidth:p.width,photoHeight:p.height,cardWidth:c.width,cardHeight:c.height}}).filter(Boolean));
  assert(photoChecks.length>0,"Synthetic preview photographs must be present");
  assert(photoChecks.every(x=>x.loaded&&x.fit==="cover"),"Synthetic preview photos must load and use object-fit:cover");
- assert(photoChecks.every(x=>Math.abs(x.photoWidth-x.cardWidth)<=2&&Math.abs(x.photoHeight-x.cardHeight)<=2),"Synthetic preview photo layer must cover the full card");
- await mobilePage.screenshot({path:"preview-screenshots/home-android.png",fullPage:true});
+ assert(photoChecks.every(x=>Math.abs(x.photoWidth-x.cardWidth)<=2&&Math.abs(x.photoHeight-x.cardHeight)<=2),"Synthetic preview photographs must fill the top photo region");
+ await mobilePage.screenshot({path:"preview-screenshots/home-android-390.png",fullPage:true});
  const tabletContext=await browser.newContext({viewport:{width:820,height:1180},deviceScaleFactor:1});
  const tabletPage=await tabletContext.newPage();
  tabletPage.on("request",req=>{if(productionPattern(req.url()))attempts.add(req.url())});
@@ -223,10 +250,10 @@ try{
  await tabletPage.locator(".home-product-card .home-product-photo img").evaluateAll(imgs=>imgs.forEach(img=>{img.loading="eager";}));
  await tabletPage.waitForFunction(()=>[...document.querySelectorAll(".home-product-card .home-product-photo img")].length>0&&[...document.querySelectorAll(".home-product-card .home-product-photo img")].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:20000});
  const tabletPhotoChecks=await tabletPage.locator(".home-product-card").evaluateAll(cards=>cards.map(card=>{const img=card.querySelector(".home-product-photo img");if(!img)return null;const p=card.querySelector(".home-product-photo").getBoundingClientRect(),c=card.getBoundingClientRect();return {loaded:img.complete&&img.naturalWidth>0,fit:getComputedStyle(img).objectFit,photoWidth:p.width,photoHeight:p.height,cardWidth:c.width,cardHeight:c.height}}).filter(Boolean));
- assert(tabletPhotoChecks.length>0&&tabletPhotoChecks.every(x=>x.loaded&&x.fit==="cover"&&Math.abs(x.photoWidth-x.cardWidth)<=2&&Math.abs(x.photoHeight-x.cardHeight)<=2),"Tablet synthetic photographs must load, cover the full card and use cover cropping");
+ assert(tabletPhotoChecks.length>0&&tabletPhotoChecks.every(x=>x.loaded&&x.fit==="cover"&&Math.abs(x.photoWidth-x.cardWidth)<=2&&Math.abs(x.photoHeight-x.cardHeight)<=2),"Tablet synthetic photographs must load, cover the top photo region and use cover cropping");
  const tabletSpacing=await tabletPage.locator(".home-product-info").first().evaluate(el=>{const s=getComputedStyle(el);return {left:parseFloat(s.paddingLeft),right:parseFloat(s.paddingRight),width:el.clientWidth,scrollWidth:el.scrollWidth};});
  assert(tabletSpacing.left>=18&&tabletSpacing.right>=18,"Tablet product text must have comfortable side insets");
- assert(tabletSpacing.scrollWidth<=tabletSpacing.width+1,"Tablet product text must not overflow its overlay");
+ assert(tabletSpacing.scrollWidth<=tabletSpacing.width+1,"Tablet product text must not overflow its separate information panel");
  const tabletTrust=await tabletPage.locator(".home-trust-label").first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
  assert(tabletTrust>=9,"Tablet Trust Shield label must remain readable; measured "+tabletTrust+"px");
  await tabletPage.screenshot({path:"preview-screenshots/home-tablet.png",fullPage:true});
