@@ -42,7 +42,7 @@ Deno.serve(async(req:Request)=>{
  if(req.headers.get("origin")!==allowedOrigin)return jsonResponse(403,{error:"Origin not allowed"});
  if(req.headers.get("apikey")!==publishableKey)return jsonResponse(401,{error:"Invalid API key"});
  const declaredLength=req.headers.get("content-length");
- if(declaredLength!==null&&(!/^\\d+$/.test(declaredLength)||Number(declaredLength)>2048))return jsonResponse(413,{error:"Request body is too large"});
+ if(declaredLength!==null&&(!/^\d+$/.test(declaredLength)||Number(declaredLength)>2048))return jsonResponse(413,{error:"Request body is too large"});
  let rawBody:string;try{rawBody=await readBodyLimited(req,2048)}catch(error){
   if(error instanceof Error&&error.message==="body_too_large")return jsonResponse(413,{error:"Request body is too large"});
   return jsonResponse(400,{error:"Invalid request body"});
