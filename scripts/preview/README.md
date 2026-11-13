@@ -2,7 +2,7 @@
 
 This preview-only workflow creates fixture-backed copies of the approved application
 baseline on an ephemeral GitHub Actions runner. It validates the generated
-\`preview-dist/\` directory; it is not a deployment or publishing workflow.
+`preview-dist/` directory; it is not a deployment or publishing workflow.
 
 ## Browser isolation gate
 
@@ -27,7 +27,7 @@ defence, not a replacement for browser request interception.
 ## Safety boundaries
 
 - The nine application source files are restored from and hash-checked against
-  approved baseline \`10de8ec63bf77ec08e0252592251542ad6ad142a\`.
+  approved baseline `10de8ec63bf77ec08e0252592251542ad6ad142a`.
 - The workflow checks out and verifies the exact tooling revision that triggered
   the run; the application baseline remains independently pinned.
 - No Supabase credentials are used by the workflow.

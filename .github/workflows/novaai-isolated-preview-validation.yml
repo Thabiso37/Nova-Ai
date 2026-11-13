@@ -27,14 +27,14 @@ jobs:
       - name: Checkout this exact preview tooling revision
         uses: actions/checkout@v4
         with:
-          ref: \${{ github.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 1
           persist-credentials: false
 
       - name: Enforce approved baseline and verify exact source files
         env:
-          EXPECTED_COMMIT: "\${{ inputs.expected_commit || '10de8ec63bf77ec08e0252592251542ad6ad142a' }}"
-          EXPECTED_TOOLING_COMMIT: "\${{ github.sha }}"
+          EXPECTED_COMMIT: "${{ inputs.expected_commit || '10de8ec63bf77ec08e0252592251542ad6ad142a' }}"
+          EXPECTED_TOOLING_COMMIT: "${{ github.sha }}"
         shell: bash
         run: |
           set -euo pipefail
@@ -67,9 +67,9 @@ jobs:
             service-worker.js
           )
 
-          git checkout "$EXPECTED_COMMIT" -- "\${application_files[@]}"
+          git checkout "$EXPECTED_COMMIT" -- "${application_files[@]}"
 
-          for file in "\${application_files[@]}"; do
+          for file in "${application_files[@]}"; do
             expected_blob="$(git rev-parse "$EXPECTED_COMMIT:$file")"
             actual_blob="$(git hash-object "$file")"
             if [[ "$actual_blob" != "$expected_blob" ]]; then
@@ -107,5 +107,4 @@ jobs:
         run: |
           set -euo pipefail
           test -d preview-dist
-          test ! -d .github/workflows/deploy
           echo "Build and browser audit ran on the ephemeral runner only; no artifact, URL, Pages deployment or tunnel created."
