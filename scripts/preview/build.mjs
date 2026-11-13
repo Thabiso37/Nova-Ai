@@ -9,7 +9,7 @@ fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
 
 const APPROVED_BASELINE_COMMIT = "ae424b41f73ef6bd704b7f4018ab69c70a38e0aa";
-const DESIGN_INDEX_COMMIT = "1026ffcc40251bb87a84633770f33e719c045c31";
+const DESIGN_INDEX_COMMIT = "b750ecf382cb4675e486bce2335df188deec1158";
 const expectedBaselineBlobs = {
  "index.html":"bd54ed3e3322bc1262589e66f30d65f5050eb363",
  "retail.html":"38277fef4c9a9226da1d9f43736ae78a46fd1f6a",
@@ -31,7 +31,7 @@ for (const [file,expected] of Object.entries(expectedBaselineBlobs)) {
 }
 const designIndex = execFileSync("curl",["-fsSL","https://raw.githubusercontent.com/Thabiso37/Nova-Ai/"+DESIGN_INDEX_COMMIT+"/index.html"],{encoding:"utf8",maxBuffer:8*1024*1024});
 const designIndexBlob=gitBlobSha(designIndex);
-if(designIndexBlob!=="abe7744e514c464db3e9c4c8fa5442ed03f5785b") throw new Error("Approved redesign index.html hash mismatch: "+designIndexBlob);
+if(designIndexBlob!=="a4b99e964f50d760babbf5c64661c378536563b9") throw new Error("Approved redesign index.html hash mismatch: "+designIndexBlob);
 fs.writeFileSync(path.join(out,".source-manifest.json"),JSON.stringify({
  source:"mixed-approved",
  baselineCommit:APPROVED_BASELINE_COMMIT,
