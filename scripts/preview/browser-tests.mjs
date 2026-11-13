@@ -111,6 +111,13 @@ try{
  assert.equal(await firstCard.locator(".home-add-cart[data-add-product]").count(),1,"Existing Home Add to Cart control is missing");
  assert.equal(await firstCard.locator(".home-wishlist-toggle[data-home-wishlist]").count(),1,"Existing Home wishlist control is missing");
 
+ const desktopImageCount=await home.evaluate(async()=>{
+  const images=[...document.querySelectorAll(".home-category-image img,.home-product-photo img")];
+  images.forEach(img=>img.loading="eager");
+  await Promise.all(images.map(img=>img.decode().catch(()=>{})));
+  return images.filter(img=>img.naturalWidth>0&&img.naturalHeight>0).length;
+ });
+ assert(desktopImageCount>=3,"Desktop Preview 2 did not load the actual marketplace product images");
  const propertyCard=home.locator('[data-home-category="premium-properties"] .home-product-card').first();
  const retailCard=home.locator('[data-home-category="featured-products"] .home-product-card').first();
  const measure=async card=>card.evaluate(el=>{
@@ -206,6 +213,14 @@ try{
  mobile.on("pageerror",err=>failures.push("mobile Home: "+err.message));
  await mobile.goto(origin+"/index.html",{waitUntil:"domcontentloaded",timeout:20000});
  await mobile.waitForSelector(".home-product-card .home-product-share",{timeout:15000});
+ const mobileImageCount=await mobile.evaluate(async()=>{
+  const images=[...document.querySelectorAll(".home-category-image img,.home-product-photo img")];
+  images.forEach(img=>img.loading="eager");
+  await Promise.all(images.map(img=>img.decode().catch(()=>{})));
+  return images.filter(img=>img.naturalWidth>0&&img.naturalHeight>0).length;
+ });
+ assert(mobileImageCount>=3,"Android Preview 2 did not load the actual marketplace product images");
+
  const mobileHero=await mobile.locator(".nova-hero-carousel").evaluate(el=>({display:getComputedStyle(el).display,visibility:getComputedStyle(el).visibility,height:el.getBoundingClientRect().height}));
 
  const mobileProperty=mobile.locator('[data-home-category="premium-properties"] .home-product-card').first();
