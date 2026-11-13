@@ -9,7 +9,9 @@ fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
 
 const APPROVED_BASELINE_COMMIT = "ae424b41f73ef6bd704b7f4018ab69c70a38e0aa";
-const DESIGN_INDEX_COMMIT = "ea48a9c62ad41c08016d323a7b193faf6e06b2f2";
+const DESIGN_INDEX_COMMIT = "6fb64689a2413f775344d78464bc7c8497152adb";
+const HISTORICAL_HOME_VISUAL_COMMIT = "0851cf99f7ecfe78b381340b3a2d7317b9dbb2fd";
+const EXPECTED_HISTORICAL_HOME_BLOB = "b76c6014c1264548e600fe4961210c2c8e5a611b";
 const expectedBaselineBlobs = {
  "index.html":"bd54ed3e3322bc1262589e66f30d65f5050eb363",
  "retail.html":"38277fef4c9a9226da1d9f43736ae78a46fd1f6a",
@@ -30,6 +32,7 @@ for (const [file,expected] of Object.entries(expectedBaselineBlobs)) {
  if(actual!==expected) throw new Error("Approved baseline source hash mismatch for "+file+": "+actual);
 }
 const designIndex = execFileSync("curl",["-fsSL","https://raw.githubusercontent.com/Thabiso37/Nova-Ai/"+DESIGN_INDEX_COMMIT+"/index.html"],{encoding:"utf8",maxBuffer:8*1024*1024});
+const historicalHomeIndex = execFileSync("curl",["-fsSL","https://raw.githubusercontent.com/Thabiso37/Nova-Ai/"+HISTORICAL_HOME_VISUAL_COMMIT+"/index.html"],{encoding:"utf8",maxBuffer:8*1024*1024});
 /* Scoped review correction: product-card text inset and alignment only. */
 const productCardTextSpacing = `
 body:not(.product-view-active) .home-product-info{
@@ -71,12 +74,17 @@ body:not(.product-view-active) .home-product-price{
 if(!designIndex.includes("</head>")) throw new Error("Approved Home document head closing tag not found");
 const spacedDesignIndex=designIndex.replace("</head>",'<style id="nova-product-card-text-spacing">'+productCardTextSpacing+'</style></head>');
 const designIndexBlob=gitBlobSha(designIndex);
-if(designIndexBlob!=="ef744b97a27b7756dcf3ecd648c40e731ec444be") throw new Error("Approved redesign index.html hash mismatch: "+designIndexBlob);
+if(designIndexBlob!=="d433f51904aa2350f4b2d35cba3a934340f341e4") throw new Error("Preview 2-restored design index.html hash mismatch: "+designIndexBlob);
+const historicalHomeVisualBlob=gitBlobSha(historicalHomeIndex);
+if(historicalHomeVisualBlob!==EXPECTED_HISTORICAL_HOME_BLOB) throw new Error("Historical Preview 2 source hash mismatch: "+historicalHomeVisualBlob);
+if(!historicalHomeIndex.includes(".home-product-info{display:flex;flex:1;flex-direction:column")) throw new Error("Historical Preview 2 information-panel source could not be verified.");
 fs.writeFileSync(path.join(out,".source-manifest.json"),JSON.stringify({
- source:"mixed-approved",
+ source:"mixed-approved-preview2",
  baselineCommit:APPROVED_BASELINE_COMMIT,
  designIndexCommit:DESIGN_INDEX_COMMIT,
- files:{...expectedBaselineBlobs,"index.html@design":designIndexBlob}
+ historicalHomeVisualCommit:HISTORICAL_HOME_VISUAL_COMMIT,
+ historicalHomeVisualBlob,
+ files:{...expectedBaselineBlobs,"index.html@design":designIndexBlob,"index.html@historical-visual":historicalHomeVisualBlob}
 },null,2)+"\n");
 
 const pages = ["index.html", "retail.html", "seller-motors-houses.html", "property-details.html"];
