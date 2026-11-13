@@ -9,7 +9,7 @@ fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
 
 const APPROVED_BASELINE_COMMIT = "ae424b41f73ef6bd704b7f4018ab69c70a38e0aa";
-const DESIGN_INDEX_COMMIT = "d359fab10492c2af1bb6df61119e097685d925cf";
+const DESIGN_INDEX_COMMIT = "51c52df4c3e340a4c54bdefd22a1b089bb4f243e";
 const expectedBaselineBlobs = {
  "index.html":"bd54ed3e3322bc1262589e66f30d65f5050eb363",
  "retail.html":"38277fef4c9a9226da1d9f43736ae78a46fd1f6a",
@@ -31,7 +31,7 @@ for (const [file,expected] of Object.entries(expectedBaselineBlobs)) {
 }
 const designIndex = execFileSync("curl",["-fsSL","https://raw.githubusercontent.com/Thabiso37/Nova-Ai/"+DESIGN_INDEX_COMMIT+"/index.html"],{encoding:"utf8",maxBuffer:8*1024*1024});
 const designIndexBlob=gitBlobSha(designIndex);
-if(designIndexBlob!=="91cc7cda744424bf0e7a2ede580983c14a89607c") throw new Error("Approved redesign index.html hash mismatch: "+designIndexBlob);
+if(designIndexBlob!=="aa256c3f7c86e8be79c1fa73d8c6e0b63ad3dcd0") throw new Error("Approved redesign index.html hash mismatch: "+designIndexBlob);
 fs.writeFileSync(path.join(out,".source-manifest.json"),JSON.stringify({
  source:"mixed-approved",
  baselineCommit:APPROVED_BASELINE_COMMIT,
@@ -52,14 +52,14 @@ const sellers = [
  {user_id:"fixture-property",store_name:"Sample Homes",store_slug:"sample-homes",description:"Synthetic preview seller",status:"approved",phone:""}
 ];
 const products = [
- {id:910001,name:"Preview Cotton T-Shirt",description:"Synthetic Retail listing for sharing tests.",price:249,category:"Clothing",image_url:"",images:[],seller_name:"Cape Town Everyday",seller_id:"fixture-retail",status:"approved",created_at:"2026-11-13T00:00:00Z"},
- {id:910002,name:"Preview City Car Hatchback",description:"Synthetic Motors listing for sharing tests.",price:89500,category:"Auto",image_url:"",images:[],seller_name:"Demo Motors",seller_id:"fixture-motors",status:"approved",created_at:"2026-11-13T00:00:00Z"},
- {id:910003,name:"Preview Family Home",description:"Synthetic Property listing for sharing tests.\\nProperty type: House\\nBedrooms: 3",price:1250000,category:"Property For Sale",image_url:"",images:[],seller_name:"Sample Homes",seller_id:"fixture-property",status:"approved",created_at:"2026-11-13T00:00:00Z",location:"Pretoria"},
- {id:910004,name:"Preview Modern Apartment",description:"Synthetic Property listing for sharing tests.\\nProperty type: Apartment\\nBedrooms: 2",price:18500,category:"Property To Rent",image_url:"",images:[],seller_name:"Sample Homes",seller_id:"fixture-property",status:"approved",created_at:"2026-11-12T00:00:00Z",location:"Cape Town"},
- {id:910005,name:"Preview Executive Estate",description:"Synthetic Property listing for sharing tests.\\nProperty type: House\\nBedrooms: 4",price:6850000,category:"Property For Sale",image_url:"",images:[],seller_name:"Sample Homes",seller_id:"fixture-property",status:"approved",created_at:"2026-11-11T00:00:00Z",location:"Pretoria"},
- {id:910006,name:"Preview Wireless Earbuds",description:"Synthetic Retail listing.",price:2499,category:"Electronics",image_url:"",images:[],seller_name:"Cape Town Everyday",seller_id:"fixture-retail",status:"approved",created_at:"2026-11-10T00:00:00Z"},
- {id:910007,name:"Preview Smart Watch",description:"Synthetic Retail listing.",price:3999,category:"Electronics",image_url:"",images:[],seller_name:"Cape Town Everyday",seller_id:"fixture-retail",status:"approved",created_at:"2026-11-09T00:00:00Z"},
- {id:910008,name:"Preview UltraBook",description:"Synthetic Retail listing.",price:12999,category:"Computers & Laptops",image_url:"",images:[],seller_name:"Cape Town Everyday",seller_id:"fixture-retail",status:"approved",created_at:"2026-11-08T00:00:00Z"}
+ {id:910001,name:"Preview Cotton T-Shirt",description:"Synthetic Retail listing for sharing tests.",price:249,category:"Clothing",image_url:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=900&auto=format&fit=crop&q=85",images:[],seller_name:"Cape Town Everyday",seller_id:"fixture-retail",status:"approved",created_at:"2026-11-13T00:00:00Z"},
+ {id:910002,name:"Preview City Car Hatchback",description:"Synthetic Motors listing for sharing tests.",price:89500,category:"Auto",image_url:"https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=900&auto=format&fit=crop&q=85",images:[],seller_name:"Demo Motors",seller_id:"fixture-motors",status:"approved",created_at:"2026-11-13T00:00:00Z"},
+ {id:910003,name:"Preview Family Home",description:"Synthetic Property listing for sharing tests.\\nProperty type: House\\nBedrooms: 3",price:1250000,category:"Property For Sale",image_url:"https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=900&auto=format&fit=crop&q=85",images:[],seller_name:"Sample Homes",seller_id:"fixture-property",status:"approved",created_at:"2026-11-13T00:00:00Z",location:"Pretoria"},
+ {id:910004,name:"Preview Modern Apartment",description:"Synthetic Property listing for sharing tests.\\nProperty type: Apartment\\nBedrooms: 2",price:18500,category:"Property To Rent",image_url:"https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=900&auto=format&fit=crop&q=85",images:[],seller_name:"Sample Homes",seller_id:"fixture-property",status:"approved",created_at:"2026-11-12T00:00:00Z",location:"Cape Town"},
+ {id:910005,name:"Preview Executive Estate",description:"Synthetic Property listing for sharing tests.\\nProperty type: House\\nBedrooms: 4",price:6850000,category:"Property For Sale",image_url:"https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=900&auto=format&fit=crop&q=85",images:[],seller_name:"Sample Homes",seller_id:"fixture-property",status:"approved",created_at:"2026-11-11T00:00:00Z",location:"Pretoria"},
+ {id:910006,name:"Preview Wireless Earbuds",description:"Synthetic Retail listing.",price:2499,category:"Electronics",image_url:"https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=900&auto=format&fit=crop&q=85",images:[],seller_name:"Cape Town Everyday",seller_id:"fixture-retail",status:"approved",created_at:"2026-11-10T00:00:00Z"},
+ {id:910007,name:"Preview Smart Watch",description:"Synthetic Retail listing.",price:3999,category:"Electronics",image_url:"https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=900&auto=format&fit=crop&q=85",images:[],seller_name:"Cape Town Everyday",seller_id:"fixture-retail",status:"approved",created_at:"2026-11-09T00:00:00Z"},
+ {id:910008,name:"Preview UltraBook",description:"Synthetic Retail listing.",price:12999,category:"Computers & Laptops",image_url:"https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=900&auto=format&fit=crop&q=85",images:[],seller_name:"Cape Town Everyday",seller_id:"fixture-retail",status:"approved",created_at:"2026-11-08T00:00:00Z"}
 ];
 const locations = sellers.map(s=>({user_id:s.user_id,province:"Gauteng",city:"Pretoria",suburb:"Preview",latitude:null,longitude:null,public_location_enabled:true,approval_status:"approved"}));
 const tables = {Products:products,seller_stores:sellers,seller_public_locations:locations};
