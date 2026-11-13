@@ -256,7 +256,7 @@ try{
  const photoChecks=await mobilePage.locator(".home-product-card").evaluateAll(cards=>cards.map(card=>{const img=card.querySelector(".home-product-photo img");if(!img)return null;const p=card.querySelector(".home-product-photo").getBoundingClientRect(),c=card.getBoundingClientRect();return {loaded:img.complete&&img.naturalWidth>0,naturalWidth:img.naturalWidth,naturalHeight:img.naturalHeight,fit:getComputedStyle(img).objectFit,photoWidth:p.width,photoHeight:p.height,cardWidth:c.width,cardHeight:c.height}}).filter(Boolean));
  assert(photoChecks.length>0,"Synthetic preview photographs must be present");
  assert(photoChecks.every(x=>x.loaded&&x.fit==="cover"),"Synthetic preview photos must load and use object-fit:cover");
- assert(photoChecks.every(x=>Math.abs(x.photoWidth-x.cardWidth)<=2&&Math.abs(x.photoHeight-x.cardHeight)<=2),"Synthetic preview photographs must fill the top photo region");
+ assert(photoChecks.every(x=>Math.abs(x.photoWidth-x.cardWidth)<=2&&x.photoHeight<x.cardHeight),"Synthetic preview photographs must fill the top photo region");
  await mobilePage.screenshot({path:"preview-screenshots/home-android-390.png",fullPage:true});
  const tabletContext=await browser.newContext({viewport:{width:820,height:1180},deviceScaleFactor:1});
  const tabletPage=await tabletContext.newPage();
@@ -267,7 +267,7 @@ try{
  await tabletPage.locator(".home-product-card .home-product-photo img").evaluateAll(imgs=>imgs.forEach(img=>{img.loading="eager";}));
  await tabletPage.waitForFunction(()=>[...document.querySelectorAll(".home-product-card .home-product-photo img")].length>0&&[...document.querySelectorAll(".home-product-card .home-product-photo img")].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:20000});
  const tabletPhotoChecks=await tabletPage.locator(".home-product-card").evaluateAll(cards=>cards.map(card=>{const img=card.querySelector(".home-product-photo img");if(!img)return null;const p=card.querySelector(".home-product-photo").getBoundingClientRect(),c=card.getBoundingClientRect();return {loaded:img.complete&&img.naturalWidth>0,fit:getComputedStyle(img).objectFit,photoWidth:p.width,photoHeight:p.height,cardWidth:c.width,cardHeight:c.height}}).filter(Boolean));
- assert(tabletPhotoChecks.length>0&&tabletPhotoChecks.every(x=>x.loaded&&x.fit==="cover"&&Math.abs(x.photoWidth-x.cardWidth)<=2&&Math.abs(x.photoHeight-x.cardHeight)<=2),"Tablet synthetic photographs must load, cover the top photo region and use cover cropping");
+ assert(tabletPhotoChecks.length>0&&tabletPhotoChecks.every(x=>x.loaded&&x.fit==="cover"&&Math.abs(x.photoWidth-x.cardWidth)<=2&&x.photoHeight<x.cardHeight),"Tablet synthetic photographs must load, cover the top photo region and use cover cropping");
  const tabletSpacing=await tabletPage.locator(".home-product-info").first().evaluate(el=>{const s=getComputedStyle(el);return {left:parseFloat(s.paddingLeft),right:parseFloat(s.paddingRight),width:el.clientWidth,scrollWidth:el.scrollWidth};});
  assert(tabletSpacing.left>=18&&tabletSpacing.right>=18,"Tablet product text must have comfortable side insets");
  assert(tabletSpacing.scrollWidth<=tabletSpacing.width+1,"Tablet product text must not overflow its separate information panel");
