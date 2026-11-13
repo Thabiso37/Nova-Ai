@@ -93,6 +93,38 @@ try{
  }
  const homePage=pages.find(x=>x.file==="index.html").page;
  await homePage.waitForFunction(()=>!!document.querySelector(".home-product-card .home-product-share"),null,{timeout:10000});
+ assert.equal(await homePage.locator(".home-category-tile").count(),4,"Home must show the four approved category shortcuts");
+ assert.equal(await homePage.locator('[data-home-category="premium-properties"] .home-property-card').count(),3,"Home must render three synthetic property cards");
+ assert.equal(await homePage.locator('[data-home-category="featured-products"] .home-product-card').count(),4,"Home must render the synthetic retail product cards");
+ const brandColors=await homePage.locator(".logo .nova-ai").evaluate(el=>({nova:getComputedStyle(el).color,ai:getComputedStyle(el.querySelector("span")).color}));
+ assert.notEqual(brandColors.nova,brandColors.ai,"NOVAAI brand letters must use contrasting NOVA and AI colours");
+ const desktopStyle=await homePage.locator(".home-carousel").first().evaluate(el=>({overflow:getComputedStyle(el).overflowX,snap:getComputedStyle(el).scrollSnapType,scrollbar:getComputedStyle(el).scrollbarWidth}));
+ assert.equal(desktopStyle.overflow,"auto","Product carousels must use natural horizontal scrolling");
+ assert.match(desktopStyle.snap,/x mandatory/,"Product carousels must use horizontal snap");
+ assert.equal(desktopStyle.scrollbar,"none","Product carousels must hide traditional scrollbars");
+ assert.equal(await homePage.locator(".home-carousel .carousel-arrow, .home-carousel .swipe-instruction, .home-carousel .scroll-indicator").count(),0,"Product carousels must not show arrows or swipe instructions");
+ console.log("PASS 2080 Home structure, Trust Shield, brand hierarchy and horizontal carousel styling");
+ fs.mkdirSync("preview-screenshots",{recursive:true});
+ const desktopShot=await homePage.screenshot({path:"preview-screenshots/home-desktop.png",fullPage:true});
+ const mobilePage=await context.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
+ mobilePage.on("request",req=>{if(productionPattern(req.url()))attempts.add(req.url())});
+ mobilePage.on("pageerror",err=>failures.push("mobile Home: "+err.message));
+ await mobilePage.goto(origin+"/index.html",{waitUntil:"domcontentloaded",timeout:15000});
+ await mobilePage.waitForFunction(()=>document.readyState==="complete"&&!!document.querySelector('[data-home-category="premium-properties"] .home-property-card'),null,{timeout:10000});
+ const mobilePeek=await mobilePage.locator('[data-home-category="premium-properties"] .home-carousel').evaluate(el=>{
+  const cards=[...el.querySelectorAll(".home-product-card")],box=el.getBoundingClientRect(),a=cards[0]?.getBoundingClientRect(),b=cards[1]?.getBoundingClientRect();
+  return {width:box.width,overflow:getComputedStyle(el).overflowX,firstFits:!!a&&a.left>=box.left&&a.right<=box.right,secondPeeks:!!b&&b.left<box.right&&b.right>box.right};
+ });
+ assert.equal(mobilePeek.overflow,"auto","Android product carousel must remain touch-scrollable");
+ assert.equal(mobilePeek.firstFits,true,"First property card must fit within the mobile carousel");
+ assert.equal(mobilePeek.secondPeeks,true,"Next property card must be partially visible on Android");
+ await mobilePage.screenshot({path:"preview-screenshots/home-android.png",fullPage:true});
+ const tabletPage=await context.newPage({viewport:{width:820,height:1180},deviceScaleFactor:1});
+ tabletPage.on("request",req=>{if(productionPattern(req.url()))attempts.add(req.url())});
+ await tabletPage.goto(origin+"/index.html",{waitUntil:"domcontentloaded",timeout:15000});
+ await tabletPage.waitForFunction(()=>document.readyState==="complete"&&!!document.querySelector(".home-category-tile"),null,{timeout:10000});
+ await tabletPage.screenshot({path:"preview-screenshots/home-tablet.png",fullPage:true});
+ await mobilePage.close();await tabletPage.close();
  const homeLayout=await homePage.evaluate(()=>{
   const share=document.querySelector(".home-product-card .home-product-share");
   const cart=document.querySelector(".home-product-card .home-add-cart");
