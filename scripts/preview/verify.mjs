@@ -25,7 +25,7 @@ assert.equal(manifest.files["seller-motors-houses.html"],"79dbca93afd3852471df8f
 assert.equal(manifest.files["property-details.html"],"4742bb9372941f388aadf4fe3c4280e008ec8462","Property detail source baseline mismatch");
 const generatedIndex=fs.readFileSync(path.resolve("preview-dist/index.html"),"utf8");
 assert(generatedIndex.includes("2080")||generatedIndex.includes("nova-home-2080"),"Generated Home page does not contain the approved redesign marker");
-const wireCardRegistrations=(generatedIndex.match(/wireCards\\(items\\);/g)||[]).length;
+const wireCardRegistrations=generatedIndex.split("wireCards(items);").length-1;
 assert.equal(wireCardRegistrations,2,"Home card event handlers must be wired once on initial render and once only after a nearby-location refresh");
 assert(!generatedIndex.includes("wireCards(items);updateCartCount();"),"Redundant final Home event-handler registration must remain removed");
 const panelRestore=generatedIndex.match(/<style id="nova-home-preview2-panel-restoration">([\s\S]*?)<\/style>/);
