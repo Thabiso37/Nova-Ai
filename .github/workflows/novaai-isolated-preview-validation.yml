@@ -1,0 +1,41 @@
+name: NOVAAI Isolated Preview Build Validation
+on:
+  workflow_dispatch:
+    inputs:
+      expected_commit:
+        description: Exact PR commit SHA to build
+        required: true
+        type: string
+        default: 10de8ec63bf77ec08e0252592251542ad6ad142a
+permissions:
+  contents: read
+concurrency:
+  group: novaai-isolated-preview-validation
+  cancel-in-progress: true
+jobs:
+  build-and-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact approved PR commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.expected_commit }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verify checked-out commit
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ inputs.expected_commit }}"
+      - name: Generate fixture-backed isolated preview copy
+        run: node scripts/preview/build.mjs
+      - name: Run static isolation verification
+        run: node scripts/preview/verify.mjs
+      - name: Confirm preview build does not publish
+        run: |
+          test -d preview-dist
+          test ! -e .github/workflows/pages.yml
+          echo "Build validated locally on runner only; no artifact, URL, Pages deployment or tunnel created."
