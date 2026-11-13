@@ -26,10 +26,35 @@ function gitBlobSha(value) {
  const bytes=Buffer.isBuffer(value)?value:Buffer.from(value,"utf8");
  return crypto.createHash("sha1").update(Buffer.concat([Buffer.from("blob "+bytes.length+"\0"),bytes])).digest("hex");
 }
-for (const [file,expected] of Object.entries(expectedBaselineBlobs)) {
+const EXPECTED_PR_COMMIT = "49bad87f8f3d67937db4e962372987787865e6fc";
+const expectedPrBlobs = {
+ "index.html":"26f0f1a173a63dbbd69d25e5cfd0ae8af6deef91",
+ "retail.html":"38277fef4c9a9226da1d9f43736ae78a46fd1f6a",
+ "seller-motors-houses.html":"79dbca93afd3852471df8f3fa9bf06f83b33b4d7",
+ "property-details.html":"4742bb9372941f388aadf4fe3c4280e008ec8462",
+ "novaai-product-sharing.js":"db7b7db7fd5d011a15dbf2687b23e162cdc85a76",
+ "nearby-search.js":"9b95cb2c9f4c58909c8c00d2100916b904710147",
+ "novaai-ad-slots.js":"da652ad2ece5d6ec833b189650c9cc74b84fead5",
+ "novaai-share-visits.js":"2e7bb419b3ce0f7d83c7017737bb65bb551c1d59",
+ "service-worker.js":"be127a7c2517d47664c220968e9ff1b454809ad3"
+};
+const intentionalPrSourceChanges = {
+ "index.html": {baselineBlob:"bd54ed3e3322bc1262589e66f30d65f5050eb363",prBlob:"26f0f1a173a63dbbd69d25e5cfd0ae8af6deef91",publishedSource:"historical-approved-preview2-home"},
+ "novaai-product-sharing.js": {baselineBlob:"daed2fbbe87344753f23f89635608475063f8742",prBlob:"db7b7db7fd5d011a15dbf2687b23e162cdc85a76",publishedSource:"final-pr-source-with-preview-only-sanitization"}
+};
+for (const [file,expected] of Object.entries(expectedPrBlobs)) {
  const actual=gitBlobSha(fs.readFileSync(path.join(root,file)));
- if(actual!==expected) throw new Error("Approved baseline source hash mismatch for "+file+": "+actual);
+ if(actual!==expected) throw new Error("Final PR source hash mismatch for "+file+": expected "+expected+" but received "+actual);
+ const baseline=expectedBaselineBlobs[file];
+ const intentional=intentionalPrSourceChanges[file];
+ if(baseline!==expected && (!intentional || intentional.baselineBlob!==baseline || intentional.prBlob!==expected)) {
+  throw new Error("Unreviewed baseline-to-PR source difference for "+file+": baseline "+baseline+", PR "+expected);
+ }
+ if(baseline===expected && actual!==baseline) throw new Error("Unchanged approved baseline source hash mismatch for "+file+": "+actual);
 }
+const differingFiles=Object.keys(expectedPrBlobs).filter(file=>expectedBaselineBlobs[file]!==expectedPrBlobs[file]).sort();
+const approvedDifferenceFiles=Object.keys(intentionalPrSourceChanges).sort();
+if(JSON.stringify(differingFiles)!==JSON.stringify(approvedDifferenceFiles)) throw new Error("The set of baseline-to-PR source differences changed: "+differingFiles.join(", "));
 const historicalHomeIndex = execFileSync("curl",["-fsSL","https://raw.githubusercontent.com/Thabiso37/Nova-Ai/"+HISTORICAL_HOME_VISUAL_COMMIT+"/index.html"],{encoding:"utf8",maxBuffer:8*1024*1024});
 /* Actual rendered Preview 2 is the Home visual authority. Use its complete source,
    not a newer design index that merely shares selected CSS fragments. */
@@ -43,6 +68,20 @@ fs.writeFileSync(path.join(out,".source-manifest.json"),JSON.stringify({
  baselineCommit:APPROVED_BASELINE_COMMIT,
   historicalHomeVisualCommit:HISTORICAL_HOME_VISUAL_COMMIT,
  historicalHomeVisualBlob,
+ prCommit:EXPECTED_PR_COMMIT,
+ downloadedFiles:{...expectedPrBlobs},
+ intentionalPrSourceChanges,
+ publishedSources:{
+  "index.html":{commit:HISTORICAL_HOME_VISUAL_COMMIT,blob:historicalHomeVisualBlob,reason:"Exact approved historical Preview 2 Home visual source; deliberately retained unchanged."},
+  "retail.html":{commit:EXPECTED_PR_COMMIT,blob:expectedPrBlobs["retail.html"],reason:"Final PR source, adapted only for isolated fixtures and CSP."},
+  "seller-motors-houses.html":{commit:EXPECTED_PR_COMMIT,blob:expectedPrBlobs["seller-motors-houses.html"],reason:"Final PR source, adapted only for isolated fixtures and CSP."},
+  "property-details.html":{commit:EXPECTED_PR_COMMIT,blob:expectedPrBlobs["property-details.html"],reason:"Final PR source, adapted only for isolated fixtures and CSP."},
+  "novaai-product-sharing.js":{commit:EXPECTED_PR_COMMIT,blob:expectedPrBlobs["novaai-product-sharing.js"],reason:"Final PR source, with production analytics endpoint removed for preview isolation."},
+  "nearby-search.js":{commit:EXPECTED_PR_COMMIT,blob:expectedPrBlobs["nearby-search.js"],published:false,reason:"Script reference removed from generated HTML for preview isolation."},
+  "novaai-ad-slots.js":{commit:EXPECTED_PR_COMMIT,blob:expectedPrBlobs["novaai-ad-slots.js"],published:false,reason:"Script reference removed from generated HTML for preview isolation."},
+  "novaai-share-visits.js":{commit:EXPECTED_PR_COMMIT,blob:expectedPrBlobs["novaai-share-visits.js"],published:false,reason:"Analytics script reference removed from generated HTML for preview isolation."},
+  "service-worker.js":{commit:EXPECTED_PR_COMMIT,blob:expectedPrBlobs["service-worker.js"],published:false,reason:"Service worker registration and script reference removed from preview."}
+ },
  files:{...expectedBaselineBlobs,"index.html@actual-preview2":historicalHomeVisualBlob}
 },null,2)+"\n");
 
