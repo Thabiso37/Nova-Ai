@@ -7,9 +7,9 @@ const out = path.join(root, "preview-dist");
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
 
-const IMPLEMENTATION_COMMIT = "985e4389bd2dc53a45ab7eb99ce06e4c9aa0aa17";
+const IMPLEMENTATION_COMMIT = "d42d998623c5f4854b44f07c05bcc3903a4ca671";
 const IMPLEMENTATION_BRANCH = "fix/restore-preview2-home-cards";
-const EXPECTED_IMPLEMENTATION_HOME_BLOB = "81ccb4c246845239d574115c3a3389df219540cc";
+const EXPECTED_IMPLEMENTATION_HOME_BLOB = "592bfe7387d11887604987c19749884f0063c5bd";
 const expectedBaselineBlobs = {
  "index.html":"81ccb4c246845239d574115c3a3389df219540cc",
  "retail.html":"38277fef4c9a9226da1d9f43736ae78a46fd1f6a",
