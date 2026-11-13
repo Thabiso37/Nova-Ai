@@ -10,7 +10,7 @@ on:
         description: Exact approved application baseline commit SHA
         required: true
         type: string
-        default: 10de8ec63bf77ec08e0252592251542ad6ad142a
+        default: ae424b41f73ef6bd704b7f4018ab69c70a38e0aa
 
 permissions:
   contents: read
@@ -33,13 +33,13 @@ jobs:
 
       - name: Enforce approved baseline and verify exact source files
         env:
-          EXPECTED_COMMIT: "${{ inputs.expected_commit || '10de8ec63bf77ec08e0252592251542ad6ad142a' }}"
+          EXPECTED_COMMIT: "${{ inputs.expected_commit || 'ae424b41f73ef6bd704b7f4018ab69c70a38e0aa' }}"
           EXPECTED_TOOLING_COMMIT: "${{ github.sha }}"
         shell: bash
         run: |
           set -euo pipefail
 
-          readonly APPROVED_APPLICATION_COMMIT="10de8ec63bf77ec08e0252592251542ad6ad142a"
+          readonly APPROVED_APPLICATION_COMMIT="ae424b41f73ef6bd704b7f4018ab69c70a38e0aa"
 
           if [[ "$EXPECTED_COMMIT" != "$APPROVED_APPLICATION_COMMIT" ]]; then
             echo "::error::expected_commit must equal the approved application baseline $APPROVED_APPLICATION_COMMIT"
