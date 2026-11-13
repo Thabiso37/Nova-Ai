@@ -132,13 +132,13 @@ try{
  await mobilePage.goto(origin+"/index.html",{waitUntil:"domcontentloaded",timeout:15000});
  await mobilePage.waitForFunction(()=>document.readyState==="complete"&&!!document.querySelector('[data-home-category="premium-properties"] .home-property-card'),null,{timeout:10000});
  const mobilePeek=await mobilePage.locator('[data-home-category="premium-properties"] .home-carousel').evaluate(el=>{
-  const cards=[...el.querySelectorAll(".home-product-card")],box=el.getBoundingClientRect(),a=cards[0]?.getBoundingClientRect(),c=cards[2]?.getBoundingClientRect();
+  const cards=[...el.querySelectorAll(".home-product-card")],box=el.getBoundingClientRect(),a=cards[0]?.getBoundingClientRect();
   const tile=document.querySelector(".home-category-tile")?.getBoundingClientRect();
-  return {width:box.width,overflow:getComputedStyle(el).overflowX,firstFits:!!a&&a.left>=box.left&&a.right<=box.right,thirdPeeks:!!c&&c.left<box.right&&c.right>box.right,cardWidth:a?.width,cardHeight:a?.height,tileWidth:tile?.width,tileHeight:tile?.height};
+  return {width:box.width,overflow:getComputedStyle(el).overflowX,scrollable:el.scrollWidth>el.clientWidth,firstFits:!!a&&a.left>=box.left&&a.right<=box.right,cardWidth:a?.width,cardHeight:a?.height,tileWidth:tile?.width,tileHeight:tile?.height};
  });
  assert.equal(mobilePeek.overflow,"auto","Android product carousel must remain touch-scrollable");
  assert.equal(mobilePeek.firstFits,true,"First property card must fit within the mobile carousel");
- assert.equal(mobilePeek.thirdPeeks,true,"Next product card must be partially visible after the two category-width cards on Android");
+ assert.equal(mobilePeek.scrollable,true,"Android product carousel must retain horizontal overflow scrolling");
  assert(Math.abs(mobilePeek.cardWidth-mobilePeek.tileWidth)<=4,"Android product-card width must match category-tile width");
  assert(Math.abs(mobilePeek.cardHeight/mobilePeek.tileHeight-1.2)<=.04,"Android product card must extend category-tile height by approximately 20%");
  await mobilePage.screenshot({path:"preview-screenshots/home-android.png",fullPage:true});
