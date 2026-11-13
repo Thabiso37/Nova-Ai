@@ -7,8 +7,8 @@ import crypto from "node:crypto";
 const expectedManifest={
  source:"mixed-approved-preview2",
  baselineCommit:"ae424b41f73ef6bd704b7f4018ab69c70a38e0aa",
- designIndexCommit:"6fb64689a2413f775344d78464bc7c8497152adb",
- designIndexBlob:"d433f51904aa2350f4b2d35cba3a934340f341e4",
+ designIndexCommit:"b411945588c8c99358e39b20e2a99640c43c4b1c",
+ designIndexBlob:"aff2390ab400eac244b068e6f619e37fc74f3206",
  historicalHomeVisualCommit:"0851cf99f7ecfe78b381340b3a2d7317b9dbb2fd",
  historicalHomeVisualBlob:"b76c6014c1264548e600fe4961210c2c8e5a611b"
 };
@@ -25,6 +25,9 @@ assert.equal(manifest.files["seller-motors-houses.html"],"79dbca93afd3852471df8f
 assert.equal(manifest.files["property-details.html"],"4742bb9372941f388aadf4fe3c4280e008ec8462","Property detail source baseline mismatch");
 const generatedIndex=fs.readFileSync(path.resolve("preview-dist/index.html"),"utf8");
 assert(generatedIndex.includes("2080")||generatedIndex.includes("nova-home-2080"),"Generated Home page does not contain the approved redesign marker");
+const wireCardRegistrations=(generatedIndex.match(/wireCards\\(items\\);/g)||[]).length;
+assert.equal(wireCardRegistrations,2,"Home card event handlers must be wired once on initial render and once only after a nearby-location refresh");
+assert(!generatedIndex.includes("wireCards(items);updateCartCount();"),"Redundant final Home event-handler registration must remain removed");
 const panelRestore=generatedIndex.match(/<style id="nova-home-preview2-panel-restoration">([\s\S]*?)<\/style>/);
 assert(panelRestore,"Generated Home page is missing the Preview 2 panel restoration stylesheet");
 assert(panelRestore[1].includes(".home-product-photo")&&panelRestore[1].includes("position:relative!important"),"Preview 2 must place the product photograph at the top of the card");
