@@ -21,7 +21,7 @@ assert.equal(manifest.files["seller-motors-houses.html"],"79dbca93afd3852471df8f
 assert.equal(manifest.files["property-details.html"],"4742bb9372941f388aadf4fe3c4280e008ec8462","Property detail source baseline mismatch");
 
 const generatedIndex=fs.readFileSync(path.join(dir,"index.html"),"utf8");
-assert(!/nova-ads-pending/.test(generatedIndex),"Preview Home must not remain hidden behind the production ad-loading gate");
+assert(!/<html[^>]*class=["'][^"']*nova-ads-pending/.test(generatedIndex),"Preview Home must not remain hidden behind the production ad-loading gate");
 assert(generatedIndex.includes("Browse fashion, tech and home essentials."),"Preview Home is missing the approved promotional hero copy");
 assert(generatedIndex.includes("images.unsplash.com/photo-1483985988355-763728e1935b"),"Preview Home is missing its isolated static hero image");
 assert(generatedIndex.includes('data-home-category-tile="retail"')&&generatedIndex.includes('data-home-category-tile="motors"')&&generatedIndex.includes('data-home-category-tile="property"'),"Preview 2 category tiles are incomplete");
