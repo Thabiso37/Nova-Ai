@@ -73,13 +73,13 @@ fs.writeFileSync(path.join(out, "preview-fixtures.js"), fixture);
 
 for (const page of pages) {
  let html=fs.readFileSync(path.join(root,page),"utf8");
- html=html.replace(/<script[^>]+supabase-js[^>]*><\\/script>/gi,'<script src="./preview-fixtures.js"></script>');
- html=html.replace(/<script[^>]+novaai-ad-slots\\.js[^>]*><\\/script>/gi,"");
- html=html.replace(/<script[^>]+novaai-share-visits\\.js[^>]*><\\/script>/gi,"");
- html=html.replace(/<script[^>]+nearby-search\\.js[^>]*><\\/script>/gi,"");
- html=html.replace(/<script[^>]+service-worker\\.js[^>]*><\\/script>/gi,"");
- html=html.replace(/https:\\/\\/nxplffvklkopwfjaqexo\\.supabase\\.co\\/functions\\/v1\\/property-contact-action/g,"#preview-contact-disabled");
- html=html.replace(/https:\\/\\/nxplffvklkopwfjaqexo\\.supabase\\.co/g,"https://blocked.invalid");
+ html=html.replace(/<script[^>]+supabase-js[^>]*><\/script>/gi,'<script src="./preview-fixtures.js"></script>');
+ html=html.replace(/<script[^>]+novaai-ad-slots\.js[^>]*><\/script>/gi,"");
+ html=html.replace(/<script[^>]+novaai-share-visits\.js[^>]*><\/script>/gi,"");
+ html=html.replace(/<script[^>]+nearby-search\.js[^>]*><\/script>/gi,"");
+ html=html.replace(/<script[^>]+service-worker\.js[^>]*><\/script>/gi,"");
+ html=html.replace(/https:\/\/nxplffvklkopwfjaqexo\.supabase\.co\/functions\/v1\/property-contact-action/g,"#preview-contact-disabled");
+ html=html.replace(/https:\/\/nxplffvklkopwfjaqexo\.supabase\.co/g,"https://blocked.invalid");
  html=html.replace(/sb_publishable_[A-Za-z0-9_-]+/g,"PREVIEW_NO_KEY");
  html=html.replace(/<head>/i,'<head><meta http-equiv="Content-Security-Policy" content="default-src \'self\'; script-src \'self\' \'unsafe-inline\'; style-src \'self\' \'unsafe-inline\' https:; img-src \'self\' data: blob: https:; font-src \'self\' data: https:; connect-src \'self\'; form-action \'self\'; object-src \'none\'; base-uri \'self\'; frame-src \'none\'; worker-src \'none\'">');
  html=html.replace(/<body([^>]*)>/i,'<body$1><div id="novaai-preview-banner" role="status" style="position:sticky;top:0;z-index:99999;padding:8px;text-align:center;background:#fff1b8;color:#10284b;font:700 12px Arial">ISOLATED PREVIEW — SYNTHETIC DATA — AUTH, ORDERS AND ANALYTICS DISABLED</div>');
@@ -87,8 +87,8 @@ for (const page of pages) {
 }
 let share=fs.readFileSync(path.join(root,"novaai-product-sharing.js"),"utf8");
 share=share.replace(/const endpoint="[^"]+",publishableKey="[^"]+";/,'const endpoint="",publishableKey="";');
-share=share.replace(/function record\\(d\\)\\{[\\s\\S]*?\\nfunction announce/, 'function record(){/* Intentionally disabled in fixture preview. */}\nfunction announce');
-if (/nxplffvklkopwfjaqexo\\.supabase\\.co|sb_publishable_|functions\\/v1/.test(share)) throw new Error("Production endpoint remained in sharing script");
+share=share.replace(/function record\(d\)\{[\s\S]*?\nfunction announce/, 'function record(){/* Intentionally disabled in fixture preview. */}\nfunction announce');
+if (/nxplffvklkopwfjaqexo\.supabase\.co|sb_publishable_|functions\/v1/.test(share)) throw new Error("Production endpoint remained in sharing script");
 fs.writeFileSync(path.join(out,"novaai-product-sharing.js"),share);
 for (const file of ["nearby-search.js","novaai-ad-slots.js","novaai-share-visits.js","service-worker.js"]) {
  // Deliberately do not copy or serve these production-connected scripts.
