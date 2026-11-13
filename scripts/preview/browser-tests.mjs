@@ -109,8 +109,12 @@ try{
  assert.equal(await productCard.locator(".home-product-share[data-nova-product-share]").count(),1,"Existing product sharing hook must be preserved");
  assert.equal(await productCard.locator(".home-add-cart[data-add-product]").count(),1,"Existing add-to-cart hook must be preserved");
  assert.equal(await productCard.locator(".home-wishlist-toggle[data-home-wishlist]").count(),1,"Existing wishlist hook must be preserved");
- const cardGeometry=await productCard.locator(".home-product-photo").evaluate(el=>{const r=el.getBoundingClientRect();return {width:r.width,height:r.height}});
- assert(cardGeometry.width>cardGeometry.height*.9,"Product photography must occupy a prominent upper card region");
+ const cardGeometry=await productCard.evaluate(el=>{const r=el.getBoundingClientRect(),photo=el.querySelector(".home-product-photo").getBoundingClientRect();return {width:r.width,height:r.height,photoWidth:photo.width,photoHeight:photo.height}});
+ const categoryReference=await homePage.locator(".home-category-tile").first().evaluate(el=>{const r=el.getBoundingClientRect();return {width:r.width,height:r.height}});
+ assert(Math.abs(cardGeometry.width-categoryReference.width)<=4,"Desktop product-card width must match category-tile width");
+ assert(Math.abs(cardGeometry.height/categoryReference.height-1.2)<=.035,"Desktop product card must extend category-tile height by approximately 20%");
+ assert(cardGeometry.photoWidth>cardGeometry.photoHeight*1.2,"Product photography must remain visually prominent");
+
  const brandColors=await homePage.locator(".logo .nova-ai").evaluate(el=>({nova:getComputedStyle(el).color,ai:getComputedStyle(el.querySelector("span")).color}));
  assert.notEqual(brandColors.nova,brandColors.ai,"NOVAAI brand letters must use contrasting NOVA and AI colours");
  const desktopStyle=await homePage.locator(".home-carousel").first().evaluate(el=>({overflow:getComputedStyle(el).overflowX,snap:getComputedStyle(el).scrollSnapType,scrollbar:getComputedStyle(el).scrollbarWidth}));
@@ -128,12 +132,15 @@ try{
  await mobilePage.goto(origin+"/index.html",{waitUntil:"domcontentloaded",timeout:15000});
  await mobilePage.waitForFunction(()=>document.readyState==="complete"&&!!document.querySelector('[data-home-category="premium-properties"] .home-property-card'),null,{timeout:10000});
  const mobilePeek=await mobilePage.locator('[data-home-category="premium-properties"] .home-carousel').evaluate(el=>{
-  const cards=[...el.querySelectorAll(".home-product-card")],box=el.getBoundingClientRect(),a=cards[0]?.getBoundingClientRect(),b=cards[1]?.getBoundingClientRect();
-  return {width:box.width,overflow:getComputedStyle(el).overflowX,firstFits:!!a&&a.left>=box.left&&a.right<=box.right,secondPeeks:!!b&&b.left<box.right&&b.right>box.right};
+  const cards=[...el.querySelectorAll(".home-product-card")],box=el.getBoundingClientRect(),a=cards[0]?.getBoundingClientRect(),c=cards[2]?.getBoundingClientRect();
+  const tile=document.querySelector(".home-category-tile")?.getBoundingClientRect();
+  return {width:box.width,overflow:getComputedStyle(el).overflowX,firstFits:!!a&&a.left>=box.left&&a.right<=box.right,thirdPeeks:!!c&&c.left<box.right&&c.right>box.right,cardWidth:a?.width,cardHeight:a?.height,tileWidth:tile?.width,tileHeight:tile?.height};
  });
  assert.equal(mobilePeek.overflow,"auto","Android product carousel must remain touch-scrollable");
  assert.equal(mobilePeek.firstFits,true,"First property card must fit within the mobile carousel");
- assert.equal(mobilePeek.secondPeeks,true,"Next property card must be partially visible on Android");
+ assert.equal(mobilePeek.thirdPeeks,true,"Next product card must be partially visible after the two category-width cards on Android");
+ assert(Math.abs(mobilePeek.cardWidth-mobilePeek.tileWidth)<=4,"Android product-card width must match category-tile width");
+ assert(Math.abs(mobilePeek.cardHeight/mobilePeek.tileHeight-1.2)<=.04,"Android product card must extend category-tile height by approximately 20%");
  await mobilePage.screenshot({path:"preview-screenshots/home-android.png",fullPage:true});
  const tabletContext=await browser.newContext({viewport:{width:820,height:1180},deviceScaleFactor:1});
  const tabletPage=await tabletContext.newPage();
