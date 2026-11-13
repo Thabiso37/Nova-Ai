@@ -190,8 +190,8 @@ try{
  assert.equal(await productCard.locator(".home-product-info .home-product-seller-block .home-trust-label").count(),1,"NOVAAI Trust Shield must remain inside the information panel");
  assert.equal(await productCard.locator(".home-product-info .home-product-buy-row .home-product-price").count(),1,"Product price must remain inside the information panel");
  const approvedDimensions=await homePage.locator(".home-category-tile").first().evaluate(el=>{const r=el.getBoundingClientRect();return {width:r.width,height:r.height}});
- assert(Math.abs(overlayGeometry.width-approvedDimensions.width)<=4,"Product card width must retain the approved category-tile match");
- assert(Math.abs(overlayGeometry.height/approvedDimensions.height-1.2)<=.04,"Product card height must retain the approved approximately 20% extension");
+ assert(Math.abs(panelGeometry.width-approvedDimensions.width)<=4,"Product card width must retain the approved category-tile match");
+ assert(Math.abs(panelGeometry.height/approvedDimensions.height-1.2)<=.04,"Product card height must retain the approved approximately 20% extension");
 
  const brandColors=await homePage.locator(".brand-novaai").first().evaluate(el=>({nova:getComputedStyle(el.querySelector("span:first-child")).color,ai:getComputedStyle(el.querySelector("span:last-child")).color}));
  assert.notEqual(brandColors.nova,brandColors.ai,"NOVA blue and final AI yellow brand treatment must remain distinct");
