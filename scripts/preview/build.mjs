@@ -1,10 +1,43 @@
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
+import { execFileSync } from "node:child_process";
 
 const root = process.cwd();
 const out = path.join(root, "preview-dist");
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
+
+const APPROVED_BASELINE_COMMIT = "ae424b41f73ef6bd704b7f4018ab69c70a38e0aa";
+const DESIGN_INDEX_COMMIT = "4237605170876328fdcdf2225aaf6f892d60755b";
+const expectedBaselineBlobs = {
+ "index.html":"bd54ed3e3322bc1262589e66f30d65f5050eb363",
+ "retail.html":"38277fef4c9a9226da1d9f43736ae78a46fd1f6a",
+ "seller-motors-houses.html":"79dbca93afd3852471df8f3fa9bf06f83b33b4d7",
+ "property-details.html":"4742bb9372941f388aadf4fe3c4280e008ec8462",
+ "novaai-product-sharing.js":"daed2fbbe87344753f23f89635608475063f8742",
+ "nearby-search.js":"9b95cb2c9f4c58909c8c00d2100916b904710147",
+ "novaai-ad-slots.js":"da652ad2ece5d6ec833b189650c9cc74b84fead5",
+ "novaai-share-visits.js":"2e7bb419b3ce0f7d83c7017737bb65bb551c1d59",
+ "service-worker.js":"be127a7c2517d47664c220968e9ff1b454809ad3"
+};
+function gitBlobSha(value) {
+ const bytes=Buffer.isBuffer(value)?value:Buffer.from(value,"utf8");
+ return crypto.createHash("sha1").update(Buffer.concat([Buffer.from("blob "+bytes.length+"\\0"),bytes])).digest("hex");
+}
+for (const [file,expected] of Object.entries(expectedBaselineBlobs)) {
+ const actual=gitBlobSha(fs.readFileSync(path.join(root,file)));
+ if(actual!==expected) throw new Error("Approved baseline source hash mismatch for "+file+": "+actual);
+}
+const designIndex = execFileSync("curl",["-fsSL","https://raw.githubusercontent.com/Thabiso37/Nova-Ai/"+DESIGN_INDEX_COMMIT+"/index.html"],{encoding:"utf8",maxBuffer:8*1024*1024});
+const designIndexBlob=gitBlobSha(designIndex);
+if(designIndexBlob!=="0687855df71c383581ade5fcff99808812e70039") throw new Error("Approved redesign index.html hash mismatch: "+designIndexBlob);
+fs.writeFileSync(path.join(out,".source-manifest.json"),JSON.stringify({
+ source:"mixed-approved",
+ baselineCommit:APPROVED_BASELINE_COMMIT,
+ designIndexCommit:DESIGN_INDEX_COMMIT,
+ files:{...expectedBaselineBlobs,"index.html@design":designIndexBlob}
+},null,2)+"\\n");
 
 const pages = ["index.html", "retail.html", "seller-motors-houses.html", "property-details.html"];
 const required = [...pages, "novaai-product-sharing.js"];
@@ -83,7 +116,7 @@ window.__NOVAAI_PREVIEW_FIXTURES__={products,sellers,locations};
 fs.writeFileSync(path.join(out, "preview-fixtures.js"), fixture);
 
 for (const page of pages) {
- let html=fs.readFileSync(path.join(root,page),"utf8");
+ let html=page==="index.html"?designIndex:fs.readFileSync(path.join(root,page),"utf8");
  html=html.replace(/<script[^>]+supabase-js[^>]*><\/script>/gi,'<script src="./preview-fixtures.js"></script>');
  html=html.replace(/<script[^>]+novaai-ad-slots\.js[^>]*><\/script>/gi,"");
  html=html.replace(/<script[^>]+novaai-share-visits\.js[^>]*><\/script>/gi,"");
