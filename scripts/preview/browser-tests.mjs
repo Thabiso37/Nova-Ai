@@ -112,6 +112,7 @@ try{
  console.log("PASS Motors and Property share URL builders resolve against preview origin");
 
  const propertyPage=pages.find(x=>x.file==="property-details.html").page;
+ await propertyPage.waitForFunction(()=>typeof window.propertyDetailShareButton==="function"&&window.propertyDetailShareButton().length>0,{timeout:10000});
  const propertyDetailUrl=await propertyPage.evaluate(()=>{
   if(typeof window.propertyDetailShareButton!=="function")throw new Error("Property detail share URL builder is not available");
   const html=window.propertyDetailShareButton();const holder=document.createElement("div");holder.innerHTML=html;const button=holder.querySelector("[data-nova-product-share]");return button&&button.dataset.shareUrl;
