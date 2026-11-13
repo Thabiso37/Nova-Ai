@@ -146,6 +146,12 @@ try{
  assert(adControls.dots>=2&&adControls.slides>=2,"Advertising carousel campaigns/dots must remain");
  console.log("PASS 2080 Home structure, Trust Shield, brand hierarchy and horizontal carousel styling");
  fs.mkdirSync("preview-screenshots",{recursive:true});
+ await homePage.locator(".home-product-card .home-product-photo img").evaluateAll(imgs=>imgs.forEach(img=>{img.loading="eager";}));
+ await homePage.waitForFunction(()=>[...document.querySelectorAll(".home-product-card .home-product-photo img")].length>0&&[...document.querySelectorAll(".home-product-card .home-product-photo img")].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:20000});
+ const desktopPhotoChecks=await homePage.locator(".home-product-card").evaluateAll(cards=>cards.map(card=>{const img=card.querySelector(".home-product-photo img");if(!img)return null;const p=card.querySelector(".home-product-photo").getBoundingClientRect(),c=card.getBoundingClientRect();return {loaded:img.complete&&img.naturalWidth>0,fit:getComputedStyle(img).objectFit,photoWidth:p.width,photoHeight:p.height,cardWidth:c.width,cardHeight:c.height}}).filter(Boolean));
+ assert(desktopPhotoChecks.length>0&&desktopPhotoChecks.every(x=>x.loaded&&x.fit==="cover"&&Math.abs(x.photoWidth-x.cardWidth)<=2&&Math.abs(x.photoHeight-x.cardHeight)<=2),"Desktop synthetic photographs must load, cover the full card and use cover cropping");
+ const desktopTrust=await homePage.locator(".home-trust-label").first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
+ assert(desktopTrust>=8,"Desktop Trust Shield label must remain readable; measured "+desktopTrust+"px");
  const desktopShot=await homePage.screenshot({path:"preview-screenshots/home-desktop.png",fullPage:true});
  const mobileContext=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
  const mobilePage=await mobileContext.newPage();
@@ -177,6 +183,12 @@ try{
  tabletPage.on("request",req=>{if(productionPattern(req.url()))attempts.add(req.url())});
  await tabletPage.goto(origin+"/index.html",{waitUntil:"domcontentloaded",timeout:15000});
  await tabletPage.waitForFunction(()=>document.readyState==="complete"&&!!document.querySelector(".home-category-tile"),null,{timeout:10000});
+ await tabletPage.locator(".home-product-card .home-product-photo img").evaluateAll(imgs=>imgs.forEach(img=>{img.loading="eager";}));
+ await tabletPage.waitForFunction(()=>[...document.querySelectorAll(".home-product-card .home-product-photo img")].length>0&&[...document.querySelectorAll(".home-product-card .home-product-photo img")].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:20000});
+ const tabletPhotoChecks=await tabletPage.locator(".home-product-card").evaluateAll(cards=>cards.map(card=>{const img=card.querySelector(".home-product-photo img");if(!img)return null;const p=card.querySelector(".home-product-photo").getBoundingClientRect(),c=card.getBoundingClientRect();return {loaded:img.complete&&img.naturalWidth>0,fit:getComputedStyle(img).objectFit,photoWidth:p.width,photoHeight:p.height,cardWidth:c.width,cardHeight:c.height}}).filter(Boolean));
+ assert(tabletPhotoChecks.length>0&&tabletPhotoChecks.every(x=>x.loaded&&x.fit==="cover"&&Math.abs(x.photoWidth-x.cardWidth)<=2&&Math.abs(x.photoHeight-x.cardHeight)<=2),"Tablet synthetic photographs must load, cover the full card and use cover cropping");
+ const tabletTrust=await tabletPage.locator(".home-trust-label").first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
+ assert(tabletTrust>=8,"Tablet Trust Shield label must remain readable; measured "+tabletTrust+"px");
  await tabletPage.screenshot({path:"preview-screenshots/home-tablet.png",fullPage:true});
  await mobilePage.close();await tabletPage.close();await mobileContext.close();await tabletContext.close();
  const homeLayout=await homePage.evaluate(()=>{
