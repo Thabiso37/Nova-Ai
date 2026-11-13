@@ -42,6 +42,8 @@ for(const name of fs.readdirSync(dir).filter(n=>fs.statSync(path.join(dir,n)).is
   assert(source.includes("preview-fixtures.js"),name+" missing actual-data preview adapter");
   assert(source.includes("connect-src 'self'"),name+" missing restrictive preview CSP");
   assert(source.includes("novaai-preview-banner"),name+" missing isolated-preview warning");
+  assert(source.includes("READ-ONLY ACTUAL LISTING SNAPSHOT"),name+" missing actual-data preview label");
+  assert(!source.includes("SYNTHETIC DATA"),name+" still labels actual marketplace records as synthetic");
  }
 }
 const sharing=fs.readFileSync(path.join(dir,"novaai-product-sharing.js"),"utf8");
