@@ -5,21 +5,31 @@ import vm from "node:vm";
 import crypto from "node:crypto";
 
 const expectedManifest={
- source:"mixed-approved",
+ source:"mixed-approved-preview2",
  baselineCommit:"ae424b41f73ef6bd704b7f4018ab69c70a38e0aa",
- designIndexCommit:"ea48a9c62ad41c08016d323a7b193faf6e06b2f2",
- designIndexBlob:"ef744b97a27b7756dcf3ecd648c40e731ec444be"
+ designIndexCommit:"6fb64689a2413f775344d78464bc7c8497152adb",
+ designIndexBlob:"d433f51904aa2350f4b2d35cba3a934340f341e4",
+ historicalHomeVisualCommit:"0851cf99f7ecfe78b381340b3a2d7317b9dbb2fd",
+ historicalHomeVisualBlob:"b76c6014c1264548e600fe4961210c2c8e5a611b"
 };
 const manifest=JSON.parse(fs.readFileSync(path.resolve("preview-dist/.source-manifest.json"),"utf8"));
 assert.equal(manifest.source,expectedManifest.source,"Unexpected preview source mode");
 assert.equal(manifest.baselineCommit,expectedManifest.baselineCommit,"Preview baseline commit mismatch");
 assert.equal(manifest.designIndexCommit,expectedManifest.designIndexCommit,"Home redesign commit mismatch");
-assert.equal(manifest.files["index.html@design"],expectedManifest.designIndexBlob,"Home redesign blob mismatch");
+assert.equal(manifest.files["index.html@design"],expectedManifest.designIndexBlob,"Preview 2-restored Home source blob mismatch");
+assert.equal(manifest.historicalHomeVisualCommit,expectedManifest.historicalHomeVisualCommit,"Historical Preview 2 visual authority commit mismatch");
+assert.equal(manifest.historicalHomeVisualBlob,expectedManifest.historicalHomeVisualBlob,"Historical Preview 2 visual authority blob mismatch");
+assert.equal(manifest.files["index.html@historical-visual"],expectedManifest.historicalHomeVisualBlob,"Historical Preview 2 visual source blob mismatch");
 assert.equal(manifest.files["retail.html"],"38277fef4c9a9226da1d9f43736ae78a46fd1f6a","Retail source baseline mismatch");
 assert.equal(manifest.files["seller-motors-houses.html"],"79dbca93afd3852471df8f3fa9bf06f83b33b4d7","Motors/Property source baseline mismatch");
 assert.equal(manifest.files["property-details.html"],"4742bb9372941f388aadf4fe3c4280e008ec8462","Property detail source baseline mismatch");
 const generatedIndex=fs.readFileSync(path.resolve("preview-dist/index.html"),"utf8");
 assert(generatedIndex.includes("2080")||generatedIndex.includes("nova-home-2080"),"Generated Home page does not contain the approved redesign marker");
+const panelRestore=generatedIndex.match(/<style id="nova-home-preview2-panel-restoration">([\\s\\S]*?)<\\/style>/);
+assert(panelRestore,"Generated Home page is missing the Preview 2 panel restoration stylesheet");
+assert(panelRestore[1].includes(".home-product-photo")&&panelRestore[1].includes("position:relative!important"),"Preview 2 must place the product photograph at the top of the card");
+assert(panelRestore[1].includes(".home-product-info")&&panelRestore[1].includes("flex:1 1 52%!important"),"Preview 2 must restore the separate information panel beneath the photo");
+assert(!/\\.home-product-info\\s*\\{[^}]*position:absolute/i.test(panelRestore[1]),"Preview 2 information panel must not overlay the product photo");
 const dir=path.resolve("preview-dist");
 const forbidden=[
  /nxplffvklkopwfjaqexo/i,
