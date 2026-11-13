@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import assert from "node:assert/strict";
+import vm from "node:vm";
 const dir=path.resolve("preview-dist");
 const forbidden=[/nxplffvklkopwfjaqexo\.supabase\.co/i,/sb_publishable_[A-Za-z0-9_-]+/i,/\/rest\/v1\//i,/\/auth\/v1\//i,/\/functions\/v1\//i];
 const files=fs.readdirSync(dir).filter(f=>/\.(html|js|json|webmanifest)$/.test(f));
@@ -10,4 +11,18 @@ const sharing=fs.readFileSync(path.join(dir,"novaai-product-sharing.js"),"utf8")
 assert(sharing.includes("navigator.share"),"Native share implementation was not preserved");
 assert(sharing.includes("navigator.clipboard"),"Clipboard fallback was not preserved");
 assert(/function record\(\)\{\/\* Intentionally disabled/.test(sharing),"Analytics recorder is not explicitly disabled");
-console.log("PASS: static preview isolation scan; native share and clipboard code retained; analytics disabled.");
+const fixtureSource=fs.readFileSync(path.join(dir,"preview-fixtures.js"),"utf8");
+const sandbox={window:{}};
+vm.runInNewContext(fixtureSource,sandbox);
+const mock=sandbox.window.supabase.createClient();
+const retail=await mock.from("Products").select("*").eq("id",910001).maybeSingle();
+assert.equal(retail.data.name,"Preview Cotton T-Shirt","Synthetic fixture query failed");
+const write=await mock.from("Products").insert({name:"must not persist"});
+assert.equal(write.error.code,"PREVIEW_DISABLED","Database insert was not rejected");
+const rpc=await mock.rpc("place_order");
+assert.equal(rpc.error.code,"PREVIEW_DISABLED","RPC was not rejected");
+const login=await mock.auth.signInWithPassword({email:"x",password:"x"});
+assert.equal(login.error.code,"PREVIEW_DISABLED","Authentication was not rejected");
+const session=await mock.auth.getSession();
+assert.equal(session.data.session,null,"Preview unexpectedly has an authenticated session");
+console.log("PASS: static isolation scan; synthetic fixture query; writes/RPC/auth rejection; native share and clipboard source retained; analytics disabled.");
