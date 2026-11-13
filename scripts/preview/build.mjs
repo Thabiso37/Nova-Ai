@@ -9,7 +9,7 @@ fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
 
 const APPROVED_BASELINE_COMMIT = "ae424b41f73ef6bd704b7f4018ab69c70a38e0aa";
-const DESIGN_INDEX_COMMIT = "6fb64689a2413f775344d78464bc7c8497152adb";
+const DESIGN_INDEX_COMMIT = "b411945588c8c99358e39b20e2a99640c43c4b1c";
 const HISTORICAL_HOME_VISUAL_COMMIT = "0851cf99f7ecfe78b381340b3a2d7317b9dbb2fd";
 const EXPECTED_HISTORICAL_HOME_BLOB = "b76c6014c1264548e600fe4961210c2c8e5a611b";
 const expectedBaselineBlobs = {
@@ -74,7 +74,7 @@ body:not(.product-view-active) .home-product-price{
 if(!designIndex.includes("</head>")) throw new Error("Approved Home document head closing tag not found");
 const spacedDesignIndex=designIndex.replace("</head>",'<style id="nova-product-card-text-spacing">'+productCardTextSpacing+'</style></head>');
 const designIndexBlob=gitBlobSha(designIndex);
-if(designIndexBlob!=="d433f51904aa2350f4b2d35cba3a934340f341e4") throw new Error("Preview 2-restored design index.html hash mismatch: "+designIndexBlob);
+if(designIndexBlob!=="aff2390ab400eac244b068e6f619e37fc74f3206") throw new Error("Preview 2-restored design index.html hash mismatch: "+designIndexBlob);
 const historicalHomeVisualBlob=gitBlobSha(historicalHomeIndex);
 if(historicalHomeVisualBlob!==EXPECTED_HISTORICAL_HOME_BLOB) throw new Error("Historical Preview 2 source hash mismatch: "+historicalHomeVisualBlob);
 if(!historicalHomeIndex.includes(".home-product-info{display:flex;flex:1;flex-direction:column")) throw new Error("Historical Preview 2 information-panel source could not be verified.");
