@@ -1,0 +1,206 @@
+{
+  "snapshotAt": "2026-11-14",
+  "source": "Read-only snapshot of approved public NOVAAI MARKET listings and approved seller-store metadata from Supabase",
+  "project": "nxplffvklkopwfjaqexo",
+  "products": [
+    {
+      "id": 63,
+      "name": "test phone a12",
+      "description": "Test alaska store",
+      "price": "500.00",
+      "category": "Accessories",
+      "image_url": "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/f15815c0-3cca-450d-a1d4-1f4d5e16510a/1794428678916_0.jpg",
+      "images": [
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/f15815c0-3cca-450d-a1d4-1f4d5e16510a/1794428678916_0.jpg",
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/f15815c0-3cca-450d-a1d4-1f4d5e16510a/1794428680738_1.jpg",
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/f15815c0-3cca-450d-a1d4-1f4d5e16510a/1794428681845_2.jpg",
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/f15815c0-3cca-450d-a1d4-1f4d5e16510a/1794428682909_3.jpg"
+      ],
+      "seller_name": "Alaska store",
+      "seller_id": "f15815c0-3cca-450d-a1d4-1f4d5e16510a",
+      "status": "approved",
+      "created_at": "2026-11-11 20:24:44.416746+00"
+    },
+    {
+      "id": 61,
+      "name": "Property",
+      "description": "Test\n\nNOVAAI DETAILS\nProperty type: House\nLocation: Pretoria,Gauteng",
+      "price": "185.00",
+      "category": "Property For Sale",
+      "image_url": "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/25e830fe-f387-4525-934e-af45fc6ac10f/1793904341777_0.jpg",
+      "images": [
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/25e830fe-f387-4525-934e-af45fc6ac10f/1793904341777_0.jpg",
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/25e830fe-f387-4525-934e-af45fc6ac10f/1793904344384_1.jpg"
+      ],
+      "seller_name": "Property",
+      "seller_id": "25e830fe-f387-4525-934e-af45fc6ac10f",
+      "status": "approved",
+      "created_at": "2026-11-05 18:45:50.082845+00"
+    },
+    {
+      "id": 49,
+      "name": "Car Dashboard Phone Mount",
+      "description": "Car",
+      "price": "755.00",
+      "category": "Auto",
+      "image_url": "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793853906785_0.jpg",
+      "images": [
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793853906785_0.jpg"
+      ],
+      "seller_name": "Raider Retail",
+      "seller_id": "7bfceb27-1ce9-47af-80c5-398de121031f",
+      "status": "approved",
+      "created_at": "2026-11-05 04:45:11.94039+00"
+    },
+    {
+      "id": 48,
+      "name": "1616",
+      "description": "1616",
+      "price": "500.00",
+      "category": "Auto",
+      "image_url": "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793536144158_0.jpg",
+      "images": [
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793536144158_0.jpg"
+      ],
+      "seller_name": "Raider Retail",
+      "seller_id": "7bfceb27-1ce9-47af-80c5-398de121031f",
+      "status": "approved",
+      "created_at": "2026-11-01 12:29:06.598452+00"
+    },
+    {
+      "id": 47,
+      "name": "Auto",
+      "description": "Cars",
+      "price": "509.00",
+      "category": "Auto",
+      "image_url": "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793535528380_0.jpg",
+      "images": [
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793535528380_0.jpg",
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793535532771_1.jpg"
+      ],
+      "seller_name": "Raider Retail",
+      "seller_id": "7bfceb27-1ce9-47af-80c5-398de121031f",
+      "status": "approved",
+      "created_at": "2026-11-01 12:18:57.044166+00"
+    },
+    {
+      "id": 46,
+      "name": "Bike",
+      "description": "Bike",
+      "price": "7809.00",
+      "category": "Auto",
+      "image_url": "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793535444368_0.jpg",
+      "images": [
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793535444368_0.jpg",
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793535445506_1.jpg",
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793535446605_2.jpg"
+      ],
+      "seller_name": "Raider Retail",
+      "seller_id": "7bfceb27-1ce9-47af-80c5-398de121031f",
+      "status": "approved",
+      "created_at": "2026-11-01 12:17:28.625075+00"
+    },
+    {
+      "id": 44,
+      "name": "Test",
+      "description": "Test",
+      "price": "80.00",
+      "category": "Auto",
+      "image_url": "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793534481674_0.jpg",
+      "images": [
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793534481674_0.jpg",
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793534483597_1.jpg",
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793534486071_2.jpg"
+      ],
+      "seller_name": "Raider Retail",
+      "seller_id": "7bfceb27-1ce9-47af-80c5-398de121031f",
+      "status": "approved",
+      "created_at": "2026-11-01 12:01:32.777771+00"
+    },
+    {
+      "id": 40,
+      "name": "Test Black T-Shirt",
+      "description": "T shirt",
+      "price": "200.00",
+      "category": "Office & Stationery",
+      "image_url": "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793467096936_0.jpg",
+      "images": [
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793467096936_0.jpg",
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793467098760_1.jpg",
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793467100345_2.jpg",
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793467101880_3.jpg",
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793467103629_4.jpg",
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/7bfceb27-1ce9-47af-80c5-398de121031f/1793467106165_5.jpg"
+      ],
+      "seller_name": "Nova Test Store",
+      "seller_id": "7bfceb27-1ce9-47af-80c5-398de121031f",
+      "status": "approved",
+      "created_at": "2026-10-31 17:18:29.250499+00"
+    },
+    {
+      "id": 38,
+      "name": "Raider",
+      "description": "Hggg",
+      "price": "50.00",
+      "category": "Groceries",
+      "image_url": "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/2fc320e9-40b6-407f-9e71-e8a1999956a7/1793453793807_0.jpg",
+      "images": [
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/2fc320e9-40b6-407f-9e71-e8a1999956a7/1793453793807_0.jpg",
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/2fc320e9-40b6-407f-9e71-e8a1999956a7/1793453795649_1.jpg",
+        "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/2fc320e9-40b6-407f-9e71-e8a1999956a7/1793453797905_2.jpg"
+      ],
+      "seller_name": "Nova Test Store",
+      "seller_id": "7bfceb27-1ce9-47af-80c5-398de121031f",
+      "status": "approved",
+      "created_at": "2026-10-31 13:36:41.360411+00"
+    },
+    {
+      "id": 25,
+      "name": "746526",
+      "description": "Raider",
+      "price": "7.00",
+      "category": "Electronics",
+      "image_url": "https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/Nova%20AI/2fc320e9-40b6-407f-9e71-e8a1999956a7/1793211728209.jpg",
+      "images": [],
+      "seller_name": "Skeleme",
+      "seller_id": "7bfceb27-1ce9-47af-80c5-398de121031f",
+      "status": "approved",
+      "created_at": "2026-10-28 18:22:12.189973+00"
+    }
+  ],
+  "stores": [
+    {
+      "user_id": "f15815c0-3cca-450d-a1d4-1f4d5e16510a",
+      "store_name": "Alaska store",
+      "store_slug": "alaska-store-07c2ddd3",
+      "description": "",
+      "status": "approved"
+    },
+    {
+      "user_id": "25e830fe-f387-4525-934e-af45fc6ac10f",
+      "store_name": "Property",
+      "store_slug": "property-ba6fae8a",
+      "description": "",
+      "status": "approved"
+    },
+    {
+      "user_id": "7bfceb27-1ce9-47af-80c5-398de121031f",
+      "store_name": "Raider Retail",
+      "store_slug": "raider-retail",
+      "description": "",
+      "status": "approved"
+    }
+  ],
+  "locations": [
+    {
+      "user_id": "7bfceb27-1ce9-47af-80c5-398de121031f",
+      "province": "Gauteng",
+      "city": "Pretoria",
+      "suburb": "Centurion",
+      "latitude": null,
+      "longitude": null,
+      "public_location_enabled": true,
+      "approval_status": "approved"
+    }
+  ]
+}
