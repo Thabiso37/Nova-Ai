@@ -35,7 +35,7 @@ async function auditHomeSections(page,label){
   if(!item.hasCarousel){assert.equal(item.count,0,label+" empty section unexpectedly contains cards: "+item.id);continue;}
   assert.equal(item.overflow,"auto",label+" section does not preserve horizontal scrolling: "+item.id);
   if(item.count>1&&item.scrollWidth>item.clientWidth){
-   const moved=await page.locator('[data-home-category="'+item.id+'"] .home-carousel').evaluate(el=>{el.scrollLeft=el.scrollWidth;return el.scrollLeft;});
+   const moved=await page.locator('[data-home-category="'+item.id+'"] .home-carousel').evaluate(el=>{el.scrollLeft=el.scrollWidth;const moved=el.scrollLeft;el.scrollLeft=0;return moved;});
    assert(moved>0,label+" carousel could not move horizontally: "+item.id);
   }
  }
@@ -49,7 +49,7 @@ try{
   const url=route.request().url();
   if(productionPattern(url)){attempts.add(url);await route.abort("blockedbyclient");return}
   const parsed=new URL(url);
-  if(parsed.origin!==origin){await route.abort("blockedbyclient");return}
+  if(parsed.origin!==origin&&parsed.hostname!=="images.unsplash.com"){await route.abort("blockedbyclient");return}
   await route.continue();
  });
  context.routeWebSocket("**/*",socketRoute=>{
