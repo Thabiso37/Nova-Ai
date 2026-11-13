@@ -161,7 +161,7 @@ window.__NOVAAI_PREVIEW_FIXTURES__={products,sellers,locations};
 fs.writeFileSync(path.join(out, "preview-fixtures.js"), fixture);
 
 for (const page of pages) {
- let html=page==="index.html"?designIndex:fs.readFileSync(path.join(root,page),"utf8");
+ let html=page==="index.html"?spacedDesignIndex:fs.readFileSync(path.join(root,page),"utf8");
  html=html.replace(/<script[^>]+supabase-js[^>]*><\/script>/gi,'<script src="./preview-fixtures.js"></script>');
  html=html.replace(/<script[^>]+novaai-ad-slots\.js[^>]*><\/script>/gi,"");
  html=html.replace(/<script[^>]+novaai-share-visits\.js[^>]*><\/script>/gi,"");
