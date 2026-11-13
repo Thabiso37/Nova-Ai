@@ -150,7 +150,10 @@ try{
  await wishlistButton.scrollIntoViewIfNeeded();
  const wishlistHit=await wishlistButton.evaluate(el=>{const r=el.getBoundingClientRect(),hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return {visible:r.width>0&&r.height>0,hitButton:hit===el||el.contains(hit),hitTag:hit?.tagName,hitClass:hit?.className};});
  assert(wishlistHit.visible&&wishlistHit.hitButton,"Home wishlist control is covered or not hit-testable: "+JSON.stringify(wishlistHit));
+ await wishlistButton.evaluate(el=>{window.__homeWishlistClickObserved=false;el.addEventListener("click",()=>{window.__homeWishlistClickObserved=true},{capture:true,once:true});});
  await wishlistButton.click();
+ const wishlistDebug=await homePage.evaluate(()=>({observed:window.__homeWishlistClickObserved,pressed:document.querySelector(".home-product-card .home-wishlist-toggle")?.getAttribute("aria-pressed"),stored:localStorage.getItem("novaWishlist"),button:document.querySelector(".home-product-card .home-wishlist-toggle")?.outerHTML,errors:window.__NOVAAI_PREVIEW__?null:"preview flag missing"}));
+ console.log("Home wishlist diagnostic: "+JSON.stringify(wishlistDebug));
  assert.equal(await wishlistButton.getAttribute("aria-pressed"),"true","Home wishlist action did not save the selected product");
  assert((await homePage.evaluate(()=>JSON.parse(localStorage.getItem("novaWishlist")||"[]"))).includes("910001"),"Home wishlist action did not persist its product ID");
  await wishlistButton.click({force:true});
