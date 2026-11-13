@@ -106,7 +106,8 @@ try{
  console.log("PASS 2080 Home structure, Trust Shield, brand hierarchy and horizontal carousel styling");
  fs.mkdirSync("preview-screenshots",{recursive:true});
  const desktopShot=await homePage.screenshot({path:"preview-screenshots/home-desktop.png",fullPage:true});
- const mobilePage=await context.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
+ const mobileContext=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
+ const mobilePage=await mobileContext.newPage();
  mobilePage.on("request",req=>{if(productionPattern(req.url()))attempts.add(req.url())});
  mobilePage.on("pageerror",err=>failures.push("mobile Home: "+err.message));
  await mobilePage.goto(origin+"/index.html",{waitUntil:"domcontentloaded",timeout:15000});
@@ -119,12 +120,13 @@ try{
  assert.equal(mobilePeek.firstFits,true,"First property card must fit within the mobile carousel");
  assert.equal(mobilePeek.secondPeeks,true,"Next property card must be partially visible on Android");
  await mobilePage.screenshot({path:"preview-screenshots/home-android.png",fullPage:true});
- const tabletPage=await context.newPage({viewport:{width:820,height:1180},deviceScaleFactor:1});
+ const tabletContext=await browser.newContext({viewport:{width:820,height:1180},deviceScaleFactor:1});
+ const tabletPage=await tabletContext.newPage();
  tabletPage.on("request",req=>{if(productionPattern(req.url()))attempts.add(req.url())});
  await tabletPage.goto(origin+"/index.html",{waitUntil:"domcontentloaded",timeout:15000});
  await tabletPage.waitForFunction(()=>document.readyState==="complete"&&!!document.querySelector(".home-category-tile"),null,{timeout:10000});
  await tabletPage.screenshot({path:"preview-screenshots/home-tablet.png",fullPage:true});
- await mobilePage.close();await tabletPage.close();
+ await mobilePage.close();await tabletPage.close();await mobileContext.close();await tabletContext.close();
  const homeLayout=await homePage.evaluate(()=>{
   const share=document.querySelector(".home-product-card .home-product-share");
   const cart=document.querySelector(".home-product-card .home-add-cart");
