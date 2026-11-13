@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: novaai-isolated-preview-validation
+  group: novaai-isolated-preview-validation-v2
   cancel-in-progress: true
 
 jobs:
