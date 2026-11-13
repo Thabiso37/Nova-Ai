@@ -7,8 +7,8 @@ import crypto from "node:crypto";
 const expectedManifest={
  source:"mixed-approved-preview2",
  baselineCommit:"ae424b41f73ef6bd704b7f4018ab69c70a38e0aa",
- designIndexCommit:"9a7d3e7f05e6d6c4c2e15f947c09a0dbb2b9d7c4",
- designIndexBlob:"8f1e4e56e0c2d8b16b23a62b9c4e8d5f3e2c6b8a",
+ designIndexCommit:"bbe86ee1ec986fccba514022f228f33980968a22",
+ designIndexBlob:"26f0f1a173a63dbbd69d25e5cfd0ae8af6deef91",
  historicalHomeVisualCommit:"0851cf99f7ecfe78b381340b3a2d7317b9dbb2fd",
  historicalHomeVisualBlob:"b76c6014c1264548e600fe4961210c2c8e5a611b"
 };
