@@ -2,71 +2,66 @@ import fs from "node:fs";
 import path from "node:path";
 import assert from "node:assert/strict";
 import vm from "node:vm";
-import crypto from "node:crypto";
 
 const expectedManifest={
- source:"mixed-approved-preview2",
+ source:"actual-rendered-preview2",
  baselineCommit:"ae424b41f73ef6bd704b7f4018ab69c70a38e0aa",
- designIndexCommit:"bbe86ee1ec986fccba514022f228f33980968a22",
- designIndexBlob:"26f0f1a173a63dbbd69d25e5cfd0ae8af6deef91",
  historicalHomeVisualCommit:"0851cf99f7ecfe78b381340b3a2d7317b9dbb2fd",
  historicalHomeVisualBlob:"b76c6014c1264548e600fe4961210c2c8e5a611b"
 };
-const manifest=JSON.parse(fs.readFileSync(path.resolve("preview-dist/.source-manifest.json"),"utf8"));
-assert.equal(manifest.source,expectedManifest.source,"Unexpected preview source mode");
-assert.equal(manifest.baselineCommit,expectedManifest.baselineCommit,"Preview baseline commit mismatch");
-assert.equal(manifest.designIndexCommit,expectedManifest.designIndexCommit,"Home redesign commit mismatch");
-assert.equal(manifest.files["index.html@design"],expectedManifest.designIndexBlob,"Preview 2-restored Home source blob mismatch");
-assert.equal(manifest.historicalHomeVisualCommit,expectedManifest.historicalHomeVisualCommit,"Historical Preview 2 visual authority commit mismatch");
-assert.equal(manifest.historicalHomeVisualBlob,expectedManifest.historicalHomeVisualBlob,"Historical Preview 2 visual authority blob mismatch");
-assert.equal(manifest.files["index.html@historical-visual"],expectedManifest.historicalHomeVisualBlob,"Historical Preview 2 visual source blob mismatch");
+const dir=path.resolve("preview-dist");
+const manifest=JSON.parse(fs.readFileSync(path.join(dir,".source-manifest.json"),"utf8"));
+assert.equal(manifest.source,expectedManifest.source,"Preview must use the complete actual Preview 2 source");
+assert.equal(manifest.baselineCommit,expectedManifest.baselineCommit,"Approved baseline commit mismatch");
+assert.equal(manifest.historicalHomeVisualCommit,expectedManifest.historicalHomeVisualCommit,"Actual Preview 2 source commit mismatch");
+assert.equal(manifest.historicalHomeVisualBlob,expectedManifest.historicalHomeVisualBlob,"Actual Preview 2 source blob mismatch");
+assert.equal(manifest.files["index.html@actual-preview2"],expectedManifest.historicalHomeVisualBlob,"Generated Home source is not the approved Preview 2 blob");
 assert.equal(manifest.files["retail.html"],"38277fef4c9a9226da1d9f43736ae78a46fd1f6a","Retail source baseline mismatch");
 assert.equal(manifest.files["seller-motors-houses.html"],"79dbca93afd3852471df8f3fa9bf06f83b33b4d7","Motors/Property source baseline mismatch");
 assert.equal(manifest.files["property-details.html"],"4742bb9372941f388aadf4fe3c4280e008ec8462","Property detail source baseline mismatch");
-const generatedIndex=fs.readFileSync(path.resolve("preview-dist/index.html"),"utf8");
-assert(generatedIndex.includes("2080")||generatedIndex.includes("nova-home-2080"),"Generated Home page does not contain the approved redesign marker");
-const wireCardRegistrations=generatedIndex.split("wireCards(items);").length-1;
-assert.equal(wireCardRegistrations,2,"Home card event handlers must be wired once on initial render and once only after a nearby-location refresh");
-assert(!generatedIndex.includes("wireCards(items);updateCartCount();"),"Redundant final Home event-handler registration must remain removed");
-const panelRestore=generatedIndex.match(/<style id="nova-home-preview2-panel-restoration">([\s\S]*?)<\/style>/);
-assert(panelRestore,"Generated Home page is missing the Preview 2 panel restoration stylesheet");
-assert(panelRestore[1].includes(".home-product-photo")&&panelRestore[1].includes("position:relative!important"),"Preview 2 must place the product photograph at the top of the card");
-assert(panelRestore[1].includes(".home-product-info")&&panelRestore[1].includes("flex:1 1 52%!important"),"Preview 2 must restore the separate information panel beneath the photo");
-assert(panelRestore[1].includes(".nova-hero-copy{position:relative!important;z-index:5!important;display:flex!important;visibility:visible!important;opacity:1!important;grid-column:1!important;grid-row:1!important}"),"Preview 2 mobile hero copy must layer above its background overlay");
-assert(!/\.home-product-info\s*\{[^}]*position:absolute/i.test(panelRestore[1]),"Preview 2 information panel must not overlay the product photo");
-const dir=path.resolve("preview-dist");
+
+const generatedIndex=fs.readFileSync(path.join(dir,"index.html"),"utf8");
+assert(!/nova-ads-pending/.test(generatedIndex),"Preview Home must not remain hidden behind the production ad-loading gate");
+assert(generatedIndex.includes("Browse fashion, tech and home essentials."),"Preview Home is missing the approved promotional hero copy");
+assert(generatedIndex.includes("images.unsplash.com/photo-1483985988355-763728e1935b"),"Preview Home is missing its isolated static hero image");
+assert(generatedIndex.includes('data-home-category-tile="retail"')&&generatedIndex.includes('data-home-category-tile="motors"')&&generatedIndex.includes('data-home-category-tile="property"'),"Preview 2 category tiles are incomplete");
+const categoryOrder=["retail","motors","property","more"].map(key=>generatedIndex.indexOf('data-home-category-tile="'+key+'"'));
+assert(categoryOrder.every((v,i)=>v>=0&&(i===0||v>categoryOrder[i-1])),"Preview 2 category order must be Retail, Motors, Property, More");
+assert(generatedIndex.includes(".home-product-photo{position:relative;width:100%;aspect-ratio:1/1"),"Preview 2 product photo must remain a square top image");
+assert(generatedIndex.includes(".home-product-info{display:flex;flex:1;flex-direction:column"),"Preview 2 product information must remain a separate lower panel");
+assert(generatedIndex.includes("home-product-share")&&generatedIndex.includes("home-add-cart")&&generatedIndex.includes("home-wishlist-toggle"),"Home sharing, cart and wishlist controls must be retained");
+assert(generatedIndex.includes("novaai-product-sharing.js?v=3"),"Home product-sharing helper import is missing");
+
 const forbidden=[
- /nxplffvklkopwfjaqexo/i,
- /(?:[a-z0-9-]+\.)?supabase\.co/i,
- /(?:[a-z0-9-]+\.)?supabase\.com/i,
- /sb_(?:publishable|secret)_[A-Za-z0-9_-]+/i,
- /eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}/i,
- /\/rest\/v1\//i,/\/auth\/v1\//i,/\/storage\/v1\//i,
- /\/functions\/v1\//i,/\/realtime\/v1\//i
+ /nxplffvklkopwfjaqexo/i,/(?:[a-z0-9-]+\.)?supabase\.co/i,/(?:[a-z0-9-]+\.)?supabase\.com/i,
+ /sb_(?:publishable|secret)_[A-Za-z0-9_-]+/i,/eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}/i,
+ /\/rest\/v1\//i,/\/auth\/v1\//i,/\/storage\/v1\//i,/\/functions\/v1\//i,/\/realtime\/v1\//i
 ];
 const required=["index.html","retail.html","seller-motors-houses.html","property-details.html","preview-fixtures.js","novaai-product-sharing.js"];
 for(const name of required)assert(fs.existsSync(path.join(dir,name)),"Generated preview file missing: "+name);
-const files=fs.readdirSync(dir).filter(f=>fs.statSync(path.join(dir,f)).isFile());
-assert(files.includes("novaai-product-sharing.js"),"Actual sharing implementation copy missing");
-for(const f of files){
- const s=fs.readFileSync(path.join(dir,f),"utf8");
- for(const re of forbidden)assert(!re.test(s),f+" contains forbidden production endpoint or credential material: "+re);
- if(f.endsWith(".html")){
-  assert(s.includes("preview-fixtures.js"),f+" is missing fixture adapter");
-  assert(s.includes("connect-src 'self'"),f+" is missing restrictive CSP");
-  assert(s.includes("novaai-preview-banner"),f+" is missing preview warning banner");
+const files=fs.readdirSync(dir).filter(name=>fs.statSync(path.join(dir,name)).isFile());
+for(const name of files){
+ const source=fs.readFileSync(path.join(dir,name),"utf8");
+ for(const re of forbidden)assert(!re.test(source),name+" contains a forbidden production endpoint or credential: "+re);
+ if(name.endsWith(".html")){
+  assert(source.includes("preview-fixtures.js"),name+" is missing the synthetic fixture adapter");
+  assert(source.includes("connect-src 'self'"),name+" is missing the restrictive preview CSP");
+  assert(source.includes("novaai-preview-banner"),name+" is missing the isolated-preview warning");
  }
 }
 const sharing=fs.readFileSync(path.join(dir,"novaai-product-sharing.js"),"utf8");
 assert(sharing.includes("navigator.share"),"Native share implementation was not preserved");
 assert(sharing.includes("navigator.clipboard"),"Clipboard fallback was not preserved");
-assert(/function record\(\)\{\/\* Intentionally disabled/.test(sharing),"Analytics recorder is not explicitly disabled");
+assert(/function record\(\)\{\/\* Intentionally disabled/.test(sharing),"Product-share analytics must remain disabled in preview");
+
 const fixtureSource=fs.readFileSync(path.join(dir,"preview-fixtures.js"),"utf8");
 const sandbox={window:{}};
 vm.runInNewContext(fixtureSource,sandbox);
 const mock=sandbox.window.supabase.createClient();
 const retail=await mock.from("Products").select("*").eq("id",910001).maybeSingle();
-assert.equal(retail.data.name,"Preview Cotton T-Shirt","Synthetic fixture query failed");
+assert.equal(retail.data.name,"Preview Cotton T-Shirt","Synthetic Retail fixture query failed");
+const motor=await mock.from("Products").select("*").eq("id",910002).maybeSingle();
+assert(motor.data.description.includes("Vehicle type: car"),"Synthetic Motors fixture is missing its approved vehicle-type marker");
 for(const result of [
  await mock.from("Products").insert({name:"must not persist"}),
  await mock.from("Products").update({name:"must not persist"}),
@@ -79,6 +74,6 @@ for(const result of [
  await mock.auth.resetPasswordForEmail("x"),
  await mock.storage.from("listing-images").upload("x",new Blob(["x"])),
  await mock.storage.from("listing-images").remove(["x"])
-])assert.equal(result.error.code,"PREVIEW_DISABLED","A production-capable mutation/auth method was not rejected");
+])assert.equal(result.error.code,"PREVIEW_DISABLED","A database/auth/storage mutation path was not rejected");
 assert.equal((await mock.auth.getSession()).data.session,null,"Preview unexpectedly has an authenticated session");
-console.log("PASS: generated-file credential/endpoint scan; four-page fixture/CSP checks; synthetic query; database writes, RPC, storage and authentication rejection; native share and clipboard code retained; analytics disabled.");
+console.log("PASS: actual Preview 2 source hash, Home visual authority, hero/category order, separate product panels, sharing/cart/wishlist hooks, endpoint/credential scan, fixture queries and all mutation/auth/storage denials.");
