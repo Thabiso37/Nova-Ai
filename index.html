@@ -817,7 +817,7 @@ function renderHomeSections(items,storesBySeller,client){
      const approvedLocations=new Map((locResult.data||[]).map(l=>[String(l.user_id),l]));
      const km=(a,b,c,d)=>{const r=v=>v*Math.PI/180,x=r(c-a),y=r(d-b),h=Math.sin(x/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(y/2)**2;return 6371*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));};
      const selected=groups.find(g=>g.id===groupId),pool=groupId.startsWith('retail')?items.filter(isRetailProduct):groupId.startsWith('motors')?items.filter(isMotorProduct):items.filter(isPropertyProduct);
-     const nearby=pool.map(p=>{const l=approvedLocations.get(String(p.seller_id));if(!l||l.latitude==null||l.longitude==null)return null;return {...p,_distance:km(pos.coords.latitude,pos.coords.longitude,Number(l.latitude),Number(l.longitude))};}).filter(p=>p&&p._distance<=25).sort((a,b)=>a._distance-b._distance);
+     const nearby=pool.map(p=>{if(!storesBySeller.has(String(p.seller_id)))return null;const l=approvedLocations.get(String(p.seller_id));if(!l||l.latitude==null||l.longitude==null)return null;return {...p,_distance:km(pos.coords.latitude,pos.coords.longitude,Number(l.latitude),Number(l.longitude))};}).filter(p=>p&&p._distance<=25).sort((a,b)=>a._distance-b._distance);
      const target=section.querySelector('.home-products-message');
      if(nearby.length){target.outerHTML='<div class="home-carousel" aria-label="'+escapeHTML(selected.title)+' products">'+nearby.map(p=>renderCard(p,storesBySeller)).join('')+'</div>';wireCards(items);}
      else target.textContent='No approved listings with administrator-approved public seller locations were found within 25 km. Browse all listings using View All.';
