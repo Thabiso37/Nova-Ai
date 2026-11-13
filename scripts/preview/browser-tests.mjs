@@ -63,8 +63,9 @@ try{
   page.on("pageerror",err=>failures.push(item.file+": "+err.message));
   const response=await page.goto(origin+"/"+item.file+item.query,{waitUntil:"domcontentloaded",timeout:15000});
   assert(response&&response.ok(),item.file+" did not return HTTP success");
-  await page.waitForFunction(()=>document.readyState==="complete",{timeout:10000});
-  await page.waitForFunction(()=>!!window.NOVAAIProductShare&&!!window.__NOVAAI_PREVIEW__===true,{timeout:10000});
+  await page.waitForFunction(()=>document.readyState==="complete",null,{timeout:10000});
+  await page.waitForFunction(()=>window.__NOVAAI_PREVIEW__===true&&!!window.supabase,null,{timeout:10000});
+  if(item.file!=="index.html")await page.waitForFunction(()=>!!window.NOVAAIProductShare,null,{timeout:10000});
   assert.equal(await page.locator("#novaai-preview-banner").count(),1,item.file+" missing isolated preview banner");
   assert.equal(new URL(page.url()).origin,origin,"Page did not use the local preview origin");
   const mutations=await page.evaluate(async()=>{
@@ -112,7 +113,7 @@ try{
  console.log("PASS Motors and Property share URL builders resolve against preview origin");
 
  const propertyPage=pages.find(x=>x.file==="property-details.html").page;
- await propertyPage.waitForFunction(()=>typeof window.propertyDetailShareButton==="function"&&window.propertyDetailShareButton().length>0,{timeout:10000});
+ await propertyPage.waitForFunction(()=>typeof window.propertyDetailShareButton==="function"&&window.propertyDetailShareButton().length>0,null,{timeout:10000});
  const propertyDetailUrl=await propertyPage.evaluate(()=>{
   if(typeof window.propertyDetailShareButton!=="function")throw new Error("Property detail share URL builder is not available");
   const html=window.propertyDetailShareButton();const holder=document.createElement("div");holder.innerHTML=html;const button=holder.querySelector("[data-nova-product-share]");return button&&button.dataset.shareUrl;
