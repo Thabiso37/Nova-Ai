@@ -134,7 +134,7 @@ for (const page of pages) {
   if(page==="index.html"){
     html=html.replace('<html lang="en" class="nova-ads-pending">','<html lang="en">');
     const approvedHero="<div class=\"nova-hero-slide active\"><div class=\"nova-hero-copy\"><span class=\"nova-hero-kicker\"><span class=\"brand-novaai\"><span>NOVA</span><span>AI</span></span> MARKET</span><h1>Browse fashion, tech and home essentials.</h1><p>Discover great finds from South African sellers.</p><a href=\"./retail.html\">Explore Retail <span aria-hidden=\"true\">→</span></a></div><div class=\"nova-hero-art\" style=\"background-image:linear-gradient(90deg,rgba(16,40,75,.08),rgba(16,40,75,.02)),url(https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85);background-size:cover;background-position:center\" aria-hidden=\"true\"></div></div>";
-    html=html.replace(/<div class="nova-hero-slide active">[\s\S]*?<\\/div><\\/div>(?=\\s*<div class="nova-hero-slide">)/,approvedHero);
+    html=html.replace(new RegExp('<div class="nova-hero-slide active">[\\s\\S]*?</div></div>(?=\\s*<div class="nova-hero-slide">)'),approvedHero);
   }
  html=html.replace(/<script[^>]+novaai-ad-slots\.js[^>]*><\/script>/gi,"");
  html=html.replace(/<script[^>]+novaai-share-visits\.js[^>]*><\/script>/gi,"");
