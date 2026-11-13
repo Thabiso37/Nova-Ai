@@ -9,7 +9,7 @@ const forbidden=[
  /(?:[a-z0-9-]+\.)?supabase\.co/i,
  /(?:[a-z0-9-]+\.)?supabase\.com/i,
  /sb_(?:publishable|secret)_[A-Za-z0-9_-]+/i,
- /eyJ[A-Za-z0-9_-]{20,}\\.[A-Za-z0-9_-]{20,}\\.[A-Za-z0-9_-]{10,}/i,
+ /eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}/i,
  /\/rest\/v1\//i,/\/auth\/v1\//i,/\/storage\/v1\//i,
  /\/functions\/v1\//i,/\/realtime\/v1\//i
 ];
