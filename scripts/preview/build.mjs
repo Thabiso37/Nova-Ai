@@ -7,11 +7,11 @@ const out = path.join(root, "preview-dist");
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
 
-const IMPLEMENTATION_COMMIT = "b8328d4fb43018452725132e64d859e45d82af57";
-const IMPLEMENTATION_BRANCH = "fix/approved-preview2-home-layout";
-const EXPECTED_IMPLEMENTATION_HOME_BLOB = "82380f7172f0cd1699ea5da113de9f4945276cd7";
+const IMPLEMENTATION_COMMIT = "fce28c817442bc9c58976ff4a643e5cb5cf2bb6d";
+const IMPLEMENTATION_BRANCH = "fix/restore-preview2-home-cards";
+const EXPECTED_IMPLEMENTATION_HOME_BLOB = "7584c8a0974e19e138fdd2712c16ba7b3ce5de11";
 const expectedBaselineBlobs = {
- "index.html":"82380f7172f0cd1699ea5da113de9f4945276cd7",
+ "index.html":"7584c8a0974e19e138fdd2712c16ba7b3ce5de11",
  "retail.html":"38277fef4c9a9226da1d9f43736ae78a46fd1f6a",
  "seller-motors-houses.html":"79dbca93afd3852471df8f3fa9bf06f83b33b4d7",
  "property-details.html":"4742bb9372941f388aadf4fe3c4280e008ec8462",
@@ -37,11 +37,11 @@ if(!branchHomeIndex.includes('data-home-category-tile="retail"')||!branchHomeInd
 if(!branchHomeIndex.includes("title:'Premium Properties'")||!branchHomeIndex.includes("title:'Featured Products'")) throw new Error("Accepted branch Home category groups are incomplete.");
 const previewHomeIndex=branchHomeIndex;
 fs.writeFileSync(path.join(out,".source-manifest.json"),JSON.stringify({
- source:"accepted-branch-index",
+ source:"restored-preview2-branch-index",
  implementationCommit:IMPLEMENTATION_COMMIT,
  implementationBranch:IMPLEMENTATION_BRANCH,
  implementationHomeBlob:branchHomeBlob,
- files:{...expectedBaselineBlobs,"index.html@accepted-branch":branchHomeBlob}
+ files:{...expectedBaselineBlobs,"index.html@restored-preview2-branch":branchHomeBlob}
 },null,2)+"\n");
 
 const pages = ["index.html", "retail.html", "seller-motors-houses.html", "property-details.html"];
@@ -49,32 +49,28 @@ const required = [...pages, "novaai-product-sharing.js"];
 for (const file of required) {
   if (!fs.existsSync(path.join(root, file))) throw new Error("Missing required PR asset: " + file);
 }
-const fixture = `(() => {
+const snapshotPath=path.join(root,"scripts/preview/marketplace-listings.json");
+const snapshot=JSON.parse(fs.readFileSync(snapshotPath,"utf8"));
+if(!Array.isArray(snapshot.products)||snapshot.products.length===0) throw new Error("Actual approved marketplace listing snapshot is empty.");
+if(!snapshot.products.every(p=>p.status==="approved"&&p.seller_id&&p.name&&Number(p.price)>0)) throw new Error("Snapshot contains a listing that is not an eligible approved marketplace product.");
+if(!Array.isArray(snapshot.stores)||!snapshot.stores.length) throw new Error("Actual approved seller-store snapshot is empty.");
+const fixture = [
+`(() => {
 "use strict";
-const sellers = [
- {user_id:"fixture-retail",store_name:"Cape Town Everyday",store_slug:"cape-town-everyday",description:"Synthetic preview seller",status:"approved",phone:""},
- {user_id:"fixture-motors",store_name:"Demo Motors",store_slug:"demo-motors",description:"Synthetic preview seller",status:"approved",phone:""},
- {user_id:"fixture-property",store_name:"Sample Homes",store_slug:"sample-homes",description:"Synthetic preview seller",status:"approved",phone:""}
-];
-const products = [
- {id:910001,name:"Preview Cotton T-Shirt",description:"Synthetic Retail listing for sharing tests.",price:249,category:"Clothing",image_url:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=900&auto=format&fit=crop&q=85",images:[],seller_name:"Cape Town Everyday",seller_id:"fixture-retail",status:"approved",created_at:"2026-11-13T00:00:00Z"},
- {id:910002,name:"Preview City Car Hatchback",description:"Synthetic Motors listing for sharing tests.\\nVehicle type: car\\nListing type: vehicle.",price:89500,category:"Auto",image_url:"https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=900&auto=format&fit=crop&q=85",images:[],seller_name:"Demo Motors",seller_id:"fixture-motors",status:"approved",created_at:"2026-11-13T00:00:00Z"},
- {id:910003,name:"Preview Family Home",description:"Synthetic Property listing for sharing tests.\\nProperty type: House\\nBedrooms: 3",price:1250000,category:"Property For Sale",image_url:"https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=900&auto=format&fit=crop&q=85",images:[],seller_name:"Sample Homes",seller_id:"fixture-property",status:"approved",created_at:"2026-11-13T00:00:00Z",location:"Pretoria"},
- {id:910004,name:"Preview Modern Apartment",description:"Synthetic Property listing for sharing tests.\\nProperty type: Apartment\\nBedrooms: 2",price:18500,category:"Property To Rent",image_url:"https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=900&auto=format&fit=crop&q=85",images:[],seller_name:"Sample Homes",seller_id:"fixture-property",status:"approved",created_at:"2026-11-12T00:00:00Z",location:"Cape Town"},
- {id:910005,name:"Preview Executive Estate",description:"Synthetic Property listing for sharing tests.\\nProperty type: House\\nBedrooms: 4",price:6850000,category:"Property For Sale",image_url:"https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=900&auto=format&fit=crop&q=85",images:[],seller_name:"Sample Homes",seller_id:"fixture-property",status:"approved",created_at:"2026-11-11T00:00:00Z",location:"Pretoria"},
- {id:910006,name:"Preview Wireless Earbuds",description:"Synthetic Retail listing.",price:2499,category:"Electronics",image_url:"https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=900&auto=format&fit=crop&q=85",images:[],seller_name:"Cape Town Everyday",seller_id:"fixture-retail",status:"approved",created_at:"2026-11-10T00:00:00Z"},
- {id:910007,name:"Preview Smart Watch",description:"Synthetic Retail listing.",price:3999,category:"Electronics",image_url:"https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=900&auto=format&fit=crop&q=85",images:[],seller_name:"Cape Town Everyday",seller_id:"fixture-retail",status:"approved",created_at:"2026-11-09T00:00:00Z"},
- {id:910008,name:"Preview UltraBook",description:"Synthetic Retail listing.",price:12999,category:"Computers & Laptops",image_url:"https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=900&auto=format&fit=crop&q=85",images:[],seller_name:"Cape Town Everyday",seller_id:"fixture-retail",status:"approved",created_at:"2026-11-08T00:00:00Z"}
-];
-const locations = sellers.map(s=>({user_id:s.user_id,province:"Gauteng",city:"Pretoria",suburb:"Preview",latitude:null,longitude:null,public_location_enabled:true,approval_status:"approved"}));
-const tables = {Products:products,seller_stores:sellers,seller_public_locations:locations};
+const snapshot = `,
+JSON.stringify(snapshot),
+`;
+const products=snapshot.products;
+const sellers=snapshot.stores;
+const locations=snapshot.locations||[];
+const tables={Products:products,seller_stores:sellers,seller_public_locations:locations};
 function fail(message){return {data:null,error:{message,code:"PREVIEW_DISABLED"}}}
-class Query {
- constructor(table){this.table=table;this.filters=[];this.max=Infinity;this.one=false;this.columns="*"}
+class Query{
+ constructor(table){this.table=table;this.filters=[];this.max=Infinity;this.one=false;this.columns="*";this.sort=null}
  select(columns){this.columns=columns||"*";return this}
  eq(k,v){this.filters.push(x=>String(x[k])===String(v));return this}
  neq(k,v){this.filters.push(x=>String(x[k])!==String(v));return this}
- in(k,vs){this.filters.push(x=>vs.map(String).includes(String(x[k])));return this}
+ in(k,vs){this.filters.push(x=>(vs||[]).map(String).includes(String(x[k])));return this}
  gte(k,v){this.filters.push(x=>x[k]>=v);return this}
  lte(k,v){this.filters.push(x=>x[k]<=v);return this}
  gt(k,v){this.filters.push(x=>x[k]>v);return this}
@@ -85,15 +81,17 @@ class Query {
  contains(k,values){this.filters.push(x=>(Array.isArray(x[k])?x[k]:[]).some(v=>(values||[]).includes(v)));return this}
  or(){return this}
  not(){return this}
- order(){return this}
- range(a,b){this.max=Math.max(0,Number(b)-Number(a)+1);return this}
+ order(k,opts){this.sort={key:k,ascending:opts?.ascending!==false};return this}
+ range(a,b){this.max=Math.max(0,Number(b)-Number(a)+1);this.offset=Math.max(0,Number(a));return this}
  limit(n){this.max=Number(n);return this}
  maybeSingle(){this.one=true;return this.run()}
  single(){this.one=true;return this.run()}
  then(resolve,reject){return this.run().then(resolve,reject)}
  async run(){
-  if(!tables[this.table])return fail("Table is not available in fixture preview: "+this.table);
-  let rows=tables[this.table].filter(row=>this.filters.every(f=>f(row))).slice(0,this.max);
+  if(!tables[this.table])return fail("Table is not available in actual-data preview fixture: "+this.table);
+  let rows=tables[this.table].filter(row=>this.filters.every(f=>f(row)));
+  if(this.sort){const {key,ascending}=this.sort;rows=rows.slice().sort((a,b)=>{const x=a[key],y=b[key];return (x===y?0:x>y?1:-1)*(ascending?1:-1);});}
+  rows=rows.slice(this.offset||0,Number.isFinite(this.max)?(this.offset||0)+this.max:undefined);
   if(this.one)return {data:rows[0]||null,error:null};
   return {data:rows,error:null};
  }
@@ -102,7 +100,7 @@ class Query {
  delete(){return Promise.resolve(fail("Writes are disabled in preview."))}
  upsert(){return Promise.resolve(fail("Writes are disabled in preview."))}
 }
-const auth = {
+const auth={
  getUser:async()=>({data:{user:null},error:null}),
  getSession:async()=>({data:{session:null},error:null}),
  onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),
@@ -112,18 +110,14 @@ const auth = {
  resetPasswordForEmail:async()=>fail("Authentication is disabled in preview."),
  updateUser:async()=>fail("Authentication is disabled in preview.")
 };
-const client = {
- from:(table)=>new Query(table),
- rpc:async()=>fail("RPC and order operations are disabled in preview."),
- auth,
- storage:{from:()=>({upload:async()=>fail("Storage is disabled in preview."),remove:async()=>fail("Storage is disabled in preview."),getPublicUrl:()=>({data:{publicUrl:""}})})}
-};
+const client={from:table=>new Query(table),rpc:async()=>fail("RPC and order operations are disabled in preview."),auth,storage:{from:()=>({upload:async()=>fail("Storage is disabled in preview."),remove:async()=>fail("Storage is disabled in preview."),getPublicUrl:()=>({data:{publicUrl:""}})})}};
 window.__NOVAAI_PREVIEW__=true;
 window.supabase={createClient:()=>client};
 window.NOVAAI_SUPABASE_CLIENT=client;
-window.__NOVAAI_PREVIEW_FIXTURES__={products,sellers,locations};
-})();`;
-fs.writeFileSync(path.join(out, "preview-fixtures.js"), fixture);
+window.__NOVAAI_PREVIEW_FIXTURES__={products,sellers,locations,snapshotAt:snapshot.snapshotAt,source:snapshot.source};
+})();`
+].join("");
+fs.writeFileSync(path.join(out,"preview-fixtures.js"),fixture);
 
 for (const page of pages) {
  let html=page==="index.html"?previewHomeIndex:fs.readFileSync(path.join(root,page),"utf8");
