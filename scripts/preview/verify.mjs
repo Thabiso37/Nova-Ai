@@ -5,9 +5,9 @@ import assert from "node:assert/strict";
 const dir=path.resolve("preview-dist");
 const manifest=JSON.parse(fs.readFileSync(path.join(dir,".source-manifest.json"),"utf8"));
 assert.equal(manifest.source,"restored-preview2-branch-index","Validation build must use the restored Preview 2 branch index");
-assert.equal(manifest.implementationCommit,"fce28c817442bc9c58976ff4a643e5cb5cf2bb6d","Restored Home implementation commit mismatch");
+assert.equal(manifest.implementationCommit,"985e4389bd2dc53a45ab7eb99ce06e4c9aa0aa17","Restored Home implementation commit mismatch");
 assert.equal(manifest.implementationBranch,"fix/restore-preview2-home-cards","Restored Home branch mismatch");
-assert.equal(manifest.implementationHomeBlob,"7584c8a0974e19e138fdd2712c16ba7b3ce5de11","Restored Home index blob mismatch");
+assert.equal(manifest.implementationHomeBlob,"81ccb4c246845239d574115c3a3389df219540cc","Restored Home index blob mismatch");
 assert.equal(manifest.files["index.html@restored-preview2-branch"],manifest.implementationHomeBlob,"Generated Home is not sourced from the accepted branch index");
 
 const html=fs.readFileSync(path.join(dir,"index.html"),"utf8");
