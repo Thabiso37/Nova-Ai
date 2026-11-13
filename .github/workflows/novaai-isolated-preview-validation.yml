@@ -4,13 +4,14 @@ on:
   push:
     branches:
       - feature/product-sharing-analytics
+      - fix/isolated-preview-pr-source-validation
   workflow_dispatch:
     inputs:
       expected_commit:
         description: Exact approved application baseline commit SHA (preview remains isolated)
         required: true
         type: string
-        default: ae424b41f73ef6bd704b7f4018ab69c70a38e0aa
+        default: 49bad87f8f3d67937db4e962372987787865e6fc
 
 permissions:
   contents: read
@@ -33,13 +34,13 @@ jobs:
 
       - name: Enforce approved baseline and verify exact source files
         env:
-          EXPECTED_COMMIT: "${{ inputs.expected_commit || 'ae424b41f73ef6bd704b7f4018ab69c70a38e0aa' }}"
+          EXPECTED_COMMIT: "${{ inputs.expected_commit || '49bad87f8f3d67937db4e962372987787865e6fc' }}"
           EXPECTED_TOOLING_COMMIT: "${{ github.sha }}"
         shell: bash
         run: |
           set -euo pipefail
 
-          readonly APPROVED_APPLICATION_COMMIT="ae424b41f73ef6bd704b7f4018ab69c70a38e0aa"
+          readonly APPROVED_APPLICATION_COMMIT="49bad87f8f3d67937db4e962372987787865e6fc"
 
           if [[ "$EXPECTED_COMMIT" != "$APPROVED_APPLICATION_COMMIT" ]]; then
             echo "::error::expected_commit must equal the approved application baseline $APPROVED_APPLICATION_COMMIT"
