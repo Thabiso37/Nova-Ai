@@ -249,6 +249,8 @@ try{
  await mobilePage.locator(".home-product-card .home-product-photo img").evaluateAll(imgs=>imgs.forEach(img=>{img.loading="eager";}));
  await mobilePage.waitForFunction(()=>[...document.querySelectorAll(".home-product-card .home-product-photo img")].length>0&&[...document.querySelectorAll(".home-product-card .home-product-photo img")].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:20000});
  const mobileSpacing=await mobilePage.locator(".home-product-info").first().evaluate(el=>{const s=getComputedStyle(el);return {left:parseFloat(s.paddingLeft),right:parseFloat(s.paddingRight),width:el.clientWidth,scrollWidth:el.scrollWidth};});
+ const mobileHeroStack=await mobilePage.locator(".nova-hero-copy").first().evaluate(el=>({zIndex:parseInt(getComputedStyle(el).zIndex,10),height:el.getBoundingClientRect().height}));
+ assert(mobileHeroStack.zIndex>=2&&mobileHeroStack.height>0,"Android hero copy must remain visible above the background overlay");
  assert(mobileSpacing.left>=7&&mobileSpacing.right>=7,"Android product text must retain compact readable side insets");
  assert(mobileSpacing.scrollWidth<=mobileSpacing.width+1,"Android product text must not overflow its separate information panel");
  const mobileTrust=await mobilePage.locator(".home-trust-label").first().evaluate(el=>({fontSize:parseFloat(getComputedStyle(el).fontSize),text:el.innerText.trim()}));
