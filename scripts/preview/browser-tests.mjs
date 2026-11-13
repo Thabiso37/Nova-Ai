@@ -87,7 +87,17 @@ try{
  assert.notEqual(heroState.visibility,"hidden","Preview 2 Home promotional hero is still hidden");
  assert.notEqual(heroState.display,"none","Preview 2 Home promotional hero is not rendered");
  assert(heroState.width>500&&heroState.height>100,"Preview 2 Home promotional hero has no visible layout area");
- assert(heroState.text.includes("Browse fashion, tech and home essentials."),"Home hero copy does not match the approved Preview 2 reference");
+ assert(heroState.text.includes("The Future is Here"),"First accepted Home hero message is missing");
+ assert(heroState.text.includes("Great finds. Local businesses."),"Second accepted Home hero message is missing");
+ assert(heroState.text.includes("Your products deserve a marketplace."),"Third accepted Home hero message is missing");
+ assert.equal(await hero.locator(".nova-hero-slide").count(),3,"Home must render all three accepted promotional slides");
+ assert.equal(await home.locator("#homeUseLocation").count(),1,"Header Near Me control missing");
+ assert.equal(await home.locator(".home-seller-banner").count(),1,"Become a NOVAAI Seller banner missing");
+ assert.equal(await home.locator("footer").count(),1,"Home footer missing");
+ assert.equal(await home.locator(".nova-bottom-nav").count(),1,"Footer navigation missing");
+ const forbiddenHomeTitles=["Nearby Retail Products","New Retail Arrivals","Nearby Motors Listings","Recently Added Vehicles","Featured Cars and Vehicles","Nearby Properties","Featured Properties for Sale","Featured Properties for Rent","Motors & Vehicles","Parts & Accessories"];
+ const renderedHomeText=await home.locator("body").innerText();
+ for(const title of forbiddenHomeTitles)assert(!renderedHomeText.includes(title),"Forbidden Home section is visible: "+title);
  const sectionTitles=await home.locator("[data-home-category] .section-kicker h2").allTextContents();
  assert.deepEqual(sectionTitles.slice(0,2).map(x=>x.trim()),["Premium Properties","Featured Products"],"Home section order must match actual Preview 2");
  const firstCard=home.locator(".home-product-card").first();
@@ -170,6 +180,7 @@ try{
  assert(mobileCard.width>=155&&mobileCard.width<=175,"Android Preview 2 card width is outside the approved 155–175px range: "+mobileCard.width);
  assert(Math.abs(mobileCard.photoHeight-mobileCard.photoWidth)<=4,"Android Preview 2 product photo is not square");
  assert(mobileCard.height>=320&&mobileCard.infoHeight>=170&&mobileCard.infoTop>=mobileCard.photoBottom-2,"Android Preview 2 card must retain its tall separate information panel");
+ fs.mkdirSync("preview-screenshots",{recursive:true});
  await mobile.screenshot({path:"preview-screenshots/home-android-390.png",fullPage:true});
  await home.screenshot({path:"preview-screenshots/home-desktop-1280.png",fullPage:true});
  await mobileContext.close();
