@@ -1,0 +1,182 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import http from "node:http";
+import path from "node:path";
+import { chromium } from "playwright";
+
+const root=path.resolve("preview-dist");
+const requiredPages=["index.html","retail.html","seller-motors-houses.html","property-details.html"];
+for(const file of requiredPages)assert(fs.existsSync(path.join(root,file)),"Missing generated page: "+file);
+const mime={".html":"text/html; charset=utf-8",".js":"text/javascript; charset=utf-8",".css":"text/css; charset=utf-8",".svg":"image/svg+xml",".json":"application/json"};
+const server=http.createServer((req,res)=>{
+ let pathname;
+ try{pathname=decodeURIComponent(new URL(req.url,"http://127.0.0.1").pathname)}catch{res.writeHead(400).end();return}
+ const target=path.resolve(root,"."+pathname);
+ if(!target.startsWith(root+path.sep)){res.writeHead(403).end();return}
+ fs.readFile(target,(err,data)=>{if(err){res.writeHead(404).end("Not found");return}res.writeHead(200,{"content-type":mime[path.extname(target)]||"application/octet-stream","cache-control":"no-store"});res.end(data)});
+});
+await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));
+const address=server.address(),origin="http://127.0.0.1:"+address.port;
+const productionPattern=url=>{
+ let u;try{u=new URL(url)}catch{return false}
+ return /nxplffvklkopwfjaqexo/i.test(u.href)||/(^|\.)supabase\.(co|com)$/i.test(u.hostname)||/\/(rest|auth|storage|functions|realtime)\/v1(?:\/|$)/i.test(u.pathname)||/record-novaai-product-share|product[-_/]?share[-_/]?analytics/i.test(u.href);
+};
+const attempts=new Set(),failures=[];
+let browser;
+try{
+ browser=await chromium.launch({headless:true});
+ const context=await browser.newContext({viewport:{width:1280,height:900},deviceScaleFactor:1});
+ await context.route("**/*",async route=>{
+  const url=route.request().url();
+  if(productionPattern(url)){attempts.add(url);await route.abort("blockedbyclient");return}
+  const parsed=new URL(url);
+  if(parsed.origin!==origin&&parsed.hostname!=="images.unsplash.com"){await route.abort("blockedbyclient");return}
+  await route.continue();
+ });
+ context.routeWebSocket("**/*",socketRoute=>{
+  const url=socketRoute.url();if(productionPattern(url))attempts.add(url);socketRoute.close();
+ });
+ await context.addInitScript(()=>{
+  window.__nativeShareCalls=[];window.__clipboardWrites=[];
+  Object.defineProperty(navigator,"share",{configurable:true,writable:true,value:async payload=>{window.__nativeShareCalls.push(payload)}});
+  Object.defineProperty(navigator,"clipboard",{configurable:true,value:{writeText:async value=>{window.__clipboardWrites.push(String(value))}}});
+ });
+ const cases=[
+  {file:"index.html",query:""},
+  {file:"retail.html",query:""},
+  {file:"seller-motors-houses.html",query:"?market=motors"},
+  {file:"seller-motors-houses.html",query:"?market=property"},
+  {file:"property-details.html",query:"?id=910003"}
+ ];
+ const pages=[];
+ for(const item of cases){
+  const page=await context.newPage();
+  page.on("request",req=>{if(productionPattern(req.url()))attempts.add(req.url())});
+  page.on("pageerror",err=>failures.push(item.file+": "+err.message));
+  const response=await page.goto(origin+"/"+item.file+item.query,{waitUntil:"domcontentloaded",timeout:20000});
+  assert(response&&response.ok(),item.file+" did not return HTTP success");
+  await page.waitForFunction(()=>document.readyState==="complete",null,{timeout:15000});
+  await page.waitForFunction(()=>window.__NOVAAI_PREVIEW__===true&&!!window.supabase,null,{timeout:10000});
+  await page.waitForFunction(()=>!!window.NOVAAIProductShare,null,{timeout:10000});
+  assert.equal(await page.locator("#novaai-preview-banner").count(),1,item.file+" missing isolated-preview warning");
+  assert.equal(new URL(page.url()).origin,origin,"Page escaped the isolated preview origin");
+  const guarded=await page.evaluate(async()=>{
+   const c=window.supabase.createClient();
+   const values=[
+    await c.from("Products").insert({name:"blocked"}),await c.from("Products").update({name:"blocked"}),
+    await c.from("Products").delete(),await c.from("Products").upsert({name:"blocked"}),
+    await c.rpc("place_order"),await c.auth.signInWithPassword({email:"x",password:"x"}),
+    await c.auth.signUp({email:"x",password:"x"}),await c.auth.updateUser({email:"x"}),
+    await c.auth.resetPasswordForEmail("x"),await c.storage.from("listing-images").upload("x",new Blob(["x"])),
+    await c.storage.from("listing-images").remove(["x"])
+   ];
+   return values.map(v=>v?.error?.code);
+  });
+  assert.equal(guarded.length,11,item.file+" did not exercise every blocked mutation");
+  assert(guarded.every(code=>code==="PREVIEW_DISABLED"),item.file+" exposed a mutation/auth/storage path");
+  pages.push({page,...item});
+  console.log("PASS isolated page + synthetic fixture + 11 mutation/auth/storage denials: "+item.file+item.query);
+ }
+
+ const home=pages.find(x=>x.file==="index.html").page;
+ await home.waitForSelector(".home-product-card .home-product-share",{timeout:15000});
+ const labels=(await home.locator(".home-category-tile .home-category-label").allTextContents()).map(x=>x.trim());
+ assert.deepEqual(labels,["Retail","Motors","Property","More"],"Actual Preview 2 category order must be Retail, Motors, Property, More");
+ const hero=home.locator(".nova-hero-carousel");
+ const heroState=await hero.evaluate(el=>({visibility:getComputedStyle(el).visibility,display:getComputedStyle(el).display,width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height,text:el.innerText}));
+ assert.notEqual(heroState.visibility,"hidden","Preview 2 Home promotional hero is still hidden");
+ assert.notEqual(heroState.display,"none","Preview 2 Home promotional hero is not rendered");
+ assert(heroState.width>500&&heroState.height>100,"Preview 2 Home promotional hero has no visible layout area");
+ assert(heroState.text.includes("Browse fashion, tech and home essentials."),"Home hero copy does not match the approved Preview 2 reference");
+ const sectionTitles=await home.locator("[data-home-category] .section-kicker h2").allTextContents();
+ assert.deepEqual(sectionTitles.slice(0,2).map(x=>x.trim()),["Premium Properties","Featured Products"],"Home section order must match actual Preview 2");
+ const firstCard=home.locator(".home-product-card").first();
+ assert.equal(await firstCard.locator(".home-product-share[data-nova-product-share]").count(),1,"Home product Share control is missing");
+ assert.equal(await firstCard.locator(".home-add-cart[data-add-product]").count(),1,"Existing Home Add to Cart control is missing");
+ assert.equal(await firstCard.locator(".home-wishlist-toggle[data-home-wishlist]").count(),1,"Existing Home wishlist control is missing");
+ const geometry=await firstCard.evaluate(card=>{
+  const c=card.getBoundingClientRect(),p=card.querySelector(".home-product-photo").getBoundingClientRect(),i=card.querySelector(".home-product-info").getBoundingClientRect();
+  return {width:c.width,height:c.height,photoWidth:p.width,photoHeight:p.height,infoHeight:i.height,photoPosition:getComputedStyle(card.querySelector(".home-product-photo")).position,infoPosition:getComputedStyle(card.querySelector(".home-product-info")).position,photoBottom:p.bottom,infoTop:i.top};
+ });
+ assert(geometry.photoPosition==="relative"&&geometry.infoPosition!=="absolute","Preview 2 product photo and information must remain separate normal-flow panels");
+ assert(Math.abs(geometry.photoWidth-geometry.width)<=3&&Math.abs(geometry.photoHeight-geometry.photoWidth)<=4,"Preview 2 product photo must be square and fill the card width");
+ assert(geometry.infoTop>=geometry.photoBottom-2&&geometry.infoHeight>=150,"Preview 2 product information must be a generous separate panel below the image");
+ const shareUrl=await firstCard.locator("[data-nova-product-share]").getAttribute("data-share-url");
+ assert(shareUrl&&new URL(shareUrl).origin===origin,"Home product Share URL must remain inside isolated preview");
+ const native=await home.evaluate(async url=>{
+  const ok=await window.NOVAAIProductShare.share({title:"Preview product",price:"R1,250,000",url,productId:"910003",marketplace:"property",shareLocation:"product_card"});
+  return {ok,calls:window.__nativeShareCalls,clipboard:window.__clipboardWrites};
+ },shareUrl);
+ assert.equal(native.ok,true,"Native Web Share mock did not succeed");
+ assert.equal(native.calls.length,1,"Native Web Share should be called exactly once");
+ assert.equal(native.calls[0].url,shareUrl,"Native share did not use the isolated preview URL");
+ assert.equal(native.clipboard.length,0,"Clipboard should not run after native share success");
+ const clipboard=await home.evaluate(async url=>{
+  navigator.share=async()=>{throw new Error("Native share unavailable")};
+  const ok=await window.NOVAAIProductShare.share({title:"Preview product",price:"R1,250,000",url,productId:"910003",marketplace:"property",shareLocation:"product_card"});
+  return {ok,writes:window.__clipboardWrites};
+ },shareUrl);
+ assert.equal(clipboard.ok,true,"Clipboard fallback did not succeed");
+ assert.equal(clipboard.writes.length,1,"Clipboard fallback should write exactly once");
+ assert(clipboard.writes[0].includes(shareUrl),"Clipboard text did not include the isolated preview URL");
+ const cancel=await home.evaluate(async url=>{
+  navigator.share=async()=>{const e=new Error("Cancelled");e.name="AbortError";throw e};
+  const before=window.__clipboardWrites.length;
+  const ok=await window.NOVAAIProductShare.share({title:"Preview product",url,productId:"910003",marketplace:"property",shareLocation:"product_card"});
+  return {ok,before,after:window.__clipboardWrites.length};
+ },shareUrl);
+ assert.equal(cancel.ok,false,"Native share cancellation must not be recorded as success");
+ assert.equal(cancel.after,cancel.before,"Clipboard must not run after a user cancellation");
+
+ const wishlist=firstCard.locator(".home-wishlist-toggle");
+ await wishlist.click();
+ assert.equal(await wishlist.getAttribute("aria-pressed"),"true","Home wishlist action did not save the listing");
+ assert((await home.evaluate(()=>JSON.parse(localStorage.getItem("novaWishlist")||"[]"))).includes("910003"),"Wishlist did not persist the selected product");
+ const cart=firstCard.locator(".home-add-cart");
+ await cart.click();
+ const cartData=await home.evaluate(()=>JSON.parse(localStorage.getItem("novaMarketplaceCartV1")||"[]"));
+ assert(cartData.length>0,"Home Add to Cart did not persist the selected product");
+ console.log("PASS Preview 2 Home hero, category order, Home sections, separate square-photo/product-info cards, native sharing, clipboard fallback, cancellation, cart and wishlist");
+
+ const retail=pages.find(x=>x.file==="retail.html").page;
+ await retail.waitForFunction(()=>!!document.querySelector("#products .product-open-card .actions .nova-product-share-card"),null,{timeout:15000});
+ const retailShare=retail.locator("#products .product-open-card .actions .nova-product-share-card").first();
+ assert.equal(await retailShare.count(),1,"Retail listing-card Share control missing");
+ const motors=pages.find(x=>x.file==="seller-motors-houses.html"&&x.query.includes("motors")).page;
+ await motors.waitForFunction(()=>!!document.querySelector(".vehicle-card .motor-gallery .nova-product-share-card"),null,{timeout:15000});
+ const property=pages.find(x=>x.file==="seller-motors-houses.html"&&x.query.includes("property")).page;
+ await property.waitForFunction(()=>!!document.querySelector(".property-card .property-card-gallery .nova-product-share-card"),null,{timeout:15000});
+ const detail=pages.find(x=>x.file==="property-details.html").page;
+ await detail.waitForFunction(()=>typeof window.propertyDetailShareButton==="function"&&window.propertyDetailShareButton().length>0,null,{timeout:15000});
+ console.log("PASS Retail, Motors, Property listing and Property detail Share controls");
+
+ const mobileContext=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
+ await mobileContext.route("**/*",async route=>{
+  const url=route.request().url();
+  if(productionPattern(url)){attempts.add(url);await route.abort("blockedbyclient");return}
+  const parsed=new URL(url);
+  if(parsed.origin!==origin&&parsed.hostname!=="images.unsplash.com"){await route.abort("blockedbyclient");return}
+  await route.continue();
+ });
+ const mobile=await mobileContext.newPage();
+ mobile.on("pageerror",err=>failures.push("mobile Home: "+err.message));
+ await mobile.goto(origin+"/index.html",{waitUntil:"domcontentloaded",timeout:20000});
+ await mobile.waitForSelector(".home-product-card .home-product-share",{timeout:15000});
+ const mobileHero=await mobile.locator(".nova-hero-carousel").evaluate(el=>({display:getComputedStyle(el).display,visibility:getComputedStyle(el).visibility,height:el.getBoundingClientRect().height}));
+ const mobileCard=await mobile.locator(".home-product-card").first().evaluate(card=>{
+  const c=card.getBoundingClientRect(),p=card.querySelector(".home-product-photo").getBoundingClientRect(),i=card.querySelector(".home-product-info").getBoundingClientRect();
+  return {width:c.width,height:c.height,photoWidth:p.width,photoHeight:p.height,infoHeight:i.height,photoBottom:p.bottom,infoTop:i.top};
+ });
+ assert(mobileCard.width>=155&&mobileCard.width<=175,"Android Preview 2 card width is outside the approved 155–175px range: "+mobileCard.width);
+ assert(Math.abs(mobileCard.photoHeight-mobileCard.photoWidth)<=4,"Android Preview 2 product photo is not square");
+ assert(mobileCard.height>=320&&mobileCard.infoHeight>=170&&mobileCard.infoTop>=mobileCard.photoBottom-2,"Android Preview 2 card must retain its tall separate information panel");
+ await mobile.screenshot({path:"preview-screenshots/home-android-390.png",fullPage:true});
+ await home.screenshot({path:"preview-screenshots/home-desktop-1280.png",fullPage:true});
+ await mobileContext.close();
+ assert.equal(attempts.size,0,"Production Supabase/analytics network attempts detected: "+[...attempts].join(", "));
+ assert.deepEqual(failures,[],"Browser page JavaScript errors: "+failures.join(" | "));
+ console.log("PASS rendered Preview 2 desktop/mobile comparison + 5-page browser isolation; zero production Supabase/analytics requests.");
+}finally{
+ if(browser)await browser.close();
+ await new Promise(resolve=>server.close(resolve));
+}

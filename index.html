@@ -46,6 +46,735 @@ footer{background:var(--navy);color:#dbe5f2;text-align:center;padding:23px 16px;
 /* Preserve the ad-slot first-paint gate used by novaai-ad-slots.js. */
 html.nova-ads-pending [data-nova-ad-slot],
 html.nova-ads-pending [data-nova-ad-slot] * { visibility:hidden !important; }
+
+/* =========================================================
+   NOVAAI 2080 HOME VISUAL LAYER
+   CSS-only presentation overrides. Keep Home interactions,
+   advertising slot behaviour and all application markup intact.
+   ========================================================= */
+body:not(.product-view-active){
+  --navy:#07152f;
+  --blue:#176bff;
+  --yellow:#ffd21f;
+  --ink:#eaf3ff;
+  --muted:#9bb0cc;
+  --bg:#050d1d;
+  --line:rgba(126,174,235,.2);
+  background:
+    radial-gradient(ellipse at 12% 8%,rgba(22,103,255,.18),transparent 34rem),
+    radial-gradient(ellipse at 88% 26%,rgba(0,220,255,.09),transparent 32rem),
+    linear-gradient(180deg,#07152d 0%,#050d1d 58%,#08152b 100%);
+  color:#eaf3ff;
+}
+body:not(.product-view-active) .top{
+  background:linear-gradient(90deg,#07152f,#123b7c 48%,#07152f);
+  color:#bfeaff;border-bottom:1px solid rgba(79,193,255,.28);
+  letter-spacing:1.05px;text-shadow:0 0 14px rgba(0,204,255,.25)
+}
+body:not(.product-view-active) header{
+  background:rgba(6,17,39,.88);border-bottom:1px solid rgba(92,165,255,.24);
+  box-shadow:0 12px 34px rgba(0,0,0,.22);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)
+}
+body:not(.product-view-active) .head{padding-top:15px;padding-bottom:15px}
+body:not(.product-view-active) .logo{color:#7cb8ff;text-shadow:0 0 22px rgba(40,137,255,.28)}
+body:not(.product-view-active) .logo .nova-ai{color:#8bc5ff}
+body:not(.product-view-active) .logo .nova-ai span{color:var(--yellow);text-shadow:0 0 15px rgba(255,210,31,.32)}
+body:not(.product-view-active) .logo .market-word{color:#e4f1ff}
+body:not(.product-view-active) .tag{color:#8eaed4}
+body:not(.product-view-active) .home-signin-link,
+body:not(.product-view-active) .cart-link{
+  border-color:rgba(100,174,255,.32);background:rgba(17,43,82,.72);color:#d9edff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 5px 18px rgba(0,0,0,.15);
+  transition:background .2s ease,border-color .2s ease,transform .2s ease
+}
+body:not(.product-view-active) .home-signin-link:hover,
+body:not(.product-view-active) .cart-link:hover{background:rgba(24,83,157,.78);border-color:rgba(69,201,255,.65);transform:translateY(-1px)}
+body:not(.product-view-active) .cart-link b{background:var(--yellow);color:#14264a;box-shadow:0 0 16px rgba(255,210,31,.3)}
+body:not(.product-view-active) .home-search-wrap{padding-top:17px;padding-bottom:10px}
+body:not(.product-view-active) .home-search{
+  max-width:960px;min-height:52px;border:1px solid rgba(91,169,255,.32);
+  border-radius:15px;background:rgba(12,31,61,.82);
+  box-shadow:0 10px 30px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.05);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)
+}
+body:not(.product-view-active) .home-search input{background:transparent;color:#f1f7ff}
+body:not(.product-view-active) .home-search input::placeholder{color:#829bbd}
+body:not(.product-view-active) .home-search button[type=submit]{
+  background:linear-gradient(135deg,#168bff,#1558e8);color:#fff;
+  box-shadow:0 0 22px rgba(23,107,255,.3)
+}
+body:not(.product-view-active) .home-search .home-location-button{
+  background:linear-gradient(135deg,#ffe66b,#ffc928);color:#17284a
+}
+body:not(.product-view-active) .home-location-status{color:#91a9c8}
+body:not(.product-view-active) main{padding-top:2px}
+body:not(.product-view-active) .nova-hero-carousel{
+  max-width:1160px;margin-top:16px;margin-bottom:29px;
+  filter:drop-shadow(0 18px 36px rgba(0,0,0,.22))
+}
+body:not(.product-view-active) .nova-hero-slide{
+  min-height:250px;border:1px solid rgba(94,180,255,.36);border-radius:23px;
+  background:linear-gradient(115deg,rgba(8,25,56,.97),rgba(11,43,91,.94) 58%,rgba(5,23,51,.97));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 34px rgba(0,128,255,.13);
+  position:relative
+}
+body:not(.product-view-active) .nova-hero-slide::after{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(115deg,rgba(0,204,255,.07),transparent 42%,rgba(34,104,255,.08));
+  box-shadow:inset 0 0 55px rgba(76,166,255,.08)
+}
+body:not(.product-view-active) .nova-hero-copy{
+  position:relative;z-index:1;padding:clamp(24px,4.6vw,48px);
+  background:linear-gradient(115deg,rgba(5,18,43,.22),rgba(10,45,98,.18))
+}
+body:not(.product-view-active) .nova-hero-kicker{
+  color:#ffe05a;letter-spacing:2px;text-shadow:0 0 16px rgba(255,210,31,.25)
+}
+body:not(.product-view-active) .nova-hero-copy h1{
+  color:#f5faff;text-shadow:0 4px 24px rgba(0,0,0,.25)
+}
+body:not(.product-view-active) .nova-hero-copy p{color:#c0d9f5}
+body:not(.product-view-active) .nova-hero-copy>a{
+  border:1px solid rgba(255,238,153,.75);border-radius:11px;
+  background:linear-gradient(135deg,#ffe66b,#ffc51b);color:#14264a;
+  box-shadow:0 7px 24px rgba(255,197,27,.18);transition:transform .2s ease,box-shadow .2s ease
+}
+body:not(.product-view-active) .nova-hero-copy>a:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(255,197,27,.28)}
+body:not(.product-view-active) .nova-hero-art,
+body:not(.product-view-active) .nova-hero-art.local,
+body:not(.product-view-active) .nova-hero-art.sellers{
+  background:radial-gradient(circle at 52% 45%,rgba(0,220,255,.22),transparent 48%),
+    linear-gradient(145deg,#0c3670,#071a3a 78%)
+}
+body:not(.product-view-active) .hero-art-circle{
+  right:-25px;top:-65px;width:260px;height:260px;
+  border:1px solid rgba(91,222,255,.32);
+  background:radial-gradient(circle,rgba(27,162,255,.2),rgba(0,214,255,.04) 62%,transparent 70%);
+  box-shadow:0 0 55px rgba(0,174,255,.14)
+}
+body:not(.product-view-active) .hero-art-card{
+  width:min(78%,230px);min-height:135px;border:1px solid rgba(124,222,255,.55);
+  border-radius:20px;background:linear-gradient(145deg,rgba(23,73,133,.78),rgba(6,25,57,.88));
+  color:#f3f9ff;text-shadow:0 0 20px rgba(0,193,255,.3);
+  box-shadow:0 18px 42px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.18);
+  backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px)
+}
+body:not(.product-view-active) .hero-art-card>span{color:var(--yellow)}
+body:not(.product-view-active) .hero-art-card small{color:#8fe8ff}
+body:not(.product-view-active) .nova-hero-controls>button{
+  border-color:rgba(99,178,255,.38);background:rgba(12,35,71,.9);color:#c9edff;
+  box-shadow:0 4px 15px rgba(0,0,0,.2)
+}
+body:not(.product-view-active) .nova-hero-dots button{background:#466184}
+body:not(.product-view-active) .nova-hero-dots button.active{
+  background:#39d8ff;box-shadow:0 0 13px rgba(57,216,255,.55)
+}
+body:not(.product-view-active) .home-featured{margin-top:30px}
+body:not(.product-view-active) .section-kicker h2{color:#f0f7ff}
+body:not(.product-view-active) .section-kicker a{color:#62dfff}
+body:not(.product-view-active) .featured-subtitle{color:#91a9c8}
+body:not(.product-view-active) .home-category-section{margin-bottom:34px}
+body:not(.product-view-active) .home-carousel{
+  gap:14px;padding:5px 3px 15px;scrollbar-color:#31547e transparent
+}
+body:not(.product-view-active) .home-carousel::-webkit-scrollbar-thumb{background:#31547e}
+body:not(.product-view-active) .home-product-card{
+  border:1px solid rgba(101,165,239,.28);border-radius:17px;
+  background:linear-gradient(155deg,rgba(17,39,75,.96),rgba(8,23,49,.98));
+  box-shadow:0 10px 26px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.06);
+  transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease
+}
+body:not(.product-view-active) .home-product-card:hover{
+  transform:translateY(-4px);border-color:rgba(65,211,255,.62);
+  box-shadow:0 16px 34px rgba(0,0,0,.28),0 0 24px rgba(0,145,255,.12)
+}
+body:not(.product-view-active) .home-product-card:focus-visible{
+  outline:3px solid var(--yellow);outline-offset:3px
+}
+body:not(.product-view-active) .home-product-photo{
+  aspect-ratio:1/1;background:linear-gradient(145deg,#eaf4ff,#cbdcf2);
+  border-bottom:1px solid rgba(99,175,255,.22)
+}
+body:not(.product-view-active) .home-product-photo img{
+  object-fit:contain;object-position:center;transition:transform .35s ease
+}
+body:not(.product-view-active) .home-product-card:hover .home-product-photo img{transform:scale(1.035)}
+body:not(.product-view-active) .home-no-photo{color:#526b8b}
+body:not(.product-view-active) .home-wishlist-toggle{
+  border:1px solid rgba(255,255,255,.65);background:rgba(7,24,49,.82);
+  color:#eaf6ff;box-shadow:0 4px 14px rgba(0,0,0,.2);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)
+}
+body:not(.product-view-active) .home-wishlist-toggle.is-saved{color:#ff7196}
+body:not(.product-view-active) .home-product-info{padding:12px}
+body:not(.product-view-active) .home-product-category{color:#83c9ef}
+body:not(.product-view-active) .home-product-info h3{color:#f0f6ff;line-height:1.38}
+body:not(.product-view-active) .home-card-seller{color:#a9bfdc}
+body:not(.product-view-active) .home-card-seller .verified-check{
+  background:rgba(41,205,151,.16);color:#63e5b5
+}
+body:not(.product-view-active) .home-trust-label{
+  border:1px solid rgba(80,178,255,.2);background:rgba(25,91,163,.2);color:#8fd9ff
+}
+/* Three fixed action columns protect Share and Cart from long prices. */
+body:not(.product-view-active) .home-product-buy-row{
+  display:grid;grid-template-columns:minmax(0,1fr) 34px 36px;
+  align-items:center;justify-content:initial;gap:6px;width:100%;min-width:0
+}
+body:not(.product-view-active) .home-product-price{
+  min-width:0;max-width:100%;color:#ffe16a;font-size:clamp(12px,3.8vw,16px);
+  line-height:1.18;letter-spacing:-.25px;font-weight:950;
+  white-space:normal;overflow-wrap:anywhere;word-break:normal
+}
+body:not(.product-view-active) .home-product-share{
+  flex:none!important;width:34px!important;min-width:34px!important;height:34px!important;
+  border:1px solid rgba(87,207,255,.45)!important;border-radius:10px!important;
+  background:linear-gradient(145deg,rgba(18,102,172,.9),rgba(10,54,111,.95))!important;
+  color:#b9f2ff!important;box-shadow:0 0 14px rgba(0,178,255,.13)!important
+}
+body:not(.product-view-active) .home-product-share svg{width:17px;height:17px;stroke:currentColor}
+body:not(.product-view-active) .home-add-cart{
+  flex:none;border:1px solid rgba(255,221,89,.65);border-radius:10px;
+  background:linear-gradient(145deg,#ffe66b,#ffc928);color:#14264a;
+  box-shadow:0 5px 16px rgba(255,201,40,.16);transition:transform .18s ease,filter .18s ease
+}
+body:not(.product-view-active) .home-add-cart:hover{filter:brightness(1.06);transform:translateY(-1px)}
+body:not(.product-view-active) .home-add-cart:active{background:#176bff;color:#fff}
+body:not(.product-view-active) .home-products-message{
+  border:1px dashed rgba(102,180,255,.35);border-radius:15px;
+  background:rgba(13,33,66,.7);color:#a9c4e5
+}
+body:not(.product-view-active) .home-seller-banner{
+  border:1px solid rgba(86,182,255,.35);border-radius:20px;
+  background:linear-gradient(115deg,rgba(8,27,60,.98),rgba(14,65,132,.95));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 15px 34px rgba(0,0,0,.2)
+}
+body:not(.product-view-active) .home-seller-banner p{color:#c0d9f5}
+body:not(.product-view-active) .home-seller-banner a{
+  background:linear-gradient(135deg,#ffe66b,#ffc51b);color:#14264a;
+  box-shadow:0 6px 20px rgba(255,197,27,.16)
+}
+body:not(.product-view-active) footer{
+  border-top:1px solid rgba(92,165,255,.2);
+  background:linear-gradient(180deg,#091a37,#050d1d);color:#a9c4e5
+}
+body:not(.product-view-active) footer .footer-nova{color:#77baff}
+body:not(.product-view-active) footer .footer-ai{color:var(--yellow)}
+body:not(.product-view-active) .nova-bottom-nav{
+  border-color:rgba(95,167,255,.28);background:rgba(5,17,39,.91);
+  box-shadow:0 -8px 28px rgba(0,0,0,.32);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)
+}
+body:not(.product-view-active) .nova-nav-item{color:#91a9c8}
+body:not(.product-view-active) .nova-nav-item.active{color:#55dfff}
+body:not(.product-view-active) .home-cart-toast{
+  border:1px solid rgba(96,185,255,.28);background:#102c56;color:#f3f9ff
+}
+@media(min-width:761px){
+  body:not(.product-view-active) .home-product-card{flex-basis:clamp(190px,19vw,225px)}
+  body:not(.product-view-active) .home-product-info{padding:14px}
+}
+@media(max-width:760px){
+  body:not(.product-view-active) .head{padding:12px 13px}
+  body:not(.product-view-active) .home-search-wrap{padding:12px 13px 8px}
+  body:not(.product-view-active) .nova-hero-carousel{margin:10px auto 21px}
+  body:not(.product-view-active) .nova-hero-slide{
+    min-height:188px;height:clamp(188px,52vw,225px);border-radius:17px;
+    grid-template-columns:40% minmax(0,1fr)
+  }
+  body:not(.product-view-active) .nova-hero-copy{padding:12px}
+  body:not(.product-view-active) .nova-hero-art{min-width:0}
+  body:not(.product-view-active) .hero-art-card{width:84%;min-height:78px;padding:8px;font-size:15px}
+  body:not(.product-view-active) .hero-art-card small{font-size:6px}
+  body:not(.product-view-active) .home-carousel{gap:10px}
+  body:not(.product-view-active) .home-product-card{flex-basis:clamp(148px,42vw,174px)}
+  body:not(.product-view-active) .home-product-info{padding:10px}
+  body:not(.product-view-active) .home-product-buy-row{grid-template-columns:minmax(0,1fr) 34px 34px;gap:5px}
+  body:not(.product-view-active) .home-product-price{font-size:clamp(12px,3.8vw,15px)}
+  body:not(.product-view-active) .home-add-cart{width:34px;height:34px;min-height:34px}
+  body:not(.product-view-active) .home-product-share{width:34px!important;min-width:34px!important;height:34px!important}
+  body:not(.product-view-active) .nova-bottom-nav{border-top-color:rgba(95,167,255,.28)}
+}
+@media(max-width:360px){
+  body:not(.product-view-active) .home-product-card{flex-basis:145px}
+  body:not(.product-view-active) .home-product-info{padding:9px}
+  body:not(.product-view-active) .home-product-buy-row{grid-template-columns:minmax(0,1fr) 32px 32px;gap:4px}
+  body:not(.product-view-active) .home-product-share{width:32px!important;min-width:32px!important;height:32px!important}
+  body:not(.product-view-active) .home-add-cart{width:32px;height:32px;min-height:32px}
+  body:not(.product-view-active) .home-product-price{font-size:12px}
+}
+@media(hover:none){
+  body:not(.product-view-active) .home-product-card:hover{transform:none}
+  body:not(.product-view-active) .home-product-card:hover .home-product-photo img{transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+  body:not(.product-view-active) .home-product-card,
+  body:not(.product-view-active) .home-product-photo img,
+  body:not(.product-view-active) .home-add-cart,
+  body:not(.product-view-active) .home-signin-link,
+  body:not(.product-view-active) .cart-link,
+  body:not(.product-view-active) .nova-hero-copy>a{transition:none!important}
+}
+
+
+/* NOVAAI 2080 approved Home composition — presentation layer only */
+body:not(.product-view-active){--navy:#06142d;--blue:#168cff;--yellow:#ffd21f;--ink:#edf6ff;--muted:#a8c0df;--bg:#030b1b;--line:rgba(91,190,255,.42);background:radial-gradient(ellipse at 10% 10%,rgba(0,111,255,.22),transparent 35rem),radial-gradient(ellipse at 92% 42%,rgba(0,210,255,.12),transparent 34rem),linear-gradient(180deg,#06152f 0%,#030b1b 62%,#07172e 100%);color:#edf6ff}
+body:not(.product-view-active) .top{background:#06142d;color:#8bdcff;border-bottom:1px solid #2ab1ff40}
+body:not(.product-view-active) header{background:#030d1fee;border-bottom:1px solid #24abff60;box-shadow:0 8px 30px #0008}
+body:not(.product-view-active) .logo .nova-ai{color:#8dc8ff}
+body:not(.product-view-active) .brand-novaai span:first-child{color:#8dc8ff}
+body:not(.product-view-active) .logo .nova-ai span,body:not(.product-view-active) .brand-novaai span:last-child{color:#ffd21f}
+body:not(.product-view-active) .logo .market-word{color:#eaf5ff}
+body:not(.product-view-active) .home-search{border:1px solid #168cff;border-radius:28px;background:#03132be8;box-shadow:0 0 0 1px #168cff55,0 0 22px #078cff66}
+body:not(.product-view-active) .home-search input{color:#fff;background:transparent}
+body:not(.product-view-active) .home-search input::placeholder{color:#90b8e4}
+body:not(.product-view-active) .home-search button[type=submit]{background:linear-gradient(135deg,#20baff,#126bff)}
+body:not(.product-view-active) .home-search .home-location-button{background:#ffd21f;color:#06142d}
+body:not(.product-view-active) .nova-hero-carousel{margin:12px auto 24px;padding-bottom:27px}
+body:not(.product-view-active) .nova-hero-slide{position:relative;isolation:isolate;min-height:clamp(230px,29vw,340px);grid-template-columns:minmax(0,1fr);border:1px solid #20baff;border-radius:22px;background:radial-gradient(ellipse at 78% 38%,#1469b5 0%,#082b58 35%,#06152e 76%);box-shadow:0 0 28px #087fff55,inset 0 0 32px #159dff18}
+body:not(.product-view-active) .nova-hero-slide:before{content:"";position:absolute;z-index:-1;inset:0;background:radial-gradient(circle at 76% 22%,#5bcfff88 0 1px,transparent 2px),radial-gradient(ellipse at 78% 80%,transparent 0 24%,#0b9eff55 25%,transparent 26%),linear-gradient(115deg,transparent 40%,#20aaff22 70%,transparent);background-size:37px 37px,100% 100%,100% 100%;pointer-events:none}
+body:not(.product-view-active) .nova-hero-copy{grid-column:1;grid-row:1;z-index:2;max-width:62%;padding:clamp(22px,5vw,56px);background:linear-gradient(90deg,#06142df2 0%,#071b3bdc 72%,transparent 100%)}
+body:not(.product-view-active) .nova-hero-kicker{color:#4ce1ff}
+body:not(.product-view-active) .nova-hero-copy h1{font-size:clamp(30px,5vw,58px);line-height:1.03;letter-spacing:-1.5px}
+body:not(.product-view-active) .nova-hero-copy p{color:#d6eaff;font-size:clamp(13px,1.4vw,17px)}
+body:not(.product-view-active) .nova-hero-copy>a{padding:12px 19px;border-radius:28px;background:#ffd21f;color:#06142d;box-shadow:0 0 22px #ffd21f55}
+body:not(.product-view-active) .nova-hero-slide:before{z-index:1}
+body:not(.product-view-active) .nova-hero-art{position:absolute;z-index:0;inset:0;grid-column:1;grid-row:1;background:radial-gradient(ellipse at 79% 35%,#7edaff 0%,#1265b7 18%,#071d3d 53%,transparent 70%),linear-gradient(135deg,transparent 45%,#0b4f9b 70%,#06142d);overflow:hidden}
+body:not(.product-view-active) .hero-art-circle{right:10%;top:-20%;width:clamp(180px,30vw,350px);height:clamp(180px,30vw,350px);background:radial-gradient(circle at 35% 35%,#b9edff,#247dca 42%,#071a3a 70%);box-shadow:0 0 60px #16aaff88}
+body:not(.product-view-active) .hero-art-card{display:none}
+body:not(.product-view-active) .nova-hero-controls>button{border-color:#35c8ff;background:#071a38;color:#bceeff;box-shadow:0 0 12px #078cff66}
+body:not(.product-view-active) .nova-hero-dots button{background:#426c9a}
+body:not(.product-view-active) .nova-hero-dots button.active{background:#ffd21f}
+body:not(.product-view-active) main{max-width:1440px;padding-left:clamp(13px,2.4vw,32px);padding-right:clamp(13px,2.4vw,32px)}
+.home-category-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(10px,1.6vw,20px);margin:0 0 28px}
+.home-category-tile{position:relative;min-width:0;min-height:clamp(110px,14vw,180px);overflow:hidden;display:flex;align-items:flex-end;border:1px solid #168cff;border-radius:18px;background:linear-gradient(135deg,#0a2d5a,#06152e);box-shadow:0 0 17px #078cff33;isolation:isolate}
+.home-category-image{position:absolute;z-index:-1;inset:0;background:radial-gradient(circle at 60% 35%,#168cff99,transparent 55%),linear-gradient(145deg,#0c4a8a,#06152e)}
+.home-category-image:after{content:"";position:absolute;inset:35% 0 0;background:linear-gradient(180deg,transparent,#04132aee)}
+.home-category-image img{width:100%;height:100%;object-fit:cover;opacity:.86;transition:transform .45s ease}
+.home-category-tile:hover .home-category-image img{transform:scale(1.05)}
+.home-category-label{position:relative;z-index:1;padding:12px 16px;color:#fff;font-size:clamp(15px,1.8vw,21px);font-weight:900;text-shadow:0 2px 10px #000}
+.home-category-arrow{position:absolute;right:14px;bottom:13px;color:#63ddff;font-size:22px}
+.home-category-tile.more .home-category-image{display:grid;place-items:center}
+.category-more-symbol{color:#51dfff;font-size:68px;font-weight:200;text-shadow:0 0 24px #00cfff}
+.home-category-section{position:relative;margin:0 0 clamp(25px,3vw,42px);overflow:hidden}
+.section-kicker{margin:0 0 12px}
+.section-kicker h2{color:#f0f7ff;font-size:clamp(21px,2.6vw,29px);letter-spacing:-.5px}
+.section-kicker a{color:#ffd21f;font-size:13px}
+.home-carousel{gap:clamp(12px,1.5vw,20px);padding:2px 36px 15px 2px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;mask-image:linear-gradient(90deg,#000 0%,#000 91%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,#000 0%,#000 91%,transparent 100%)}
+.home-carousel::-webkit-scrollbar{display:none;height:0}
+.home-product-card{flex:0 0 clamp(245px,26vw,320px);border:1px solid #32baffaa;border-radius:18px;background:linear-gradient(160deg,#0b274dfb,#041025fb);box-shadow:0 0 16px #078cff26,inset 0 1px 0 #ffffff18;scroll-snap-align:start;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+.home-product-card:hover{transform:translateY(-3px);border-color:#64e3ff;box-shadow:0 0 24px #078cff55}
+.home-product-photo{aspect-ratio:16/10;background:linear-gradient(145deg,#123c70,#06152e)}
+.home-product-photo img{object-fit:cover}
+.home-wishlist-toggle{top:12px;right:12px;border:1px solid #8bdcff88;background:#071a38cc;color:#e7f8ff;backdrop-filter:blur(10px)}
+.home-product-info{padding:15px;gap:2px}
+.home-product-category{color:#66dfff;font-size:10px;letter-spacing:1px}
+.home-product-info h3{min-height:42px;color:#f2f7ff;font-size:16px;line-height:1.3}
+.home-card-seller{color:#b9d4f3;font-size:11px}
+.home-card-seller .verified-check{background:#00cda7;color:#042b36}
+.home-trust-label{display:inline-flex;align-items:center;gap:5px;width:max-content;max-width:100%;margin:2px 0 10px;padding:5px 8px;border-radius:999px;background:#00c9b01f;color:#52f3d0;font-size:9px;letter-spacing:.25px}
+.home-trust-label.trust-pending{background:#203b60;color:#a9c7e9}
+.home-product-buy-row{display:grid;grid-template-columns:minmax(0,1fr) 36px 40px;align-items:center;gap:9px;width:100%;min-width:0}
+.home-product-price{min-width:0;color:#ffd21f;font-size:clamp(17px,2vw,22px);white-space:normal;overflow-wrap:anywhere}
+.home-product-price small{font-size:10px;color:#9fdfff;white-space:nowrap}
+.home-product-share{width:36px!important;min-width:36px!important;height:36px!important;border:1px solid #4ccfff88!important;border-radius:11px!important;background:#0c4a82!important;color:#aeefff!important;box-shadow:0 0 12px #009dff22!important}
+.home-add-cart{width:40px;height:40px;min-height:40px;flex-basis:40px;border:1px solid #ffdf61;background:linear-gradient(145deg,#ffe66b,#ffc928);color:#13284a;box-shadow:0 5px 18px #ffc92825}
+.home-property-card{flex-basis:clamp(275px,30vw,365px)}
+.home-property-card .home-product-photo{aspect-ratio:16/9}
+.home-property-card .home-product-info{padding:16px}
+.home-property-card .home-product-info h3{min-height:24px;font-size:17px}
+.home-listing-type{position:absolute;top:12px;left:12px;padding:6px 11px;border-radius:999px;background:#ffd21f;color:#14264a;font-size:11px;font-weight:950}
+.home-seller-banner{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:minmax(90px,17%) minmax(0,1fr) auto auto;align-items:center;gap:clamp(12px,2vw,28px);min-height:150px;margin:35px 0 27px;padding:20px clamp(18px,3vw,34px);border:1px solid #20baff;border-radius:22px;background:radial-gradient(ellipse at 12% 50%,#0d65a5 0%,#092e5c 22%,transparent 48%),linear-gradient(110deg,#071a38,#06132a 70%,#092d59);box-shadow:0 0 24px #078cff33}
+.home-seller-banner:after{content:"";position:absolute;z-index:-1;inset:0;background:radial-gradient(circle at 76% 25%,#26baff66 0 1px,transparent 2px),linear-gradient(115deg,transparent 45%,#0a8bff22 75%,transparent);background-size:29px 29px,100% 100%;pointer-events:none}
+.home-seller-visual{position:relative;align-self:stretch;min-height:105px;display:grid;place-items:center}
+.seller-visual-orbit{position:absolute;width:115px;height:115px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#b4efff,#1787db 45%,#061b3c 73%);box-shadow:0 0 32px #14b9ff77}
+.seller-visual-person{position:relative;width:52px;height:80px;margin-top:25px;border-radius:45% 45% 18% 18%;background:linear-gradient(100deg,#07172e,#7bdcff 45%,#0c3b69 75%);clip-path:polygon(28% 0,72% 0,100% 100%,0 100%);filter:drop-shadow(0 0 10px #18baff)}
+.home-seller-copy{min-width:0}
+.home-seller-kicker{margin:0 0 6px!important;color:#57dfff!important;font-size:9px!important;font-weight:900;letter-spacing:1.3px}
+.home-seller-banner h2{color:#fff;font-size:clamp(22px,3vw,34px);margin:0 0 7px}
+.home-seller-banner .brand-novaai{white-space:nowrap}
+.home-seller-banner .brand-novaai span:first-child{color:#8dc8ff}
+.home-seller-banner .brand-novaai span:last-child{color:#ffd21f}
+.home-seller-banner p{color:#d5eaff;font-size:13px}
+.home-seller-growth{height:85px;display:flex;align-items:flex-end;gap:7px;padding:0 8px;border-bottom:2px solid #27bfff;transform:skewY(-5deg)}
+.home-seller-growth span{width:12px;height:var(--h,35px);background:linear-gradient(180deg,#4de4ff,#116bff);box-shadow:0 0 13px #0b9cff}
+.home-seller-growth span:nth-child(1){--h:18px}.home-seller-growth span:nth-child(2){--h:30px}.home-seller-growth span:nth-child(3){--h:45px}.home-seller-growth span:nth-child(4){--h:61px}.home-seller-growth span:nth-child(5){--h:78px}
+.home-seller-banner>a{position:relative;z-index:1;padding:13px 19px;border-radius:999px;background:#ffd21f;color:#10284b;white-space:nowrap;box-shadow:0 0 20px #ffd21f33}
+body:not(.product-view-active) footer{background:#06142d;color:#a8c7e9;border-top:1px solid #168cff55}
+body:not(.product-view-active) footer .footer-nova{color:#8dc8ff}
+body:not(.product-view-active) footer .footer-ai{color:#ffd21f}
+body:not(.product-view-active) .nova-bottom-nav{background:#030d1ff0;border:1px solid #168cff66;border-bottom:0;box-shadow:0 -8px 30px #008dff44;backdrop-filter:blur(20px)}
+body:not(.product-view-active) .nova-nav-item{color:#8ccfff}
+body:not(.product-view-active) .nova-nav-item.active{color:#ffd21f;text-shadow:0 0 14px #ffd21f77}
+@media(max-width:760px){
+ .home-category-tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:22px}
+ .home-category-tile{min-height:116px;border-radius:15px}
+ .home-category-label{padding:10px 12px;font-size:16px}
+ body:not(.product-view-active) .nova-hero-slide{min-height:clamp(220px,58vw,285px);height:auto}
+ body:not(.product-view-active) .nova-hero-copy{max-width:76%;padding:18px}
+ body:not(.product-view-active) .nova-hero-copy h1{font-size:clamp(25px,7vw,38px)}
+ body:not(.product-view-active) .nova-hero-art{opacity:.8}
+ .home-carousel{gap:12px;padding-right:30px;mask-image:linear-gradient(90deg,#000 0%,#000 88%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,#000 0%,#000 88%,transparent 100%)}
+ .home-product-card{flex-basis:clamp(245px,78vw,300px)}
+ .home-property-card{flex-basis:clamp(275px,86vw,330px)}
+ .home-product-photo{aspect-ratio:16/10}
+ .home-property-card .home-product-photo{aspect-ratio:16/9}
+ .home-seller-banner{grid-template-columns:72px minmax(0,1fr);gap:12px;padding:17px;min-height:0}
+ .home-seller-visual{min-height:85px}
+ .seller-visual-orbit{width:75px;height:75px}
+ .seller-visual-person{width:35px;height:57px;margin-top:19px}
+ .home-seller-growth{display:none}
+ .home-seller-banner>a{grid-column:1/-1;width:100%;justify-content:center}
+ .home-seller-banner h2{font-size:clamp(20px,5.8vw,27px)}
+ .home-seller-banner .home-seller-copy>p:last-child{font-size:11px;line-height:1.5}
+ body:not(.product-view-active) .nova-bottom-nav{left:0;right:0;width:100%;transform:none;border-radius:18px 18px 0 0}
+}
+@media(max-width:380px){.home-product-card{flex-basis:250px}.home-property-card{flex-basis:270px}.home-product-info{padding:13px}.home-product-buy-row{grid-template-columns:minmax(0,1fr) 34px 38px;gap:6px}.home-product-share{width:34px!important;min-width:34px!important;height:34px!important}.home-add-cart{width:38px;height:38px;min-height:38px;flex-basis:38px}}
+@media(prefers-reduced-motion:reduce){.home-category-image img,.home-product-card{transition:none!important}}
+
+/* Focused 2080 correction: image-led category destinations and composed listing cards */
+body:not(.product-view-active) .home-category-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,1.45vw,22px);margin:0 0 clamp(30px,3.2vw,46px)}
+body:not(.product-view-active) .home-category-tile{position:relative;display:block;isolation:isolate;min-height:0;aspect-ratio:1.42/1;overflow:hidden;border:1px solid #42c9ff88;border-radius:clamp(16px,1.7vw,24px);background:linear-gradient(145deg,#123c70,#06152e);box-shadow:0 9px 26px #0005,0 0 18px #078cff25;transform:translateZ(0);transition:border-color .28s ease,box-shadow .28s ease}
+body:not(.product-view-active) .home-category-tile:focus-visible{outline:3px solid #ffd21f;outline-offset:4px}
+body:not(.product-view-active) .home-category-image{position:absolute;z-index:-1;inset:0;display:block;background:radial-gradient(ellipse at 55% 35%,#167fc8 0%,#0a2c55 56%,#06152e 100%)}
+body:not(.product-view-active) .home-category-image:before{content:"";position:absolute;z-index:1;inset:0;background:linear-gradient(180deg,#03132a08 18%,#03132a22 46%,#03132af2 100%),linear-gradient(120deg,#28baff22,transparent 55%);pointer-events:none}
+body:not(.product-view-active) .home-category-image:after{content:"";position:absolute;z-index:2;inset:0;border:1px solid #b9efff20;border-radius:inherit;box-shadow:inset 0 0 34px #29baff1c;pointer-events:none}
+body:not(.product-view-active) .home-category-image img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;opacity:.96;filter:saturate(1.08) contrast(1.04);transition:transform .55s cubic-bezier(.2,.7,.2,1),filter .4s ease}
+body:not(.product-view-active) .home-category-tile:hover .home-category-image img{transform:scale(1.055);filter:saturate(1.16) contrast(1.06)}
+body:not(.product-view-active) .home-category-label{position:absolute;z-index:3;left:clamp(14px,1.7vw,24px);right:48px;bottom:clamp(13px,1.5vw,21px);padding:0;color:#fff;font-size:clamp(18px,2vw,27px);font-weight:900;letter-spacing:-.45px;line-height:1.05;text-shadow:0 3px 16px #000d}
+body:not(.product-view-active) .home-category-arrow{position:absolute;z-index:3;right:clamp(12px,1.4vw,19px);bottom:clamp(11px,1.3vw,18px);display:grid;place-items:center;width:35px;height:35px;border:1px solid #77dfff99;border-radius:50%;background:#061a35b8;color:#ffd21f;font-size:20px;backdrop-filter:blur(12px)}
+body:not(.product-view-active) .home-category-tile.more .home-category-image img{opacity:.72}
+body:not(.product-view-active) .home-category-tile.more .category-more-symbol{position:absolute;z-index:2;top:14px;right:16px;display:grid;place-items:center;width:38px;height:38px;border:1px solid #8be5ff99;border-radius:50%;background:#061a35a8;color:#ffe16a;font-size:25px;font-weight:300;backdrop-filter:blur(12px)}
+body:not(.product-view-active) .home-category-tile.more .home-category-image img:not([src]),body:not(.product-view-active) .home-category-tile.more .home-category-image img[src=""]{display:none}
+body:not(.product-view-active) .home-product-card{flex:0 0 clamp(285px,27vw,360px);border:1px solid #3cbfff9c;border-radius:22px;background:linear-gradient(155deg,#0b2b53f7 0%,#06152dfc 76%);box-shadow:0 12px 30px #0005,0 0 22px #078cff20;scroll-snap-align:start}
+body:not(.product-view-active) .home-product-photo{aspect-ratio:1.18/1;min-height:210px;background:radial-gradient(ellipse at 50% 45%,#164b7c,#071a35 76%);overflow:hidden}
+body:not(.product-view-active) .home-product-photo img{object-fit:cover;object-position:center;transition:transform .55s cubic-bezier(.2,.7,.2,1)}
+body:not(.product-view-active) .home-product-card:hover .home-product-photo img{transform:scale(1.035)}
+body:not(.product-view-active) .home-product-category{position:absolute;left:15px;bottom:14px;z-index:2;margin:0;padding:6px 10px;border:1px solid #75dfff70;border-radius:999px;background:#061a35c9;color:#c5f4ff;font-size:9px;font-weight:900;letter-spacing:1px;backdrop-filter:blur(12px)}
+body:not(.product-view-active) .home-property-card{flex-basis:clamp(330px,33vw,430px)}
+body:not(.product-view-active) .home-property-card .home-product-photo{aspect-ratio:1.42/1;min-height:225px}
+body:not(.product-view-active) .home-product-info{display:flex;flex:1;min-height:176px;flex-direction:column;gap:0;padding:17px 18px 16px}
+body:not(.product-view-active) .home-product-heading{min-height:48px}
+body:not(.product-view-active) .home-product-info h3{min-height:0;margin:0 0 9px;color:#f3f8ff;font-size:clamp(17px,1.55vw,20px);line-height:1.25;font-weight:850;letter-spacing:-.25px}
+body:not(.product-view-active) .home-product-seller-block{display:flex;min-height:40px;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:5px;margin:0 0 13px}
+body:not(.product-view-active) .home-card-seller{display:flex;align-items:center;gap:6px;margin:0;color:#bdd7f1;font-size:11px;line-height:1.3}
+body:not(.product-view-active) .home-card-seller .verified-check{flex:0 0 15px;width:15px;height:15px;margin:0;background:#00cda7;color:#042b36}
+body:not(.product-view-active) .home-trust-label{margin:0;padding:4px 8px;border:1px solid #25cbb044;border-radius:999px;background:#00c9b01c;color:#63f1d4;font-size:8px;letter-spacing:.3px}
+body:not(.product-view-active) .home-trust-label.trust-pending{border-color:#7196bf55;background:#203b6077;color:#bad3ed}
+body:not(.product-view-active) .home-product-buy-row{display:grid;grid-template-columns:minmax(0,1fr) 38px 42px;align-items:center;gap:9px;width:100%;margin-top:auto}
+body:not(.product-view-active) .home-product-price{min-width:0;color:#ffda36;font-size:clamp(19px,2vw,24px);font-weight:950;line-height:1.15;white-space:normal;overflow-wrap:anywhere}
+body:not(.product-view-active) .home-product-price small{display:block;margin-top:3px;color:#a8dcff;font-size:10px;white-space:nowrap}
+body:not(.product-view-active) .home-product-share{width:38px!important;min-width:38px!important;height:38px!important;border:1px solid #48cfff99!important;border-radius:12px!important;background:#0c4a82!important;color:#c2f2ff!important;box-shadow:0 0 14px #009dff22!important}
+body:not(.product-view-active) .home-add-cart{width:42px;height:42px;min-height:42px;flex-basis:42px;border:1px solid #ffe16a;background:linear-gradient(145deg,#ffe66b,#ffc928);color:#13284a;box-shadow:0 5px 18px #ffc92825}
+body:not(.product-view-active) .home-carousel{scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;mask-image:linear-gradient(90deg,#000 0%,#000 91%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,#000 0%,#000 91%,transparent 100%)}
+body:not(.product-view-active) .home-carousel::-webkit-scrollbar{display:none}
+@media(max-width:760px){
+ body:not(.product-view-active) .home-category-tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-bottom:26px}
+ body:not(.product-view-active) .home-category-tile{aspect-ratio:1.12/1;border-radius:17px}
+ body:not(.product-view-active) .home-category-label{left:13px;bottom:13px;font-size:clamp(17px,4.6vw,21px)}
+ body:not(.product-view-active) .home-category-arrow{right:10px;bottom:10px;width:31px;height:31px}
+ body:not(.product-view-active) .home-category-tile.more .category-more-symbol{top:10px;right:10px;width:32px;height:32px}
+ body:not(.product-view-active) .home-product-card{flex-basis:84vw;max-width:355px}
+ body:not(.product-view-active) .home-product-photo{aspect-ratio:1.28/1;min-height:0}
+ body:not(.product-view-active) .home-property-card{flex-basis:88vw;max-width:390px}
+ body:not(.product-view-active) .home-property-card .home-product-photo{aspect-ratio:1.42/1;min-height:0}
+ body:not(.product-view-active) .home-product-info{min-height:165px;padding:15px}
+ body:not(.product-view-active) .home-product-heading{min-height:43px}
+ body:not(.product-view-active) .home-product-seller-block{min-height:37px;margin-bottom:11px}
+ body:not(.product-view-active) .home-product-buy-row{grid-template-columns:minmax(0,1fr) 36px 40px;gap:8px}
+ body:not(.product-view-active) .home-product-share{width:36px!important;min-width:36px!important;height:36px!important}
+ body:not(.product-view-active) .home-add-cart{width:40px;height:40px;min-height:40px;flex-basis:40px}
+}
+@media(max-width:380px){
+ body:not(.product-view-active) .home-category-tile{aspect-ratio:1/1}
+ body:not(.product-view-active) .home-product-card{flex-basis:86vw}
+ body:not(.product-view-active) .home-property-card{flex-basis:90vw}
+ body:not(.product-view-active) .home-product-info{padding:13px}
+ body:not(.product-view-active) .home-product-buy-row{grid-template-columns:minmax(0,1fr) 34px 38px;gap:7px}
+ body:not(.product-view-active) .home-product-share{width:34px!important;min-width:34px!important;height:34px!important}
+ body:not(.product-view-active) .home-add-cart{width:38px;height:38px;min-height:38px;flex-basis:38px}
+}
+
+
+/* Product-card dimensions only: match category-tile width and extend tile height by 20%. */
+body:not(.product-view-active) .home-product-card{
+ flex:0 0 calc((100% + 38px - 3 * clamp(12px,1.45vw,22px))/4);
+ width:calc((100% + 38px - 3 * clamp(12px,1.45vw,22px))/4);
+ max-width:none;
+ aspect-ratio:1.183/1;
+ min-height:0;
+}
+body:not(.product-view-active) .home-product-photo{
+ flex:0 0 56%;
+ min-height:0;
+ aspect-ratio:auto;
+}
+body:not(.product-view-active) .home-product-info{
+ flex:1 1 44%;
+ min-height:0;
+ padding:11px 12px 12px;
+}
+body:not(.product-view-active) .home-product-heading{min-height:35px}
+body:not(.product-view-active) .home-product-info h3{
+ margin:0 0 5px;
+ font-size:clamp(14px,1.25vw,17px);
+ line-height:1.2;
+}
+body:not(.product-view-active) .home-product-seller-block{
+ min-height:0;
+ gap:4px;
+ margin:0 0 7px;
+}
+body:not(.product-view-active) .home-card-seller{font-size:10px}
+body:not(.product-view-active) .home-trust-label{
+ max-width:100%;
+ margin:0;
+ padding:3px 6px;
+ font-size:7px;
+}
+body:not(.product-view-active) .home-product-buy-row{
+ grid-template-columns:minmax(0,1fr) 34px 36px;
+ gap:7px;
+}
+body:not(.product-view-active) .home-product-price{font-size:clamp(15px,1.55vw,19px)}
+body:not(.product-view-active) .home-product-share{
+ width:34px!important;min-width:34px!important;height:34px!important
+}
+body:not(.product-view-active) .home-add-cart{
+ width:36px;height:36px;min-height:36px;flex-basis:36px
+}
+body:not(.product-view-active) .home-property-card{flex-basis:calc((100% + 38px - 3 * clamp(12px,1.45vw,22px))/4)}
+body:not(.product-view-active) .home-property-card .home-product-photo{aspect-ratio:auto;min-height:0}
+body:not(.product-view-active) .home-property-card .home-product-info{padding:11px 12px 12px}
+@media(max-width:760px){
+ body:not(.product-view-active) .home-product-card,
+ body:not(.product-view-active) .home-property-card{
+  flex:0 0 calc((100% + 21px)/2);
+  width:calc((100% + 21px)/2);
+  max-width:none;
+  aspect-ratio:.933/1;
+ }
+ body:not(.product-view-active) .home-product-photo{flex-basis:47%}
+ body:not(.product-view-active) .home-product-info{
+  flex:1 1 53%;
+  padding:9px 10px 10px;
+ }
+ body:not(.product-view-active) .home-product-heading{min-height:31px}
+ body:not(.product-view-active) .home-product-info h3{font-size:12px;line-height:1.2;margin-bottom:4px}
+ body:not(.product-view-active) .home-product-seller-block{gap:3px;margin-bottom:5px}
+ body:not(.product-view-active) .home-card-seller{font-size:9px}
+ body:not(.product-view-active) .home-trust-label{font-size:6px;padding:2px 5px}
+ body:not(.product-view-active) .home-product-buy-row{grid-template-columns:minmax(0,1fr) 30px 32px;gap:5px}
+ body:not(.product-view-active) .home-product-price{font-size:clamp(13px,3.6vw,16px)}
+ body:not(.product-view-active) .home-product-share{width:30px!important;min-width:30px!important;height:30px!important}
+ body:not(.product-view-active) .home-add-cart{width:32px;height:32px;min-height:32px;flex-basis:32px}
+ body:not(.product-view-active) .home-property-card .home-product-info{padding:9px 10px 10px}
+}
+@media(max-width:380px){
+ body:not(.product-view-active) .home-product-card,
+ body:not(.product-view-active) .home-property-card{
+  flex-basis:calc((100% + 21px)/2);
+  width:calc((100% + 21px)/2);
+  aspect-ratio:.833/1;
+ }
+ body:not(.product-view-active) .home-product-photo{flex-basis:43%}
+ body:not(.product-view-active) .home-product-info{flex-basis:57%;padding:8px}
+ body:not(.product-view-active) .home-product-heading{min-height:29px}
+ body:not(.product-view-active) .home-product-info h3{font-size:11px}
+ body:not(.product-view-active) .home-product-buy-row{grid-template-columns:minmax(0,1fr) 28px 30px;gap:4px}
+ body:not(.product-view-active) .home-product-share{width:28px!important;min-width:28px!important;height:28px!important}
+ body:not(.product-view-active) .home-add-cart{width:30px;height:30px;min-height:30px;flex-basis:30px}
+}
+
+/* Final fit: keep the seller/price/action row inside the taller tile-matched card. */
+body:not(.product-view-active) .home-product-card,
+body:not(.product-view-active) .home-property-card{
+ flex-basis:calc((100% + 22px - 3 * clamp(12px,1.45vw,22px))/4);
+ width:calc((100% + 22px - 3 * clamp(12px,1.45vw,22px))/4);
+}
+body:not(.product-view-active) .home-product-info{
+ min-height:0;overflow:hidden;padding:10px 12px;
+}
+body:not(.product-view-active) .home-product-heading{min-height:28px}
+body:not(.product-view-active) .home-product-info h3{font-size:15px;line-height:1.15;margin:0 0 3px}
+body:not(.product-view-active) .home-product-seller-block{min-height:0;gap:2px;margin:0 0 5px}
+body:not(.product-view-active) .home-card-seller{font-size:9px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body:not(.product-view-active) .home-trust-label{display:block;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+body:not(.product-view-active) .home-product-buy-row{height:34px;min-height:34px;grid-template-columns:minmax(0,1fr) 30px 32px;gap:6px}
+body:not(.product-view-active) .home-product-price{font-size:15px;white-space:nowrap;overflow:hidden}
+body:not(.product-view-active) .home-product-share{width:30px!important;min-width:30px!important;height:30px!important}
+body:not(.product-view-active) .home-add-cart{width:32px;height:32px;min-height:32px;flex-basis:32px}
+@media(max-width:760px){
+ body:not(.product-view-active) .home-product-card,
+ body:not(.product-view-active) .home-property-card{
+  flex-basis:calc((100% - 5px)/2);
+  width:calc((100% - 5px)/2);
+ }
+ body:not(.product-view-active) .home-product-photo{flex-basis:44%}
+ body:not(.product-view-active) .home-product-info{flex-basis:56%;padding:8px 9px}
+ body:not(.product-view-active) .home-product-heading{min-height:26px}
+ body:not(.product-view-active) .home-product-info h3{font-size:12px;line-height:1.15}
+ body:not(.product-view-active) .home-product-seller-block{gap:2px;margin-bottom:4px}
+ body:not(.product-view-active) .home-card-seller{font-size:8px}
+ body:not(.product-view-active) .home-trust-label{font-size:6px;padding:2px 4px}
+ body:not(.product-view-active) .home-product-buy-row{height:30px;min-height:30px;grid-template-columns:minmax(0,1fr) 27px 29px;gap:4px}
+ body:not(.product-view-active) .home-product-price{font-size:clamp(11px,3vw,13px)}
+ body:not(.product-view-active) .home-product-share{width:27px!important;min-width:27px!important;height:27px!important}
+ body:not(.product-view-active) .home-add-cart{width:29px;height:29px;min-height:29px;flex-basis:29px}
+}
+@media(max-width:380px){
+ body:not(.product-view-active) .home-product-photo{flex-basis:41%}
+ body:not(.product-view-active) .home-product-info{flex-basis:59%;padding:7px}
+ body:not(.product-view-active) .home-product-heading{min-height:24px}
+ body:not(.product-view-active) .home-product-info h3{font-size:11px}
+ body:not(.product-view-active) .home-product-buy-row{grid-template-columns:minmax(0,1fr) 25px 27px;gap:3px}
+ body:not(.product-view-active) .home-product-share{width:25px!important;min-width:25px!important;height:25px!important}
+ body:not(.product-view-active) .home-add-cart{width:27px;height:27px;min-height:27px;flex-basis:27px}
+}
+
+/* Mobile photo emphasis: reclaim a little lower-section space without hiding listing details. */
+body:not(.product-view-active) .home-product-card,
+body:not(.product-view-active) .home-property-card{
+ flex-basis:calc((100% + 6px - 3 * clamp(12px,1.45vw,22px))/4);
+ width:calc((100% + 6px - 3 * clamp(12px,1.45vw,22px))/4);
+}
+@media(max-width:760px){
+ body:not(.product-view-active) .home-product-photo{flex-basis:48%}
+ body:not(.product-view-active) .home-product-info{flex-basis:52%;padding:6px 8px}
+ body:not(.product-view-active) .home-product-heading{min-height:22px}
+ body:not(.product-view-active) .home-product-info h3{font-size:11.5px;line-height:1.08;margin:0}
+ body:not(.product-view-active) .home-product-seller-block{flex-shrink:0;gap:2px;margin-bottom:3px}
+ body:not(.product-view-active) .home-card-seller{flex:0 0 auto;font-size:9px;line-height:1.15}
+ body:not(.product-view-active) .home-trust-label{font-size:6px;line-height:1.1;padding:1px 3px}
+ body:not(.product-view-active) .home-product-buy-row{height:28px;min-height:28px;grid-template-columns:minmax(0,1fr) 25px 27px;gap:3px}
+ body:not(.product-view-active) .home-product-price{font-size:11px}
+ body:not(.product-view-active) .home-product-share{width:25px!important;min-width:25px!important;height:25px!important}
+ body:not(.product-view-active) .home-add-cart{width:27px;height:27px;min-height:27px;flex-basis:27px}
+}
+@media(max-width:380px){
+ body:not(.product-view-active) .home-product-photo{flex-basis:50%}
+ body:not(.product-view-active) .home-product-info{flex-basis:50%;padding:7px}
+ body:not(.product-view-active) .home-product-heading{min-height:24px}
+ body:not(.product-view-active) .home-product-info h3{font-size:11px}
+ body:not(.product-view-active) .home-product-buy-row{grid-template-columns:minmax(0,1fr) 25px 27px;gap:3px}
+}
+
+/* Keep the responsive two-column category width on mobile after desktop sizing overrides. */
+@media(max-width:760px){
+ body:not(.product-view-active) .home-product-card,
+ body:not(.product-view-active) .home-property-card{
+  flex:0 0 calc(50% - 2.5px);
+  width:calc(50% - 2.5px);
+ }
+}
+
+/* Focused Home-only finishing: preserve approved card dimensions, tiles and carousel. */
+body:not(.product-view-active) .home-product-card{position:relative;isolation:isolate;overflow:hidden}
+body:not(.product-view-active) .home-product-photo{position:absolute;inset:0;width:100%;height:100%;min-height:0;aspect-ratio:auto;flex:1 1 auto;background:#071a35;overflow:hidden}
+body:not(.product-view-active) .home-product-photo img{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
+body:not(.product-view-active) .home-product-photo:after{content:"";position:absolute;z-index:1;inset:24% 0 0;background:linear-gradient(180deg,rgba(3,12,27,0) 0%,rgba(3,12,27,.24) 27%,rgba(3,12,27,.9) 100%);pointer-events:none}
+body:not(.product-view-active) .home-product-category,body:not(.product-view-active) .home-listing-type,body:not(.product-view-active) .home-wishlist-toggle{z-index:3}
+body:not(.product-view-active) .home-product-info{position:absolute;z-index:2;left:0;right:0;bottom:0;width:100%;min-height:0;flex:0 0 auto;display:flex;flex-direction:column;gap:0;padding:12px 13px 12px;background:linear-gradient(180deg,rgba(4,15,32,0),rgba(4,15,32,.18) 10%,rgba(4,15,32,.84) 43%,rgba(4,15,32,.96));backdrop-filter:blur(3px)}
+body:not(.product-view-active) .home-product-heading{min-height:0;margin:0 0 5px}
+body:not(.product-view-active) .home-product-info h3{min-height:0;margin:0;color:#f4f8ff;font-size:clamp(14px,1.35vw,18px);line-height:1.2;font-weight:900;text-shadow:0 2px 10px rgba(0,0,0,.55)}
+body:not(.product-view-active) .home-product-seller-block{min-height:0;display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:0 0 7px}
+body:not(.product-view-active) .home-card-seller{color:#d9eaff;font-size:clamp(9px,.8vw,11px);text-shadow:0 1px 5px #000}
+body:not(.product-view-active) .home-trust-label{background:rgba(0,201,176,.16);border-color:rgba(37,203,176,.45);backdrop-filter:blur(8px)}
+body:not(.product-view-active) .home-product-buy-row{margin-top:0}
+body:not(.product-view-active) .nova-hero-controls>button{display:none!important}
+body:not(.product-view-active) .nova-hero-controls{gap:0}
+body:not(.product-view-active) .home-nearby-action{border:1px solid rgba(65,194,255,.55);border-radius:999px;background:rgba(9,62,110,.65);color:#bcecff;padding:6px 10px;font-size:10px;font-weight:850;backdrop-filter:blur(8px)}
+body:not(.product-view-active) .home-products-message{min-height:78px;display:flex;align-items:center;justify-content:center;padding:14px 16px;border:1px solid rgba(76,171,239,.22);border-radius:14px;background:rgba(9,29,57,.62);color:#b7cce4;font-size:12px;line-height:1.5}
+
+
+/* Focused Android readability correction: retain card size and photo-overlay layout. */
+@media(max-width:760px){
+ body:not(.product-view-active) .home-trust-label{
+  font-size:10px;line-height:1.25;padding:3px 5px;white-space:normal;
+ }
+}
+
+@media(min-width:761px){
+ body:not(.product-view-active) .home-trust-label{font-size:9px;line-height:1.2}
+}
+</style>
+
+<style id="nova-home-preview2-panel-restoration">
+/* NOVAAI Home Preview 2 restoration.
+   Historical visual authority: 0851cf99f7ecfe78b381340b3a2d7317b9dbb2fd
+   Restore the separate photo + information-panel composition only.
+   Keep approved current card dimensions, markup, IDs and event hooks. */
+body:not(.product-view-active) .home-product-card{
+ display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;
+ background:linear-gradient(155deg,rgba(17,39,75,.96),rgba(8,23,49,.98))!important;
+ border:1px solid rgba(101,165,239,.28);
+}
+body:not(.product-view-active) .home-product-photo{
+ position:relative!important;inset:auto!important;flex:0 0 48%!important;
+ width:100%!important;height:auto!important;min-height:0!important;aspect-ratio:auto!important;
+ overflow:hidden!important;background:linear-gradient(145deg,#123c70,#06152e)!important;
+ border-bottom:1px solid rgba(99,175,255,.22)!important;
+}
+body:not(.product-view-active) .home-product-photo img{
+ display:block;width:100%;height:100%;object-fit:cover;object-position:center;
+}
+body:not(.product-view-active) .home-product-photo:after{
+ content:none!important;display:none!important;
+}
+body:not(.product-view-active) .home-product-info{
+ position:relative!important;z-index:2;inset:auto!important;left:auto!important;right:auto!important;bottom:auto!important;
+ width:100%;min-height:0!important;flex:1 1 52%!important;
+ display:flex;flex-direction:column;align-items:stretch;gap:0;
+ box-sizing:border-box;padding:16px 18px 16px;
+ background:linear-gradient(155deg,rgba(17,39,75,.96),rgba(8,23,49,.98))!important;
+ backdrop-filter:none!important;overflow:hidden;
+}
+body:not(.product-view-active) .home-product-info h3{
+ min-height:0;margin:0 0 9px;color:#f3f8ff;font-size:clamp(14px,1.35vw,18px);
+ line-height:1.25;font-weight:850;letter-spacing:-.25px;text-shadow:none;
+}
+body:not(.product-view-active) .home-product-seller-block{
+ display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0;
+}
+body:not(.product-view-active) .home-card-seller{
+ margin:0;color:#d9eaff;font-size:clamp(9px,.8vw,11px);line-height:1.3;text-shadow:none;
+}
+body:not(.product-view-active) .home-card-seller .verified-check{
+ background:#00cda7;color:#042b36;
+}
+body:not(.product-view-active) .home-trust-label{
+ display:inline-flex;align-items:center;gap:5px;width:max-content;max-width:100%;
+ margin:2px 0 6px;padding:5px 8px;border:1px solid rgba(37,203,176,.45);
+ border-radius:999px;background:#00c9b01f;color:#63f1d4;
+ font-size:9px;line-height:1.2;letter-spacing:.25px;white-space:normal;
+ overflow-wrap:anywhere;backdrop-filter:blur(8px);
+}
+body:not(.product-view-active) .home-product-price{
+ min-width:0;max-width:100%;color:#ffda36;font-size:clamp(15px,1.55vw,19px);
+ font-weight:950;line-height:1.15;white-space:normal;overflow-wrap:anywhere;
+}
+body:not(.product-view-active) .nova-hero-copy{position:relative!important;z-index:5!important;display:flex!important;visibility:visible!important;opacity:1!important;grid-column:1!important;grid-row:1!important}
+@media(max-width:760px){
+ body:not(.product-view-active) .home-product-photo{flex-basis:36%!important}
+ body:not(.product-view-active) .home-product-info{flex-basis:64%!important;padding:4px 7px 4px;gap:0}
+ body:not(.product-view-active) .home-product-heading{min-height:0}
+ body:not(.product-view-active) .home-product-info h3{font-size:10px;line-height:1.1;margin:0 0 2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+ body:not(.product-view-active) .home-product-seller-block{min-height:0;gap:2px;margin:0 0 3px}
+ body:not(.product-view-active) .home-card-seller{font-size:7px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;min-width:0}
+ body:not(.product-view-active) .home-trust-label{font-size:7px;line-height:1;padding:2px 3px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:max-content;max-width:100%}
+ body:not(.product-view-active) .home-trust-copy{white-space:nowrap}
+ body:not(.product-view-active) .home-trust-verified{display:none}
+ body:not(.product-view-active) .home-product-buy-row{grid-template-columns:minmax(0,1fr) 18px 18px;gap:2px;width:100%;margin-top:auto}
+ body:not(.product-view-active) .home-product-price{font-size:8px;line-height:1.05;white-space:normal;overflow-wrap:anywhere}
+ body:not(.product-view-active) .home-product-buy-row .home-product-share,
+ body:not(.product-view-active) .home-product-buy-row .home-add-cart{width:18px!important;height:18px!important;min-width:18px!important;min-height:18px!important;flex-basis:18px!important;padding:1px!important;border-radius:6px!important}
+ body:not(.product-view-active) .home-product-buy-row .home-product-share svg,
+ body:not(.product-view-active) .home-product-buy-row .home-add-cart svg{width:11px;height:11px}
+}
+@media(min-width:761px){
+ body:not(.product-view-active) .home-product-info{padding:17px 20px 17px}
+ body:not(.product-view-active) .home-trust-label{font-size:9px;line-height:1.2}
+}
 </style>
 </head>
 <body>
@@ -56,13 +785,14 @@ html.nova-ads-pending [data-nova-ad-slot] * { visibility:hidden !important; }
 </div></header>
 <div class="home-search-wrap"><form class="home-search" id="homeSearchForm" role="search"><input id="homeSearchInput" type="search" placeholder="Search products, brands or categories…" aria-label="Search homepage products"><button type="submit" aria-label="Search products">⌕</button><button type="button" id="homeUseLocation" class="home-location-button">Near Me</button></form><p id="homeLocationStatus" class="home-location-status" aria-live="polite"></p></div>
 <section class="nova-hero-carousel" id="novaHeroCarousel" data-nova-ad-slot="home_hero" data-nova-ad-format="carousel" data-nova-ad-version="1" aria-label="NOVAAI marketplace highlights">
-<div class="nova-hero-slide active"><div class="nova-hero-copy"><span class="nova-hero-kicker">NOVAAI MARKET</span><h1>Discover something worth buying.</h1><p>Shop products from approved independent South African sellers.</p><a href="./retail.html">Explore the marketplace <span aria-hidden="true">→</span></a></div><div class="nova-hero-art" aria-hidden="true"><span class="hero-art-circle"></span><span class="hero-art-card">NOVA<span>AI</span><small>SHOP SMART</small></span></div></div>
+<div class="nova-hero-slide active"><div class="nova-hero-copy"><span class="nova-hero-kicker"><span class="brand-novaai"><span>NOVA</span><span>AI</span></span> MARKET</span><h1>The Future is <em>Here</em></h1><p>Shop Smarter. Live Better.</p><a href="./retail.html">Explore Now <span aria-hidden="true">→</span></a></div><div class="nova-hero-art" aria-hidden="true"><span class="hero-art-circle"></span><span class="hero-art-card">NOVA<span>AI</span><small>SHOP SMART</small></span></div></div>
 <div class="nova-hero-slide"><div class="nova-hero-copy"><span class="nova-hero-kicker">SUPPORT LOCAL SELLERS</span><h1>Great finds. Local businesses.</h1><p>Find fashion, electronics, home essentials and more in one marketplace.</p><a href="./retail.html">Browse retail <span aria-hidden="true">→</span></a></div><div class="nova-hero-art local" aria-hidden="true"><span class="hero-art-circle"></span><span class="hero-art-card">MADE FOR<br>SA<small>SHOP LOCAL</small></span></div></div>
-<div class="nova-hero-slide"><div class="nova-hero-copy"><span class="nova-hero-kicker">SELL ON NOVAAI</span><h1>Your products deserve a marketplace.</h1><p>Build your store and reach customers across South Africa.</p><a href="./seller.html">Open seller portal <span aria-hidden="true">→</span></a></div><div class="nova-hero-art sellers" aria-hidden="true"><span class="hero-art-circle"></span><span class="hero-art-card">SELLER<br>SPACE<small>GROW WITH US</small></span></div></div>
+<div class="nova-hero-slide"><div class="nova-hero-copy"><span class="nova-hero-kicker">SELL ON <span class="brand-novaai"><span>NOVA</span><span>AI</span></span></span><h1>Your products deserve a marketplace.</h1><p>Build your store and reach customers across South Africa.</p><a href="./seller.html">Open seller portal <span aria-hidden="true">→</span></a></div><div class="nova-hero-art sellers" aria-hidden="true"><span class="hero-art-circle"></span><span class="hero-art-card">SELLER<br>SPACE<small>GROW WITH US</small></span></div></div>
 <div class="nova-hero-controls"><button type="button" id="novaHeroPrev" aria-label="Previous banner">‹</button><div class="nova-hero-dots"><button type="button" class="active" data-hero-slide="0" aria-label="Banner 1"></button><button type="button" data-hero-slide="1" aria-label="Banner 2"></button><button type="button" data-hero-slide="2" aria-label="Banner 3"></button></div><button type="button" id="novaHeroNext" aria-label="Next banner">›</button></div>
 </section>
-<main><section class="home-featured" id="homeFeatured" aria-label="Marketplace categories"><div id="homeProductGrid" aria-live="polite"><div class="home-products-message">Loading approved marketplace listings…</div></div></section>
-<section class="home-seller-banner" aria-label="Become a NOVAAI seller"><div><h2>Have products to sell?</h2><p>Join NOVAAI MARKET and introduce your business to shoppers across South Africa.</p></div><a href="./seller.html">Become a seller <span aria-hidden="true">→</span></a></section></main>
+<main><section class="home-category-tiles" aria-label="Shop marketplace categories"><a class="home-category-tile property" href="./seller-motors-houses.html?market=property" data-home-category-tile="property"><span class="home-category-image"><img alt="" loading="lazy"></span><span class="home-category-label">Property</span><span class="home-category-arrow" aria-hidden="true">↗</span></a><a class="home-category-tile motors" href="./seller-motors-houses.html?market=motors" data-home-category-tile="motors"><span class="home-category-image"><img alt="" loading="lazy"></span><span class="home-category-label">Cars</span><span class="home-category-arrow" aria-hidden="true">↗</span></a><a class="home-category-tile retail" href="./retail.html" data-home-category-tile="retail"><span class="home-category-image"><img alt="" loading="lazy"></span><span class="home-category-label">Retail</span><span class="home-category-arrow" aria-hidden="true">↗</span></a><a class="home-category-tile more" href="./retail.html" data-home-category-tile="more"><span class="home-category-image"><img alt="" loading="lazy"><span class="category-more-symbol" aria-hidden="true">＋</span></span><span class="home-category-label">More</span><span class="home-category-arrow" aria-hidden="true">↗</span></a></section>
+<section class="home-featured" id="homeFeatured" aria-label="Marketplace listings"><div id="homeProductGrid" aria-live="polite"><div class="home-products-message">Loading approved marketplace listings…</div></div></section>
+<section class="home-seller-banner" aria-label="Become a NOVAAI seller"><div class="home-seller-visual" aria-hidden="true"><span class="seller-visual-orbit"></span><span class="seller-visual-person"></span></div><div class="home-seller-copy"><p class="home-seller-kicker">YOUR NEXT CHAPTER STARTS HERE</p><h2>Become a <span class="brand-novaai"><span>NOVA</span><span>AI</span></span> Seller</h2><p>Reach more customers and grow your business on our marketplace.</p></div><div class="home-seller-growth" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div><a href="./seller.html">Register Now <span aria-hidden="true">→</span></a></section></main>
 <footer><strong><span class="footer-nova">NOVA</span><span class="footer-ai">AI</span> MARKET</strong><span class="footer-tagline">Your Marketplace. Your Opportunity.</span><span>Built for South Africa · Shop with confidence · Support local businesses</span></footer>
 <nav class="nova-bottom-nav" aria-label="Main navigation">
 <a class="nova-nav-item active" href="./index.html"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Home</span></a>
@@ -128,31 +858,63 @@ function readMarker(description,label){const escaped=label.replace(/[.*+?^{}()|[
 function isHouse(product){return /^house$/i.test(readMarker(product.description,'Property type'));}
 function vehicleType(product){return readMarker(product.description,'Vehicle type').toLowerCase();}
 function listingType(product){return readMarker(product.description,'Listing type').toLowerCase();}
+function isMotorProduct(p){return ['Auto','Motors & Vehicles'].includes(String(p.category||''))&&!['replacement part','accessory','car part','car accessory'].includes(listingType(p));}
+function isRetailProduct(p){return !isPropertyProduct(p)&&!['Auto','Motors & Vehicles'].includes(String(p.category||''));}
 function categoryGroups(items){
-const groups=[
-{id:'houses-sale',title:'Houses for Sale',items:items.filter(p=>p.category==='Property For Sale'&&isHouse(p))},
-{id:'houses-rent',title:'Houses to Rent',items:items.filter(p=>p.category==='Property To Rent'&&isHouse(p))},
-{id:'electronics',title:'Electronics',items:items.filter(p=>['Electronics','Cellphones','Computers & Laptops','TV Audio & Video'].includes(p.category))},
-{id:'fashion',title:'Fashion',items:items.filter(p=>['Fashion','Clothing Shoes & Accessories'].includes(p.category))},
-{id:'home-living',title:'Home & Living',items:items.filter(p=>p.category==='Home & Living')},
-{id:'groceries',title:'Groceries',items:items.filter(p=>p.category==='Groceries')},
-{id:'office',title:'Office & Stationery',items:items.filter(p=>p.category==='Office & Stationery')},
-{id:'other-retail',title:'Other Retail Categories',items:items.filter(p=>!['Property For Sale','Property To Rent','Auto','Motors & Vehicles','Electronics','Cellphones','Computers & Laptops','TV Audio & Video','Fashion','Clothing Shoes & Accessories','Home & Living','Groceries','Office & Stationery'].includes(p.category))}
-];
-const cars=items.filter(p=>['Auto','Motors & Vehicles'].includes(p.category)&&['car','suv'].includes(vehicleType(p))&&!['replacement part','accessory','car part','car accessory'].includes(listingType(p)));
-const parts=items.filter(p=>['Auto','Motors & Vehicles'].includes(p.category)&&['replacement part','accessory','car part','car accessory'].includes(listingType(p)));
-if(cars.length)groups.push({id:'cars',title:'Cars',items:cars});if(parts.length)groups.push({id:'car-parts',title:'Car Parts & Accessories',items:parts});
-return groups.filter(g=>g.items.length);
+ const retail=items.filter(isRetailProduct),motors=items.filter(isMotorProduct),properties=items.filter(isPropertyProduct);
+ const sale=properties.filter(p=>p.category==='Property For Sale'),rent=properties.filter(p=>p.category==='Property To Rent');
+ const newest=list=>list.slice().sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
+ return [
+  {id:'retail-featured',title:'Featured Retail Products',items:retail,href:'./retail.html',empty:'No approved Retail products are available right now.'},
+  {id:'retail-nearby',title:'Nearby Retail Products',items:[],href:'./retail.html',nearby:true,empty:'Use your location to find approved Retail listings near you.'},
+  {id:'retail-new',title:'New Retail Arrivals',items:newest(retail),href:'./retail.html',empty:'New Retail arrivals will appear here when approved listings become available.'},
+  {id:'motors-featured',title:'Featured Cars and Vehicles',items:motors,href:'./seller-motors-houses.html?market=motors',empty:'No approved vehicle listings are available right now.'},
+  {id:'motors-nearby',title:'Nearby Motors Listings',items:[],href:'./seller-motors-houses.html?market=motors',nearby:true,empty:'Use your location to find approved vehicle listings near you.'},
+  {id:'motors-new',title:'Recently Added Vehicles',items:newest(motors),href:'./seller-motors-houses.html?market=motors',empty:'Recently added vehicles will appear here when approved listings become available.'},
+  {id:'property-sale',title:'Featured Properties for Sale',items:sale,href:'./seller-motors-houses.html?market=property',empty:'No approved properties for sale are available right now.'},
+  {id:'property-rent',title:'Featured Properties for Rent',items:rent,href:'./seller-motors-houses.html?market=property',empty:'No approved rental properties are available right now.'},
+  {id:'property-nearby',title:'Nearby Properties',items:[],href:'./seller-motors-houses.html?market=property',nearby:true,empty:'Use your location to find approved properties near you.'}
+ ];
 }
 function renderCard(p,storesBySeller){
-const imgs=productPhotos(p),img=imgs[0]||'',saved=readHomeWishlist().includes(String(p.id)),store=storesBySeller.get(String(p.seller_id))||{},sellerName=store.store_name||p.seller_name||'';
-const sellerMarkup=sellerName?'<div class="home-card-seller">'+(store.store_name?'<span class="verified-check" aria-hidden="true">✓</span>':'')+escapeHTML(sellerName)+(store.store_name?'<div class="home-trust-label">APPROVED STORE</div>':'')+'</div>':'';
-return '<article class="home-product-card" data-open-home-product="'+escapeHTML(p.id)+'" tabindex="0" role="link" aria-label="Open '+escapeHTML(p.name)+' details"><div class="home-product-photo">'+(img?'<img src="'+escapeHTML(img)+'" alt="'+escapeHTML(p.name)+'" loading="lazy" decoding="async">':'<span class="home-no-photo">Photo not supplied</span>')+'<button type="button" class="home-wishlist-toggle'+(saved?' is-saved':'')+'" data-home-wishlist="'+escapeHTML(p.id)+'" aria-label="'+(saved?'Remove from wishlist':'Add to wishlist')+'" aria-pressed="'+String(saved)+'" title="Save to wishlist">'+(saved?'♥':'♡')+'</button></div><div class="home-product-info"><div class="home-product-category">'+escapeHTML(p.category||'Marketplace product')+'</div><h3>'+escapeHTML(p.name)+'</h3>'+sellerMarkup+'<div class="home-trust-label">NOVA AI TRUST SHIELD · APPROVED LISTING</div><div class="home-product-buy-row"><div class="home-product-price">'+money(p.price)+'</div><button type="button" class="home-add-cart" data-add-product="'+escapeHTML(p.id)+'" aria-label="Add '+escapeHTML(p.name)+' to cart" title="Add to cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg></button></div></div></article>';
+const imgs=productPhotos(p),img=imgs[0]||'',saved=readHomeWishlist().includes(String(p.id)),store=storesBySeller.get(String(p.seller_id))||{},sellerName=store.store_name||p.seller_name||'',property=isPropertyProduct(p),trusted=!!store.store_name;
+const sellerMarkup=sellerName?'<div class="home-card-seller">'+(trusted?'<span class="verified-check" aria-hidden="true">✓</span>':'')+escapeHTML(sellerName)+'</div>':'';
+const marketplace=property?'property':(['Auto','Motors & Vehicles'].includes(p.category)?'motors':'retail');
+const shareRoute=marketplace==='property'?'./property-details.html?id='+encodeURIComponent(String(p.id)):marketplace==='motors'?'./seller-motors-houses.html?market=motors&product='+encodeURIComponent(String(p.id)):'./retail.html?product='+encodeURIComponent(String(p.id));
+const shareButton='<button type="button" class="nova-product-share-icon nova-product-share-card home-product-share" style="flex:0 0 34px;width:34px;height:34px;min-width:34px;border-color:#dbe5f2;background:#edf4ff;color:#174ea6;box-shadow:none;border-radius:10px" data-nova-product-share data-share-product-id="'+escapeHTML(p.id)+'" data-share-marketplace="'+marketplace+'" data-share-location-type="product_card" data-share-title="'+escapeHTML(p.name||'Marketplace listing')+'" data-share-price="'+escapeHTML(money(p.price))+'" data-share-location="" data-share-url="'+escapeHTML(new URL(shareRoute,window.location.href).toString())+'" aria-label="Share listing" title="Share listing"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"></path></svg></button>';
+const trustMarkup=trusted?'<div class="home-trust-label"><span aria-hidden="true">◆</span> <span class="brand-novaai"><span>NOVA</span><span>AI</span></span> <span class="home-trust-copy">TRUST SHIELD <span class="home-trust-verified">· VERIFIED SELLER</span></span></div>':'';
+return '<article class="home-product-card'+(property?' home-property-card':'')+'" data-open-home-product="'+escapeHTML(p.id)+'" tabindex="0" role="link" aria-label="Open '+escapeHTML(p.name)+' details"><div class="home-product-photo">'+(img?'<img src="'+escapeHTML(img)+'" alt="'+escapeHTML(p.name)+'" loading="lazy" decoding="async">':'<span class="home-no-photo">Photo not supplied</span>')+(property?'<span class="home-listing-type">'+(p.category==='Property To Rent'?'To Let':'For Sale')+'</span>':'')+'<span class="home-product-category">'+escapeHTML(property?'PROPERTY':(p.category||'Marketplace product'))+'</span><button type="button" class="home-wishlist-toggle'+(saved?' is-saved':'')+'" data-home-wishlist="'+escapeHTML(p.id)+'" aria-label="'+(saved?'Remove from wishlist':'Add to wishlist')+'" aria-pressed="'+String(saved)+'" title="Save to wishlist">'+(saved?'♥':'♡')+'</button></div><div class="home-product-info"><div class="home-product-heading"><h3>'+escapeHTML(p.name)+'</h3></div><div class="home-product-seller-block">'+sellerMarkup+trustMarkup+'</div><div class="home-product-buy-row"><div class="home-product-price">'+money(p.price)+(p.category==='Property To Rent'?' <small>/ month</small>':'')+'</div>'+shareButton+'<button type="button" class="home-add-cart" data-add-product="'+escapeHTML(p.id)+'" aria-label="Add '+escapeHTML(p.name)+' to cart" title="Add to cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg></button></div></div></article>';
 }
 function wireCards(items){
 grid.querySelectorAll('[data-open-home-product]').forEach(card=>{const open=()=>{const product=items.find(item=>String(item.id)===card.dataset.openHomeProduct),destination=product&&isPropertyProduct(product)?'./property-details.html?id=':'./index.html?product=';window.location.href=destination+encodeURIComponent(card.dataset.openHomeProduct);};card.addEventListener('click',e=>{if(e.target.closest('button'))return;open();});card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});});
 grid.querySelectorAll('[data-home-wishlist]').forEach(button=>button.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();toggleHomeWishlist(button.dataset.homeWishlist,button);}));
 grid.querySelectorAll('[data-add-product]').forEach(button=>button.addEventListener('click',e=>{e.stopPropagation();const product=items.find(item=>String(item.id)===button.dataset.addProduct);if(product)addToCart(product);}));
+}
+function renderHomeSections(items,storesBySeller,client){
+ const groups=categoryGroups(items);
+ grid.innerHTML=groups.map(group=>'<section class="home-category-section" data-home-category="'+escapeHTML(group.id)+'"><div class="section-kicker"><h2>'+escapeHTML(group.title)+'</h2><div style="display:flex;align-items:center;gap:9px"><a href="'+group.href+'">View All <span aria-hidden="true">→</span></a></div></div>'+(group.items.length?'<div class="home-carousel" aria-label="'+escapeHTML(group.title)+' products">'+group.items.map(p=>renderCard(p,storesBySeller)).join('')+'</div>':'<div class="home-products-message">'+escapeHTML(group.empty)+'</div>')+'</section>').join('');
+ wireCards(items);
+ grid.querySelectorAll('[data-home-category="retail-nearby"],[data-home-category="motors-nearby"],[data-home-category="property-nearby"]').forEach(section=>{
+  const groupId=section.dataset.homeCategory,button=document.createElement('button');button.type='button';button.className='home-nearby-action';button.textContent='Use my location';section.querySelector('.section-kicker>div').prepend(button);
+  button.addEventListener('click',()=>{
+   if(!navigator.geolocation){section.querySelector('.home-products-message').textContent='Location is not supported by this browser. Browse approved listings using View All.';return;}
+   button.disabled=true;button.textContent='Finding location…';
+   navigator.geolocation.getCurrentPosition(async pos=>{
+    try{
+     const locResult=await client.from('seller_public_locations').select('user_id,latitude,longitude,public_location_enabled,approval_status').eq('public_location_enabled',true).eq('approval_status','approved');
+     if(locResult.error)throw locResult.error;
+     const approvedLocations=new Map((locResult.data||[]).map(l=>[String(l.user_id),l]));
+     const km=(a,b,c,d)=>{const r=v=>v*Math.PI/180,x=r(c-a),y=r(d-b),h=Math.sin(x/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(y/2)**2;return 6371*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));};
+     const selected=groups.find(g=>g.id===groupId),pool=groupId.startsWith('retail')?items.filter(isRetailProduct):groupId.startsWith('motors')?items.filter(isMotorProduct):items.filter(isPropertyProduct);
+     const nearby=pool.map(p=>{if(!storesBySeller.has(String(p.seller_id)))return null;const l=approvedLocations.get(String(p.seller_id));if(!l||l.latitude==null||l.longitude==null)return null;return {...p,_distance:km(pos.coords.latitude,pos.coords.longitude,Number(l.latitude),Number(l.longitude))};}).filter(p=>p&&p._distance<=25).sort((a,b)=>a._distance-b._distance);
+     const target=section.querySelector('.home-products-message');
+     if(nearby.length){target.outerHTML='<div class="home-carousel" aria-label="'+escapeHTML(selected.title)+' products">'+nearby.map(p=>renderCard(p,storesBySeller)).join('')+'</div>';wireCards(items);}
+     else target.textContent='No approved listings with administrator-approved public seller locations were found within 25 km. Browse all listings using View All.';
+     button.textContent='Location checked';button.disabled=true;
+    }catch(error){button.disabled=false;button.textContent='Try location again';section.querySelector('.home-products-message').textContent='Nearby listings could not be loaded safely. Browse approved listings using View All.';console.warn('Nearby Home section:',error);}
+   },()=>{button.disabled=false;button.textContent='Use my location';section.querySelector('.home-products-message').textContent='Location permission was not granted. Browse approved listings using View All.';},{enableHighAccuracy:false,timeout:20000,maximumAge:300000});
+  });
+ });
 }
 async function loadHomeProducts(){
 const requestedId=new URLSearchParams(window.location.search).get('product');
@@ -170,9 +932,10 @@ try{const storeResult=await client.from('seller_stores').select('user_id,store_n
 const storesBySeller=new Map(stores.map(store=>[String(store.user_id),store]));
 const items=rows.filter(p=>p.status==='approved'&&p.seller_id&&p.name&&Number(p.price)>0);
 if(!items.length){grid.innerHTML='<div class="home-products-message">There are no eligible approved listings to display right now. Please check back soon.</div>';return;}
-const groups=categoryGroups(items);if(!groups.length){grid.innerHTML='<div class="home-products-message">There are no listings with the verified category details needed for these homepage sections yet. Visit the marketplace to browse available listings.</div>';return;}
-grid.innerHTML=groups.map(group=>'<section class="home-category-section" data-home-category="'+escapeHTML(group.id)+'"><div class="section-kicker"><h2>'+escapeHTML(group.title)+'</h2><a href="'+(group.id==='houses-sale'||group.id==='houses-rent'?'./seller-motors-houses.html?market=property':group.id==='cars'||group.id==='car-parts'?'./seller-motors-houses.html?market=motors':'./retail.html')+'">View All <span aria-hidden="true">→</span></a></div><div class="featured-subtitle">'+(group.id==='houses-sale'||group.id==='houses-rent'?'Homes listed by approved marketplace sellers.':'Discover listings from approved NOVAAI marketplace sellers.')+'</div><div class="home-carousel" aria-label="'+escapeHTML(group.title)+' products">'+group.items.map(p=>renderCard(p,storesBySeller)).join('')+'</div></section>').join('');
-wireCards(items);updateCartCount();
+renderHomeSections(items,storesBySeller,client);
+const categorySources={retail:items.find(p=>!isPropertyProduct(p)&&!['Auto','Motors & Vehicles'].includes(p.category)),motors:items.find(p=>['Auto','Motors & Vehicles'].includes(p.category)),property:items.find(p=>isPropertyProduct(p)),more:items.find(p=>!isPropertyProduct(p)&&!['Auto','Motors & Vehicles'].includes(p.category)&&productPhotos(p).length>0&&String(p.id)!==String(items.find(x=>!isPropertyProduct(x)&&!['Auto','Motors & Vehicles'].includes(x.category))?.id))||items.find(p=>productPhotos(p).length>0)};
+Object.entries(categorySources).forEach(([key,product])=>{const tile=document.querySelector('[data-home-category-tile="'+key+'"] img'),photo=product&&productPhotos(product)[0];if(tile&&photo){tile.src=photo;tile.alt=key+' marketplace listings';tile.parentElement.classList.add('has-photo');}});
+updateCartCount();
 }catch(error){console.error('Homepage product loading:',error);grid.innerHTML='<div class="home-products-message">We could not load marketplace products right now. Please try again later or browse the full marketplace.</div>';}
 }
 updateCartCount();loadHomeProducts();
@@ -181,4 +944,5 @@ updateCartCount();loadHomeProducts();
 <script src="./nearby-search.js"></script>
 <script src="./novaai-ad-slots.js?v=20261112-ad-sharing-1" onerror="window.__novaAdsRevealBoards&&window.__novaAdsRevealBoards()"></script>
 <script src="./novaai-share-visits.js?v=20261113-share-visits-1" defer></script>
+<script src="./novaai-product-sharing.js?v=3" defer></script>
 </body></html>

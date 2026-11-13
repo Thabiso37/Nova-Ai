@@ -1055,6 +1055,7 @@ html.nova-ads-pending [data-nova-ad-slot] * {
   <div class="product-modal-card nova-product-page">
     <button type="button" class="product-modal-close" id="closeProductModal" aria-label="Close">×</button>
     <div class="nova-product-photo-container" id="openLightboxBtn" title="Tap to view fullscreen">
+      <button type="button" class="nova-product-share-icon nova-product-share-detail" id="modalShareProduct" data-nova-product-share aria-label="Share product" title="Share product"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"></path></svg></button>
       <div id="modalGalleryScroll" class="nova-gallery-scroll"></div>
       <div id="galleryDots" class="nova-gallery-dots"></div>
     </div>
@@ -1074,7 +1075,6 @@ html.nova-ads-pending [data-nova-ad-slot] * {
           <span class="muted" style="font-size:11px">Price:</span>
           <span id="modalProductPrice" class="product-modal-price">R 0</span>
         </div>
-        <button type="button" class="btn outline nova-product-share-button" id="modalShareProduct" data-nova-product-share>Share</button>
         <button type="button" class="btn primary add-to-cart-btn" id="modalAddToCart">🛒 Add to Cart</button>
       </div>
     </div>
@@ -1300,7 +1300,7 @@ function saveCart(){try{localStorage.setItem("novaMarketplaceCartV1",JSON.string
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function cash(n){return "R "+new Intl.NumberFormat("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0)}
 function safeImg(s){try{let u=new URL(s);return ["http:","https:"].includes(u.protocol)?u.href:""}catch(e){return ""}}
-function retailShareButton(p){if(!p||!p.dbId)return "";const url=new URL("./retail.html?product="+encodeURIComponent(String(p.dbId)),window.location.href).toString();const attrs=' data-nova-product-share data-share-title="'+esc(p.name||"Product listing")+'" data-share-price="'+esc(cash(p.price))+'" data-share-location="'+esc(p.publicLocation||"")+'" data-share-url="'+esc(url)+'"';return '<button type="button" class="nova-product-share-button nova-product-share-card"'+attrs+'><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"></path></svg>Share</button>'}
+function retailShareButton(p,shareLocation="product_card"){if(!p||!p.dbId)return "";const url=new URL("./retail.html?product="+encodeURIComponent(String(p.dbId)),location.href).toString();const attrs=' data-nova-product-share data-share-product-id="'+esc(p.dbId)+'" data-share-marketplace="retail" data-share-location-type="'+shareLocation+'" data-share-title="'+esc(p.name||"Product listing")+'" data-share-price="'+esc(cash(p.price))+'" data-share-location="'+esc(p.publicLocation||"")+'" data-share-url="'+esc(url)+'"';return '<button type="button" class="nova-product-share-icon nova-product-share-card" style="flex:0 0 38px;width:38px;height:38px;min-width:38px" aria-label="Share product" title="Share product"'+attrs+'>'+"<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"18\" cy=\"5\" r=\"3\"></circle><circle cx=\"6\" cy=\"12\" r=\"3\"></circle><circle cx=\"18\" cy=\"19\" r=\"3\"></circle><path d=\"m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4\"></path></svg>"+'</button>'}
 function go(id) {
   const section = document.getElementById(id);
   if (!section) return;
@@ -1349,11 +1349,11 @@ function renderRetailMarketGrid(list) {
 </div>
 <div class="prodbody">
   <small style="color:#08774f;font-weight:800">${esc(p.seller)}</small>
-  <h3>${esc(p.name)}</h3>
+  <div class="nova-product-title-row"><h3>${esc(p.name)}</h3></div>
   
   <div class="price">${cash(p.price)}</div>
-  ${retailShareButton(p)}
   <div class="actions">
+    ${retailShareButton(p)}
     <button class="btn primary shop-card-cart" data-add="${esc(p.id)}" aria-label="Add ${esc(p.name)} to cart" title="Add to cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg></button>
   </div>
 </div>
@@ -1380,11 +1380,11 @@ function render(){
 </div>
 <div class="prodbody">
   <small style="color:#6654f5;font-weight:800">${esc(p.category)}</small>
-  <h3>${esc(p.name)}</h3>
+  <div class="nova-product-title-row"><h3>${esc(p.name)}</h3></div>
   
   <div class="price">${cash(p.price)}</div>
-  ${retailShareButton(p)}
   <div class="actions">
+    ${retailShareButton(p)}
     <button type="button" class="btn primary shop-card-cart" data-add="${esc(p.id)}" aria-label="Add ${esc(p.name)} to cart" title="Add to cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg></button>
   </div>
 </div>
@@ -1425,7 +1425,7 @@ function openProductDetails(p) {
   }
   document.getElementById("modalAddToCart").onclick=()=>{add(p.id);modal.classList.remove("open");lightbox.classList.remove("open");};
   const shareButton=document.getElementById("modalShareProduct");
-  if(shareButton){shareButton.dataset.shareTitle=p.name||"Product";shareButton.dataset.sharePrice=cash(p.price);shareButton.dataset.shareLocation=p.publicLocation||"";shareButton.dataset.shareUrl=p.dbId?new URL("./retail.html?product="+encodeURIComponent(String(p.dbId)),window.location.href).toString():"";shareButton.disabled=!p.dbId;}
+  if(shareButton){shareButton.dataset.shareTitle=p.name||"Product";shareButton.dataset.sharePrice=cash(p.price);shareButton.dataset.shareLocation=p.publicLocation||"";shareButton.dataset.shareUrl=p.dbId?new URL("./retail.html?product="+encodeURIComponent(String(p.dbId)),window.location.href).toString():"";shareButton.dataset.shareProductId=p.dbId||"";shareButton.dataset.shareMarketplace="retail";shareButton.dataset.shareLocationType="detail_page";shareButton.disabled=!p.dbId;}
   modal.classList.add("open");
 }
 function bindProductEvents() {
@@ -2225,7 +2225,7 @@ body.wishlist-view #wishlistAdSlot{display:none!important}
 @media(min-width:700px){.nova-footer-ad{min-height:170px}.nova-footer-ad-copy{padding:22px 26px}.nova-footer-ad-copy strong{font-size:25px}}
 @media(prefers-reduced-motion:reduce){.nova-footer-ad-image{transition:none}}
 </style>
-<script src="./novaai-product-sharing.js?v=1" defer></script>
+<script src="./novaai-product-sharing.js?v=3" defer></script>
 </body>
 </html>
 

@@ -1,0 +1,119 @@
+name: NOVAAI Isolated Preview Build Validation
+
+on:
+  push:
+    branches:
+      - feature/product-sharing-analytics
+  workflow_dispatch:
+    inputs:
+      expected_commit:
+        description: Exact approved application baseline commit SHA (preview remains isolated)
+        required: true
+        type: string
+        default: ae424b41f73ef6bd704b7f4018ab69c70a38e0aa
+
+permissions:
+  contents: read
+
+concurrency:
+  group: novaai-isolated-preview-validation-v2
+  cancel-in-progress: true
+
+jobs:
+  build-and-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout this exact preview tooling revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Enforce approved baseline and verify exact source files
+        env:
+          EXPECTED_COMMIT: "${{ inputs.expected_commit || 'ae424b41f73ef6bd704b7f4018ab69c70a38e0aa' }}"
+          EXPECTED_TOOLING_COMMIT: "${{ github.sha }}"
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          readonly APPROVED_APPLICATION_COMMIT="ae424b41f73ef6bd704b7f4018ab69c70a38e0aa"
+
+          if [[ "$EXPECTED_COMMIT" != "$APPROVED_APPLICATION_COMMIT" ]]; then
+            echo "::error::expected_commit must equal the approved application baseline $APPROVED_APPLICATION_COMMIT"
+            exit 1
+          fi
+
+          ACTUAL_TOOLING_COMMIT="$(git rev-parse HEAD)"
+          if [[ "$ACTUAL_TOOLING_COMMIT" != "$EXPECTED_TOOLING_COMMIT" ]]; then
+            echo "::error::Preview tooling checkout mismatch. Expected $EXPECTED_TOOLING_COMMIT; got $ACTUAL_TOOLING_COMMIT"
+            exit 1
+          fi
+
+          git fetch --no-tags --depth=1 origin "$EXPECTED_COMMIT"
+          git cat-file -e "$EXPECTED_COMMIT^{commit}"
+
+          application_files=(
+            index.html
+            retail.html
+            seller-motors-houses.html
+            property-details.html
+            novaai-product-sharing.js
+            nearby-search.js
+            novaai-ad-slots.js
+            novaai-share-visits.js
+            service-worker.js
+          )
+
+          git checkout "$EXPECTED_COMMIT" -- "${application_files[@]}"
+
+          for file in "${application_files[@]}"; do
+            expected_blob="$(git rev-parse "$EXPECTED_COMMIT:$file")"
+            actual_blob="$(git hash-object "$file")"
+            if [[ "$actual_blob" != "$expected_blob" ]]; then
+              echo "::error::Application file does not match approved baseline: $file"
+              exit 1
+            fi
+            echo "Verified baseline file: $file ($actual_blob)"
+          done
+
+          echo "Verified preview tooling commit: $ACTUAL_TOOLING_COMMIT"
+          echo "Verified approved application baseline: $EXPECTED_COMMIT"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pinned Playwright test dependency
+        run: npm install --no-save --package-lock=false playwright@1.56.1
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Generate fixture-backed isolated preview copy
+        run: node scripts/preview/build.mjs
+
+      - name: Run static isolation verification
+        run: node scripts/preview/verify.mjs
+
+      - name: Run Playwright browser network-isolation tests
+        run: node scripts/preview/browser-tests.mjs
+
+      - name: Save responsive Home screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: novaai-preview2-home-screenshots
+          path: preview-screenshots/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Confirm preview build does not publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -d preview-dist
+          echo "Build and browser audit ran on the ephemeral runner only; no artifact, URL, Pages deployment or tunnel created."
