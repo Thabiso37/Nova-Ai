@@ -790,7 +790,7 @@ body:not(.product-view-active) .nova-hero-copy{position:relative!important;z-ind
 <div class="nova-hero-slide"><div class="nova-hero-copy"><span class="nova-hero-kicker">SELL ON <span class="brand-novaai"><span>NOVA</span><span>AI</span></span></span><h1>Your products deserve a marketplace.</h1><p>Build your store and reach customers across South Africa.</p><a href="./seller.html">Open seller portal <span aria-hidden="true">→</span></a></div><div class="nova-hero-art sellers" aria-hidden="true"><span class="hero-art-circle"></span><span class="hero-art-card">SELLER<br>SPACE<small>GROW WITH US</small></span></div></div>
 <div class="nova-hero-controls"><button type="button" id="novaHeroPrev" aria-label="Previous banner">‹</button><div class="nova-hero-dots"><button type="button" class="active" data-hero-slide="0" aria-label="Banner 1"></button><button type="button" data-hero-slide="1" aria-label="Banner 2"></button><button type="button" data-hero-slide="2" aria-label="Banner 3"></button></div><button type="button" id="novaHeroNext" aria-label="Next banner">›</button></div>
 </section>
-<main><section class="home-category-tiles" aria-label="Shop marketplace categories"><a class="home-category-tile property" href="./seller-motors-houses.html?market=property" data-home-category-tile="property"><span class="home-category-image"><img alt="" loading="lazy"></span><span class="home-category-label">Property</span><span class="home-category-arrow" aria-hidden="true">↗</span></a><a class="home-category-tile motors" href="./seller-motors-houses.html?market=motors" data-home-category-tile="motors"><span class="home-category-image"><img alt="" loading="lazy"></span><span class="home-category-label">Cars</span><span class="home-category-arrow" aria-hidden="true">↗</span></a><a class="home-category-tile retail" href="./retail.html" data-home-category-tile="retail"><span class="home-category-image"><img alt="" loading="lazy"></span><span class="home-category-label">Retail</span><span class="home-category-arrow" aria-hidden="true">↗</span></a><a class="home-category-tile more" href="./retail.html" data-home-category-tile="more"><span class="home-category-image"><img alt="" loading="lazy"><span class="category-more-symbol" aria-hidden="true">＋</span></span><span class="home-category-label">More</span><span class="home-category-arrow" aria-hidden="true">↗</span></a></section>
+<main><section class="home-category-tiles" aria-label="Shop marketplace categories"><a class="home-category-tile retail" href="./retail.html" data-home-category-tile="retail"><span class="home-category-image"><img alt="" loading="lazy"></span><span class="home-category-label">Retail</span><span class="home-category-arrow" aria-hidden="true">↗</span></a><a class="home-category-tile motors" href="./seller-motors-houses.html?market=motors" data-home-category-tile="motors"><span class="home-category-image"><img alt="" loading="lazy"></span><span class="home-category-label">Motors</span><span class="home-category-arrow" aria-hidden="true">↗</span></a><a class="home-category-tile property" href="./seller-motors-houses.html?market=property" data-home-category-tile="property"><span class="home-category-image"><img alt="" loading="lazy"></span><span class="home-category-label">Property</span><span class="home-category-arrow" aria-hidden="true">↗</span></a><a class="home-category-tile more" href="./retail.html" data-home-category-tile="more"><span class="home-category-image" aria-hidden="true"><span class="category-more-symbol">＋</span></span><span class="home-category-label">More</span><span class="home-category-arrow" aria-hidden="true">↗</span></a></section>
 <section class="home-featured" id="homeFeatured" aria-label="Marketplace listings"><div id="homeProductGrid" aria-live="polite"><div class="home-products-message">Loading approved marketplace listings…</div></div></section>
 <section class="home-seller-banner" aria-label="Become a NOVAAI seller"><div class="home-seller-visual" aria-hidden="true"><span class="seller-visual-orbit"></span><span class="seller-visual-person"></span></div><div class="home-seller-copy"><p class="home-seller-kicker">YOUR NEXT CHAPTER STARTS HERE</p><h2>Become a <span class="brand-novaai"><span>NOVA</span><span>AI</span></span> Seller</h2><p>Reach more customers and grow your business on our marketplace.</p></div><div class="home-seller-growth" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div><a href="./seller.html">Register Now <span aria-hidden="true">→</span></a></section></main>
 <footer><strong><span class="footer-nova">NOVA</span><span class="footer-ai">AI</span> MARKET</strong><span class="footer-tagline">Your Marketplace. Your Opportunity.</span><span>Built for South Africa · Shop with confidence · Support local businesses</span></footer>
@@ -861,19 +861,11 @@ function listingType(product){return readMarker(product.description,'Listing typ
 function isMotorProduct(p){return ['Auto','Motors & Vehicles'].includes(String(p.category||''))&&!['replacement part','accessory','car part','car accessory'].includes(listingType(p));}
 function isRetailProduct(p){return !isPropertyProduct(p)&&!['Auto','Motors & Vehicles'].includes(String(p.category||''));}
 function categoryGroups(items){
- const retail=items.filter(isRetailProduct),motors=items.filter(isMotorProduct),properties=items.filter(isPropertyProduct);
- const sale=properties.filter(p=>p.category==='Property For Sale'),rent=properties.filter(p=>p.category==='Property To Rent');
- const newest=list=>list.slice().sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
+ const properties=items.filter(isPropertyProduct);
+ const retail=items.filter(p=>!isPropertyProduct(p)&&!['Auto','Motors & Vehicles'].includes(String(p.category||'')));
  return [
-  {id:'retail-featured',title:'Featured Retail Products',items:retail,href:'./retail.html',empty:'No approved Retail products are available right now.'},
-  {id:'retail-nearby',title:'Nearby Retail Products',items:[],href:'./retail.html',nearby:true,empty:'Use your location to find approved Retail listings near you.'},
-  {id:'retail-new',title:'New Retail Arrivals',items:newest(retail),href:'./retail.html',empty:'New Retail arrivals will appear here when approved listings become available.'},
-  {id:'motors-featured',title:'Featured Cars and Vehicles',items:motors,href:'./seller-motors-houses.html?market=motors',empty:'No approved vehicle listings are available right now.'},
-  {id:'motors-nearby',title:'Nearby Motors Listings',items:[],href:'./seller-motors-houses.html?market=motors',nearby:true,empty:'Use your location to find approved vehicle listings near you.'},
-  {id:'motors-new',title:'Recently Added Vehicles',items:newest(motors),href:'./seller-motors-houses.html?market=motors',empty:'Recently added vehicles will appear here when approved listings become available.'},
-  {id:'property-sale',title:'Featured Properties for Sale',items:sale,href:'./seller-motors-houses.html?market=property',empty:'No approved properties for sale are available right now.'},
-  {id:'property-rent',title:'Featured Properties for Rent',items:rent,href:'./seller-motors-houses.html?market=property',empty:'No approved rental properties are available right now.'},
-  {id:'property-nearby',title:'Nearby Properties',items:[],href:'./seller-motors-houses.html?market=property',nearby:true,empty:'Use your location to find approved properties near you.'}
+  {id:'premium-properties',title:'Premium Properties',items:properties,href:'./seller-motors-houses.html?market=property',empty:'No approved properties are available right now.'},
+  {id:'featured-products',title:'Featured Products',items:retail,href:'./retail.html',empty:'No approved Retail products are available right now.'}
  ];
 }
 function renderCard(p,storesBySeller){
@@ -890,31 +882,10 @@ grid.querySelectorAll('[data-open-home-product]').forEach(card=>{const open=()=>
 grid.querySelectorAll('[data-home-wishlist]').forEach(button=>button.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();toggleHomeWishlist(button.dataset.homeWishlist,button);}));
 grid.querySelectorAll('[data-add-product]').forEach(button=>button.addEventListener('click',e=>{e.stopPropagation();const product=items.find(item=>String(item.id)===button.dataset.addProduct);if(product)addToCart(product);}));
 }
-function renderHomeSections(items,storesBySeller,client){
+function renderHomeSections(items,storesBySeller){
  const groups=categoryGroups(items);
- grid.innerHTML=groups.map(group=>'<section class="home-category-section" data-home-category="'+escapeHTML(group.id)+'"><div class="section-kicker"><h2>'+escapeHTML(group.title)+'</h2><div style="display:flex;align-items:center;gap:9px"><a href="'+group.href+'">View All <span aria-hidden="true">→</span></a></div></div>'+(group.items.length?'<div class="home-carousel" aria-label="'+escapeHTML(group.title)+' products">'+group.items.map(p=>renderCard(p,storesBySeller)).join('')+'</div>':'<div class="home-products-message">'+escapeHTML(group.empty)+'</div>')+'</section>').join('');
+ grid.innerHTML=groups.map(group=>'<section class="home-category-section" data-home-category="'+escapeHTML(group.id)+'"><div class="section-kicker"><h2>'+escapeHTML(group.title)+'</h2><a href="'+group.href+'">View All <span aria-hidden="true">→</span></a></div>'+(group.items.length?'<div class="home-carousel" aria-label="'+escapeHTML(group.title)+' products">'+group.items.map(p=>renderCard(p,storesBySeller)).join('')+'</div>':'<div class="home-products-message">'+escapeHTML(group.empty)+'</div>')+'</section>').join('');
  wireCards(items);
- grid.querySelectorAll('[data-home-category="retail-nearby"],[data-home-category="motors-nearby"],[data-home-category="property-nearby"]').forEach(section=>{
-  const groupId=section.dataset.homeCategory,button=document.createElement('button');button.type='button';button.className='home-nearby-action';button.textContent='Use my location';section.querySelector('.section-kicker>div').prepend(button);
-  button.addEventListener('click',()=>{
-   if(!navigator.geolocation){section.querySelector('.home-products-message').textContent='Location is not supported by this browser. Browse approved listings using View All.';return;}
-   button.disabled=true;button.textContent='Finding location…';
-   navigator.geolocation.getCurrentPosition(async pos=>{
-    try{
-     const locResult=await client.from('seller_public_locations').select('user_id,latitude,longitude,public_location_enabled,approval_status').eq('public_location_enabled',true).eq('approval_status','approved');
-     if(locResult.error)throw locResult.error;
-     const approvedLocations=new Map((locResult.data||[]).map(l=>[String(l.user_id),l]));
-     const km=(a,b,c,d)=>{const r=v=>v*Math.PI/180,x=r(c-a),y=r(d-b),h=Math.sin(x/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(y/2)**2;return 6371*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));};
-     const selected=groups.find(g=>g.id===groupId),pool=groupId.startsWith('retail')?items.filter(isRetailProduct):groupId.startsWith('motors')?items.filter(isMotorProduct):items.filter(isPropertyProduct);
-     const nearby=pool.map(p=>{if(!storesBySeller.has(String(p.seller_id)))return null;const l=approvedLocations.get(String(p.seller_id));if(!l||l.latitude==null||l.longitude==null)return null;return {...p,_distance:km(pos.coords.latitude,pos.coords.longitude,Number(l.latitude),Number(l.longitude))};}).filter(p=>p&&p._distance<=25).sort((a,b)=>a._distance-b._distance);
-     const target=section.querySelector('.home-products-message');
-     if(nearby.length){target.outerHTML='<div class="home-carousel" aria-label="'+escapeHTML(selected.title)+' products">'+nearby.map(p=>renderCard(p,storesBySeller)).join('')+'</div>';wireCards(items);}
-     else target.textContent='No approved listings with administrator-approved public seller locations were found within 25 km. Browse all listings using View All.';
-     button.textContent='Location checked';button.disabled=true;
-    }catch(error){button.disabled=false;button.textContent='Try location again';section.querySelector('.home-products-message').textContent='Nearby listings could not be loaded safely. Browse approved listings using View All.';console.warn('Nearby Home section:',error);}
-   },()=>{button.disabled=false;button.textContent='Use my location';section.querySelector('.home-products-message').textContent='Location permission was not granted. Browse approved listings using View All.';},{enableHighAccuracy:false,timeout:20000,maximumAge:300000});
-  });
- });
 }
 async function loadHomeProducts(){
 const requestedId=new URLSearchParams(window.location.search).get('product');
@@ -932,8 +903,8 @@ try{const storeResult=await client.from('seller_stores').select('user_id,store_n
 const storesBySeller=new Map(stores.map(store=>[String(store.user_id),store]));
 const items=rows.filter(p=>p.status==='approved'&&p.seller_id&&p.name&&Number(p.price)>0);
 if(!items.length){grid.innerHTML='<div class="home-products-message">There are no eligible approved listings to display right now. Please check back soon.</div>';return;}
-renderHomeSections(items,storesBySeller,client);
-const categorySources={retail:items.find(p=>!isPropertyProduct(p)&&!['Auto','Motors & Vehicles'].includes(p.category)),motors:items.find(p=>['Auto','Motors & Vehicles'].includes(p.category)),property:items.find(p=>isPropertyProduct(p)),more:items.find(p=>!isPropertyProduct(p)&&!['Auto','Motors & Vehicles'].includes(p.category)&&productPhotos(p).length>0&&String(p.id)!==String(items.find(x=>!isPropertyProduct(x)&&!['Auto','Motors & Vehicles'].includes(x.category))?.id))||items.find(p=>productPhotos(p).length>0)};
+renderHomeSections(items,storesBySeller);
+const categorySources={retail:items.find(p=>!isPropertyProduct(p)&&!['Auto','Motors & Vehicles'].includes(p.category)),motors:items.find(p=>['Auto','Motors & Vehicles'].includes(p.category)),property:items.find(p=>isPropertyProduct(p))};
 Object.entries(categorySources).forEach(([key,product])=>{const tile=document.querySelector('[data-home-category-tile="'+key+'"] img'),photo=product&&productPhotos(product)[0];if(tile&&photo){tile.src=photo;tile.alt=key+' marketplace listings';tile.parentElement.classList.add('has-photo');}});
 updateCartCount();
 }catch(error){console.error('Homepage product loading:',error);grid.innerHTML='<div class="home-products-message">We could not load marketplace products right now. Please try again later or browse the full marketplace.</div>';}
