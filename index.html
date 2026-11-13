@@ -585,6 +585,52 @@ body:not(.product-view-active) .home-property-card .home-product-info{padding:11
  body:not(.product-view-active) .home-product-share{width:28px!important;min-width:28px!important;height:28px!important}
  body:not(.product-view-active) .home-add-cart{width:30px;height:30px;min-height:30px;flex-basis:30px}
 }
+
+/* Final fit: keep the seller/price/action row inside the taller tile-matched card. */
+body:not(.product-view-active) .home-product-card,
+body:not(.product-view-active) .home-property-card{
+ flex-basis:calc((100% + 22px - 3 * clamp(12px,1.45vw,22px))/4);
+ width:calc((100% + 22px - 3 * clamp(12px,1.45vw,22px))/4);
+}
+body:not(.product-view-active) .home-product-info{
+ min-height:0;overflow:hidden;padding:10px 12px;
+}
+body:not(.product-view-active) .home-product-heading{min-height:28px}
+body:not(.product-view-active) .home-product-info h3{font-size:15px;line-height:1.15;margin:0 0 3px}
+body:not(.product-view-active) .home-product-seller-block{min-height:0;gap:2px;margin:0 0 5px}
+body:not(.product-view-active) .home-card-seller{font-size:9px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body:not(.product-view-active) .home-trust-label{display:block;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+body:not(.product-view-active) .home-product-buy-row{height:34px;min-height:34px;grid-template-columns:minmax(0,1fr) 30px 32px;gap:6px}
+body:not(.product-view-active) .home-product-price{font-size:15px;white-space:nowrap;overflow:hidden}
+body:not(.product-view-active) .home-product-share{width:30px!important;min-width:30px!important;height:30px!important}
+body:not(.product-view-active) .home-add-cart{width:32px;height:32px;min-height:32px;flex-basis:32px}
+@media(max-width:760px){
+ body:not(.product-view-active) .home-product-card,
+ body:not(.product-view-active) .home-property-card{
+  flex-basis:calc((100% - 5px)/2);
+  width:calc((100% - 5px)/2);
+ }
+ body:not(.product-view-active) .home-product-photo{flex-basis:44%}
+ body:not(.product-view-active) .home-product-info{flex-basis:56%;padding:8px 9px}
+ body:not(.product-view-active) .home-product-heading{min-height:26px}
+ body:not(.product-view-active) .home-product-info h3{font-size:12px;line-height:1.15}
+ body:not(.product-view-active) .home-product-seller-block{gap:2px;margin-bottom:4px}
+ body:not(.product-view-active) .home-card-seller{font-size:8px}
+ body:not(.product-view-active) .home-trust-label{font-size:6px;padding:2px 4px}
+ body:not(.product-view-active) .home-product-buy-row{height:30px;min-height:30px;grid-template-columns:minmax(0,1fr) 27px 29px;gap:4px}
+ body:not(.product-view-active) .home-product-price{font-size:clamp(11px,3vw,13px)}
+ body:not(.product-view-active) .home-product-share{width:27px!important;min-width:27px!important;height:27px!important}
+ body:not(.product-view-active) .home-add-cart{width:29px;height:29px;min-height:29px;flex-basis:29px}
+}
+@media(max-width:380px){
+ body:not(.product-view-active) .home-product-photo{flex-basis:41%}
+ body:not(.product-view-active) .home-product-info{flex-basis:59%;padding:7px}
+ body:not(.product-view-active) .home-product-heading{min-height:24px}
+ body:not(.product-view-active) .home-product-info h3{font-size:11px}
+ body:not(.product-view-active) .home-product-buy-row{grid-template-columns:minmax(0,1fr) 25px 27px;gap:3px}
+ body:not(.product-view-active) .home-product-share{width:25px!important;min-width:25px!important;height:25px!important}
+ body:not(.product-view-active) .home-add-cart{width:27px;height:27px;min-height:27px;flex-basis:27px}
+}
 </style>
 </head>
 <body>
