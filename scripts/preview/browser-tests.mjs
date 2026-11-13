@@ -179,6 +179,9 @@ try{
  await homePage.waitForFunction(()=>[...document.querySelectorAll(".home-product-card .home-product-photo img")].length>0&&[...document.querySelectorAll(".home-product-card .home-product-photo img")].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:20000});
  const desktopPhotoChecks=await homePage.locator(".home-product-card").evaluateAll(cards=>cards.map(card=>{const img=card.querySelector(".home-product-photo img");if(!img)return null;const p=card.querySelector(".home-product-photo").getBoundingClientRect(),c=card.getBoundingClientRect();return {loaded:img.complete&&img.naturalWidth>0,fit:getComputedStyle(img).objectFit,photoWidth:p.width,photoHeight:p.height,cardWidth:c.width,cardHeight:c.height}}).filter(Boolean));
  assert(desktopPhotoChecks.length>0&&desktopPhotoChecks.every(x=>x.loaded&&x.fit==="cover"&&Math.abs(x.photoWidth-x.cardWidth)<=2&&Math.abs(x.photoHeight-x.cardHeight)<=2),"Desktop synthetic photographs must load, cover the full card and use cover cropping");
+ const desktopTextSpacing=await productCard.locator(".home-product-info").evaluate(el=>{const s=getComputedStyle(el);return {paddingLeft:parseFloat(s.paddingLeft),paddingRight:parseFloat(s.paddingRight),width:el.getBoundingClientRect().width,scrollWidth:el.scrollWidth,clientWidth:el.clientWidth};});
+ assert(desktopTextSpacing.paddingLeft>=18&&desktopTextSpacing.paddingRight>=18,"Desktop product text must have comfortable 18px side insets");
+ assert(desktopTextSpacing.scrollWidth<=desktopTextSpacing.clientWidth+1,"Desktop product text must not overflow its overlay");
  const desktopTrust=await homePage.locator(".home-trust-label").first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
  assert(desktopTrust>=9,"Desktop Trust Shield label must remain readable; measured "+desktopTrust+"px");
  const desktopShot=await homePage.screenshot({path:"preview-screenshots/home-desktop.png",fullPage:true});
@@ -201,6 +204,9 @@ try{
  assert(mobilePeek.cardHeight>mobilePeek.tileHeight,"Android product card must preserve the approved taller-than-tile proportion");
  await mobilePage.locator(".home-product-card .home-product-photo img").evaluateAll(imgs=>imgs.forEach(img=>{img.loading="eager";}));
  await mobilePage.waitForFunction(()=>[...document.querySelectorAll(".home-product-card .home-product-photo img")].length>0&&[...document.querySelectorAll(".home-product-card .home-product-photo img")].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:20000});
+ const mobileSpacing=await mobilePage.locator(".home-product-info").first().evaluate(el=>{const s=getComputedStyle(el);return {left:parseFloat(s.paddingLeft),right:parseFloat(s.paddingRight),width:el.clientWidth,scrollWidth:el.scrollWidth};});
+ assert(mobileSpacing.left>=14&&mobileSpacing.right>=14,"Android product text must have at least 14px side insets");
+ assert(mobileSpacing.scrollWidth<=mobileSpacing.width+1,"Android product text must not overflow its overlay");
  const mobileTrust=await mobilePage.locator(".home-trust-label").first().evaluate(el=>({fontSize:parseFloat(getComputedStyle(el).fontSize),text:el.innerText.trim()}));
  assert(mobileTrust.fontSize>=10,"Android Trust Shield must be at least 10px; measured "+mobileTrust.fontSize+"px");
  const photoChecks=await mobilePage.locator(".home-product-card").evaluateAll(cards=>cards.map(card=>{const img=card.querySelector(".home-product-photo img");if(!img)return null;const p=card.querySelector(".home-product-photo").getBoundingClientRect(),c=card.getBoundingClientRect();return {loaded:img.complete&&img.naturalWidth>0,naturalWidth:img.naturalWidth,naturalHeight:img.naturalHeight,fit:getComputedStyle(img).objectFit,photoWidth:p.width,photoHeight:p.height,cardWidth:c.width,cardHeight:c.height}}).filter(Boolean));
@@ -218,6 +224,9 @@ try{
  await tabletPage.waitForFunction(()=>[...document.querySelectorAll(".home-product-card .home-product-photo img")].length>0&&[...document.querySelectorAll(".home-product-card .home-product-photo img")].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:20000});
  const tabletPhotoChecks=await tabletPage.locator(".home-product-card").evaluateAll(cards=>cards.map(card=>{const img=card.querySelector(".home-product-photo img");if(!img)return null;const p=card.querySelector(".home-product-photo").getBoundingClientRect(),c=card.getBoundingClientRect();return {loaded:img.complete&&img.naturalWidth>0,fit:getComputedStyle(img).objectFit,photoWidth:p.width,photoHeight:p.height,cardWidth:c.width,cardHeight:c.height}}).filter(Boolean));
  assert(tabletPhotoChecks.length>0&&tabletPhotoChecks.every(x=>x.loaded&&x.fit==="cover"&&Math.abs(x.photoWidth-x.cardWidth)<=2&&Math.abs(x.photoHeight-x.cardHeight)<=2),"Tablet synthetic photographs must load, cover the full card and use cover cropping");
+ const tabletSpacing=await tabletPage.locator(".home-product-info").first().evaluate(el=>{const s=getComputedStyle(el);return {left:parseFloat(s.paddingLeft),right:parseFloat(s.paddingRight),width:el.clientWidth,scrollWidth:el.scrollWidth};});
+ assert(tabletSpacing.left>=18&&tabletSpacing.right>=18,"Tablet product text must have comfortable side insets");
+ assert(tabletSpacing.scrollWidth<=tabletSpacing.width+1,"Tablet product text must not overflow its overlay");
  const tabletTrust=await tabletPage.locator(".home-trust-label").first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
  assert(tabletTrust>=9,"Tablet Trust Shield label must remain readable; measured "+tabletTrust+"px");
  await tabletPage.screenshot({path:"preview-screenshots/home-tablet.png",fullPage:true});
