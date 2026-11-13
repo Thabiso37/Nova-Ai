@@ -686,6 +686,13 @@ body:not(.product-view-active) .nova-hero-controls{gap:0}
 body:not(.product-view-active) .home-nearby-action{border:1px solid rgba(65,194,255,.55);border-radius:999px;background:rgba(9,62,110,.65);color:#bcecff;padding:6px 10px;font-size:10px;font-weight:850;backdrop-filter:blur(8px)}
 body:not(.product-view-active) .home-products-message{min-height:78px;display:flex;align-items:center;justify-content:center;padding:14px 16px;border:1px solid rgba(76,171,239,.22);border-radius:14px;background:rgba(9,29,57,.62);color:#b7cce4;font-size:12px;line-height:1.5}
 
+
+/* Focused Android readability correction: retain card size and photo-overlay layout. */
+@media(max-width:380px){
+ body:not(.product-view-active) .home-trust-label{
+  font-size:10px;line-height:1.25;padding:3px 5px;white-space:normal;
+ }
+}
 </style>
 </head>
 <body>
