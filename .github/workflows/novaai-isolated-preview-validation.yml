@@ -1,6 +1,9 @@
 name: NOVAAI Isolated Preview Build Validation
 
 on:
+  push:
+    branches:
+      - feature/product-sharing-analytics
   workflow_dispatch:
     inputs:
       expected_commit:
