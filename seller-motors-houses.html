@@ -94,7 +94,7 @@ body.property-mode .property-ad-slot small{display:block;margin-top:3px;color:#7
 @media(min-width:760px){body.property-mode #productGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}body.property-mode .property-card-photo,body.property-mode .property-card-placeholder{height:210px}}
 @media(max-width:390px){body.property-mode #productGrid{gap:8px}body.property-mode .property-card-body{padding:8px}body.property-mode .property-card h4{font-size:12px}body.property-mode .property-price{font-size:15px}}
 
-.vehicle-title-row{align-items:center}.vehicle-title-row .vehicle-title{margin:0;flex:1;min-width:0}.property-title-row{align-items:center}.property-title-row h4{margin:0;flex:1;min-width:0}
+.vehicle-title-row{align-items:center}.vehicle-title-row .vehicle-title{margin:0;flex:1;min-width:0}.vehicle-card .motor-gallery .nova-product-share-detail{display:none}.vehicle-card-detail-open .motor-gallery .nova-product-share-detail{display:inline-flex}.property-title-row{align-items:center}.property-title-row h4{margin:0;flex:1;min-width:0}
 </style>
 <style>
 body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important;background:#F5F7FB}
@@ -692,7 +692,6 @@ function marketShareButton(item,market,shareLocation="product_card",detail=false
   const attrs=' data-nova-product-share data-share-product-id="'+esc(id)+'" data-share-marketplace="'+market+'" data-share-location-type="'+shareLocation+'" data-share-title="'+esc(item.name||"Listing")+'" data-share-price="'+esc(cash(item.price))+'" data-share-location="'+esc(place)+'" data-share-url="'+esc(url)+'"';
   return '<button type="button" class="nova-product-share-icon '+(detail?"nova-product-share-detail":"nova-product-share-card")+'" aria-label="Share listing" title="Share listing"'+attrs+'>'+"<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"18\" cy=\"5\" r=\"3\"></circle><circle cx=\"6\" cy=\"12\" r=\"3\"></circle><circle cx=\"18\" cy=\"19\" r=\"3\"></circle><path d=\"m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4\"></path></svg>"+'</button>';
 }
-const requestedProductId=new URLSearchParams(location.search).get("product")||"";
 
 async function loadListings(marketType, searchQuery = '') {
   const runId = ++listingLoadRun;
@@ -843,8 +842,7 @@ function renderMotorsParts(rows){
   }
   grid.innerHTML=visible.map(item=>{
     const title=String(item.name||'Vehicle');
-    const detailTarget=requestedProductId&&String(item.id)===String(requestedProductId);
-    const photo='<div class="motor-gallery">'+(item.image_url&&String(item.image_url).startsWith('http')?'<img class="vehicle-photo" src="'+esc(item.image_url)+'" alt="'+esc(title)+'" loading="lazy">':'<div class="vehicle-photo-empty">Vehicle photo not supplied</div>')+(detailTarget?marketShareButton(item,"motors","detail_page",true):'')+'</div>';
+    const photo='<div class="motor-gallery">'+(item.image_url&&String(item.image_url).startsWith('http')?'<img class="vehicle-photo" src="'+esc(item.image_url)+'" alt="'+esc(title)+'" loading="lazy">':'<div class="vehicle-photo-empty">Vehicle photo not supplied</div>')+marketShareButton(item,"motors","detail_page",true)+'</div>';
     const desc=String(item.description||'');
     const year=vehicleSpec(desc,'year');
     const mileage=vehicleSpec(desc,'mileage');
@@ -854,6 +852,7 @@ function renderMotorsParts(rows){
     const specs=[year,transmission,fuel].map(esc).join(' · ');
     return '<article class="panel vehicle-card" data-product-id="'+esc(item.id)+'">'+photo+'<div class="vehicle-card-body"><div class="vehicle-spec-line">'+specs+'</div><div class="nova-product-title-row vehicle-title-row"><h3 class="vehicle-title">'+esc(title)+'</h3>'+marketShareButton(item,"motors","product_card")+'</div><div class="vehicle-price">'+cash(item.price)+'</div><div class="vehicle-meta">'+esc(mileage)+' · '+esc(location)+'</div><details class="vehicle-details"><summary>View Vehicle Details</summary><p>'+esc(desc||'The seller has not supplied additional vehicle details.')+'</p><div><strong>Seller:</strong> '+esc(item.seller_name||'NOVAAI seller')+'</div></details><div class="vehicle-seller">Listed by '+esc(item.seller_name||'NOVAAI seller')+'</div></div></article>';
   }).join('');
+  grid.querySelectorAll(".vehicle-card").forEach(card=>{const details=card.querySelector(".vehicle-details"),share=card.querySelector(".motor-gallery .nova-product-share-detail");if(!details||!share)return;const sync=()=>card.classList.toggle("vehicle-card-detail-open",details.open);details.addEventListener("toggle",sync);sync();});
 }
 let propertyListings=[];let propertyVisibleRows=[];let propertyKind='all';let propertySearchText='';let propertyMin=0;let propertyMax=10000000;
 function searchProperty(v){propertySearchText=String(v||'').toLowerCase().trim();applyPropertyFilters()}
