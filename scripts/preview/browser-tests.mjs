@@ -125,6 +125,9 @@ try{
   return {width:c.width,height:c.height,photoWidth:p.width,photoHeight:p.height,infoHeight:i.height,photoPosition:getComputedStyle(el.querySelector(".home-product-photo")).position,infoPosition:getComputedStyle(el.querySelector(".home-product-info")).position,photoBottom:p.bottom,infoTop:i.top};
  });
  const propertyGeometry=await measure(propertyCard),retailGeometry=await measure(retailCard);
+ const retailHeights=await home.locator('[data-home-category="featured-products"] .home-product-card').evaluateAll(cards=>cards.map(el=>el.getBoundingClientRect().height));
+ assert(Math.max(...retailHeights)-Math.min(...retailHeights)<=1,"Featured Products cards must have consistent heights");
+
  assert(Math.abs(propertyGeometry.width-225)<=2&&Math.abs(retailGeometry.width-225)<=2,"Desktop card widths do not match original Preview 2 dimensions");
  assert.equal(await propertyCard.locator(".home-add-cart").evaluate(el=>el.getBoundingClientRect().width),40,"Desktop cart control must retain the original 40px size");
  assert(Math.abs(propertyGeometry.photoHeight/propertyGeometry.photoWidth-1)<.015,"Premium Properties image ratio must match original 16:9");
@@ -227,6 +230,9 @@ try{
  const mobileProperty=mobile.locator('[data-home-category="premium-properties"] .home-product-card').first();
  const mobileRetail=mobile.locator('[data-home-category="featured-products"] .home-product-card').first();
  const mobilePropertyGeometry=await measure(mobileProperty),mobileRetailGeometry=await measure(mobileRetail);
+ const mobileRetailHeights=await mobile.locator('[data-home-category="featured-products"] .home-product-card').evaluateAll(cards=>cards.map(el=>el.getBoundingClientRect().height));
+ assert(Math.max(...mobileRetailHeights)-Math.min(...mobileRetailHeights)<=1,"Android Featured Products cards must have consistent heights");
+
  assert(Math.abs(mobilePropertyGeometry.width-163.8)<=2&&Math.abs(mobileRetailGeometry.width-163.8)<=2,"Android card widths do not match original Preview 2 dimensions");
  assert.equal(await mobileProperty.locator(".home-add-cart").evaluate(el=>el.getBoundingClientRect().width),34,"Android cart control must retain the original 34px size");
  assert(Math.abs(mobilePropertyGeometry.photoHeight/mobilePropertyGeometry.photoWidth-1)<.02,"Android Premium Properties image ratio must be 16:9");
