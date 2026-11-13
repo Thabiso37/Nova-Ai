@@ -47,7 +47,7 @@ for(const name of fs.readdirSync(dir).filter(n=>fs.statSync(path.join(dir,n)).is
 }
 const sharing=fs.readFileSync(path.join(dir,"novaai-product-sharing.js"),"utf8");
 assert(sharing.includes("navigator.share")&&sharing.includes("navigator.clipboard"),"Native share or clipboard fallback missing");
-assert(/function record\\(\\)\\{\\/\\* Intentionally disabled/.test(sharing),"Share analytics must remain disabled in preview");
+assert(!/nxplffvklkopwfjaqexo\\.supabase\\.co|record-novaai-product-share|product-share-analytics/i.test(sharing),"Share analytics or production Supabase integration must not execute in preview");
 for(const name of ["index.html","retail.html","seller-motors-houses.html","property-details.html","preview-fixtures.js","novaai-product-sharing.js"])
  assert(fs.existsSync(path.join(dir,name)),"Missing generated validation asset: "+name);
 console.log("PASS accepted branch source hash; exact three-slide Home; Near Me; tile and content order; seller banner/footer; prohibited sections absent; PR #35 controls; preview CSP and production endpoint/credential isolation.");
