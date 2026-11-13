@@ -2,7 +2,24 @@ import fs from "node:fs";
 import path from "node:path";
 import assert from "node:assert/strict";
 import vm from "node:vm";
+import crypto from "node:crypto";
 
+const expectedManifest={
+ source:"mixed-approved",
+ baselineCommit:"ae424b41f73ef6bd704b7f4018ab69c70a38e0aa",
+ designIndexCommit:"4237605170876328fdcdf2225aaf6f892d60755b",
+ designIndexBlob:"0687855df71c383581ade5fcff99808812e70039"
+};
+const manifest=JSON.parse(fs.readFileSync(path.resolve("preview-dist/.source-manifest.json"),"utf8"));
+assert.equal(manifest.source,expectedManifest.source,"Unexpected preview source mode");
+assert.equal(manifest.baselineCommit,expectedManifest.baselineCommit,"Preview baseline commit mismatch");
+assert.equal(manifest.designIndexCommit,expectedManifest.designIndexCommit,"Home redesign commit mismatch");
+assert.equal(manifest.files["index.html@design"],expectedManifest.designIndexBlob,"Home redesign blob mismatch");
+assert.equal(manifest.files["retail.html"],"38277fef4c9a9226da1d9f43736ae78a46fd1f6a","Retail source baseline mismatch");
+assert.equal(manifest.files["seller-motors-houses.html"],"79dbca93afd3852471df8f3fa9bf06f83b33b4d7","Motors/Property source baseline mismatch");
+assert.equal(manifest.files["property-details.html"],"4742bb9372941f388aadf4fe3c4280e008ec8462","Property detail source baseline mismatch");
+const generatedIndex=fs.readFileSync(path.resolve("preview-dist/index.html"),"utf8");
+assert(generatedIndex.includes("2080")||generatedIndex.includes("nova-home-2080"),"Generated Home page does not contain the approved redesign marker");
 const dir=path.resolve("preview-dist");
 const forbidden=[
  /nxplffvklkopwfjaqexo/i,
