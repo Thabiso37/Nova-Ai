@@ -102,6 +102,15 @@ jobs:
       - name: Run Playwright browser network-isolation tests
         run: node scripts/preview/browser-tests.mjs
 
+      - name: Save responsive Home screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: novaai-2080-home-screenshots
+          path: preview-screenshots/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Confirm preview build does not publish
         shell: bash
         run: |
