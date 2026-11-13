@@ -130,8 +130,10 @@ try{
 
  assert(Math.abs(propertyGeometry.width-225)<=2&&Math.abs(retailGeometry.width-225)<=2,"Desktop card widths do not match original Preview 2 dimensions");
  assert.equal(await propertyCard.locator(".home-add-cart").evaluate(el=>el.getBoundingClientRect().width),40,"Desktop cart control must retain the original 40px size");
- assert(Math.abs(propertyGeometry.photoHeight/propertyGeometry.photoWidth-1)<.015,"Premium Properties image ratio must match original 16:9");
- assert(Math.abs(retailGeometry.photoHeight/retailGeometry.photoWidth-1)<.015,"Featured Products image ratio must match original 16:10");
+ assert(Math.abs(propertyGeometry.photoHeight/propertyGeometry.photoWidth-1)<.015,"Premium Properties image ratio must match the original square photo");
+ assert(Math.abs(propertyGeometry.height-415.84)<=2&&Math.abs(propertyGeometry.infoHeight-190.84)<=2,"Desktop Premium Properties card height/panel differs from Preview 2");
+ assert(Math.abs(retailGeometry.photoHeight/retailGeometry.photoWidth-1)<.015,"Featured Products image ratio must match the original square photo");
+ assert(Math.abs(retailGeometry.height-433.84)<=2&&Math.abs(retailGeometry.infoHeight-208.84)<=2,"Desktop Featured Products card height/panel differs from Preview 2");
  for(const g of [propertyGeometry,retailGeometry]){
   assert(g.photoPosition==="relative"&&g.infoPosition==="static","Preview 2 photo and information must remain separate normal-flow panels");
   assert(g.infoTop>=g.photoBottom-2&&g.infoHeight>=150,"Preview 2 information panel must remain below the image");
@@ -235,8 +237,10 @@ try{
 
  assert(Math.abs(mobilePropertyGeometry.width-163.8)<=2&&Math.abs(mobileRetailGeometry.width-163.8)<=2,"Android card widths do not match original Preview 2 dimensions");
  assert.equal(await mobileProperty.locator(".home-add-cart").evaluate(el=>el.getBoundingClientRect().width),34,"Android cart control must retain the original 34px size");
- assert(Math.abs(mobilePropertyGeometry.photoHeight/mobilePropertyGeometry.photoWidth-1)<.02,"Android Premium Properties image ratio must be 16:9");
- assert(Math.abs(mobileRetailGeometry.photoHeight/mobileRetailGeometry.photoWidth-1)<.02,"Android Featured Products image ratio must be 16:10");
+ assert(Math.abs(mobilePropertyGeometry.photoHeight/mobilePropertyGeometry.photoWidth-1)<.02,"Android Premium Properties image ratio must be square");
+ assert(Math.abs(mobilePropertyGeometry.height-361.58)<=2&&Math.abs(mobilePropertyGeometry.infoHeight-197.78)<=2,"Android Premium Properties card height/panel differs from Preview 2");
+ assert(Math.abs(mobileRetailGeometry.photoHeight/mobileRetailGeometry.photoWidth-1)<.02,"Android Featured Products image ratio must be square");
+ assert(Math.abs(mobileRetailGeometry.height-392.73)<=2&&Math.abs(mobileRetailGeometry.infoHeight-228.94)<=2,"Android Featured Products card height/panel differs from Preview 2");
  for(const g of [mobilePropertyGeometry,mobileRetailGeometry])assert(g.infoTop>=g.photoBottom-2&&g.infoHeight>=150,"Android information panel is not separate below its image");
  fs.mkdirSync("preview-screenshots",{recursive:true});
  await mobile.screenshot({path:"preview-screenshots/home-android-390.png",fullPage:true});
