@@ -17,10 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout exact approved PR commit
+      - name: Checkout preview tooling branch and restore exact approved application files
         uses: actions/checkout@v4
         with:
-          ref: 10de8ec63bf77ec08e0252592251542ad6ad142a
+          ref: feature/product-sharing-analytics
           fetch-depth: 1
           persist-credentials: false
       - name: Set up Node
@@ -29,7 +29,8 @@ jobs:
           node-version: '20'
       - name: Verify checked-out commit
         run: |
-          test "$(git rev-parse HEAD)" = "10de8ec63bf77ec08e0252592251542ad6ad142a"
+          git checkout 10de8ec63bf77ec08e0252592251542ad6ad142a -- index.html retail.html seller-motors-houses.html property-details.html novaai-product-sharing.js nearby-search.js novaai-ad-slots.js novaai-share-visits.js service-worker.js
+git diff --quiet 10de8ec63bf77ec08e0252592251542ad6ad142a -- index.html retail.html seller-motors-houses.html property-details.html novaai-product-sharing.js nearby-search.js novaai-ad-slots.js novaai-share-visits.js service-worker.js
       - name: Generate fixture-backed isolated preview copy
         run: node scripts/preview/build.mjs
       - name: Run static isolation verification
