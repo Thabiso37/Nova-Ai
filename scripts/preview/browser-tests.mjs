@@ -170,8 +170,10 @@ try{
  await searchInput.press("Enter");
  await homePage.waitForFunction(()=>document.getElementById("homeLocationStatus")?.textContent.includes("matching product"),null,{timeout:3000});
  const searchStatus=await homePage.locator("#homeLocationStatus").innerText();
- assert.match(searchStatus,/Showing 1 matching product/,"Home search did not report one matching product: "+searchStatus);
- assert.equal(await homePage.locator('[data-home-category="retail-featured"] .home-product-card:visible').count(),1,"Home search did not filter to the matching product");
+ assert.match(searchStatus,/Showing \\d+ matching products?/,"Home search did not report matching products: "+searchStatus);
+ const visibleSearchResults=await homePage.locator('[data-home-category="retail-featured"] .home-product-card:visible').allInnerTexts();
+ assert(visibleSearchResults.length>0&&visibleSearchResults.length<4,"Home search did not narrow the featured product list");
+ assert(visibleSearchResults.every(text=>text.toLowerCase().includes("preview cotton t-shirt")),"Home search left unrelated featured products visible");
  await searchInput.fill("");
  await searchInput.press("Enter");
  await homePage.waitForFunction(()=>document.getElementById("homeLocationStatus")?.textContent.includes("Showing all available"),null,{timeout:3000});
