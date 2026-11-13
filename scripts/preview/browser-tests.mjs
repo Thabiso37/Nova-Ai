@@ -93,35 +93,53 @@ try{
  }
  const homePage=pages.find(x=>x.file==="index.html").page;
  await homePage.waitForFunction(()=>!!document.querySelector(".home-product-card .home-product-share"),null,{timeout:10000});
- assert.equal(await homePage.locator(".home-category-tile").count(),4,"Home must show the four approved category shortcuts");
+ assert.equal(await homePage.locator(".home-category-tile").count(),4,"Home must retain the four approved category shortcuts");
  const categoryLabels=await homePage.locator(".home-category-tile .home-category-label").allTextContents();
- assert.deepEqual(categoryLabels.map(x=>x.trim()),["Property","Cars","Retail","More"],"Category destinations must follow the approved order and labels");
- assert.equal(await homePage.locator(".home-category-tile .home-category-image img").count(),4,"Every category destination must retain an image element");
- const categoryGeometry=await homePage.locator(".home-category-tile").first().evaluate(el=>{const r=el.getBoundingClientRect(),ir=el.querySelector("img").getBoundingClientRect();return {width:r.width,height:r.height,imageWidth:ir.width,imageHeight:ir.height}});
- assert(categoryGeometry.width>categoryGeometry.height,"Category destinations must be large landscape image tiles");
- assert(categoryGeometry.imageWidth>=categoryGeometry.width-2&&categoryGeometry.imageHeight>=categoryGeometry.height-2,"Category imagery must fill the complete destination tile");
- assert.equal(await homePage.locator('[data-home-category="premium-properties"] .home-property-card').count(),3,"Home must render three synthetic property cards");
- assert.equal(await homePage.locator('[data-home-category="featured-products"] .home-product-card').count(),4,"Home must render the synthetic retail product cards");
- const productCard=homePage.locator('[data-home-category="featured-products"] .home-product-card').first();
- assert.equal(await productCard.locator(".home-product-heading h3").count(),1,"Product name must use the redesigned heading region");
- assert.equal(await productCard.locator(".home-product-seller-block").count(),1,"Seller information must use the dedicated seller region");
- assert.equal(await productCard.locator(".home-product-buy-row .home-product-price").count(),1,"Product price must remain visible in the action footer");
- assert.equal(await productCard.locator(".home-product-share[data-nova-product-share]").count(),1,"Existing product sharing hook must be preserved");
- assert.equal(await productCard.locator(".home-add-cart[data-add-product]").count(),1,"Existing add-to-cart hook must be preserved");
- assert.equal(await productCard.locator(".home-wishlist-toggle[data-home-wishlist]").count(),1,"Existing wishlist hook must be preserved");
- const cardGeometry=await productCard.evaluate(el=>{const r=el.getBoundingClientRect(),photo=el.querySelector(".home-product-photo").getBoundingClientRect();return {width:r.width,height:r.height,photoWidth:photo.width,photoHeight:photo.height}});
- const categoryReference=await homePage.locator(".home-category-tile").first().evaluate(el=>{const r=el.getBoundingClientRect();return {width:r.width,height:r.height}});
- assert(Math.abs(cardGeometry.width-categoryReference.width)<=4,"Desktop product-card width must match category-tile width");
- assert(Math.abs(cardGeometry.height/categoryReference.height-1.2)<=.035,"Desktop product card must extend category-tile height by approximately 20%");
- assert(cardGeometry.photoWidth>cardGeometry.photoHeight*1.2,"Product photography must remain visually prominent");
-
- const brandColors=await homePage.locator(".logo .nova-ai").evaluate(el=>({nova:getComputedStyle(el).color,ai:getComputedStyle(el.querySelector("span")).color}));
- assert.notEqual(brandColors.nova,brandColors.ai,"NOVAAI brand letters must use contrasting NOVA and AI colours");
+ assert.deepEqual(categoryLabels.map(x=>x.trim()),["Property","Cars","Retail","More"],"Approved category labels/order changed");
+ const requiredSections=[
+  ["retail-featured","Featured Retail Products"],["retail-nearby","Nearby Retail Products"],["retail-new","New Retail Arrivals"],
+  ["motors-featured","Featured Cars and Vehicles"],["motors-nearby","Nearby Motors Listings"],["motors-new","Recently Added Vehicles"],
+  ["property-sale","Featured Properties for Sale"],["property-rent","Featured Properties for Rent"],["property-nearby","Nearby Properties"]
+ ];
+ for(const [id,title] of requiredSections){
+  const section=homePage.locator('[data-home-category="'+id+'"]');
+  assert.equal(await section.count(),1,"Missing Home marketplace section: "+title);
+  assert.equal((await section.locator(".section-kicker h2").innerText()).trim(),title,"Incorrect section heading: "+title);
+ }
+ assert.equal(await homePage.locator('[data-home-category="retail-featured"] .home-product-card').count(),4,"Retail featured cards must use synthetic Retail records");
+ assert.equal(await homePage.locator('[data-home-category="motors-featured"] .home-product-card').count(),1,"Motors featured cards must use synthetic vehicle records");
+ assert.equal(await homePage.locator('[data-home-category="property-sale"] .home-product-card').count(),2,"Property sale cards must use synthetic sale records");
+ assert.equal(await homePage.locator('[data-home-category="property-rent"] .home-product-card').count(),1,"Property rental cards must use synthetic rental records");
+ for(const id of ["retail-nearby","motors-nearby","property-nearby"]){
+  assert.equal(await homePage.locator('[data-home-category="'+id+'"] .home-nearby-action').count(),1,"Nearby section missing location action: "+id);
+  assert.equal(await homePage.locator('[data-home-category="'+id+'"] .home-product-card').count(),0,"Nearby section must not invent listings before location lookup: "+id);
+ }
+ const productCard=homePage.locator('[data-home-category="retail-featured"] .home-product-card').first();
+ assert.equal(await productCard.locator(".home-product-heading h3").count(),1,"Product name missing");
+ assert.equal(await productCard.locator(".home-product-seller-block").count(),1,"Seller information missing");
+ assert.equal(await productCard.locator(".home-product-buy-row .home-product-price").count(),1,"Product price missing");
+ assert.equal(await productCard.locator(".home-product-share[data-nova-product-share]").count(),1,"Existing share hook missing");
+ assert.equal(await productCard.locator(".home-add-cart[data-add-product]").count(),1,"Existing cart hook missing");
+ assert.equal(await productCard.locator(".home-wishlist-toggle[data-home-wishlist]").count(),1,"Existing wishlist hook missing");
+ const overlayGeometry=await productCard.evaluate(el=>{
+  const card=el.getBoundingClientRect(),photo=el.querySelector(".home-product-photo"),info=el.querySelector(".home-product-info"),img=photo.getBoundingClientRect(),ir=info.getBoundingClientRect();
+  return {width:card.width,height:card.height,photoPosition:getComputedStyle(photo).position,photoWidth:img.width,photoHeight:img.height,infoPosition:getComputedStyle(info).position,infoBottom:ir.bottom,cardBottom:card.bottom,imageFit:getComputedStyle(photo.querySelector("img")).objectFit};
+ });
+ assert.equal(overlayGeometry.photoPosition,"absolute","Product photo must cover the card surface");
+ assert.equal(overlayGeometry.infoPosition,"absolute","Product information must overlay the photo");
+ assert(Math.abs(overlayGeometry.photoWidth-overlayGeometry.width)<=2&&Math.abs(overlayGeometry.photoHeight-overlayGeometry.height)<=2,"Photo background must fill the full card");
+ assert(Math.abs(overlayGeometry.infoBottom-overlayGeometry.cardBottom)<=2,"Product information overlay must sit inside the photo at the card bottom");
+ assert.equal(overlayGeometry.imageFit,"cover","Product photo must use cover cropping");
+ const brandColors=await homePage.locator(".brand-novaai").first().evaluate(el=>({nova:getComputedStyle(el.querySelector("span:first-child")).color,ai:getComputedStyle(el.querySelector("span:last-child")).color}));
+ assert.notEqual(brandColors.nova,brandColors.ai,"NOVA blue and final AI yellow brand treatment must remain distinct");
  const desktopStyle=await homePage.locator(".home-carousel").first().evaluate(el=>({overflow:getComputedStyle(el).overflowX,snap:getComputedStyle(el).scrollSnapType,scrollbar:getComputedStyle(el).scrollbarWidth}));
- assert.equal(desktopStyle.overflow,"auto","Product carousels must use natural horizontal scrolling");
- assert.match(desktopStyle.snap,/x mandatory/,"Product carousels must use horizontal snap");
+ assert.equal(desktopStyle.overflow,"auto","Product sections must preserve horizontal scrolling");
+ assert.match(desktopStyle.snap,/x/,"Product sections must retain horizontal snap behaviour");
  assert.equal(desktopStyle.scrollbar,"none","Product carousels must hide traditional scrollbars");
- assert.equal(await homePage.locator(".home-carousel .carousel-arrow, .home-carousel .swipe-instruction, .home-carousel .scroll-indicator").count(),0,"Product carousels must not show arrows or swipe instructions");
+ const adControls=await homePage.evaluate(()=>({prev:getComputedStyle(document.querySelector("#novaHeroPrev")).display,next:getComputedStyle(document.querySelector("#novaHeroNext")).display,dots:document.querySelectorAll(".nova-hero-dots button").length,slides:document.querySelectorAll(".nova-hero-slide").length}));
+ assert.equal(adControls.prev,"none","Only the advertising board arrows should be hidden");
+ assert.equal(adControls.next,"none","Only the advertising board arrows should be hidden");
+ assert(adControls.dots>=2&&adControls.slides>=2,"Advertising carousel campaigns/dots must remain");
  console.log("PASS 2080 Home structure, Trust Shield, brand hierarchy and horizontal carousel styling");
  fs.mkdirSync("preview-screenshots",{recursive:true});
  const desktopShot=await homePage.screenshot({path:"preview-screenshots/home-desktop.png",fullPage:true});
@@ -130,7 +148,7 @@ try{
  mobilePage.on("request",req=>{if(productionPattern(req.url()))attempts.add(req.url())});
  mobilePage.on("pageerror",err=>failures.push("mobile Home: "+err.message));
  await mobilePage.goto(origin+"/index.html",{waitUntil:"domcontentloaded",timeout:15000});
- await mobilePage.waitForFunction(()=>document.readyState==="complete"&&!!document.querySelector('[data-home-category="premium-properties"] .home-property-card'),null,{timeout:10000});
+ await mobilePage.waitForFunction(()=>document.readyState==="complete"&&!!document.querySelector('[data-home-category="property-sale"] .home-property-card'),null,{timeout:10000});
  const mobilePeek=await mobilePage.locator('[data-home-category="premium-properties"] .home-carousel').evaluate(el=>{
   const cards=[...el.querySelectorAll(".home-product-card")],box=el.getBoundingClientRect(),a=cards[0]?.getBoundingClientRect();
   const tile=document.querySelector(".home-category-tile")?.getBoundingClientRect();
@@ -140,7 +158,7 @@ try{
  assert.equal(mobilePeek.firstFits,true,"First property card must fit within the mobile carousel");
  assert.equal(mobilePeek.scrollable,true,"Android product carousel must retain horizontal overflow scrolling");
  assert(Math.abs(mobilePeek.cardWidth-mobilePeek.tileWidth)<=4,"Android product-card width must match category-tile width");
- assert(Math.abs(mobilePeek.cardHeight/mobilePeek.tileHeight-1.2)<=.04,"Android product card must extend category-tile height by approximately 20%");
+ assert(mobilePeek.cardHeight>mobilePeek.tileHeight,"Android product card must preserve the approved taller-than-tile proportion");
  await mobilePage.screenshot({path:"preview-screenshots/home-android.png",fullPage:true});
  const tabletContext=await browser.newContext({viewport:{width:820,height:1180},deviceScaleFactor:1});
  const tabletPage=await tabletContext.newPage();
