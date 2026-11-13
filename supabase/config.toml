@@ -1,4 +1,0 @@
-project_id = "nxplffvklkopwfjaqexo"
-
-[functions.record-novaai-product-share]
-verify_jwt = false
