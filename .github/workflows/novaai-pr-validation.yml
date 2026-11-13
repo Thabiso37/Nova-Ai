@@ -135,7 +135,7 @@ jobs:
           print("Changed HTML validation passed; no duplicate IDs found.")
           PY
 
-      - name: Test native sharing, cancellation, clipboard and analytics rules
+      - name: Test native sharing, cancellation and clipboard without analytics dependencies
         run: |
           set -euo pipefail
           cat > /tmp/novaai-product-sharing.test.cjs <<'JS'
@@ -159,10 +159,7 @@ jobs:
               createElement() { return { textContent: '' }; },
               head: { appendChild() {} }
             };
-            const navigator = {
-              share: overrides.share,
-              clipboard: overrides.clipboard
-            };
+            const navigator = { share: overrides.share, clipboard: overrides.clipboard };
             const window = {
               crypto: { randomUUID: () => '11111111-2222-4333-8444-555555555555' },
               isSecureContext: overrides.secure !== false,
@@ -184,19 +181,15 @@ jobs:
           };
           async function settle() { await new Promise(resolve => setImmediate(resolve)); }
 
-          test('native share success records one valid analytics event', async () => {
+          test('native share succeeds and opens the platform share sheet without network analytics', async () => {
             const h = harness({ share: async () => {} });
             assert.equal(await h.api.share({ ...valid, button: h.button }), true);
             await settle();
-            assert.equal(h.requests.length, 1);
-            const event = JSON.parse(h.requests[0][1].body);
-            assert.equal(event.product_id, '42');
-            assert.equal(event.marketplace, 'retail');
-            assert.equal(event.share_location, 'product_card');
-            assert.equal(h.requests[0][1].method, 'POST');
+            assert.equal(h.requests.length, 0);
+            assert.equal(h.prompts.length, 0);
           });
 
-          test('native share cancellation records no analytics event', async () => {
+          test('native share cancellation returns false without opening fallback or making requests', async () => {
             const h = harness({ share: async () => { const error = new Error('cancelled'); error.name = 'AbortError'; throw error; } });
             assert.equal(await h.api.share(valid), false);
             await settle();
@@ -204,15 +197,16 @@ jobs:
             assert.equal(h.prompts.length, 0);
           });
 
-          test('successful secure-context clipboard fallback records one event', async () => {
-            const h = harness({ secure: true, clipboard: { writeText: async () => {} } });
+          test('clipboard fallback succeeds without analytics network requests', async () => {
+            let copied = '';
+            const h = harness({ secure: true, clipboard: { writeText: async value => { copied = value; } } });
             assert.equal(await h.api.share(valid), true);
             await settle();
-            assert.equal(h.requests.length, 1);
-            assert.equal(JSON.parse(h.requests[0][1].body).product_id, '42');
+            assert.match(copied, /View on NOVAAI MARKET/);
+            assert.equal(h.requests.length, 0);
           });
 
-          test('manual prompt fallback does not claim a successful copy or record analytics', async () => {
+          test('manual prompt fallback is available when clipboard is unavailable', async () => {
             const h = harness({ secure: false });
             assert.equal(await h.api.share(valid), false);
             await settle();
@@ -220,19 +214,9 @@ jobs:
             assert.equal(h.requests.length, 0);
           });
 
-          test('successful share with invalid analytics metadata sends no event', async () => {
-            const h = harness({ share: async () => {} });
-            assert.equal(await h.api.share({ ...valid, productId: 'not-a-product-id' }), true);
-            await settle();
-            assert.equal(h.requests.length, 0);
-          });
-
-          test('successful share with unsupported marketplace or share location sends no event', async () => {
-            const h = harness({ share: async () => {} });
-            await h.api.share({ ...valid, marketplace: 'unknown' });
-            await h.api.share({ ...valid, shareLocation: 'unknown' });
-            await settle();
-            assert.equal(h.requests.length, 0);
+          test('sharing helper contains no Supabase analytics endpoint or event recorder', () => {
+            const source = fs.readFileSync('novaai-product-sharing.js', 'utf8');
+            assert.doesNotMatch(source, /supabase\.co\/functions|record-novaai-product-share|function record\(/i);
           });
           JS
           node --test /tmp/novaai-product-sharing.test.cjs
