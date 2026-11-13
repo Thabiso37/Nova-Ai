@@ -1,42 +1,98 @@
 name: NOVAAI Isolated Preview Build Validation
+
 on:
   workflow_dispatch:
     inputs:
       expected_commit:
-        description: Exact PR commit SHA to build
+        description: Exact approved application baseline commit SHA
         required: true
         type: string
         default: 10de8ec63bf77ec08e0252592251542ad6ad142a
+
 permissions:
   contents: read
+
 concurrency:
   group: novaai-isolated-preview-validation
   cancel-in-progress: true
+
 jobs:
   build-and-audit:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout preview tooling branch and restore exact approved application files
+      - name: Checkout pinned preview tooling commit
         uses: actions/checkout@v4
         with:
-          ref: feature/product-sharing-analytics
+          ref: e53b07f3ccc5f6821a4b2bb806043b136f788e8f
           fetch-depth: 1
           persist-credentials: false
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Verify checked-out commit
+
+      - name: Enforce approved baseline and verify exact source files
+        env:
+          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+        shell: bash
         run: |
-          git checkout 10de8ec63bf77ec08e0252592251542ad6ad142a -- index.html retail.html seller-motors-houses.html property-details.html novaai-product-sharing.js nearby-search.js novaai-ad-slots.js novaai-share-visits.js service-worker.js
-git diff --quiet 10de8ec63bf77ec08e0252592251542ad6ad142a -- index.html retail.html seller-motors-houses.html property-details.html novaai-product-sharing.js nearby-search.js novaai-ad-slots.js novaai-share-visits.js service-worker.js
+          set -euo pipefail
+
+          readonly APPROVED_APPLICATION_COMMIT="10de8ec63bf77ec08e0252592251542ad6ad142a"
+          readonly EXPECTED_TOOLING_COMMIT="e53b07f3ccc5f6821a4b2bb806043b136f788e8f"
+
+          if [[ "$EXPECTED_COMMIT" != "$APPROVED_APPLICATION_COMMIT" ]]; then
+            echo "::error::expected_commit must equal the approved application baseline $APPROVED_APPLICATION_COMMIT"
+            exit 1
+          fi
+
+          ACTUAL_TOOLING_COMMIT="$(git rev-parse HEAD)"
+          if [[ "$ACTUAL_TOOLING_COMMIT" != "$EXPECTED_TOOLING_COMMIT" ]]; then
+            echo "::error::Preview tooling commit mismatch. Expected $EXPECTED_TOOLING_COMMIT; got $ACTUAL_TOOLING_COMMIT"
+            exit 1
+          fi
+
+          git fetch --no-tags --depth=1 origin "$EXPECTED_COMMIT"
+          git cat-file -e "$EXPECTED_COMMIT^{commit}"
+
+          application_files=(
+            index.html
+            retail.html
+            seller-motors-houses.html
+            property-details.html
+            novaai-product-sharing.js
+            nearby-search.js
+            novaai-ad-slots.js
+            novaai-share-visits.js
+            service-worker.js
+          )
+
+          git checkout "$EXPECTED_COMMIT" -- "${application_files[@]}"
+
+          for file in "${application_files[@]}"; do
+            expected_blob="$(git rev-parse "$EXPECTED_COMMIT:$file")"
+            actual_blob="$(git hash-object "$file")"
+            if [[ "$actual_blob" != "$expected_blob" ]]; then
+              echo "::error::Application file does not match approved baseline: $file"
+              exit 1
+            fi
+            echo "Verified baseline file: $file ($actual_blob)"
+          done
+
+          echo "Verified preview tooling commit: $ACTUAL_TOOLING_COMMIT"
+          echo "Verified approved application baseline: $EXPECTED_COMMIT"
+
       - name: Generate fixture-backed isolated preview copy
         run: node scripts/preview/build.mjs
+
       - name: Run static isolation verification
         run: node scripts/preview/verify.mjs
+
       - name: Confirm preview build does not publish
+        shell: bash
         run: |
+          set -euo pipefail
           test -d preview-dist
-          test ! -e .github/workflows/pages.yml
           echo "Build validated locally on runner only; no artifact, URL, Pages deployment or tunnel created."
