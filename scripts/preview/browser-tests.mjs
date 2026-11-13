@@ -167,8 +167,14 @@ try{
  assert.equal(savedCart[0]?.product?.dbId,910001,"Home Add to Cart did not persist the correct product");
  const searchInput=homePage.locator("#homeSearchInput");
  await searchInput.fill("Preview Cotton T-Shirt");
+ await searchInput.press("Enter");
+ await homePage.waitForFunction(()=>document.getElementById("homeLocationStatus")?.textContent.includes("matching product"),null,{timeout:3000});
+ const searchStatus=await homePage.locator("#homeLocationStatus").innerText();
+ assert.match(searchStatus,/Showing 1 matching product/,"Home search did not report one matching product: "+searchStatus);
  assert.equal(await homePage.locator('[data-home-category="retail-featured"] .home-product-card:visible').count(),1,"Home search did not filter to the matching product");
  await searchInput.fill("");
+ await searchInput.press("Enter");
+ await homePage.waitForFunction(()=>document.getElementById("homeLocationStatus")?.textContent.includes("Showing all available"),null,{timeout:3000});
  assert.equal(await homePage.locator('[data-home-category="retail-featured"] .home-product-card:visible').count(),4,"Clearing Home search did not restore all featured products");
  await homePage.evaluate(()=>localStorage.removeItem("novaMarketplaceCartV1"));
  await homePage.reload({waitUntil:"domcontentloaded"});
