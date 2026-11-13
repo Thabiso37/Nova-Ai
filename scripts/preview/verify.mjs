@@ -7,8 +7,8 @@ import crypto from "node:crypto";
 const expectedManifest={
  source:"mixed-approved",
  baselineCommit:"ae424b41f73ef6bd704b7f4018ab69c70a38e0aa",
- designIndexCommit:"6cf978743747ef27ea13c4f92053ddf0cd6a9a0d",
- designIndexBlob:"cf4b123e9ece658543d203359e1a111948c61fb3"
+ designIndexCommit:"ea48a9c62ad41c08016d323a7b193faf6e06b2f2",
+ designIndexBlob:"ef744b97a27b7756dcf3ecd648c40e731ec444be"
 };
 const manifest=JSON.parse(fs.readFileSync(path.resolve("preview-dist/.source-manifest.json"),"utf8"));
 assert.equal(manifest.source,expectedManifest.source,"Unexpected preview source mode");
