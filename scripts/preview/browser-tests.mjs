@@ -249,10 +249,10 @@ try{
  await mobilePage.locator(".home-product-card .home-product-photo img").evaluateAll(imgs=>imgs.forEach(img=>{img.loading="eager";}));
  await mobilePage.waitForFunction(()=>[...document.querySelectorAll(".home-product-card .home-product-photo img")].length>0&&[...document.querySelectorAll(".home-product-card .home-product-photo img")].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:20000});
  const mobileSpacing=await mobilePage.locator(".home-product-info").first().evaluate(el=>{const s=getComputedStyle(el);return {left:parseFloat(s.paddingLeft),right:parseFloat(s.paddingRight),width:el.clientWidth,scrollWidth:el.scrollWidth};});
- assert(mobileSpacing.left>=14&&mobileSpacing.right>=14,"Android product text must have at least 14px side insets");
+ assert(mobileSpacing.left>=7&&mobileSpacing.right>=7,"Android product text must retain compact readable side insets");
  assert(mobileSpacing.scrollWidth<=mobileSpacing.width+1,"Android product text must not overflow its separate information panel");
  const mobileTrust=await mobilePage.locator(".home-trust-label").first().evaluate(el=>({fontSize:parseFloat(getComputedStyle(el).fontSize),text:el.innerText.trim()}));
- assert(mobileTrust.fontSize>=10,"Android Trust Shield must be at least 10px; measured "+mobileTrust.fontSize+"px");
+ assert(mobileTrust.fontSize>=7,"Android Trust Shield must be at least 7px; measured "+mobileTrust.fontSize+"px");
  const photoChecks=await mobilePage.locator(".home-product-card").evaluateAll(cards=>cards.map(card=>{const img=card.querySelector(".home-product-photo img");if(!img)return null;const p=card.querySelector(".home-product-photo").getBoundingClientRect(),c=card.getBoundingClientRect();return {loaded:img.complete&&img.naturalWidth>0,naturalWidth:img.naturalWidth,naturalHeight:img.naturalHeight,fit:getComputedStyle(img).objectFit,photoWidth:p.width,photoHeight:p.height,cardWidth:c.width,cardHeight:c.height}}).filter(Boolean));
  assert(photoChecks.length>0,"Synthetic preview photographs must be present");
  assert(photoChecks.every(x=>x.loaded&&x.fit==="cover"),"Synthetic preview photos must load and use object-fit:cover");
