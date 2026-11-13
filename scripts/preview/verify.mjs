@@ -83,10 +83,10 @@ for(const name of files){
 const sharing=fs.readFileSync(path.join(dir,"novaai-product-sharing.js"),"utf8");
 assert(sharing.includes("navigator.share"),"Native share implementation was not preserved");
 assert(sharing.includes("navigator.clipboard"),"Clipboard fallback was not preserved");
-const hasAnalyticsRecorder = /(?:function\\s+record\\s*\\(|(?:const|let|var)\\s+record\\s*=|record\\s*:\\s*function)|\\b(?:recordAnalytics|trackEvent|gtag)\\s*\\(/i.test(sharing);
-const hasExplicitlyDisabledRecordStub = /function\\s+record\\s*\\(\\)\\s*\\{\\s*\\/\\*\\s*Intentionally disabled[^*]*\\*\\//i.test(sharing);
+const hasAnalyticsRecorder = /(?:function\s+record\s*\(|(?:const|let|var)\s+record\s*=|record\s*:\s*function)|\b(?:recordAnalytics|trackEvent|gtag)\s*\(/i.test(sharing);
+const hasExplicitlyDisabledRecordStub = /function\s+record\s*\(\)\s*\{\s*\/\*\s*Intentionally disabled[^*]*\*\//i.test(sharing);
 assert(!hasAnalyticsRecorder || hasExplicitlyDisabledRecordStub,"Active product-share analytics recording must not be present in preview");
-assert(!/\\b(?:sendBeacon|XMLHttpRequest|fetch)\\s*\\(/i.test(sharing),"Product-share preview must not make analytics/network requests");
+assert(!/\b(?:sendBeacon|XMLHttpRequest|fetch)\s*\(/i.test(sharing),"Product-share preview must not make analytics/network requests");
 
 const fixtureSource=fs.readFileSync(path.join(dir,"preview-fixtures.js"),"utf8");
 const sandbox={window:{}};
