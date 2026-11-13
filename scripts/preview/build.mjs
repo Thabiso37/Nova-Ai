@@ -7,11 +7,11 @@ const out = path.join(root, "preview-dist");
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
 
-const IMPLEMENTATION_COMMIT = "7f9d347e053695ebb6b0e2602415c74d87410f3b";
+const IMPLEMENTATION_COMMIT = "a0ed724371a3487ec263fd9c7598f60f72fe5269";
 const IMPLEMENTATION_BRANCH = "fix/restore-preview2-home-cards";
-const EXPECTED_IMPLEMENTATION_HOME_BLOB = "ae9633e67c0a60c24ac01df628b2c100ed4fe6eb";
+const EXPECTED_IMPLEMENTATION_HOME_BLOB = "20fc326fa485ca8f23914371334e21f97a6fc5c2";
 const expectedBaselineBlobs = {
- "index.html":"ae9633e67c0a60c24ac01df628b2c100ed4fe6eb",
+ "index.html":"20fc326fa485ca8f23914371334e21f97a6fc5c2",
  "retail.html":"38277fef4c9a9226da1d9f43736ae78a46fd1f6a",
  "seller-motors-houses.html":"79dbca93afd3852471df8f3fa9bf06f83b33b4d7",
  "property-details.html":"4742bb9372941f388aadf4fe3c4280e008ec8462",
