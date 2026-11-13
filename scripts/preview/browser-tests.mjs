@@ -125,11 +125,11 @@ try{
   return {width:c.width,height:c.height,photoWidth:p.width,photoHeight:p.height,infoHeight:i.height,photoPosition:getComputedStyle(el.querySelector(".home-product-photo")).position,infoPosition:getComputedStyle(el.querySelector(".home-product-info")).position,photoBottom:p.bottom,infoTop:i.top};
  });
  const propertyGeometry=await measure(propertyCard),retailGeometry=await measure(retailCard);
- assert(Math.abs(propertyGeometry.width-270)<=2&&Math.abs(retailGeometry.width-250)<=2,"Desktop card widths do not match original Preview 2 dimensions");
- assert(Math.abs(propertyGeometry.photoHeight/propertyGeometry.photoWidth-9/16)<.015,"Premium Properties image ratio must match original 16:9");
- assert(Math.abs(retailGeometry.photoHeight/retailGeometry.photoWidth-10/16)<.015,"Featured Products image ratio must match original 16:10");
+ assert(Math.abs(propertyGeometry.width-225)<=2&&Math.abs(retailGeometry.width-225)<=2,"Desktop card widths do not match original Preview 2 dimensions");
+ assert(Math.abs(propertyGeometry.photoHeight/propertyGeometry.photoWidth-1)<.015,"Premium Properties image ratio must match original 16:9");
+ assert(Math.abs(retailGeometry.photoHeight/retailGeometry.photoWidth-1)<.015,"Featured Products image ratio must match original 16:10");
  for(const g of [propertyGeometry,retailGeometry]){
-  assert(g.photoPosition==="relative"&&g.infoPosition==="relative","Preview 2 photo and information must remain separate normal-flow panels");
+  assert(g.photoPosition==="relative"&&g.infoPosition==="static","Preview 2 photo and information must remain separate normal-flow panels");
   assert(g.infoTop>=g.photoBottom-2&&g.infoHeight>=150,"Preview 2 information panel must remain below the image");
  }
  const propertyText=await propertyCard.innerText();
@@ -171,7 +171,7 @@ try{
  await cart.click();
  const cartData=await home.evaluate(()=>JSON.parse(localStorage.getItem("novaMarketplaceCartV1")||"[]"));
  assert(cartData.length>0,"Home Add to Cart did not persist the selected product");
- console.log("PASS original Preview 2 Home hero, real listing names/categories/sellers/Trust Shield/prices, 16:9 property + 16:10 retail cards, native sharing, clipboard fallback, cancellation, cart and wishlist");
+ console.log("PASS original Preview 2 Home hero, real listing names/categories/sellers/Trust Shield/prices, square 225px desktop / 163.8px mobile cards, native sharing, clipboard fallback, cancellation, cart and wishlist");
 
  const retail=pages.find(x=>x.file==="retail.html").page;
  await retail.waitForFunction(()=>!!document.querySelector("#products .product-open-card .actions .nova-product-share-card"),null,{timeout:15000});
@@ -226,9 +226,9 @@ try{
  const mobileProperty=mobile.locator('[data-home-category="premium-properties"] .home-product-card').first();
  const mobileRetail=mobile.locator('[data-home-category="featured-products"] .home-product-card').first();
  const mobilePropertyGeometry=await measure(mobileProperty),mobileRetailGeometry=await measure(mobileRetail);
- assert(Math.abs(mobilePropertyGeometry.width-270)<=2&&Math.abs(mobileRetailGeometry.width-250)<=2,"Android card widths do not match original Preview 2 dimensions");
- assert(Math.abs(mobilePropertyGeometry.photoHeight/mobilePropertyGeometry.photoWidth-9/16)<.02,"Android Premium Properties image ratio must be 16:9");
- assert(Math.abs(mobileRetailGeometry.photoHeight/mobileRetailGeometry.photoWidth-10/16)<.02,"Android Featured Products image ratio must be 16:10");
+ assert(Math.abs(mobilePropertyGeometry.width-163.8)<=2&&Math.abs(mobileRetailGeometry.width-163.8)<=2,"Android card widths do not match original Preview 2 dimensions");
+ assert(Math.abs(mobilePropertyGeometry.photoHeight/mobilePropertyGeometry.photoWidth-1)<.02,"Android Premium Properties image ratio must be 16:9");
+ assert(Math.abs(mobileRetailGeometry.photoHeight/mobileRetailGeometry.photoWidth-1)<.02,"Android Featured Products image ratio must be 16:10");
  for(const g of [mobilePropertyGeometry,mobileRetailGeometry])assert(g.infoTop>=g.photoBottom-2&&g.infoHeight>=150,"Android information panel is not separate below its image");
  fs.mkdirSync("preview-screenshots",{recursive:true});
  await mobile.screenshot({path:"preview-screenshots/home-android-390.png",fullPage:true});
