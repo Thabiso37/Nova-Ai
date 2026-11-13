@@ -9,7 +9,6 @@ fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
 
 const APPROVED_BASELINE_COMMIT = "ae424b41f73ef6bd704b7f4018ab69c70a38e0aa";
-const DESIGN_INDEX_COMMIT = "bbe86ee1ec986fccba514022f228f33980968a22";
 const HISTORICAL_HOME_VISUAL_COMMIT = "0851cf99f7ecfe78b381340b3a2d7317b9dbb2fd";
 const EXPECTED_HISTORICAL_HOME_BLOB = "b76c6014c1264548e600fe4961210c2c8e5a611b";
 const expectedBaselineBlobs = {
@@ -31,60 +30,20 @@ for (const [file,expected] of Object.entries(expectedBaselineBlobs)) {
  const actual=gitBlobSha(fs.readFileSync(path.join(root,file)));
  if(actual!==expected) throw new Error("Approved baseline source hash mismatch for "+file+": "+actual);
 }
-const designIndex = execFileSync("curl",["-fsSL","https://raw.githubusercontent.com/Thabiso37/Nova-Ai/"+DESIGN_INDEX_COMMIT+"/index.html"],{encoding:"utf8",maxBuffer:8*1024*1024});
 const historicalHomeIndex = execFileSync("curl",["-fsSL","https://raw.githubusercontent.com/Thabiso37/Nova-Ai/"+HISTORICAL_HOME_VISUAL_COMMIT+"/index.html"],{encoding:"utf8",maxBuffer:8*1024*1024});
-/* Scoped review correction: product-card text inset and alignment only. */
-const productCardTextSpacing = `
-body:not(.product-view-active) .home-product-info{
- box-sizing:border-box;
- padding:16px 18px 16px;
-}
-body:not(.product-view-active) .home-product-heading,
-body:not(.product-view-active) .home-product-seller-block,
-body:not(.product-view-active) .home-product-buy-row{
- box-sizing:border-box;
- width:100%;
- max-width:100%;
- min-width:0;
-}
-body:not(.product-view-active) .home-product-info h3,
-body:not(.product-view-active) .home-card-seller,
-body:not(.product-view-active) .home-trust-label{
- max-width:100%;
- overflow-wrap:anywhere;
-}
-body:not(.product-view-active) .home-trust-label{
- box-sizing:border-box;
- white-space:normal;
-}
-body:not(.product-view-active) .home-product-buy-row{
- align-items:center;
-}
-body:not(.product-view-active) .home-product-price{
- min-width:0;
- overflow-wrap:anywhere;
-}
-@media(max-width:760px){
- body:not(.product-view-active) .home-product-info{padding:14px 15px 14px}
-}
-@media(min-width:761px){
- body:not(.product-view-active) .home-product-info{padding:17px 20px 17px}
-}
-`;
-if(!designIndex.includes("</head>")) throw new Error("Approved Home document head closing tag not found");
-const spacedDesignIndex=designIndex.replace("</head>",'<style id="nova-product-card-text-spacing">'+productCardTextSpacing+'</style></head>');
-const designIndexBlob=gitBlobSha(designIndex);
-if(designIndexBlob!=="26f0f1a173a63dbbd69d25e5cfd0ae8af6deef91") throw new Error("Preview 2-restored design index.html hash mismatch: "+designIndexBlob);
+/* Actual rendered Preview 2 is the Home visual authority. Use its complete source,
+   not a newer design index that merely shares selected CSS fragments. */
 const historicalHomeVisualBlob=gitBlobSha(historicalHomeIndex);
 if(historicalHomeVisualBlob!==EXPECTED_HISTORICAL_HOME_BLOB) throw new Error("Historical Preview 2 source hash mismatch: "+historicalHomeVisualBlob);
 if(!historicalHomeIndex.includes(".home-product-info{display:flex;flex:1;flex-direction:column")) throw new Error("Historical Preview 2 information-panel source could not be verified.");
+if(!historicalHomeIndex.includes('data-home-category-tile="retail"')||!historicalHomeIndex.includes('data-home-category-tile="motors"')||!historicalHomeIndex.includes('data-home-category-tile="property"')) throw new Error("Historical Preview 2 marketplace category tiles are incomplete.");
+const previewHomeIndex=historicalHomeIndex;
 fs.writeFileSync(path.join(out,".source-manifest.json"),JSON.stringify({
- source:"mixed-approved-preview2",
+ source:"actual-rendered-preview2",
  baselineCommit:APPROVED_BASELINE_COMMIT,
- designIndexCommit:DESIGN_INDEX_COMMIT,
- historicalHomeVisualCommit:HISTORICAL_HOME_VISUAL_COMMIT,
+  historicalHomeVisualCommit:HISTORICAL_HOME_VISUAL_COMMIT,
  historicalHomeVisualBlob,
- files:{...expectedBaselineBlobs,"index.html@design":designIndexBlob,"index.html@historical-visual":historicalHomeVisualBlob}
+ files:{...expectedBaselineBlobs,"index.html@actual-preview2":historicalHomeVisualBlob}
 },null,2)+"\n");
 
 const pages = ["index.html", "retail.html", "seller-motors-houses.html", "property-details.html"];
@@ -169,8 +128,14 @@ window.__NOVAAI_PREVIEW_FIXTURES__={products,sellers,locations};
 fs.writeFileSync(path.join(out, "preview-fixtures.js"), fixture);
 
 for (const page of pages) {
- let html=page==="index.html"?spacedDesignIndex:fs.readFileSync(path.join(root,page),"utf8");
+ let html=page==="index.html"?previewHomeIndex:fs.readFileSync(path.join(root,page),"utf8");
  html=html.replace(/<script[^>]+supabase-js[^>]*><\/script>/gi,'<script src="./preview-fixtures.js"></script>');
+
+  if(page==="index.html"){
+    html=html.replace('<html lang="en" class="nova-ads-pending">','<html lang="en">');
+    const approvedHero="<div class=\"nova-hero-slide active\"><div class=\"nova-hero-copy\"><span class=\"nova-hero-kicker\"><span class=\"brand-novaai\"><span>NOVA</span><span>AI</span></span> MARKET</span><h1>Browse fashion, tech and home essentials.</h1><p>Discover great finds from South African sellers.</p><a href=\"./retail.html\">Explore Retail <span aria-hidden=\"true\">→</span></a></div><div class=\"nova-hero-art\" style=\"background-image:linear-gradient(90deg,rgba(16,40,75,.08),rgba(16,40,75,.02)),url(https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85);background-size:cover;background-position:center\" aria-hidden=\"true\"></div></div>";
+    html=html.replace(/<div class="nova-hero-slide active">[\\s\\S]*?<\\/div><\\/div>(?=\\s*<div class="nova-hero-slide">)/,approvedHero);
+  }
  html=html.replace(/<script[^>]+novaai-ad-slots\.js[^>]*><\/script>/gi,"");
  html=html.replace(/<script[^>]+novaai-share-visits\.js[^>]*><\/script>/gi,"");
  html=html.replace(/<script[^>]+nearby-search\.js[^>]*><\/script>/gi,"");
