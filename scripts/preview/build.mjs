@@ -30,6 +30,46 @@ for (const [file,expected] of Object.entries(expectedBaselineBlobs)) {
  if(actual!==expected) throw new Error("Approved baseline source hash mismatch for "+file+": "+actual);
 }
 const designIndex = execFileSync("curl",["-fsSL","https://raw.githubusercontent.com/Thabiso37/Nova-Ai/"+DESIGN_INDEX_COMMIT+"/index.html"],{encoding:"utf8",maxBuffer:8*1024*1024});
+/* Scoped review correction: product-card text inset and alignment only. */
+const productCardTextSpacing = `
+body:not(.product-view-active) .home-product-info{
+ box-sizing:border-box;
+ padding:16px 18px 16px;
+}
+body:not(.product-view-active) .home-product-heading,
+body:not(.product-view-active) .home-product-seller-block,
+body:not(.product-view-active) .home-product-buy-row{
+ box-sizing:border-box;
+ width:100%;
+ max-width:100%;
+ min-width:0;
+}
+body:not(.product-view-active) .home-product-info h3,
+body:not(.product-view-active) .home-card-seller,
+body:not(.product-view-active) .home-trust-label{
+ max-width:100%;
+ overflow-wrap:anywhere;
+}
+body:not(.product-view-active) .home-trust-label{
+ box-sizing:border-box;
+ white-space:normal;
+}
+body:not(.product-view-active) .home-product-buy-row{
+ align-items:center;
+}
+body:not(.product-view-active) .home-product-price{
+ min-width:0;
+ overflow-wrap:anywhere;
+}
+@media(max-width:760px){
+ body:not(.product-view-active) .home-product-info{padding:14px 15px 14px}
+}
+@media(min-width:761px){
+ body:not(.product-view-active) .home-product-info{padding:17px 20px 17px}
+}
+`;
+if(!designIndex.includes("</head>")) throw new Error("Approved Home document head closing tag not found");
+const spacedDesignIndex=designIndex.replace("</head>",'<style id="nova-product-card-text-spacing">'+productCardTextSpacing+'</style></head>');
 const designIndexBlob=gitBlobSha(designIndex);
 if(designIndexBlob!=="ef744b97a27b7756dcf3ecd648c40e731ec444be") throw new Error("Approved redesign index.html hash mismatch: "+designIndexBlob);
 fs.writeFileSync(path.join(out,".source-manifest.json"),JSON.stringify({
