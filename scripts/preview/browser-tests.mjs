@@ -126,9 +126,9 @@ try{
   assert(g.infoTop>=g.photoBottom-2&&g.infoHeight>=150,"Preview 2 information panel must remain below the image");
  }
  const propertyText=await propertyCard.innerText();
- assert(propertyText.includes("Property")&&propertyText.includes("PROPERTY")&&propertyText.includes("TRUST SHIELD")&&propertyText.includes("R 185.00"),"Actual Premium Properties name/category/seller/Trust Shield/price are missing");
+ assert(propertyText.includes("Property")&&propertyText.includes("PROPERTY")&&propertyText.includes("TRUST SHIELD")&&propertyText.includes("R 185,00"),"Actual Premium Properties name/category/seller/Trust Shield/price are missing");
  const retailText=await retailCard.innerText();
- assert(retailText.includes("test phone a12")&&retailText.includes("ACCESSORIES")&&retailText.includes("Alaska store")&&retailText.includes("TRUST SHIELD")&&retailText.includes("R 500.00"),"Actual Featured Products name/category/seller/Trust Shield/price are missing");
+ assert(retailText.includes("test phone a12")&&retailText.includes("ACCESSORIES")&&retailText.includes("Alaska store")&&retailText.includes("TRUST SHIELD")&&retailText.includes("R 500,00"),"Actual Featured Products name/category/seller/Trust Shield/price are missing");
  const shareUrl=await firstCard.locator("[data-nova-product-share]").getAttribute("data-share-url");
  assert(shareUrl&&new URL(shareUrl).origin===origin,"Home product Share URL must remain inside isolated preview");
  const native=await home.evaluate(async url=>{
