@@ -77,6 +77,8 @@ try{
     await c.rpc("place_order"),
     await c.auth.signInWithPassword({email:"test@example.invalid",password:"not-a-real-password"}),
     await c.auth.signUp({email:"test@example.invalid",password:"not-a-real-password"}),
+    await c.auth.updateUser({email:"test@example.invalid"}),
+    await c.auth.resetPasswordForEmail("test@example.invalid"),
     await c.storage.from("listing-images").upload("forbidden.txt",new Blob(["x"])),
     await c.storage.from("listing-images").remove(["forbidden.txt"])
    ];
@@ -88,16 +90,35 @@ try{
  }
  const sharePage=pages.find(x=>x.file==="retail.html").page;
  const shareData=await sharePage.evaluate(()=>{
-  const actual=document.querySelector("[data-nova-product-share][data-share-url]");
-  if(actual)return {url:actual.dataset.shareUrl,found:true};
-  const fallback=new URL("./retail.html?product=910001",location.href).href;
-  return {url:fallback,found:false};
+  if(typeof window.retailShareButton!=="function")throw new Error("Retail share URL builder is not available");
+  const markup=window.retailShareButton({dbId:910001,name:"Preview Cotton T-Shirt",price:249,publicLocation:"Pretoria"});
+  const holder=document.createElement("div");holder.innerHTML=markup;
+  const button=holder.querySelector("[data-nova-product-share]");
+  if(!button||!button.dataset.shareUrl)throw new Error("Retail share URL builder did not produce a share control");
+  return button.dataset.shareUrl;
  });
- const shareUrl=new URL(shareData.url);
- assert.equal(shareUrl.origin,origin,"Product share URL does not use the preview origin");
- assert.match(shareUrl.pathname,/retail\.html$/,"Unexpected product share URL path");
- if(!shareData.found)console.log("NOTE: fixture page did not render a product share control; preview-origin URL fallback exercised.");
+ const shareUrl=new URL(shareData);
+ assert.equal(shareUrl.origin,origin,"Retail product share URL does not use the preview origin");
+ assert.match(shareUrl.pathname,/retail\.html$/,"Unexpected Retail product share URL path");
+ console.log("PASS Retail share URL builder resolves against preview origin");
 
+ const motorsPage=pages.find(x=>x.file==="seller-motors-houses.html").page;
+ const marketUrls=await motorsPage.evaluate(()=>{
+  if(typeof window.marketShareButton!=="function")throw new Error("Motors/Property share URL builder is not available");
+  const make=(market,id)=>{const html=window.marketShareButton({id,name:"Preview listing",price:100,seller_id:"fixture-motors"},market);const holder=document.createElement("div");holder.innerHTML=html;const button=holder.querySelector("[data-nova-product-share]");return button&&button.dataset.shareUrl};
+  return {motors:make("motors",910002),property:make("property",910003)};
+ });
+ for(const [market,url] of Object.entries(marketUrls)){assert(url,"Missing "+market+" share URL");assert.equal(new URL(url).origin,origin,market+" share URL escaped the preview origin");}
+ console.log("PASS Motors and Property share URL builders resolve against preview origin");
+
+ const propertyPage=pages.find(x=>x.file==="property-details.html").page;
+ const propertyDetailUrl=await propertyPage.evaluate(()=>{
+  if(typeof window.propertyDetailShareButton!=="function")throw new Error("Property detail share URL builder is not available");
+  const html=window.propertyDetailShareButton();const holder=document.createElement("div");holder.innerHTML=html;const button=holder.querySelector("[data-nova-product-share]");return button&&button.dataset.shareUrl;
+ });
+ assert(propertyDetailUrl,"Property detail page did not generate a share URL");
+ assert.equal(new URL(propertyDetailUrl).origin,origin,"Property detail share URL escaped the preview origin");
+ console.log("PASS Property detail share URL resolves against preview origin");
  const nativeResult=await sharePage.evaluate(async(url)=>{
   const ok=await window.NOVAAIProductShare.share({title:"Preview product",price:"R249",url,productId:"910001",marketplace:"retail",shareLocation:"product_card"});
   return {ok,calls:window.__nativeShareCalls,clipboard:window.__clipboardWrites};
@@ -117,6 +138,16 @@ try{
  assert.equal(clipboardResult.writes.length,1,"Clipboard fallback did not write exactly once");
  assert(clipboardResult.writes[0].includes(shareUrl.href),"Clipboard message did not include preview-origin URL");
  console.log("PASS clipboard fallback mock + preview-origin URL");
+
+ const cancelResult=await sharePage.evaluate(async(url)=>{
+  navigator.share=async()=>{const error=new Error("User cancelled");error.name="AbortError";throw error};
+  const before=window.__clipboardWrites.length;
+  const ok=await window.NOVAAIProductShare.share({title:"Preview product",price:"R249",url,productId:"910001",marketplace:"retail",shareLocation:"product_card"});
+  return {ok,before,after:window.__clipboardWrites.length};
+ },shareUrl.href);
+ assert.equal(cancelResult.ok,false,"Native share cancellation should not report success");
+ assert.equal(cancelResult.after,cancelResult.before,"Clipboard fallback should not run after user cancellation");
+ console.log("PASS native share AbortError cancellation");
 
  for(const {page} of pages)await page.close();
  assert.equal(attempts.size,0,"Production Supabase/analytics request attempts detected: "+[...attempts].join(", "));
