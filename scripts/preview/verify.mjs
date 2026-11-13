@@ -25,11 +25,11 @@ assert.equal(manifest.files["seller-motors-houses.html"],"79dbca93afd3852471df8f
 assert.equal(manifest.files["property-details.html"],"4742bb9372941f388aadf4fe3c4280e008ec8462","Property detail source baseline mismatch");
 const generatedIndex=fs.readFileSync(path.resolve("preview-dist/index.html"),"utf8");
 assert(generatedIndex.includes("2080")||generatedIndex.includes("nova-home-2080"),"Generated Home page does not contain the approved redesign marker");
-const panelRestore=generatedIndex.match(/<style id="nova-home-preview2-panel-restoration">([\\s\\S]*?)<\\/style>/);
+const panelRestore=generatedIndex.match(/<style id="nova-home-preview2-panel-restoration">([\s\S]*?)<\/style>/);
 assert(panelRestore,"Generated Home page is missing the Preview 2 panel restoration stylesheet");
 assert(panelRestore[1].includes(".home-product-photo")&&panelRestore[1].includes("position:relative!important"),"Preview 2 must place the product photograph at the top of the card");
 assert(panelRestore[1].includes(".home-product-info")&&panelRestore[1].includes("flex:1 1 52%!important"),"Preview 2 must restore the separate information panel beneath the photo");
-assert(!/\\.home-product-info\\s*\\{[^}]*position:absolute/i.test(panelRestore[1]),"Preview 2 information panel must not overlay the product photo");
+assert(!/\.home-product-info\s*\{[^}]*position:absolute/i.test(panelRestore[1]),"Preview 2 information panel must not overlay the product photo");
 const dir=path.resolve("preview-dist");
 const forbidden=[
  /nxplffvklkopwfjaqexo/i,
