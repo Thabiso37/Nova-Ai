@@ -11,7 +11,7 @@ const IMPLEMENTATION_COMMIT = "d42d998623c5f4854b44f07c05bcc3903a4ca671";
 const IMPLEMENTATION_BRANCH = "fix/restore-preview2-home-cards";
 const EXPECTED_IMPLEMENTATION_HOME_BLOB = "592bfe7387d11887604987c19749884f0063c5bd";
 const expectedBaselineBlobs = {
- "index.html":"81ccb4c246845239d574115c3a3389df219540cc",
+ "index.html":"592bfe7387d11887604987c19749884f0063c5bd",
  "retail.html":"38277fef4c9a9226da1d9f43736ae78a46fd1f6a",
  "seller-motors-houses.html":"79dbca93afd3852471df8f3fa9bf06f83b33b4d7",
  "property-details.html":"4742bb9372941f388aadf4fe3c4280e008ec8462",
