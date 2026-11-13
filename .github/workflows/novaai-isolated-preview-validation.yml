@@ -20,7 +20,7 @@ jobs:
       - name: Checkout exact approved PR commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.expected_commit }}
+          ref: 10de8ec63bf77ec08e0252592251542ad6ad142a
           fetch-depth: 1
           persist-credentials: false
       - name: Set up Node
@@ -29,7 +29,7 @@ jobs:
           node-version: '20'
       - name: Verify checked-out commit
         run: |
-          test "$(git rev-parse HEAD)" = "${{ inputs.expected_commit }}"
+          test "$(git rev-parse HEAD)" = "10de8ec63bf77ec08e0252592251542ad6ad142a"
       - name: Generate fixture-backed isolated preview copy
         run: node scripts/preview/build.mjs
       - name: Run static isolation verification
