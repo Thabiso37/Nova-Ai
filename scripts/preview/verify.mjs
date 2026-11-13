@@ -2,11 +2,29 @@ import fs from "node:fs";
 import path from "node:path";
 import assert from "node:assert/strict";
 import vm from "node:vm";
+
 const dir=path.resolve("preview-dist");
-const forbidden=[/nxplffvklkopwfjaqexo\.supabase\.co/i,/sb_publishable_[A-Za-z0-9_-]+/i,/\/rest\/v1\//i,/\/auth\/v1\//i,/\/functions\/v1\//i];
-const files=fs.readdirSync(dir).filter(f=>/\.(html|js|json|webmanifest)$/.test(f));
+const forbidden=[
+ /nxplffvklkopwfjaqexo/i,
+ /(?:[a-z0-9-]+\.)?supabase\.co/i,
+ /(?:[a-z0-9-]+\.)?supabase\.com/i,
+ /sb_publishable_[A-Za-z0-9_-]+/i,
+ /\/rest\/v1\//i,/\/auth\/v1\//i,/\/storage\/v1\//i,
+ /\/functions\/v1\//i,/\/realtime\/v1\//i
+];
+const required=["index.html","retail.html","seller-motors-houses.html","property-details.html","preview-fixtures.js","novaai-product-sharing.js"];
+for(const name of required)assert(fs.existsSync(path.join(dir,name)),"Generated preview file missing: "+name);
+const files=fs.readdirSync(dir).filter(f=>fs.statSync(path.join(dir,f)).isFile());
 assert(files.includes("novaai-product-sharing.js"),"Actual sharing implementation copy missing");
-for(const f of files){const s=fs.readFileSync(path.join(dir,f),"utf8");for(const re of forbidden)assert(!re.test(s),f+" contains forbidden production endpoint material: "+re);if(f.endsWith(".html")){assert(s.includes("preview-fixtures.js"),f+" is missing fixture adapter");assert(s.includes("connect-src 'self'"),f+" is missing restrictive CSP");}}
+for(const f of files){
+ const s=fs.readFileSync(path.join(dir,f),"utf8");
+ for(const re of forbidden)assert(!re.test(s),f+" contains forbidden production endpoint or credential material: "+re);
+ if(f.endsWith(".html")){
+  assert(s.includes("preview-fixtures.js"),f+" is missing fixture adapter");
+  assert(s.includes("connect-src 'self'"),f+" is missing restrictive CSP");
+  assert(s.includes("novaai-preview-banner"),f+" is missing preview warning banner");
+ }
+}
 const sharing=fs.readFileSync(path.join(dir,"novaai-product-sharing.js"),"utf8");
 assert(sharing.includes("navigator.share"),"Native share implementation was not preserved");
 assert(sharing.includes("navigator.clipboard"),"Clipboard fallback was not preserved");
@@ -17,12 +35,15 @@ vm.runInNewContext(fixtureSource,sandbox);
 const mock=sandbox.window.supabase.createClient();
 const retail=await mock.from("Products").select("*").eq("id",910001).maybeSingle();
 assert.equal(retail.data.name,"Preview Cotton T-Shirt","Synthetic fixture query failed");
-const write=await mock.from("Products").insert({name:"must not persist"});
-assert.equal(write.error.code,"PREVIEW_DISABLED","Database insert was not rejected");
-const rpc=await mock.rpc("place_order");
-assert.equal(rpc.error.code,"PREVIEW_DISABLED","RPC was not rejected");
-const login=await mock.auth.signInWithPassword({email:"x",password:"x"});
-assert.equal(login.error.code,"PREVIEW_DISABLED","Authentication was not rejected");
-const session=await mock.auth.getSession();
-assert.equal(session.data.session,null,"Preview unexpectedly has an authenticated session");
-console.log("PASS: static isolation scan; synthetic fixture query; writes/RPC/auth rejection; native share and clipboard source retained; analytics disabled.");
+for(const result of [
+ await mock.from("Products").insert({name:"must not persist"}),
+ await mock.from("Products").update({name:"must not persist"}),
+ await mock.from("Products").delete(),
+ await mock.from("Products").upsert({name:"must not persist"}),
+ await mock.rpc("place_order"),
+ await mock.auth.signInWithPassword({email:"x",password:"x"}),
+ await mock.auth.signUp({email:"x",password:"x"}),
+ await mock.storage.from("listing-images").upload("x",new Blob(["x"]))
+])assert.equal(result.error.code,"PREVIEW_DISABLED","A production-capable mutation/auth method was not rejected");
+assert.equal((await mock.auth.getSession()).data.session,null,"Preview unexpectedly has an authenticated session");
+console.log("PASS: generated-file credential/endpoint scan; four-page fixture/CSP checks; synthetic query; database writes, RPC, storage and authentication rejection; native share and clipboard code retained; analytics disabled.");
