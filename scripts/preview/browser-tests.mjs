@@ -159,15 +159,15 @@ try{
  assert.equal(adControls.next,"none","Only the advertising board arrows should be hidden");
  assert(adControls.dots>=2&&adControls.slides>=2,"Advertising carousel campaigns/dots must remain");
  const adSource=fs.readFileSync(path.resolve("novaai-ad-slots.js"),"utf8");
- const legacyCarousel=adSource.match(/function initHomeCarousel\\(\\)\\{[\\s\\S]*?\\n  \\}/);
+ const legacyCarousel=adSource.match(/function initHomeCarousel\(\)\{[\s\S]*?\n  \}/);
  assert(legacyCarousel,"Existing advertising carousel initializer must remain available in the approved ad script");
- await homePage.addScriptTag({content:"const liveImages={home_hero:[]};\\n"+legacyCarousel[0]+"\\nwindow.__novaaiPreviewInitHomeCarousel=initHomeCarousel;"});
+ await homePage.addScriptTag({content:"const liveImages={home_hero:[]};\n"+legacyCarousel[0]+"\nwindow.__novaaiPreviewInitHomeCarousel=initHomeCarousel;"});
  await homePage.evaluate(()=>window.__novaaiPreviewInitHomeCarousel());
  await homePage.locator('[data-hero-slide="1"]').click();
  assert.equal(await homePage.locator(".nova-hero-slide.active").count(),1,"Advertising carousel must keep exactly one active campaign slide");
  assert.equal(await homePage.locator(".nova-hero-slide").nth(1).evaluate(el=>el.classList.contains("active")),true,"Advertising campaign dot must switch to its slide");
  await homePage.locator('[data-hero-slide="0"]').click();
- await homePage.waitForFunction(()=>document.querySelectorAll(".nova-hero-slide.active").length===1&&document.querySelector(".nova-hero-slide:nth-of-type(2).active"),null,{timeout:7000});
+ await homePage.waitForFunction(()=>document.querySelectorAll(".nova-hero-slide.active").length===1&&document.querySelectorAll(".nova-hero-slide")[1]?.classList.contains("active"),null,{timeout:7000});
  assert.equal(await homePage.locator("#novaHeroPrev").evaluate(el=>getComputedStyle(el).display),"none","Previous advertising arrow must remain hidden while carousel is active");
  assert.equal(await homePage.locator("#novaHeroNext").evaluate(el=>getComputedStyle(el).display),"none","Next advertising arrow must remain hidden while carousel is active");
  console.log("PASS advertising carousel dot navigation + automatic rotation with arrows hidden");
