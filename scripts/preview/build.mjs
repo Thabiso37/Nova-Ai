@@ -23,7 +23,7 @@ const expectedBaselineBlobs = {
 };
 function gitBlobSha(value) {
  const bytes=Buffer.isBuffer(value)?value:Buffer.from(value,"utf8");
- return crypto.createHash("sha1").update(Buffer.concat([Buffer.from("blob "+bytes.length+"\\0"),bytes])).digest("hex");
+ return crypto.createHash("sha1").update(Buffer.concat([Buffer.from("blob "+bytes.length+"\0"),bytes])).digest("hex");
 }
 for (const [file,expected] of Object.entries(expectedBaselineBlobs)) {
  const actual=gitBlobSha(fs.readFileSync(path.join(root,file)));
@@ -37,7 +37,7 @@ fs.writeFileSync(path.join(out,".source-manifest.json"),JSON.stringify({
  baselineCommit:APPROVED_BASELINE_COMMIT,
  designIndexCommit:DESIGN_INDEX_COMMIT,
  files:{...expectedBaselineBlobs,"index.html@design":designIndexBlob}
-},null,2)+"\\n");
+},null,2)+"\n");
 
 const pages = ["index.html", "retail.html", "seller-motors-houses.html", "property-details.html"];
 const required = [...pages, "novaai-product-sharing.js"];
