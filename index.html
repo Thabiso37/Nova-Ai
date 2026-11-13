@@ -925,7 +925,7 @@ if(!items.length){grid.innerHTML='<div class="home-products-message">There are n
 renderHomeSections(items,storesBySeller,client);
 const categorySources={retail:items.find(p=>!isPropertyProduct(p)&&!['Auto','Motors & Vehicles'].includes(p.category)),motors:items.find(p=>['Auto','Motors & Vehicles'].includes(p.category)),property:items.find(p=>isPropertyProduct(p)),more:items.find(p=>!isPropertyProduct(p)&&!['Auto','Motors & Vehicles'].includes(p.category)&&productPhotos(p).length>0&&String(p.id)!==String(items.find(x=>!isPropertyProduct(x)&&!['Auto','Motors & Vehicles'].includes(x.category))?.id))||items.find(p=>productPhotos(p).length>0)};
 Object.entries(categorySources).forEach(([key,product])=>{const tile=document.querySelector('[data-home-category-tile="'+key+'"] img'),photo=product&&productPhotos(product)[0];if(tile&&photo){tile.src=photo;tile.alt=key+' marketplace listings';tile.parentElement.classList.add('has-photo');}});
-wireCards(items);updateCartCount();
+updateCartCount();
 }catch(error){console.error('Homepage product loading:',error);grid.innerHTML='<div class="home-products-message">We could not load marketplace products right now. Please try again later or browse the full marketplace.</div>';}
 }
 updateCartCount();loadHomeProducts();
