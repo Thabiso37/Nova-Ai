@@ -28,11 +28,6 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
       - name: Enforce approved baseline and verify exact source files
         env:
           EXPECTED_COMMIT: ${{ inputs.expected_commit }}
@@ -83,6 +78,12 @@ jobs:
 
           echo "Verified preview tooling commit: $ACTUAL_TOOLING_COMMIT"
           echo "Verified approved application baseline: $EXPECTED_COMMIT"
+
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
       - name: Generate fixture-backed isolated preview copy
         run: node scripts/preview/build.mjs
