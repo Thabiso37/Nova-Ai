@@ -57,6 +57,6 @@ assert(snapshot.products.some(p=>p.id===63&&p.category==='Accessories'),'Actual 
 const fixture=fs.readFileSync(path.join(dir,'preview-fixtures.js'),'utf8');
 assert(fixture.includes('test phone a12')&&fixture.includes('Alaska store')&&fixture.includes('Property'),'Preview fixture is not sourced from actual marketplace records');
 assert(!/Preview Cotton T-Shirt|Preview City Car Hatchback|Synthetic Retail listing/i.test(fixture),'Synthetic sample listings remain in the preview');
-assert(/storage\\/v1\\/object\\/public\\/Nova%20AI\\//i.test(fixture),'Actual public marketplace product images are missing');
+assert(/storage\/v1\/object\/public\/Nova%20AI\//i.test(fixture),'Actual public marketplace product images are missing');
 assert(html.includes('nova-home-preview2-card-authority'),'Original Preview 2 card presentation override missing');
 console.log('PASS restored Preview 2 card authority; actual approved listing snapshot; three-slide Home; Near Me; tile/content order; seller banner/footer; no extra Home sections; PR #35 controls; no write/auth/RPC paths.');
