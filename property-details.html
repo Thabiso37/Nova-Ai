@@ -181,7 +181,45 @@ function propertyFacts(description){const labels=[["Bedrooms","Bedrooms"],["Bath
 function cleanDescription(description){return String(description||"").split(/\r?\n/).filter(function(line){return !/^\s*(?:NOVAAI DETAILS|Property type|Bedrooms|Bathrooms|Garages|Parking|Floor area m2|Erf size m2|Location)\s*[:=-]?\s*/i.test(line)}).join("\n").trim()}
 function showStatus(title,message){document.getElementById("listingStatus").innerHTML="<strong>"+esc(title)+"</strong>"+esc(message)}
 function propertyDetailShareButton(){if(!listing)return "";const attrs=' data-nova-product-share data-share-product-id="'+esc(listing.id)+'" data-share-marketplace="property" data-share-location-type="detail_page" data-share-title="'+esc(listing.name||"Property listing")+'" data-share-price="'+esc(cash(listing.price)+(listing.category==="Property To Rent"?" / month":""))+'" data-share-location="'+esc(publicLocation?[publicLocation.suburb,publicLocation.city,publicLocation.province].filter(Boolean).join(", "):"")+'" data-share-url="'+esc(location.href)+'"';return '<button type="button" class="nova-product-share-icon nova-product-share-detail" aria-label="Share property listing" title="Share property listing"'+attrs+'>'+"<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"18\" cy=\"5\" r=\"3\"></circle><circle cx=\"6\" cy=\"12\" r=\"3\"></circle><circle cx=\"18\" cy=\"19\" r=\"3\"></circle><path d=\"m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4\"></path></svg>"+'</button>'}
-function renderPhoto(){const stage=document.getElementById("photoStage"),count=document.getElementById("photoCount"),thumbs=document.getElementById("photoThumbs"),prev=document.getElementById("photoPrev"),next=document.getElementById("photoNext"),enlarge=document.getElementById("enlargePhoto");if(!photos.length){stage.innerHTML=propertyDetailShareButton()+'<div class="photo-empty">No property photos supplied</div>';count.classList.add("hidden");thumbs.classList.add("hidden");prev.hidden=true;next.hidden=true;enlarge.hidden=true;return}stage.innerHTML=propertyDetailShareButton()+'<img class="main-photo" src="'+esc(photos[photoIndex])+'" alt="'+esc(listing.name||"Property")+' photograph" decoding="async">';}
+function renderPhoto(){
+ const stage=document.getElementById("photoStage"),
+ count=document.getElementById("photoCount"),
+ thumbs=document.getElementById("photoThumbs"),
+ prev=document.getElementById("photoPrev"),
+ next=document.getElementById("photoNext"),
+ enlarge=document.getElementById("enlargePhoto");
+ if(!photos.length){
+  stage.innerHTML=propertyDetailShareButton()+'<div class="photo-empty">No property photos supplied</div>';
+  count.classList.add("hidden");
+  thumbs.classList.add("hidden");
+  prev.hidden=true;
+  next.hidden=true;
+  enlarge.hidden=true;
+  return;
+ }
+ const multiple=photos.length>1;
+ stage.innerHTML=propertyDetailShareButton()+'<img class="main-photo" src="'+esc(photos[photoIndex])+'" alt="'+esc(listing.name||"Property")+' photograph" decoding="async">';
+ prev.hidden=!multiple;
+ next.hidden=!multiple;
+ enlarge.hidden=false;
+ count.textContent=(photoIndex+1)+" / "+photos.length;
+ count.classList.remove("hidden");
+ if(multiple){
+  thumbs.classList.remove("hidden");
+  thumbs.innerHTML=photos.map(function(url,i){
+   return '<button type="button" class="thumb '+(i===photoIndex?"active":"")+'" data-photo="'+i+'" aria-label="Show property photo '+(i+1)+'"><img src="'+esc(url)+'" alt="" loading="lazy"></button>';
+  }).join("");
+  thumbs.querySelectorAll("button").forEach(function(button){
+   button.addEventListener("click",function(){
+    photoIndex=Number(button.dataset.photo)||0;
+    renderPhoto();
+   });
+  });
+ }else{
+  thumbs.classList.add("hidden");
+ }
+ if(lightboxOpen)updateLightbox();
+}
 function renderListing(){document.getElementById("listingStatus").classList.add("hidden");document.getElementById("listingShell").classList.remove("hidden");document.getElementById("stickyActions").classList.add("ready");document.getElementById("listingCategory").textContent=listing.category==="Property For Sale"?"PROPERTY FOR SALE":"PROPERTY TO RENT";document.getElementById("listingTitle").textContent=listing.name||"Property listing";document.getElementById("listingPrice").textContent=cash(listing.price)+(listing.category==="Property To Rent"?" / month":"");document.getElementById("sellerName").textContent=listing.storeName||"Approved NOVAAI seller";document.getElementById("sellerBusinessDescription").textContent=listing.storeDescription||"Approved NOVAAI seller. Private contact information is protected.";document.getElementById("sellerPreviewName").textContent=listing.storeName||listing.seller_name||"Approved NOVAAI seller";document.getElementById("sellerPreviewDescription").textContent=listing.storeDescription||"Verified NOVAAI property listing";document.getElementById("listingDescription").textContent=cleanDescription(listing.description)||"No description has been provided for this listing.";document.getElementById("listingDescription").classList.toggle("empty-description",!cleanDescription(listing.description));const facts=propertyFacts(listing.description);const metricLabels=[["Bedrooms","Bedrooms"],["Bathrooms","Bathrooms"],["Garages","Garages"],["Parking","Parking"],["Floor area","Floor area"],["Erf size","Erf size"]];const icons={"Bedrooms":"<svg viewBox=\"0 0 24 24\"><path d=\"M3 20V8m0 8h18v4M3 12h18v4M7 12V9a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3\"/></svg>","Bathrooms":"<svg viewBox=\"0 0 24 24\"><path d=\"M4 12h16v3a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM7 12V6a3 3 0 0 1 6 0v1\"/></svg>","Garages":"<svg viewBox=\"0 0 24 24\"><path d=\"M3 20V8l9-5 9 5v12M7 20v-8h10v8M10 15h4\"/></svg>","Parking":"<svg viewBox=\"0 0 24 24\"><path d=\"M7 20V4h6a5 5 0 0 1 0 10H7\"/></svg>","Floor area":"<svg viewBox=\"0 0 24 24\"><path d=\"M4 4h16v16H4zM4 10h16M10 4v16\"/></svg>","Erf size":"<svg viewBox=\"0 0 24 24\"><path d=\"M4 4h16v16H4zM4 9h16M9 4v16\"/></svg>"};document.getElementById("listingFacts").innerHTML=metricLabels.map(function(pair){const found=facts.find(function(f){return f.label===pair[0]});const value=found?found.value:"—";return '<div class="fact"><span class="fact-icon" aria-hidden="true">'+(icons[pair[0]]||"")+'</span><strong class="'+(found?"":"is-empty")+'">'+esc(value)+'</strong><span>'+esc(pair[1])+'</span></div>'}).join("");document.getElementById("overviewFacts").innerHTML=facts.map(function(f){return '<div class="overview-fact"><small>'+esc(f.label)+'</small><strong>'+esc(f.value)+'</strong></div>'}).join("")||'<p class="panel-intro">No additional specifications have been supplied by the seller.</p>';document.getElementById("propertyInfoGrid").innerHTML=[["Property Type",(facts.find(function(f){return f.label==="Property type"})||{}).value||"—"],["Erf Size",(facts.find(function(f){return f.label==="Erf size"})||{}).value||"—"],["Floor Size",(facts.find(function(f){return f.label==="Floor area"})||{}).value||"—"],["Listing Status",listing.category==="Property To Rent"?"To Rent":"For Sale"]].map(function(row){const empty=row[1]==="—";return '<div class="property-info-item"><span>'+esc(row[0])+'</span><strong class="'+(empty?"is-empty":"")+'">'+esc(row[1])+'</strong></div>'}).join("");const featureMatch=String(listing.description||"").match(/(?:Features|Amenities)\s*[:=-]\s*([^\n]+)/i);const featureItems=featureMatch?featureMatch[1].split(/[,;|]/).map(function(v){return v.trim()}).filter(Boolean):[];document.getElementById("listingFeatures").innerHTML=featureItems.length?featureItems.map(function(v){return '<span class="feature-chip">✓ '+esc(v)+'</span>'}).join(""):'<span class="panel-intro">—</span>';const locLabel=publicLocation?[publicLocation.suburb,publicLocation.city,publicLocation.province].filter(Boolean).join(", "):"";document.getElementById("listingLocation").textContent=locLabel||"South Africa · Exact location not publicly shared";renderPhoto();renderLocation();}
 function renderLocation(){const box=document.getElementById("sellerLocation");if(!publicLocation){box.innerHTML='<strong>Seller location</strong><p class="location-note">No approved public seller location has been shared for this listing.</p>';return}const bits=[publicLocation.suburb,publicLocation.city,publicLocation.province].filter(Boolean),label=bits.join(", ");let link="";if(publicLocation.latitude!=null&&publicLocation.longitude!=null)link="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(publicLocation.latitude+","+publicLocation.longitude);else if(label)link="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(label);box.innerHTML='<strong>Approved public seller location</strong><p class="location-note">'+esc(label||"Location shared by seller")+'</p>'+(link?'<a href="'+esc(link)+'" target="_blank" rel="noopener noreferrer">View area on map ↗</a>':"")}
 function setPropertyTab(name){const panel=document.getElementById("tab-"+name);if(panel)panel.scrollIntoView({behavior:"smooth",block:"start"})}
