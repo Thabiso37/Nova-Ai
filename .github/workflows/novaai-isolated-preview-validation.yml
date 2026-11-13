@@ -30,7 +30,7 @@ jobs:
 
       - name: Enforce approved baseline and verify exact source files
         env:
-          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+          EXPECTED_COMMIT: "${{ inputs.expected_commit }}"
         shell: bash
         run: |
           set -euo pipefail
