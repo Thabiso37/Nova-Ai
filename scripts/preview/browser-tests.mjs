@@ -153,7 +153,7 @@ try{
  mobilePage.on("pageerror",err=>failures.push("mobile Home: "+err.message));
  await mobilePage.goto(origin+"/index.html",{waitUntil:"domcontentloaded",timeout:15000});
  await mobilePage.waitForFunction(()=>document.readyState==="complete"&&!!document.querySelector('[data-home-category="property-sale"] .home-property-card'),null,{timeout:10000});
- const mobilePeek=await mobilePage.locator('[data-home-category="premium-properties"] .home-carousel').evaluate(el=>{
+ const mobilePeek=await mobilePage.locator('[data-home-category="property-sale"] .home-carousel').evaluate(el=>{
   const cards=[...el.querySelectorAll(".home-product-card")],box=el.getBoundingClientRect(),a=cards[0]?.getBoundingClientRect();
   const tile=document.querySelector(".home-category-tile")?.getBoundingClientRect();
   return {width:box.width,overflow:getComputedStyle(el).overflowX,scrollable:el.scrollWidth>el.clientWidth,firstFits:!!a&&a.left>=box.left&&a.right<=box.right,cardWidth:a?.width,cardHeight:a?.height,tileWidth:tile?.width,tileHeight:tile?.height};
@@ -163,6 +163,13 @@ try{
  assert.equal(mobilePeek.scrollable,true,"Android product carousel must retain horizontal overflow scrolling");
  assert(Math.abs(mobilePeek.cardWidth-mobilePeek.tileWidth)<=4,"Android product-card width must match category-tile width");
  assert(mobilePeek.cardHeight>mobilePeek.tileHeight,"Android product card must preserve the approved taller-than-tile proportion");
+ await mobilePage.waitForFunction(()=>[...document.querySelectorAll(".home-product-card .home-product-photo img")].length>0&&[...document.querySelectorAll(".home-product-card .home-product-photo img")].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:20000});
+ const mobileTrust=await mobilePage.locator(".home-trust-label").first().evaluate(el=>({fontSize:parseFloat(getComputedStyle(el).fontSize),text:el.innerText.trim()}));
+ assert(mobileTrust.fontSize>=10,"Android Trust Shield must be at least 10px; measured "+mobileTrust.fontSize+"px");
+ const photoChecks=await mobilePage.locator(".home-product-card").evaluateAll(cards=>cards.map(card=>{const img=card.querySelector(".home-product-photo img");if(!img)return null;const p=card.querySelector(".home-product-photo").getBoundingClientRect(),c=card.getBoundingClientRect();return {loaded:img.complete&&img.naturalWidth>0,naturalWidth:img.naturalWidth,naturalHeight:img.naturalHeight,fit:getComputedStyle(img).objectFit,photoWidth:p.width,photoHeight:p.height,cardWidth:c.width,cardHeight:c.height}}).filter(Boolean));
+ assert(photoChecks.length>0,"Synthetic preview photographs must be present");
+ assert(photoChecks.every(x=>x.loaded&&x.fit==="cover"),"Synthetic preview photos must load and use object-fit:cover");
+ assert(photoChecks.every(x=>Math.abs(x.photoWidth-x.cardWidth)<=2&&Math.abs(x.photoHeight-x.cardHeight)<=2),"Synthetic preview photo layer must cover the full card");
  await mobilePage.screenshot({path:"preview-screenshots/home-android.png",fullPage:true});
  const tabletContext=await browser.newContext({viewport:{width:820,height:1180},deviceScaleFactor:1});
  const tabletPage=await tabletContext.newPage();
