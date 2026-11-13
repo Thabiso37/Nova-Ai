@@ -30,7 +30,7 @@ const productionPattern=(url,method="GET")=>{
 const attempts=new Set(),failures=[];
 let browser;
 try{
- browser=await chromium.launch({headless:true});
+ browser=await chromium.launch({headless:true,executablePath:process.env.NOVAAI_CHROMIUM_PATH||undefined});
  const context=await browser.newContext({viewport:{width:1280,height:900},deviceScaleFactor:1});
  await context.route("**/*",async route=>{
   const url=route.request().url();
