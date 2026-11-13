@@ -243,6 +243,8 @@ try{
  assert(Math.abs(mobileRetailGeometry.height-392.73)<=2&&Math.abs(mobileRetailGeometry.infoHeight-228.94)<=2,"Android Featured Products card height/panel differs from Preview 2");
  for(const g of [mobilePropertyGeometry,mobileRetailGeometry])assert(g.infoTop>=g.photoBottom-2&&g.infoHeight>=150,"Android information panel is not separate below its image");
  fs.mkdirSync("preview-screenshots",{recursive:true});
+ await mobile.evaluate(()=>window.scrollTo(0,0));
+ await home.evaluate(()=>window.scrollTo(0,0));
  await mobile.screenshot({path:"preview-screenshots/home-android-390.png",fullPage:true});
  await home.screenshot({path:"preview-screenshots/home-desktop-1280.png",fullPage:true});
  await mobileContext.close();
