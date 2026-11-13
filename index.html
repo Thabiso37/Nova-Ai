@@ -658,6 +658,15 @@ body:not(.product-view-active) .home-property-card{
  body:not(.product-view-active) .home-product-info h3{font-size:11px}
  body:not(.product-view-active) .home-product-buy-row{grid-template-columns:minmax(0,1fr) 25px 27px;gap:3px}
 }
+
+/* Keep the responsive two-column category width on mobile after desktop sizing overrides. */
+@media(max-width:760px){
+ body:not(.product-view-active) .home-product-card,
+ body:not(.product-view-active) .home-property-card{
+  flex:0 0 calc((100% - 11px)/2);
+  width:calc((100% - 11px)/2);
+ }
+}
 </style>
 </head>
 <body>
