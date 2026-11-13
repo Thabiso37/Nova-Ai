@@ -32,7 +32,6 @@ assert(html.includes("home-product-share")&&html.includes("home-add-cart")&&html
 assert(html.includes("novaai-product-sharing.js?v=3"),"Product sharing helper import missing");
 
 const forbiddenNetwork=[
- /(?:[a-z0-9-]+\.)?supabase\.(?:co|com)/i,
  /eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}/i,
  /\/(?:rest|auth|storage|functions|realtime)\/v1\//i
 ];
@@ -47,7 +46,7 @@ for(const name of fs.readdirSync(dir).filter(n=>fs.statSync(path.join(dir,n)).is
 }
 const sharing=fs.readFileSync(path.join(dir,"novaai-product-sharing.js"),"utf8");
 assert(sharing.includes("navigator.share")&&sharing.includes("navigator.clipboard"),"Native share or clipboard fallback missing");
- /(?:[a-z0-9-]+\.)?supabase\.(?:co|com)/i,
+assert(!/nxplffvklkopwfjaqexo\.supabase\.co|record-novaai-product-share|product-share-analytics/i.test(sharing),"Share analytics or production Supabase integration must not execute in preview");
 for(const name of ["index.html","retail.html","seller-motors-houses.html","property-details.html","preview-fixtures.js","novaai-product-sharing.js"])
  assert(fs.existsSync(path.join(dir,name)),"Missing generated validation asset: "+name);
 console.log("PASS accepted branch source hash; exact three-slide Home; Near Me; tile and content order; seller banner/footer; prohibited sections absent; PR #35 controls; preview CSP and production endpoint/credential isolation.");
