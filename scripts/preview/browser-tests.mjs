@@ -95,6 +95,14 @@ try{
  const captureSection=async(page,selector,name)=>{
   const el=page.locator(selector);
   await el.waitFor({state:"visible",timeout:15000});
+  await el.evaluate(async section=>{
+   const images=[...section.querySelectorAll(".home-product-photo img")];
+   images.forEach(img=>{img.loading="eager";});
+   await Promise.all(images.map(async img=>{
+    if(!img.complete) await new Promise(resolve=>{img.addEventListener("load",resolve,{once:true});img.addEventListener("error",resolve,{once:true});setTimeout(resolve,12000);});
+    if(img.complete&&img.naturalWidth>0) await img.decode().catch(()=>{});
+   }));
+  });
   await el.screenshot({path:"preview-screenshots/"+name+".png"});
   return el.evaluate(section=>{
    const card=section.querySelector(".home-product-card");
@@ -102,7 +110,7 @@ try{
    const info=card?.querySelector(".home-product-info");
    const rect=e=>{if(!e)return null;const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}};
    const style=e=>e?{fontFamily:getComputedStyle(e).fontFamily,fontSize:getComputedStyle(e).fontSize,fontWeight:getComputedStyle(e).fontWeight,lineHeight:getComputedStyle(e).lineHeight,color:getComputedStyle(e).color,background:getComputedStyle(e).backgroundColor}:null;
-   return {sectionText:section.innerText,section:rect(section),card:rect(card),photo:rect(photo),info:rect(info),cardStyle:style(card),nameStyle:style(card?.querySelector(".home-product-name")),priceStyle:style(card?.querySelector(".home-product-price")),image:photo?.querySelector("img")?{src:photo.querySelector("img").currentSrc,naturalWidth:photo.querySelector("img").naturalWidth,naturalHeight:photo.querySelector("img").naturalHeight}:null};
+   return {sectionText:section.innerText,section:rect(section),card:rect(card),photo:rect(photo),info:rect(info),cardStyle:style(card),nameStyle:style(card?.querySelector(".home-product-name")),priceStyle:style(card?.querySelector(".home-product-price")),images:[...section.querySelectorAll(".home-product-card")].map(c=>({id:c.getAttribute("data-open-home-product"),name:c.querySelector(".home-product-name")?.textContent?.trim(),price:c.querySelector(".home-product-price")?.textContent?.trim(),src:c.querySelector(".home-product-photo img")?.currentSrc||"",naturalWidth:c.querySelector(".home-product-photo img")?.naturalWidth||0,naturalHeight:c.querySelector(".home-product-photo img")?.naturalHeight||0,complete:c.querySelector(".home-product-photo img")?.complete??false}))};
   });
  };
  const refPremium=await captureSection(reference,'[data-home-category="premium-properties"]',"reference-premium-properties");
@@ -118,12 +126,13 @@ try{
   console.log("LIVE APPROVED REFERENCE SECTION "+section+" COUNT: "+await locator.count());
   if(await locator.count())console.log("LIVE APPROVED REFERENCE SECTION "+section+" TEXT: "+await locator.first().innerText());
  }
- const referencePriceTokens=referencePrices.join("\\n").match(/R\\s?\\d{1,3}(?:[ .]\\d{3})*,\\d{2}/g)||[];
- assert(referencePriceTokens.length>0,"Live approved Preview 2 reference did not expose any South African decimal-comma prices in its rendered product cards");
- console.log("PASS live approved Preview 2 reference currency: decimal comma; rendered examples: "+referencePriceTokens.slice(0,5).join(", "));
+ const referencePriceTokens=referencePrices.join("\n").match(/R\\s*[\\d,]+\\.\\d{2}/g)||[];
+ assert(referencePriceTokens.length>=5,"Approved Preview 2 reference did not expose the expected decimal-point South African listing prices");
+ assert(referencePriceTokens.includes("R 185.00")&&referencePriceTokens.includes("R 500.00")&&referencePriceTokens.includes("R 200.00")&&referencePriceTokens.includes("R 50.00")&&referencePriceTokens.includes("R 7.00"),"Approved Preview 2 reference prices differ from the reviewed listing values: "+referencePriceTokens.join(", "));
+ console.log("PASS approved Preview 2 reference currency: decimal point; rendered examples: "+referencePriceTokens.slice(0,5).join(", "));
  const restoredPrices=await home.locator(".home-product-card").allInnerTexts();
- const restoredPriceTokens=restoredPrices.join("\\n").match(/R\\s?\\d{1,3}(?:[ .]\\d{3})*,\\d{2}/g)||[];
- assert(restoredPriceTokens.length>0,"Restored Home product cards do not preserve decimal-comma South African prices");
+ const restoredPriceTokens=restoredPrices.join("\n").match(/R\\s*[\\d,]+\\.\\d{2}/g)||[];
+ assert.deepEqual(restoredPriceTokens,referencePriceTokens,"Restoration listing prices/formatting must exactly match the original approved Preview 2 reference");
  await reference.close();
  await home.waitForSelector(".home-product-card .home-product-share",{timeout:15000});
  const labels=(await home.locator(".home-category-tile .home-category-label").allTextContents()).map(x=>x.trim());
@@ -179,12 +188,12 @@ try{
   assert(g.infoTop>=g.photoBottom-2&&g.infoHeight>=150,"Preview 2 information panel must remain below the image");
  }
  const propertyText=await propertyCard.innerText();
- const propertyExpected=["Property","PROPERTY","TRUST SHIELD","R 185,00"];
+ const propertyExpected=["Property","PROPERTY","TRUST SHIELD","R 185.00"];
  const propertyMissing=propertyExpected.filter(value=>!propertyText.includes(value));
  const propertyFixture=await home.evaluate(()=>({product:window.__NOVAAI_PREVIEW_FIXTURES__?.products?.find(p=>String(p.id)==="61"),seller:window.__NOVAAI_PREVIEW_FIXTURES__?.sellers?.find(s=>s.user_id==="25e830fe-f387-4525-934e-af45fc6ac10f")}));
  assert.equal(propertyMissing.length,0,"Actual Premium Properties card is missing expected fields: "+JSON.stringify(propertyMissing)+". Rendered card text: "+JSON.stringify(propertyText)+". Snapshot records: "+JSON.stringify(propertyFixture));
  const retailText=await retailCard.innerText();
- assert(retailText.includes("test phone a12")&&retailText.includes("ACCESSORIES")&&retailText.includes("Alaska store")&&retailText.includes("TRUST SHIELD")&&retailText.includes("R 500,00"),"Actual Featured Products name/category/seller/Trust Shield/price are missing");
+ assert(retailText.includes("test phone a12")&&retailText.includes("ACCESSORIES")&&retailText.includes("Alaska store")&&retailText.includes("TRUST SHIELD")&&retailText.includes("R 500.00"),"Actual Featured Products name/category/seller/Trust Shield/price are missing");
  const shareUrl=await firstCard.locator("[data-nova-product-share]").getAttribute("data-share-url");
  assert(shareUrl&&new URL(shareUrl).origin===origin,"Home product Share URL must remain inside isolated preview");
  const native=await home.evaluate(async url=>{
@@ -288,8 +297,14 @@ try{
  fs.mkdirSync("preview-screenshots",{recursive:true});
  await mobile.evaluate(()=>window.scrollTo(0,0));
  await home.evaluate(()=>window.scrollTo(0,0));
+ await mobile.locator('[data-home-category="premium-properties"]').screenshot({path:"preview-screenshots/mobile-premium-properties-390.png"});
+ await mobile.locator('[data-home-category="featured-products"]').screenshot({path:"preview-screenshots/mobile-featured-products-390.png"});
  await mobile.screenshot({path:"preview-screenshots/home-android-390.png",fullPage:true});
  await home.screenshot({path:"preview-screenshots/home-desktop-1280.png",fullPage:true});
+ const mobileCardChecks=await mobile.evaluate(()=>[...document.querySelectorAll(".home-product-card")].map(card=>({id:card.dataset.openHomeProduct,price:card.querySelector(".home-product-price")?.textContent?.trim(),seller:card.querySelector(".home-card-seller")?.textContent?.trim()||"",image:card.querySelector(".home-product-photo img")?{src:card.querySelector(".home-product-photo img").currentSrc,width:card.querySelector(".home-product-photo img").naturalWidth,height:card.querySelector(".home-product-photo img").naturalHeight}:null,share:!!card.querySelector(".home-product-share"),wishlist:!!card.querySelector(".home-wishlist-toggle"),cart:!!card.querySelector(".home-add-cart")})));
+ assert(mobileCardChecks.some(c=>c.id==="61"&&c.price==="R 185.00"&&c.seller==="Property"&&c.image?.width>0&&c.share&&c.wishlist&&c.cart),"Android Premium Properties image/price/seller/share/wishlist/cart validation failed: "+JSON.stringify(mobileCardChecks));
+ assert(mobileCardChecks.some(c=>c.id==="63"&&c.price==="R 500.00"&&c.seller==="Alaska store"&&c.image?.width>0&&c.share&&c.wishlist&&c.cart),"Android Featured Products image/price/seller/share/wishlist/cart validation failed: "+JSON.stringify(mobileCardChecks));
+ console.log("ANDROID HOME CARD CHECKS: "+JSON.stringify(mobileCardChecks));
  await mobileContext.close();
  assert.equal(attempts.size,0,"Production Supabase/analytics network attempts detected: "+[...attempts].join(", "));
  assert.deepEqual(failures,[],"Browser page JavaScript errors: "+failures.join(" | "));
