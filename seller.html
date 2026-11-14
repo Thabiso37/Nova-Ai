@@ -170,6 +170,7 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
 #myProductsList .seller-property-card:nth-child(2) .seller-property-body{position:relative;isolation:auto}
 #myProductsList .seller-property-card:nth-child(2) .seller-property-body::after{content:none}
 </style>
+<link rel="stylesheet" href="seller-portal-2080.css?v=1">
 </head>
 <body>
 <div class="top">🛡️ NOVA AI TRUST SHIELD · SECURE MARKETPLACE PORTAL</div>
@@ -388,6 +389,7 @@ function hasMarketplaceAccess(market){
     normaliseApprovalStatus(storeData.status)==="approved" &&
     marketplacePermissions.some(p=>String(p.marketplace||"").trim().toLowerCase()===market && normaliseApprovalStatus(p.status)==="approved");
 }
+function refreshSeller2080(){ if(window.NOVAAISeller2080?.refresh) window.NOVAAISeller2080.refresh(); }
 function requireMarketplaceAccess(market){ if(!hasMarketplaceAccess(market)){ msg("sellerMsg","Access denied: your store and this marketplace must both be approved.",true); return false; } return true; }
 function renderMarketplacePermissionStatus(){
   const box=document.getElementById("marketplaceAccessRecords");
@@ -710,6 +712,7 @@ if (permissionError) {
 }
 await loadSellerPublicLocation();
 marketplacePermissions = permissionRows || [];
+refreshSeller2080();
 renderMarketplaceChoices();
 renderMarketplacePermissionStatus();
 if (!hasMarketplaceAccess(selectedMarket)) {
@@ -722,6 +725,7 @@ if (!hasMarketplaceAccess(selectedMarket)) {
       ? "Your "+marketplaceLabels[selectedMarket]+" application was rejected. Contact NOVAAI administration if you need a review."
       : "Your "+marketplaceLabels[selectedMarket]+" application is awaiting administrator approval.";
     await loadMyProducts();
+    refreshSeller2080();
     return true;
 }
 
@@ -746,7 +750,7 @@ await loadMyProducts();
 if (version !== authVersion) return;
 
 await loadSellerOrders();
-document.getElementById("listingFormTitle").scrollIntoView({behavior:"smooth",block:"start"});
+refreshSeller2080();
 return true;
 }
 
@@ -1585,6 +1589,7 @@ async function updateFulfillmentStatus(orderId) {
 
 </script>
 <script src="seller-location.js"></script>
+<script src="seller-portal-2080-ui.js?v=1"></script>
 </body>
 </html>
 
