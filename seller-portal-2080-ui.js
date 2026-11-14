@@ -40,7 +40,7 @@ function navigate(id){
  if(id==="listings"){$("sellerInventoryPanel")?.classList.remove("hidden");$("sellerInventoryHeading")?.classList.remove("hidden");$("sellerInventoryTabs")?.classList.remove("hidden");$("sellerListingEditorPage")?.classList.remove("hidden");$("sellerModerationPage")?.classList.remove("hidden");$("sellerOrdersPage")?.classList.remove("hidden")}
 }
 function showGate(message){$("sp2080GateTitle").textContent="Application status";$("sp2080GateText").textContent=message||"Your marketplace application is awaiting administrator approval.";navigate("gate")}
-function refresh(state){
+function refresh(){
  createShell();mountExisting();
  const state=window.NOVAAISellerState?.()||{}; const u=state.user,store=state.storeData,perms=state.marketplacePermissions||[];
  if(!u){approved=false;showGate("Sign in or apply as a new seller to access your seller workspace.");return}
