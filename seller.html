@@ -433,6 +433,7 @@ function openSellerPage(id) {
   document.getElementById("sellerOrdersPage").classList.toggle("hidden", id !== "sellerOrdersPage");
   const target = document.getElementById(id);
   if (target) target.scrollIntoView({behavior:"smooth",block:"start"});
+  if (id === "sellerAccountPanel") window.NOVAAISeller2080?.navigate("account");
 }
 function chooseMarketplace(market) {
   if (!Object.prototype.hasOwnProperty.call(marketplaceLabels, market)) return;
