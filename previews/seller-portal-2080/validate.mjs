@@ -28,10 +28,14 @@ try{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',route=>route.fulfill({contentType:'application/javascript',body:mockSupabase}));
   await page.goto(pathToFileURL(sellerFile).href);
-  await page.waitForFunction(()=>!!window.NOVAAISeller2080);
+  await page.waitForFunction(()=>!!window.NOVAAISeller2080,null,{timeout:10000}).catch(error=>{
+   throw new Error('Seller 2080 UI failed to initialise: '+(errors.join(' | ')||error.message));
+  });
   await page.evaluate((market)=>{window.__fixtureStore={id:'fixture-store-'+market,store_name:'Preview Store',store_slug:'preview-store',status:'approved',primary_marketplace:market};},variant.market);
   await page.evaluate(async()=>{await window.updateUser({id:'isolated-fixture-user',email:'preview@example.invalid',user_metadata:{full_name:'Preview Seller'}})});
-  await page.waitForFunction(()=>document.getElementById('sp2080Approval')?.textContent.includes('APPROVED'));
+  await page.waitForFunction(()=>document.getElementById('sp2080Approval')?.textContent.includes('APPROVED'),null,{timeout:10000}).catch(error=>{
+   throw new Error(size.label+'/'+variant.label+': approval fixture did not reach approved state. Page errors: '+(errors.join(' | ')||'none')+'. '+error.message);
+  });
   const shown=await page.locator('#sp2080MarketName').innerText();
   if(shown!==variant.label)throw new Error(size.label+'/'+variant.label+': wrong marketplace '+shown);
   const tileText=await page.locator('#sp2080Tiles').innerText();
