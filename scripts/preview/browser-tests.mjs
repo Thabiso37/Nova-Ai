@@ -110,7 +110,7 @@ try{
    const info=card?.querySelector(".home-product-info");
    const rect=e=>{if(!e)return null;const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}};
    const style=e=>e?{fontFamily:getComputedStyle(e).fontFamily,fontSize:getComputedStyle(e).fontSize,fontWeight:getComputedStyle(e).fontWeight,lineHeight:getComputedStyle(e).lineHeight,color:getComputedStyle(e).color,background:getComputedStyle(e).backgroundColor}:null;
-   return {sectionText:section.innerText,section:rect(section),card:rect(card),photo:rect(photo),info:rect(info),cardStyle:style(card),nameStyle:style(card?.querySelector(".home-product-name")),priceStyle:style(card?.querySelector(".home-product-price")),images:[...section.querySelectorAll(".home-product-card")].map(c=>({id:c.getAttribute("data-open-home-product"),name:c.querySelector(".home-product-name")?.textContent?.trim(),price:c.querySelector(".home-product-price")?.textContent?.trim(),src:c.querySelector(".home-product-photo img")?.currentSrc||"",naturalWidth:c.querySelector(".home-product-photo img")?.naturalWidth||0,naturalHeight:c.querySelector(".home-product-photo img")?.naturalHeight||0,complete:c.querySelector(".home-product-photo img")?.complete??false}))};
+   return {sectionText:section.innerText,section:rect(section),card:rect(card),photo:rect(photo),info:rect(info),cardStyle:style(card),nameStyle:style(card?.querySelector(".home-product-name")),priceStyle:style(card?.querySelector(".home-product-price")),images:[...section.querySelectorAll(".home-product-card")].map(c=>({id:c.getAttribute("data-open-home-product"),name:c.querySelector(".home-product-name")?.textContent?.trim(),price:c.querySelector(".home-product-price")?.textContent?.trim(),src:c.querySelector(".home-product-photo img")?.currentSrc||"",srcAttribute:c.querySelector(".home-product-photo img")?.getAttribute("src")||"",loading:c.querySelector(".home-product-photo img")?.loading||"",naturalWidth:c.querySelector(".home-product-photo img")?.naturalWidth||0,naturalHeight:c.querySelector(".home-product-photo img")?.naturalHeight||0,complete:c.querySelector(".home-product-photo img")?.complete??false}))};
   });
  };
  const refPremium=await captureSection(reference,'[data-home-category="premium-properties"]',"reference-premium-properties");
@@ -121,6 +121,24 @@ try{
  const restoredFeatured=await captureSection(home,'[data-home-category="featured-products"]',"restoration-featured-products");
  console.log("VISUAL METRICS RESTORATION PREMIUM: "+JSON.stringify(restoredPremium));
  console.log("VISUAL METRICS RESTORATION FEATURED: "+JSON.stringify(restoredFeatured));
+ const compareImageSources=(referenceSection,restoredSection,ids)=>{
+  for(const id of ids){
+   const original=referenceSection.images.find(image=>image.id===id);
+   const restored=restoredSection.images.find(image=>image.id===id);
+   assert(original&&restored,"Approved reference/restoration listing image record missing for listing "+id);
+   assert.equal(restored.srcAttribute,original.srcAttribute,"Listing "+id+" image URL differs from approved Preview 2: reference="+original.srcAttribute+" restoration="+restored.srcAttribute);
+   if(original.srcAttribute){
+    assert(original.naturalWidth>0&&original.naturalHeight>0,"Approved Preview 2 reference image did not load for listing "+id+": "+JSON.stringify(original));
+    assert(restored.naturalWidth>0&&restored.naturalHeight>0,"Restoration image did not load for listing "+id+": "+JSON.stringify(restored));
+   }
+  }
+ };
+ console.log("APPROVED REFERENCE IMAGE SOURCES PREMIUM: "+JSON.stringify(refPremium.images));
+ console.log("APPROVED REFERENCE IMAGE SOURCES FEATURED: "+JSON.stringify(refFeatured.images));
+ console.log("RESTORATION IMAGE SOURCES PREMIUM: "+JSON.stringify(restoredPremium.images));
+ console.log("RESTORATION IMAGE SOURCES FEATURED: "+JSON.stringify(restoredFeatured.images));
+ compareImageSources(refPremium,restoredPremium,["61"]);
+ compareImageSources(refFeatured,restoredFeatured,["40"]);
  for(const section of ["premium-properties","featured-products"]){
   const locator=reference.locator('[data-home-category="'+section+'"]');
   console.log("LIVE APPROVED REFERENCE SECTION "+section+" COUNT: "+await locator.count());
