@@ -35,3 +35,6 @@ body.sp2080>.top,body.sp2080>header{display:none!important}
 @media(max-width:370px){.sp2080-brand{font-size:20px}.sp2080-chip{font-size:9px;padding:6px 8px}.sp2080-welcome h1{font-size:23px}.sp2080-tile{padding:9px 7px}.sp2080-tileico{width:27px;height:27px}.sp2080-tile .sp-arrow{display:none}}
 @media(min-width:761px){.sp2080-bottom{display:none}}
 @media(prefers-reduced-motion:reduce){.sp2080-shell *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* The 2080 shell owns seller navigation; retain the marketplace picker for registration. */
+body.sp2080 #sellerWorkspace>.seller-page-nav,body.sp2080 #sellerWorkspace>.selected-market-bar{display:none!important}
