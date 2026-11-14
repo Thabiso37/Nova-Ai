@@ -329,7 +329,7 @@ try{
  assert((await mobile.evaluate(()=>JSON.parse(localStorage.getItem("novaWishlist")||"[]"))).includes("61"),"Android Wishlist did not persist the Premium Properties listing");
  const mobileCart=mobile.locator('[data-open-home-product="61"] .home-add-cart');
  await mobileCart.click();
- assert((await mobile.evaluate(()=>JSON.parse(localStorage.getItem("novaMarketplaceCartV1")||"[]"))).some(item=>String(item.product_id||item.id)==="61"),"Android Cart control did not persist the Premium Properties listing");
+ assert((await mobile.evaluate(()=>JSON.parse(localStorage.getItem("novaMarketplaceCartV1")||"[]"))).some(item=>String(item.product?.dbId||item.dbId||item.id)==="61"),"Android Cart control did not persist the Premium Properties listing");
  console.log("ANDROID HOME CARD CHECKS: "+JSON.stringify(mobileCardChecks));
  console.log("PASS Android touch Wishlist and Cart interactions for approved listing 61");
  await mobileContext.close();
