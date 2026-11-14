@@ -278,6 +278,11 @@ try{
  console.log("PASS Retail and Property rendered Share controls; Property detail Share control; Motors share helper tested with actual Auto listing 49 (no complete vehicle card to render)");
 
  const mobileContext=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
+ await mobileContext.addInitScript(()=>{
+  window.__mobileShareCalls=[];window.__mobileClipboardWrites=[];
+  Object.defineProperty(navigator,"share",{configurable:true,writable:true,value:async payload=>{window.__mobileShareCalls.push(payload)}});
+  Object.defineProperty(navigator,"clipboard",{configurable:true,value:{writeText:async value=>{window.__mobileClipboardWrites.push(String(value))}}});
+ });
  await mobileContext.route("**/*",async route=>{
   const url=route.request().url();
   if(productionPattern(url,route.request().method())){attempts.add(url);await route.abort("blockedbyclient");return}
@@ -319,11 +324,16 @@ try{
  await mobile.locator('[data-home-category="featured-products"]').screenshot({path:"preview-screenshots/mobile-featured-products-390.png"});
  await mobile.screenshot({path:"preview-screenshots/home-android-390.png",fullPage:true});
  await home.screenshot({path:"preview-screenshots/home-desktop-1280.png",fullPage:true});
- const mobileCardChecks=await mobile.evaluate(()=>[...document.querySelectorAll(".home-product-card")].map(card=>({id:card.dataset.openHomeProduct,price:card.querySelector(".home-product-price")?.textContent?.trim(),seller:(card.querySelector(".home-card-seller")?.textContent?.trim()||"").replace(/^✓\\s*/,""),image:card.querySelector(".home-product-photo img")?{src:card.querySelector(".home-product-photo img").currentSrc,width:card.querySelector(".home-product-photo img").naturalWidth,height:card.querySelector(".home-product-photo img").naturalHeight}:null,share:!!card.querySelector(".home-product-share"),wishlist:!!card.querySelector(".home-wishlist-toggle"),cart:!!card.querySelector(".home-add-cart")})));
+ const mobileCardChecks=await mobile.evaluate(()=>[...document.querySelectorAll(".home-product-card")].map(card=>({id:card.dataset.openHomeProduct,price:card.querySelector(".home-product-price")?.textContent?.trim(),seller:(card.querySelector(".home-card-seller")?.textContent?.trim()||"").replace(/^✓\s*/,""),image:card.querySelector(".home-product-photo img")?{src:card.querySelector(".home-product-photo img").currentSrc,width:card.querySelector(".home-product-photo img").naturalWidth,height:card.querySelector(".home-product-photo img").naturalHeight}:null,share:!!card.querySelector(".home-product-share"),wishlist:!!card.querySelector(".home-wishlist-toggle"),cart:!!card.querySelector(".home-add-cart")})));
  assert(mobileCardChecks.some(c=>c.id==="61"&&c.price==="R 185.00"&&c.seller==="Property"&&c.image?.width>0&&c.share&&c.wishlist&&c.cart),"Android Premium Properties image/price/seller/share/wishlist/cart validation failed: "+JSON.stringify(mobileCardChecks));
  assert(mobileCardChecks.some(c=>c.id==="63"&&c.price==="R 500.00"&&c.seller==="Alaska store"&&c.image?.width>0&&c.share&&c.wishlist&&c.cart),"Android Featured Products image/price/seller/share/wishlist/cart validation failed: "+JSON.stringify(mobileCardChecks));
  assert(mobileCardChecks.some(c=>c.id==="40"&&c.price==="R 200.00"&&c.seller==="Raider Retail"&&c.image?.width===720&&c.image?.height===1600),"Android second Featured Product image/price/seller validation failed: "+JSON.stringify(mobileCardChecks));
- const mobileWishlist=mobile.locator('[data-open-home-product="61"] .home-wishlist-toggle');
+  const mobileShare=mobile.locator('[data-open-home-product="61"] .home-product-share');
+ await mobileShare.click();
+ const mobileShareResult=await mobile.evaluate(()=>({calls:window.__mobileShareCalls,clipboard:window.__mobileClipboardWrites}));
+ assert.equal(mobileShareResult.calls.length,1,"Android Share tap did not invoke native Web Share exactly once");
+ assert.equal(mobileShareResult.calls[0].url,await mobileShare.getAttribute("data-share-url"),"Android Share did not use the selected listing URL");
+const mobileWishlist=mobile.locator('[data-open-home-product="61"] .home-wishlist-toggle');
  await mobileWishlist.click();
  assert.equal(await mobileWishlist.getAttribute("aria-pressed"),"true","Android Wishlist control did not save the Premium Properties listing");
  assert((await mobile.evaluate(()=>JSON.parse(localStorage.getItem("novaWishlist")||"[]"))).includes("61"),"Android Wishlist did not persist the Premium Properties listing");
@@ -331,7 +341,7 @@ try{
  await mobileCart.click();
  assert((await mobile.evaluate(()=>JSON.parse(localStorage.getItem("novaMarketplaceCartV1")||"[]"))).some(item=>String(item.product?.dbId||item.dbId||item.id)==="61"),"Android Cart control did not persist the Premium Properties listing");
  console.log("ANDROID HOME CARD CHECKS: "+JSON.stringify(mobileCardChecks));
- console.log("PASS Android touch Wishlist and Cart interactions for approved listing 61");
+ console.log("PASS Android touch Share, Wishlist and Cart interactions for approved listing 61");
  await mobileContext.close();
  assert.equal(attempts.size,0,"Production Supabase/analytics network attempts detected: "+[...attempts].join(", "));
  assert.deepEqual(failures,[],"Browser page JavaScript errors: "+failures.join(" | "));
