@@ -139,7 +139,9 @@ try{
   assert(g.infoTop>=g.photoBottom-2&&g.infoHeight>=150,"Preview 2 information panel must remain below the image");
  }
  const propertyText=await propertyCard.innerText();
- assert(propertyText.includes("Property")&&propertyText.includes("PROPERTY")&&propertyText.includes("TRUST SHIELD")&&propertyText.includes("R 185,00"),"Actual Premium Properties name/category/seller/Trust Shield/price are missing");
+ const propertyExpected=["Property","PROPERTY","TRUST SHIELD","R 185,00"];
+ const propertyMissing=propertyExpected.filter(value=>!propertyText.includes(value));
+ assert.equal(propertyMissing.length,0,"Actual Premium Properties card is missing expected fields: "+JSON.stringify(propertyMissing)+". Rendered card text: "+JSON.stringify(propertyText)+". Snapshot product: "+JSON.stringify(window.__NOVAAI_PREVIEW_FIXTURES__?.products?.find(p=>String(p.id)==="61"))+". Snapshot seller: "+JSON.stringify(window.__NOVAAI_PREVIEW_FIXTURES__?.sellers?.find(s=>s.user_id==="25e830fe-f387-4525-934e-af45fc6ac10f")));
  const retailText=await retailCard.innerText();
  assert(retailText.includes("test phone a12")&&retailText.includes("ACCESSORIES")&&retailText.includes("Alaska store")&&retailText.includes("TRUST SHIELD")&&retailText.includes("R 500,00"),"Actual Featured Products name/category/seller/Trust Shield/price are missing");
  const shareUrl=await firstCard.locator("[data-nova-product-share]").getAttribute("data-share-url");
