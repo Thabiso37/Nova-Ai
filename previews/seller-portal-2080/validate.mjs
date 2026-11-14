@@ -25,7 +25,10 @@ try {
       const tiles = await page.locator('#dashboard-tiles').innerText();
       if (!tiles.includes(variant.expected)) throw new Error(viewport.label + '/' + variant.name + ': missing ' + variant.expected);
       if (variant.absent && tiles.includes(variant.absent)) throw new Error(viewport.label + '/' + variant.name + ': leaked tool ' + variant.absent);
-      if (await page.locator('button:has-text("Store Reputation")').isEnabled()) throw new Error('Store Reputation must remain disabled');
+      const reputationButtons = page.locator('button:has-text("Store Reputation")');
+      for (let i = 0; i < await reputationButtons.count(); i++) {
+        if (await reputationButtons.nth(i).isEnabled()) throw new Error('Store Reputation must remain disabled');
+      }
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
       if (overflow) throw new Error(viewport.label + '/' + variant.name + ': horizontal overflow');
       if (!(await page.locator('.mobile-bottom').isVisible())) throw new Error('Android bottom navigation is not visible');
