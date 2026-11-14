@@ -91,6 +91,11 @@ try{
  await reference.waitForSelector(".home-product-card",{timeout:20000});
  const referencePrices=await reference.locator(".home-product-card").allInnerTexts();
  console.log("LIVE APPROVED REFERENCE CARD TEXT: "+referencePrices.join(" || "));
+ for(const section of ["premium-properties","featured-products"]){
+  const locator=reference.locator('[data-home-category="'+section+'"]');
+  console.log("LIVE APPROVED REFERENCE SECTION "+section+" COUNT: "+await locator.count());
+  if(await locator.count())console.log("LIVE APPROVED REFERENCE SECTION "+section+" TEXT: "+await locator.first().innerText());
+ }
  const referencePriceTokens=referencePrices.join("\\n").match(/R\\s?\\d{1,3}(?:[ .]\\d{3})*,\\d{2}/g)||[];
  assert(referencePriceTokens.length>0,"Live approved Preview 2 reference did not expose any South African decimal-comma prices in its rendered product cards");
  console.log("PASS live approved Preview 2 reference currency: decimal comma; rendered examples: "+referencePriceTokens.slice(0,5).join(", "));
