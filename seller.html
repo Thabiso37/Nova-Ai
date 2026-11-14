@@ -526,6 +526,7 @@ let editingProductId = null;
 let editingProductCategory = null;
 let editingProductMarket = null;
 let authVersion = 0;
+window.NOVAAISellerState = () => ({user,storeData,marketplacePermissions});
 setListingMarket(selectedMarket || "retail");
 function switchPortal() { return; }
 const video = document.getElementById("webcam"), canvas = document.getElementById("snapshotCanvas"), preview = document.getElementById("facePreview");
