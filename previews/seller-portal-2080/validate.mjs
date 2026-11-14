@@ -21,9 +21,9 @@ try{
   await page.locator('#sp2080OpenAuth').click();
   if(!(await page.locator('#sp2080Account').evaluate(el=>el.classList.contains('active'))))throw new Error('Sign-in gate did not open Account view');
   if(!(await page.locator('#authForm').isVisible()))throw new Error('Authentication form not visible from Account');
-  await page.locator('#email').fill('preview@example.invalid');await page.locator('#password').fill('fixture-password');await page.locator('#authForm button[type="submit"]').click();
+  await page.locator('#email').fill('preview@example.invalid');await page.locator('#password').fill('fixture-password');
   await page.evaluate(market=>{window.__fixtureStore={id:'fixture-store-'+market,store_name:'Preview Store',store_slug:'preview-store',status:'approved',primary_marketplace:market};window.__fixturePermissions=[{marketplace:market,status:'approved'}]},variant.market);
-  await page.evaluate(async()=>window.updateUser({id:'isolated-fixture-user',email:'preview@example.invalid',user_metadata:{full_name:'Preview Seller'}}));
+  await page.locator('#authForm button[type="submit"]').click();
   await page.waitForFunction(()=>document.getElementById('sp2080Approval')?.textContent.includes('APPROVED'));
   if(await page.locator('#sp2080MarketName').innerText()!==variant.label)throw new Error('Incorrect approved marketplace label');
   if(!(await page.locator('#sp2080Tiles').innerText()).includes(variant.tool))throw new Error('Marketplace-specific listing tile missing');
