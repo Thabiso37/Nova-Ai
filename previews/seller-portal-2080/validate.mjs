@@ -18,7 +18,7 @@ const sizes = [
 ];
 const mockSupabase = `window.supabase={createClient:()=>({
  auth:{getSession:async()=>({data:{session:null},error:null}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),signOut:async()=>({error:null})},
- from:(table)=>{const q={select(){return this},eq(){return this},order:async()=>({data:[],error:null}),maybeSingle:async()=>({data:table==='seller_stores'?window.__fixtureStore:table==='seller_public_locations'?null:null,error:null}),single:async()=>({data:null,error:null}),then(resolve){resolve({data:table==='seller_marketplace_permissions'?[{marketplace:window.__fixtureStore.primary_marketplace,status:'approved'}]:[],error:null})}};return q},
+ from:(table)=>{const q={select(){return this},eq(){return this},in(){return this},order:async()=>({data:[],error:null}),maybeSingle:async()=>({data:table==='seller_stores'?window.__fixtureStore:table==='seller_public_locations'?null:null,error:null}),single:async()=>({data:null,error:null}),then(resolve){resolve({data:table==='seller_marketplace_permissions'?[{marketplace:window.__fixtureStore.primary_marketplace,status:'approved'}]:[],error:null})}};return q},
  rpc:async()=>({data:[],error:null}),storage:{from:()=>({upload:async()=>({error:null}),getPublicUrl:()=>({data:{publicUrl:''}})})}
 })};`;
 const results=[];
