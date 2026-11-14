@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#030b25">
+<title>NOVAAI Seller Portal · 2080 Edition · Isolated Preview</title>
+<style>
+:root{color-scheme:dark;--bg:#03091e;--panel:#071638;--panel2:#091d48;--blue:#00aaff;--cyan:#19e5ff;--gold:#ffca18;--white:#f4f8ff;--muted:#a9c4eb;--green:#21e887;--line:rgba(0,174,255,.78);--glow:0 0 9px #008cff,0 0 24px rgba(0,134,255,.5),inset 0 0 16px rgba(0,128,255,.13)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#123b84 0,#07183d 34%,#02081d 72%);color:var(--white);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+button,a{font:inherit}button{cursor:pointer;color:inherit}.preview-bar{position:sticky;top:0;z-index:50;background:#111c35;border-bottom:1px solid #5979a8;padding:8px 12px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;font-size:12px}.preview-bar strong{color:#ffe16b;letter-spacing:.06em}.preview-bar select{background:#071a40;border:1px solid #4aaeff;border-radius:8px;padding:7px 9px;color:white}.preview-bar small{color:#b5c7df}
+.app{max-width:1500px;margin:auto;min-height:100vh}.top{height:78px;display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid #087cff;background:rgba(2,10,34,.84);box-shadow:0 5px 25px #006dff40;position:relative}.brand{font-size:28px;font-weight:950;font-style:italic;letter-spacing:-1.7px}.brand span{color:var(--gold)}.brand-sub{font-size:11px;color:#d8e8ff;letter-spacing:.03em}.top-title{border-left:1px solid #1c5c9b;padding-left:18px;margin-left:5px}.top-title b{font-size:19px}.edition{color:var(--gold);font-weight:800}.verified{margin-left:auto;border:1px solid #1be98a;border-radius:24px;padding:8px 13px;color:#9bffc9;background:#043a2c;box-shadow:0 0 12px #00dc7a66;font-size:12px;font-weight:800}.top-actions{display:flex;align-items:center;gap:12px}.icon-btn{border:1px solid #167ed1;background:#061b43;border-radius:14px;padding:8px 11px;box-shadow:var(--glow)}.avatar{width:37px;height:37px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#e6f4ff,#3985c8);color:#06204b;font-weight:900;border:2px solid #c4eaff}.layout{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:calc(100vh - 78px)}.side{padding:17px 12px;border-right:1px solid #0757a4;background:rgba(2,12,38,.76);display:flex;flex-direction:column;gap:7px}.nav{width:100%;display:flex;align-items:center;gap:13px;text-align:left;border:1px solid transparent;background:transparent;color:#e5f0ff;padding:12px;border-radius:13px;font-size:13px;font-weight:700}.nav .ico{font-size:20px;width:27px;text-align:center;color:#74dfff}.nav.active{background:linear-gradient(100deg,#0878ed,#062b70);border-color:#45d7ff;box-shadow:var(--glow)}.nav:disabled{opacity:.48;cursor:not-allowed}.nav-note{font-size:10px;color:#8eb4df;margin-left:auto}.trust-mini{margin-top:auto;border:1px solid #09aaff;border-radius:15px;padding:14px 10px;text-align:center;background:linear-gradient(145deg,#092c6d,#03132f);box-shadow:var(--glow);color:#ffdf48;font-weight:900}.trust-mini small{display:block;color:#a8f4ff;font-weight:600;margin-top:5px}
+main{padding:18px;min-width:0}.welcome{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(180px,.7fr);gap:15px;border:1px solid #16aaff;border-radius:20px;padding:22px;background:linear-gradient(110deg,#061b49ed,#092c69c9),radial-gradient(circle at 80% 20%,#1578dd,#071535);box-shadow:var(--glow);overflow:hidden;position:relative}.welcome:after{content:"";position:absolute;right:-30px;top:-75px;width:250px;height:250px;border:1px solid #1baaff77;border-radius:50%;box-shadow:0 0 40px #008cff55;pointer-events:none}.eyebrow{font-size:11px;color:#8eeaff;letter-spacing:.13em;text-transform:uppercase;font-weight:800}.welcome h1{font-size:clamp(22px,3vw,34px);line-height:1.12;margin:8px 0}.welcome h1 em{font-style:normal;color:var(--gold)}.welcome p{color:#d3e5ff;margin:0 0 16px}.gold-btn{border:1px solid #fff0a4;background:linear-gradient(180deg,#ffe85b,#ffb900);color:#11182a;border-radius:30px;padding:11px 18px;font-weight:900;box-shadow:0 0 17px #ffce2c88}.market-box{align-self:stretch;border:1px solid #198eff;border-radius:16px;padding:16px;background:rgba(1,12,38,.66);display:flex;flex-direction:column;justify-content:center}.market-box small{color:#bdd5f5}.market-box strong{font-size:26px;color:var(--gold);margin:4px 0}.approved{color:var(--green);font-weight:800;font-size:12px}.market-box button{margin-top:11px;background:#061b43;border:1px solid #1bcfff;border-radius:22px;padding:8px 12px;color:#bff7ff;font-weight:800}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:22px 2px 12px}.section-head h2{font-size:16px;margin:0}.section-head small{color:#91b8e7}.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.tile{display:flex;align-items:center;gap:13px;text-align:left;min-height:90px;padding:15px;border:1px solid #16aaff;border-radius:16px;background:linear-gradient(135deg,#0b2a63,#04112e);box-shadow:var(--glow);transition:transform .18s,border-color .18s}.tile:hover{transform:translateY(-2px);border-color:#a1f4ff}.tile:active{transform:scale(.985)}.tile .tile-ico{font-size:27px;color:#60eaff;width:39px;text-align:center;filter:drop-shadow(0 0 8px #00aaff)}.tile b{display:block;font-size:14px}.tile small{display:block;color:#b7cdec;font-size:11px;margin-top:4px}.tile .arrow{margin-left:auto;color:#59e6ff;font-size:19px}.tile.disabled{opacity:.45;cursor:not-allowed;filter:saturate(.55)}.future{font-size:9px;color:#1a1c22;background:var(--gold);border-radius:20px;padding:3px 7px;margin-left:auto;font-weight:900}
+.panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:17px}.panel{border:1px solid #168cff;border-radius:16px;padding:15px;background:linear-gradient(145deg,#092454,#04112d);box-shadow:var(--glow);min-width:0}.panel h3{margin:0 0 10px;font-size:14px}.store-row{display:flex;align-items:center;gap:12px}.store-mark{width:60px;height:60px;border-radius:12px;background:linear-gradient(145deg,#135a9a,#061634);display:grid;place-items:center;font-size:26px;border:1px solid #1cbaff}.store-row b{font-size:14px}.store-row small{display:block;color:#a9c4e9;margin-top:4px}.status-pill{display:inline-block;color:#8fffc3;background:#06432e;border:1px solid #1cbd78;border-radius:18px;padding:4px 8px;font-size:10px;margin-top:8px}.placeholder{border:1px dashed #4b81b7;border-radius:10px;padding:15px;text-align:center;color:#a9c5e8;font-size:12px;background:#061638}.trust-banner{margin-top:16px;border:1px solid #13aaff;border-radius:16px;padding:16px;background:linear-gradient(100deg,#092e70,#061538);box-shadow:var(--glow);display:flex;align-items:center;gap:15px}.trust-shield{font-size:36px;color:#5beaff}.trust-banner b{color:var(--gold);font-size:17px}.trust-banner small{display:block;color:#d4e8ff;margin-top:4px}
+.view{display:none}.view.active{display:block}.back{border:1px solid #278fe5;border-radius:20px;background:#061b43;color:#bceeff;padding:7px 12px;margin-bottom:14px}.view-card{border:1px solid #159cff;border-radius:18px;padding:18px;background:linear-gradient(140deg,#0a2557,#04112d);box-shadow:var(--glow)}.view-card h2{margin:0 0 7px}.view-card p{color:#b7cde9}.field{display:block;margin:12px 0;color:#cce1ff;font-size:12px}.field input,.field textarea{display:block;width:100%;margin-top:6px;background:#03112d;border:1px solid #2b78bd;border-radius:9px;padding:10px;color:white}.field textarea{min-height:80px;resize:vertical}.mobile-bottom{display:none}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#073d39;border:1px solid #31e99a;color:#d9fff0;padding:10px 16px;border-radius:20px;box-shadow:0 0 18px #00b97966;z-index:100;font-size:12px;display:none}
+@media(max-width:760px){.top{height:65px;padding:8px 13px;gap:9px}.brand{font-size:23px}.brand-sub{font-size:9px}.top-title{padding-left:9px}.top-title b{font-size:13px}.edition{font-size:10px}.verified{display:none}.top-actions{gap:7px}.layout{display:block;min-height:calc(100vh - 65px)}.side{display:none}main{padding:12px 12px calc(88px + env(safe-area-inset-bottom))}.welcome{grid-template-columns:1fr;gap:12px;padding:17px;border-radius:17px}.welcome h1{font-size:25px}.market-box{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:8px;padding:12px}.market-box small{grid-column:1/-1}.market-box strong{font-size:22px}.market-box .approved{grid-column:1}.market-box button{grid-column:2;grid-row:2/4;margin:0}.section-head{margin-top:19px}.tiles{gap:9px}.tile{min-height:82px;padding:11px 9px;gap:8px;border-radius:14px}.tile .tile-ico{font-size:23px;width:29px}.tile b{font-size:12px}.tile small{font-size:10px}.tile .arrow{font-size:16px}.panel-grid{grid-template-columns:1fr;gap:10px}.panel{padding:13px}.trust-banner{padding:13px;gap:10px}.trust-shield{font-size:30px}.trust-banner b{font-size:14px}.mobile-bottom{position:fixed;z-index:40;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding:7px 4px calc(7px + env(safe-area-inset-bottom));background:rgba(2,10,34,.97);border-top:1px solid #159cff;box-shadow:0 -5px 22px #006dff55}.mobile-bottom button{border:0;background:none;color:#a9c7ed;min-width:0;padding:4px 1px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9px}.mobile-bottom button span:first-child{font-size:19px}.mobile-bottom button.active{color:#ffdc3d;text-shadow:0 0 9px #ffc400}.mobile-bottom button:disabled{opacity:.35}.preview-bar{position:relative}.top-title{display:none}}
+@media(max-width:360px){.brand{font-size:20px}.top{gap:6px;padding-inline:9px}.icon-btn{padding:6px 8px}.avatar{width:32px;height:32px}.welcome h1{font-size:22px}.tile{min-height:77px;padding:9px 7px}.tile .tile-ico{width:25px;font-size:20px}.tile b{font-size:11px}.tile small{font-size:9px}.tile .arrow{display:none}.market-box strong{font-size:20px}}
+@media(min-width:761px) and (max-width:1000px){.layout{grid-template-columns:180px minmax(0,1fr)}.tiles{gap:9px}.tile{padding:11px}.panel-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="preview-bar"><strong>ISOLATED PREVIEW · DEMO ONLY</strong><label for="market-demo">Test approved seller profile:</label><select id="market-demo" aria-label="Preview marketplace variation"><option value="retail">Retail seller</option><option value="motors">Motors seller</option><option value="property">Property seller</option></select><small>This selector is a preview test tool, not a seller dashboard control.</small></div>
+<div class="app">
+<header class="top">
+  <div><div class="brand">NOVA<span>AI</span></div><div class="brand-sub">Your Marketplace. Your Opportunity.</div></div>
+  <div class="top-title"><b>Seller Portal</b><br><span class="edition">2080 Edition</span></div>
+  <div class="verified">✦ VERIFIED SELLER · DEMO</div>
+  <div class="top-actions"><button class="icon-btn" aria-label="Notifications" data-view="notifications">♧</button><div class="avatar" aria-label="Demo seller profile">S</div></div>
+</header>
+<div class="layout">
+<aside class="side" aria-label="Main navigation">
+  <button class="nav active" data-view="dashboard"><span class="ico">⌂</span>Dashboard</button>
+  <button class="nav" data-view="store"><span class="ico">▤</span>My Store</button>
+  <div id="desktop-market-tools"></div>
+  <button class="nav" data-view="analytics"><span class="ico">▥</span>Business Analytics</button>
+  <button class="nav" disabled title="Future feature"><span class="ico">✦</span>Store Reputation <span class="nav-note">Future</span></button>
+  <button class="nav" data-view="notifications"><span class="ico">♧</span>Notifications</button>
+  <button class="nav" data-view="account"><span class="ico">⬡</span>Account &amp; Security</button>
+  <button class="nav" data-view="support"><span class="ico">☏</span>Help &amp; Support</button>
+  <div class="trust-mini">✦ NOVAAI TRUST SHIELD<small>Secure · Trusted · Local</small></div>
+</aside>
+<main>
+<section class="view active" id="view-dashboard">
+  <div class="welcome"><div><div class="eyebrow">Your business command centre</div><h1>Welcome back, <em>Seller!</em></h1><p>Grow your business with NOVAAI MARKET.</p><button class="gold-btn" data-view="store">Manage Your Store&nbsp; →</button></div><div class="market-box"><small>Your approved marketplace</small><strong id="hero-market">Retail</strong><span class="approved">● Approved marketplace</span><button data-view="store">View Store →</button></div></div>
+  <div class="section-head"><h2>Business tools</h2><small id="tools-caption">Retail seller workspace</small></div>
+  <div class="tiles" id="dashboard-tiles"></div>
+  <div class="panel-grid">
+    <div class="panel"><h3>▤ &nbsp;Store Overview</h3><div class="store-row"><div class="store-mark">▤</div><div><b>My Store</b><small>Store details and presentation</small><span class="status-pill">● Store details not loaded in demo</span></div></div><button class="back" style="margin:12px 0 0" data-view="store">Manage Store →</button></div>
+    <div class="panel"><h3>▥ &nbsp;Business Performance</h3><div class="placeholder">Verified performance data will appear here when connected.<br><br>No sales, views or enquiry figures are simulated.</div></div>
+    <div class="panel"><h3>♧ &nbsp;Recent Notifications</h3><div class="placeholder">No live notifications in this isolated preview.</div></div>
+  </div>
+  <div class="trust-banner"><div class="trust-shield">⬡</div><div><b>NOVAAI TRUST SHIELD</b><small>Buy with Confidence. Sell with Confidence.</small></div></div>
+</section>
+<section class="view" id="view-store"><button class="back" data-view="dashboard">← Dashboard</button><div class="view-card"><div class="eyebrow">Store management</div><h2>My Store</h2><p>Manage your existing store profile. This prototype does not load or save account data.</p><div class="placeholder">Existing store record preview · not connected</div><label class="field">Store name<input placeholder="Existing store name will load here" disabled></label><label class="field">Store description<textarea placeholder="Existing description will load here" disabled></textarea></label><label class="field">Store location<input placeholder="Approved public location will load here" disabled></label><label class="field">Contact information<input placeholder="Protected contact details" disabled></label><div class="placeholder">Logo and banner preview · upload is disabled in this prototype</div><p><span class="status-pill">Store status: not queried</span> &nbsp; <span class="status-pill">Approval: not queried</span></p></div></section>
+<section class="view" id="view-market-tool"><button class="back" data-view="dashboard">← Dashboard</button><div class="view-card"><div class="eyebrow" id="tool-eyebrow">Marketplace management</div><h2 id="tool-title">My Products</h2><p id="tool-description">Marketplace-specific management.</p><div class="placeholder">Listing data is intentionally not loaded in this isolated design prototype. Existing listings and actions are untouched.</div></div></section>
+<section class="view" id="view-analytics"><button class="back" data-view="dashboard">← Dashboard</button><div class="view-card"><div class="eyebrow">Performance workspace</div><h2>Business Analytics</h2><p>Verified analytics will be displayed when the approved data sources are connected.</p><div class="placeholder">No fabricated revenue, orders, views, enquiries, charts or growth percentages.</div></div></section>
+<section class="view" id="view-notifications"><button class="back" data-view="dashboard">← Dashboard</button><div class="view-card"><h2>Notifications</h2><p>Seller updates and approval notices.</p><div class="placeholder">No live notifications are loaded in this isolated preview.</div></div></section>
+<section class="view" id="view-account"><button class="back" data-view="dashboard">← Dashboard</button><div class="view-card"><h2>Account &amp; Security</h2><p>Existing authentication remains outside this prototype.</p><div class="placeholder">Sign-in, password, session and security controls are not simulated or changed.</div></div></section>
+<section class="view" id="view-support"><button class="back" data-view="dashboard">← Dashboard</button><div class="view-card"><h2>Help &amp; Support</h2><p>Support resources for NOVAAI sellers.</p><div class="placeholder">Support links and contact channels will be connected in a later approved phase.</div></div></section>
+</main>
+</div>
+<nav class="mobile-bottom" aria-label="Quick navigation">
+<button class="active" data-view="dashboard"><span>⌂</span><span>Dashboard</span></button>
+<button data-view="store"><span>▤</span><span>My Store</span></button>
+<button id="bottom-market-tool" data-view="market-tool"><span>◇</span><span id="bottom-tool-label">Products</span></button>
+<button data-view="analytics"><span>▥</span><span>Analytics</span></button>
+<button data-view="support"><span>☏</span><span>Support</span></button>
+</nav>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(function(){
+ const profiles={
+  retail:{name:"Retail",caption:"Retail seller workspace",tool:"My Products",toolShort:"Products",icon:"▣",desc:"Manage your Retail product listings and catalogue.",other:["My Products"]},
+  motors:{name:"Motors",caption:"Motors seller workspace",tool:"My Vehicles",toolShort:"Vehicles",icon:"▱",desc:"Manage your approved Motors vehicle listings.",other:["My Vehicles","My Car Parts"]},
+  property:{name:"Property",caption:"Property seller workspace",tool:"My Properties",toolShort:"Properties",icon:"⌂",desc:"Manage your approved Property listings.",other:["My Properties"]}
+ };
+ let profile="retail",current="dashboard";
+ const $=id=>document.getElementById(id);
+ function show(view){
+  if(view==="market-tool")view="market-tool";
+  current=view;
+  document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="view-"+view));
+  document.querySelectorAll("[data-view]").forEach(x=>x.classList.toggle("active",x.dataset.view===view));
+  if(view==="market-tool"){$("tool-title").textContent=profiles[profile].tool;$("tool-description").textContent=profiles[profile].desc}
+  window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+ }
+ function render(){
+  const p=profiles[profile];
+  $("hero-market").textContent=p.name;
+  $("tools-caption").textContent=p.caption;
+  $("dashboard-tiles").innerHTML=[
+   {icon:"⌂",title:"Dashboard",sub:"Overview & workspace",view:"dashboard"},
+   {icon:"▤",title:"My Store",sub:"Manage your store",view:"store"},
+   {icon:p.icon,title:p.tool,sub:p.desc,view:"market-tool"},
+   ...(profile==="motors"?[{icon:"⚙",title:"My Car Parts",sub:"Only where permitted",view:"market-tool"}]:[]),
+   {icon:"▥",title:"Business Analytics",sub:"Verified performance only",view:"analytics"},
+   {icon:"✦",title:"Store Reputation",sub:"Not available yet",view:"",disabled:true},
+   {icon:"♧",title:"Notifications",sub:"Stay updated",view:"notifications"},
+   {icon:"⬡",title:"Account & Security",sub:"Manage your account",view:"account"},
+   {icon:"☏",title:"Help & Support",sub:"Get assistance",view:"support"}
+  ].map(t=>'<button class="tile '+(t.disabled?'disabled':'')+'" '+(t.disabled?'disabled aria-disabled="true" title="Future feature"':'data-view="'+t.view+'"')+'><span class="tile-ico">'+t.icon+'</span><span><b>'+t.title+'</b><small>'+t.sub+'</small></span><span class="'+(t.disabled?'future':'arrow')+'">'+(t.disabled?'Future':'›')+'</span></button>').join("");
+  $("desktop-market-tools").innerHTML=p.other.map((name,i)=>'<button class="nav" data-view="market-tool"><span class="ico">'+(i===0?p.icon:"⚙")+'</span>'+name+'</button>').join("");
+  $("bottom-tool-label").textContent=p.toolShort;
+  $("bottom-market-tool").querySelector("span:first-child").textContent=p.icon;
+  document.querySelectorAll(".nav[data-view],.mobile-bottom [data-view]").forEach(el=>el.addEventListener("click",()=>show(el.dataset.view)));
+  document.querySelectorAll("#dashboard-tiles [data-view]").forEach(el=>el.addEventListener("click",()=>show(el.dataset.view)));
+  if(profile==="motors"){
+   const carParts=document.createElement("button");carParts.className="tile";carParts.dataset.view="market-tool";carParts.innerHTML='<span class="tile-ico">⚙</span><span><b>My Car Parts</b><small>Only where permitted</small></span><span class="arrow">›</span>';
+   $("dashboard-tiles").appendChild(carParts);carParts.addEventListener("click",()=>{ $("tool-title").textContent="My Car Parts";$("tool-description").textContent="This tool is shown only in the Motors preview and remains subject to actual seller permissions.";show("market-tool")});
+  }
+ }
+ document.addEventListener("click",e=>{const el=e.target.closest("[data-view]");if(el&&!el.disabled){const v=el.dataset.view;if(v==="market-tool"&&el.closest("#desktop-market-tools")){$("tool-title").textContent=el.textContent.trim();$("tool-description").textContent="Motors-specific tool preview. Actual permissions must be checked by the existing backend."}show(v)}});
+ $("market-demo").addEventListener("change",e=>{profile=e.target.value;render();show("dashboard");$("toast").textContent="Preview variation: "+profiles[profile].name+" · No seller permissions changed.";$("toast").style.display="block";setTimeout(()=>{$("toast").style.display="none"},2400)});
+ render();
+})();
+</script>
+</body>
+</html>
