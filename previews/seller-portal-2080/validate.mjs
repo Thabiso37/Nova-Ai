@@ -44,9 +44,9 @@ try{
   if(switcher)throw new Error('Authenticated dashboard exposes marketplace switching');
   if(await page.locator('html').evaluate(el=>el.scrollWidth>window.innerWidth))throw new Error(size.label+': horizontal overflow');
   await page.screenshot({path:'artifacts/integrated-'+variant.market+'-'+size.label+'.png',fullPage:true});
-  await page.locator('[data-spview="store"]').first().click();
+  await page.locator('[data-spview="store"]:visible').first().click();
   if(!(await page.locator('#sp2080Store').evaluate(el=>el.classList.contains('active'))))throw new Error('My Store navigation failed');
-  await page.locator('[data-spview="listings"]').first().click();
+  await page.locator('[data-spview="listings"]:visible').first().click();
   if(!(await page.locator('#sp2080Listings').evaluate(el=>el.classList.contains('active'))))throw new Error('Listings navigation failed');
   if(errors.length)throw new Error(errors.join('; '));
   results.push({viewport:size.label,marketplace:variant.label,correctTool:variant.tool,noMarketplaceSwitcher:!switcher,noHorizontalOverflow:true,storeNavigation:true,listingNavigation:true});
