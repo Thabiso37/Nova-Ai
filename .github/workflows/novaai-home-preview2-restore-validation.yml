@@ -1,0 +1,63 @@
+name: NOVAAI Preview 2 Home Restoration Validation
+
+on:
+  push:
+    branches:
+      - fix/restore-preview2-home-cards
+
+permissions:
+  contents: read
+
+concurrency:
+  group: novaai-preview2-home-restoration
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out the isolated restoration branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pinned Playwright
+        run: npm install --no-save --package-lock=false playwright@1.56.1
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Check preview tooling syntax
+        run: |
+          node --check scripts/preview/build.mjs
+          node --check scripts/preview/verify.mjs
+          node --check scripts/preview/browser-tests.mjs
+
+      - name: Build isolated preview from actual approved listing snapshot
+        run: node scripts/preview/build.mjs
+
+      - name: Verify restored Preview 2 source and isolation
+        run: node scripts/preview/verify.mjs
+
+      - name: Run desktop and Android-sized Playwright tests
+        run: node scripts/preview/browser-tests.mjs
+
+      - name: Upload desktop and mobile screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: novaai-preview2-restoration-screenshots
+          path: preview-screenshots/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Confirm no deployment occurred
+        run: echo "Validation ran on an ephemeral GitHub Actions runner only. No Render deployment, GitHub Pages deployment, merge, or Supabase write was performed."

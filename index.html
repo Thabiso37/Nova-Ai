@@ -699,81 +699,49 @@ body:not(.product-view-active) .home-products-message{min-height:78px;display:fl
 }
 </style>
 
-<style id="nova-home-preview2-panel-restoration">
-/* NOVAAI Home Preview 2 restoration.
-   Historical visual authority: 0851cf99f7ecfe78b381340b3a2d7317b9dbb2fd
-   Restore the separate photo + information-panel composition only.
-   Keep approved current card dimensions, markup, IDs and event hooks. */
-body:not(.product-view-active) .home-product-card{
- display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;
- background:linear-gradient(155deg,rgba(17,39,75,.96),rgba(8,23,49,.98))!important;
- border:1px solid rgba(101,165,239,.28);
-}
-body:not(.product-view-active) .home-product-photo{
- position:relative!important;inset:auto!important;flex:0 0 48%!important;
- width:100%!important;height:auto!important;min-height:0!important;aspect-ratio:auto!important;
- overflow:hidden!important;background:linear-gradient(145deg,#123c70,#06152e)!important;
- border-bottom:1px solid rgba(99,175,255,.22)!important;
-}
-body:not(.product-view-active) .home-product-photo img{
- display:block;width:100%;height:100%;object-fit:cover;object-position:center;
-}
-body:not(.product-view-active) .home-product-photo:after{
- content:none!important;display:none!important;
-}
-body:not(.product-view-active) .home-product-info{
- position:relative!important;z-index:2;inset:auto!important;left:auto!important;right:auto!important;bottom:auto!important;
- width:100%;min-height:0!important;flex:1 1 52%!important;
- display:flex;flex-direction:column;align-items:stretch;gap:0;
- box-sizing:border-box;padding:16px 18px 16px;
- background:linear-gradient(155deg,rgba(17,39,75,.96),rgba(8,23,49,.98))!important;
- backdrop-filter:none!important;overflow:hidden;
-}
-body:not(.product-view-active) .home-product-info h3{
- min-height:0;margin:0 0 9px;color:#f3f8ff;font-size:clamp(14px,1.35vw,18px);
- line-height:1.25;font-weight:850;letter-spacing:-.25px;text-shadow:none;
-}
-body:not(.product-view-active) .home-product-seller-block{
- display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0;
-}
-body:not(.product-view-active) .home-card-seller{
- margin:0;color:#d9eaff;font-size:clamp(9px,.8vw,11px);line-height:1.3;text-shadow:none;
-}
-body:not(.product-view-active) .home-card-seller .verified-check{
- background:#00cda7;color:#042b36;
-}
-body:not(.product-view-active) .home-trust-label{
- display:inline-flex;align-items:center;gap:5px;width:max-content;max-width:100%;
- margin:2px 0 6px;padding:5px 8px;border:1px solid rgba(37,203,176,.45);
- border-radius:999px;background:#00c9b01f;color:#63f1d4;
- font-size:9px;line-height:1.2;letter-spacing:.25px;white-space:normal;
- overflow-wrap:anywhere;backdrop-filter:blur(8px);
-}
-body:not(.product-view-active) .home-product-price{
- min-width:0;max-width:100%;color:#ffda36;font-size:clamp(15px,1.55vw,19px);
- font-weight:950;line-height:1.15;white-space:normal;overflow-wrap:anywhere;
-}
-body:not(.product-view-active) .nova-hero-copy{position:relative!important;z-index:5!important;display:flex!important;visibility:visible!important;opacity:1!important;grid-column:1!important;grid-row:1!important}
+<style id="nova-home-preview2-card-authority">
+/* Card presentation measured from the supplied live Preview 2 reference URL.
+   Original square image, responsive card widths, separate information panel, and PR #35 controls. */
+body:not(.product-view-active) .home-carousel{gap:10px!important;padding:5px 3px 15px!important;overflow-x:auto!important;overflow-y:hidden!important;scroll-snap-type:x mandatory!important;scrollbar-width:none!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior-x:contain!important}
+body:not(.product-view-active) .home-product-card{position:relative!important;display:flex!important;flex:0 0 clamp(190px,19vw,225px)!important;width:auto!important;height:auto!important;min-width:0!important;min-height:0!important;max-height:none!important;aspect-ratio:auto!important;flex-direction:column!important;align-items:stretch!important;overflow:hidden!important;border:1px solid rgba(101,165,239,.28)!important;border-radius:17px!important;background:linear-gradient(155deg,rgba(17,39,75,.96),rgba(8,23,49,.98))!important;box-shadow:0 10px 26px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.06)!important;scroll-snap-align:start!important}
+body:not(.product-view-active) .home-product-photo{position:relative!important;inset:auto!important;display:block!important;width:100%!important;height:auto!important;flex:0 0 auto!important;aspect-ratio:1/1!important;overflow:hidden!important;background:linear-gradient(145deg,#eaf4ff,#cbdcf2)!important;border-bottom:1px solid rgba(99,175,255,.22)!important}
+body:not(.product-view-active) .home-product-photo img{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;transition:transform .35s ease!important}
+body:not(.product-view-active) .home-product-photo:after{content:none!important;display:none!important}
+body:not(.product-view-active) .home-product-info{position:static!important;inset:auto!important;display:flex!important;flex:1 1 auto!important;flex-direction:column!important;align-items:stretch!important;gap:2px!important;width:auto!important;min-height:0!important;box-sizing:border-box!important;overflow:visible!important;padding:14px!important;background:transparent!important;backdrop-filter:none!important}
+body:not(.product-view-active) .home-product-category{position:static!important;display:block!important;margin:0 0 5px!important;color:#83c9ef!important;font-size:10px!important;font-weight:850!important;letter-spacing:.55px!important;text-transform:uppercase!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+body:not(.product-view-active) .home-product-info h3{display:-webkit-box!important;min-height:42px!important;margin:0 0 7px!important;overflow:hidden!important;color:#f0f6ff!important;font-size:16px!important;line-height:1.3!important;font-weight:800!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;text-shadow:none!important}
+body:not(.product-view-active) .home-property-card .home-product-info h3{min-height:24px!important;font-size:17px!important}
+body:not(.product-view-active) .home-card-seller{display:block!important;gap:normal!important;margin:0 0 9px!important;color:#a9bfdc!important;font-size:11px!important;line-height:1.35!important;white-space:normal!important;text-shadow:none!important}
+body:not(.product-view-active) .home-card-seller .verified-check{display:inline-grid!important;place-items:center!important;width:14px!important;height:14px!important;margin-right:4px!important;border-radius:50%!important;background:rgba(41,205,151,.16)!important;color:#63e5b5!important;font-size:9px!important;font-weight:950!important}
+body:not(.product-view-active) .home-trust-label{display:inline-flex!important;align-items:center!important;gap:5px!important;line-height:normal!important;width:max-content!important;max-width:100%!important;margin:2px 0 10px!important;padding:5px 8px!important;border:1px solid rgba(80,178,255,.2)!important;border-radius:999px!important;background:rgba(25,91,163,.2)!important;color:#8fd9ff!important;font-size:9px!important;font-weight:900!important;letter-spacing:.3px!important;white-space:normal!important;overflow-wrap:anywhere!important}
+body:not(.product-view-active) .brand-novaai{display:block!important;white-space:nowrap!important;line-height:normal!important}body:not(.product-view-active) .brand-novaai span{display:inline!important}body:not(.product-view-active) .home-trust-label.trust-pending{background:#203b60!important;color:#a9c7e9!important}
+body:not(.product-view-active) .home-product-buy-row{display:grid!important;grid-template-columns:minmax(0,1fr) 34px 36px!important;align-items:center!important;justify-content:initial!important;gap:6px!important;width:100%!important;min-width:0!important;height:auto!important;min-height:auto!important;margin-top:auto!important}
+body:not(.product-view-active) .home-product-price{min-width:0!important;max-width:100%!important;color:#ffe16a!important;font-size:clamp(12px,3.8vw,16px)!important;line-height:1.18!important;letter-spacing:-.25px!important;font-weight:950!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important}
+body:not(.product-view-active) .home-product-price small{font-size:10px!important;color:#9fdfff!important;white-space:nowrap!important}
+body:not(.product-view-active) .home-product-share{flex:none!important;width:34px!important;min-width:34px!important;height:34px!important;min-height:34px!important;border:1px solid rgba(87,207,255,.45)!important;border-radius:10px!important;background:linear-gradient(145deg,rgba(18,102,172,.9),rgba(10,54,111,.95))!important;color:#b9f2ff!important;box-shadow:0 0 14px rgba(0,178,255,.13)!important}
+body:not(.product-view-active) .home-product-share svg{width:17px!important;height:17px!important;stroke:currentColor!important}
+body:not(.product-view-active) .home-add-cart{display:grid!important;flex:none!important;place-items:center!important;width:40px!important;height:40px!important;min-height:40px!important;margin:0!important;padding:8px!important;border:1px solid rgba(255,221,89,.65)!important;border-radius:10px!important;background:linear-gradient(145deg,#ffe66b,#ffc928)!important;color:#14264a!important;box-shadow:0 5px 16px rgba(255,201,40,.16)!important;transition:transform .18s ease,filter .18s ease!important}
+body:not(.product-view-active) .home-add-cart svg{width:19px!important;height:19px!important;fill:none!important;stroke:currentColor!important;stroke-width:1.8!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+body:not(.product-view-active) .home-listing-type{position:absolute!important;z-index:3!important;top:12px!important;left:12px!important;padding:6px 11px!important;border-radius:999px!important;background:#ffd21f!important;color:#14264a!important;font-size:11px!important;font-weight:950!important}
+@media(min-width:761px){body:not(.product-view-active) .home-product-card{flex-basis:clamp(190px,19vw,225px)!important}body:not(.product-view-active) .home-product-info{padding:14px!important}}
 @media(max-width:760px){
- body:not(.product-view-active) .home-product-photo{flex-basis:36%!important}
- body:not(.product-view-active) .home-product-info{flex-basis:64%!important;padding:4px 7px 4px;gap:0}
- body:not(.product-view-active) .home-product-heading{min-height:0}
- body:not(.product-view-active) .home-product-info h3{font-size:10px;line-height:1.1;margin:0 0 2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
- body:not(.product-view-active) .home-product-seller-block{min-height:0;gap:2px;margin:0 0 3px}
- body:not(.product-view-active) .home-card-seller{font-size:7px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;min-width:0}
- body:not(.product-view-active) .home-trust-label{font-size:7px;line-height:1;padding:2px 3px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:max-content;max-width:100%}
- body:not(.product-view-active) .home-trust-copy{white-space:nowrap}
- body:not(.product-view-active) .home-trust-verified{display:none}
- body:not(.product-view-active) .home-product-buy-row{grid-template-columns:minmax(0,1fr) 18px 18px;gap:2px;width:100%;margin-top:auto}
- body:not(.product-view-active) .home-product-price{font-size:8px;line-height:1.05;white-space:normal;overflow-wrap:anywhere}
- body:not(.product-view-active) .home-product-buy-row .home-product-share,
- body:not(.product-view-active) .home-product-buy-row .home-add-cart{width:18px!important;height:18px!important;min-width:18px!important;min-height:18px!important;flex-basis:18px!important;padding:1px!important;border-radius:6px!important}
- body:not(.product-view-active) .home-product-buy-row .home-product-share svg,
- body:not(.product-view-active) .home-product-buy-row .home-add-cart svg{width:11px;height:11px}
+ body:not(.product-view-active) .home-carousel{gap:10px!important}
+ body:not(.product-view-active) .home-product-card{flex-basis:clamp(148px,42vw,174px)!important}
+ body:not(.product-view-active) .home-product-info{padding:10px!important}
+ body:not(.product-view-active) [data-home-category="featured-products"] .home-product-info{min-height:228.9375px!important}
+ body:not(.product-view-active) .home-product-info h3{font-size:16px!important;min-height:42px!important}body:not(.product-view-active) .home-property-card .home-product-info h3{font-size:17px!important;min-height:24px!important}
+ body:not(.product-view-active) .home-product-buy-row{grid-template-columns:minmax(0,1fr) 34px 34px!important;gap:5px!important}
+ body:not(.product-view-active) .home-product-price{font-size:clamp(12px,3.8vw,15px)!important}
+ body:not(.product-view-active) .home-add-cart{width:34px!important;height:34px!important;min-height:34px!important}
+ body:not(.product-view-active) .home-product-share{width:34px!important;min-width:34px!important;height:34px!important}
 }
-@media(min-width:761px){
- body:not(.product-view-active) .home-product-info{padding:17px 20px 17px}
- body:not(.product-view-active) .home-trust-label{font-size:9px;line-height:1.2}
+@media(max-width:360px){
+ body:not(.product-view-active) .home-product-card{flex-basis:145px!important}
+ body:not(.product-view-active) .home-product-info{padding:9px!important}
+ body:not(.product-view-active) .home-product-buy-row{grid-template-columns:minmax(0,1fr) 32px 32px!important;gap:4px!important}
+ body:not(.product-view-active) .home-product-share{width:32px!important;min-width:32px!important;height:32px!important}
+ body:not(.product-view-active) .home-add-cart{width:32px!important;height:32px!important;min-height:32px!important}
+ body:not(.product-view-active) .home-product-price{font-size:12px!important}
 }
 </style>
 </head>
@@ -790,7 +758,7 @@ body:not(.product-view-active) .nova-hero-copy{position:relative!important;z-ind
 <div class="nova-hero-slide"><div class="nova-hero-copy"><span class="nova-hero-kicker">SELL ON <span class="brand-novaai"><span>NOVA</span><span>AI</span></span></span><h1>Your products deserve a marketplace.</h1><p>Build your store and reach customers across South Africa.</p><a href="./seller.html">Open seller portal <span aria-hidden="true">→</span></a></div><div class="nova-hero-art sellers" aria-hidden="true"><span class="hero-art-circle"></span><span class="hero-art-card">SELLER<br>SPACE<small>GROW WITH US</small></span></div></div>
 <div class="nova-hero-controls"><button type="button" id="novaHeroPrev" aria-label="Previous banner">‹</button><div class="nova-hero-dots"><button type="button" class="active" data-hero-slide="0" aria-label="Banner 1"></button><button type="button" data-hero-slide="1" aria-label="Banner 2"></button><button type="button" data-hero-slide="2" aria-label="Banner 3"></button></div><button type="button" id="novaHeroNext" aria-label="Next banner">›</button></div>
 </section>
-<main><section class="home-category-tiles" aria-label="Shop marketplace categories"><a class="home-category-tile property" href="./seller-motors-houses.html?market=property" data-home-category-tile="property"><span class="home-category-image"><img alt="" loading="lazy"></span><span class="home-category-label">Property</span><span class="home-category-arrow" aria-hidden="true">↗</span></a><a class="home-category-tile motors" href="./seller-motors-houses.html?market=motors" data-home-category-tile="motors"><span class="home-category-image"><img alt="" loading="lazy"></span><span class="home-category-label">Cars</span><span class="home-category-arrow" aria-hidden="true">↗</span></a><a class="home-category-tile retail" href="./retail.html" data-home-category-tile="retail"><span class="home-category-image"><img alt="" loading="lazy"></span><span class="home-category-label">Retail</span><span class="home-category-arrow" aria-hidden="true">↗</span></a><a class="home-category-tile more" href="./retail.html" data-home-category-tile="more"><span class="home-category-image"><img alt="" loading="lazy"><span class="category-more-symbol" aria-hidden="true">＋</span></span><span class="home-category-label">More</span><span class="home-category-arrow" aria-hidden="true">↗</span></a></section>
+<main><section class="home-category-tiles" aria-label="Shop marketplace categories"><a class="home-category-tile retail" href="./retail.html" data-home-category-tile="retail"><span class="home-category-image"><img alt="" loading="lazy"></span><span class="home-category-label">Retail</span><span class="home-category-arrow" aria-hidden="true">↗</span></a><a class="home-category-tile motors" href="./seller-motors-houses.html?market=motors" data-home-category-tile="motors"><span class="home-category-image"><img alt="" loading="lazy"></span><span class="home-category-label">Motors</span><span class="home-category-arrow" aria-hidden="true">↗</span></a><a class="home-category-tile property" href="./seller-motors-houses.html?market=property" data-home-category-tile="property"><span class="home-category-image"><img alt="" loading="lazy"></span><span class="home-category-label">Property</span><span class="home-category-arrow" aria-hidden="true">↗</span></a><a class="home-category-tile more" href="./retail.html" data-home-category-tile="more"><span class="home-category-image" aria-hidden="true"><span class="category-more-symbol">＋</span></span><span class="home-category-label">More</span><span class="home-category-arrow" aria-hidden="true">↗</span></a></section>
 <section class="home-featured" id="homeFeatured" aria-label="Marketplace listings"><div id="homeProductGrid" aria-live="polite"><div class="home-products-message">Loading approved marketplace listings…</div></div></section>
 <section class="home-seller-banner" aria-label="Become a NOVAAI seller"><div class="home-seller-visual" aria-hidden="true"><span class="seller-visual-orbit"></span><span class="seller-visual-person"></span></div><div class="home-seller-copy"><p class="home-seller-kicker">YOUR NEXT CHAPTER STARTS HERE</p><h2>Become a <span class="brand-novaai"><span>NOVA</span><span>AI</span></span> Seller</h2><p>Reach more customers and grow your business on our marketplace.</p></div><div class="home-seller-growth" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div><a href="./seller.html">Register Now <span aria-hidden="true">→</span></a></section></main>
 <footer><strong><span class="footer-nova">NOVA</span><span class="footer-ai">AI</span> MARKET</strong><span class="footer-tagline">Your Marketplace. Your Opportunity.</span><span>Built for South Africa · Shop with confidence · Support local businesses</span></footer>
@@ -830,7 +798,7 @@ form.addEventListener('submit',function(e){e.preventDefault();filterProducts(tru
 (function(){
 'use strict';const grid=document.getElementById('homeProductGrid');if(!grid)return;
 const escapeHTML=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
-const money=value=>'R '+new Intl.NumberFormat('en-ZA',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(value)||0);
+const money=value=>'R '+new Intl.NumberFormat('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(value)||0);
 const safeImage=value=>{try{const u=new URL(value);return ['https:','http:'].includes(u.protocol)?u.href:''}catch(e){return ''}};
 const cartKey='novaMarketplaceCartV1';
 function readCart(){try{const v=JSON.parse(localStorage.getItem(cartKey)||'[]');return Array.isArray(v)?v:[]}catch(e){return [];}}
@@ -861,19 +829,11 @@ function listingType(product){return readMarker(product.description,'Listing typ
 function isMotorProduct(p){return ['Auto','Motors & Vehicles'].includes(String(p.category||''))&&!['replacement part','accessory','car part','car accessory'].includes(listingType(p));}
 function isRetailProduct(p){return !isPropertyProduct(p)&&!['Auto','Motors & Vehicles'].includes(String(p.category||''));}
 function categoryGroups(items){
- const retail=items.filter(isRetailProduct),motors=items.filter(isMotorProduct),properties=items.filter(isPropertyProduct);
- const sale=properties.filter(p=>p.category==='Property For Sale'),rent=properties.filter(p=>p.category==='Property To Rent');
- const newest=list=>list.slice().sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
+ const properties=items.filter(isPropertyProduct);
+ const retail=items.filter(p=>!isPropertyProduct(p)&&!['Auto','Motors & Vehicles'].includes(String(p.category||'')));
  return [
-  {id:'retail-featured',title:'Featured Retail Products',items:retail,href:'./retail.html',empty:'No approved Retail products are available right now.'},
-  {id:'retail-nearby',title:'Nearby Retail Products',items:[],href:'./retail.html',nearby:true,empty:'Use your location to find approved Retail listings near you.'},
-  {id:'retail-new',title:'New Retail Arrivals',items:newest(retail),href:'./retail.html',empty:'New Retail arrivals will appear here when approved listings become available.'},
-  {id:'motors-featured',title:'Featured Cars and Vehicles',items:motors,href:'./seller-motors-houses.html?market=motors',empty:'No approved vehicle listings are available right now.'},
-  {id:'motors-nearby',title:'Nearby Motors Listings',items:[],href:'./seller-motors-houses.html?market=motors',nearby:true,empty:'Use your location to find approved vehicle listings near you.'},
-  {id:'motors-new',title:'Recently Added Vehicles',items:newest(motors),href:'./seller-motors-houses.html?market=motors',empty:'Recently added vehicles will appear here when approved listings become available.'},
-  {id:'property-sale',title:'Featured Properties for Sale',items:sale,href:'./seller-motors-houses.html?market=property',empty:'No approved properties for sale are available right now.'},
-  {id:'property-rent',title:'Featured Properties for Rent',items:rent,href:'./seller-motors-houses.html?market=property',empty:'No approved rental properties are available right now.'},
-  {id:'property-nearby',title:'Nearby Properties',items:[],href:'./seller-motors-houses.html?market=property',nearby:true,empty:'Use your location to find approved properties near you.'}
+  {id:'premium-properties',title:'Premium Properties',items:properties,href:'./seller-motors-houses.html?market=property',empty:'No approved properties are available right now.'},
+  {id:'featured-products',title:'Featured Products',items:retail,href:'./retail.html',empty:'No approved Retail products are available right now.'}
  ];
 }
 function renderCard(p,storesBySeller){
@@ -882,39 +842,17 @@ const sellerMarkup=sellerName?'<div class="home-card-seller">'+(trusted?'<span c
 const marketplace=property?'property':(['Auto','Motors & Vehicles'].includes(p.category)?'motors':'retail');
 const shareRoute=marketplace==='property'?'./property-details.html?id='+encodeURIComponent(String(p.id)):marketplace==='motors'?'./seller-motors-houses.html?market=motors&product='+encodeURIComponent(String(p.id)):'./retail.html?product='+encodeURIComponent(String(p.id));
 const shareButton='<button type="button" class="nova-product-share-icon nova-product-share-card home-product-share" style="flex:0 0 34px;width:34px;height:34px;min-width:34px;border-color:#dbe5f2;background:#edf4ff;color:#174ea6;box-shadow:none;border-radius:10px" data-nova-product-share data-share-product-id="'+escapeHTML(p.id)+'" data-share-marketplace="'+marketplace+'" data-share-location-type="product_card" data-share-title="'+escapeHTML(p.name||'Marketplace listing')+'" data-share-price="'+escapeHTML(money(p.price))+'" data-share-location="" data-share-url="'+escapeHTML(new URL(shareRoute,window.location.href).toString())+'" aria-label="Share listing" title="Share listing"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"></path></svg></button>';
-const trustMarkup=trusted?'<div class="home-trust-label"><span aria-hidden="true">◆</span> <span class="brand-novaai"><span>NOVA</span><span>AI</span></span> <span class="home-trust-copy">TRUST SHIELD <span class="home-trust-verified">· VERIFIED SELLER</span></span></div>':'';
-return '<article class="home-product-card'+(property?' home-property-card':'')+'" data-open-home-product="'+escapeHTML(p.id)+'" tabindex="0" role="link" aria-label="Open '+escapeHTML(p.name)+' details"><div class="home-product-photo">'+(img?'<img src="'+escapeHTML(img)+'" alt="'+escapeHTML(p.name)+'" loading="lazy" decoding="async">':'<span class="home-no-photo">Photo not supplied</span>')+(property?'<span class="home-listing-type">'+(p.category==='Property To Rent'?'To Let':'For Sale')+'</span>':'')+'<span class="home-product-category">'+escapeHTML(property?'PROPERTY':(p.category||'Marketplace product'))+'</span><button type="button" class="home-wishlist-toggle'+(saved?' is-saved':'')+'" data-home-wishlist="'+escapeHTML(p.id)+'" aria-label="'+(saved?'Remove from wishlist':'Add to wishlist')+'" aria-pressed="'+String(saved)+'" title="Save to wishlist">'+(saved?'♥':'♡')+'</button></div><div class="home-product-info"><div class="home-product-heading"><h3>'+escapeHTML(p.name)+'</h3></div><div class="home-product-seller-block">'+sellerMarkup+trustMarkup+'</div><div class="home-product-buy-row"><div class="home-product-price">'+money(p.price)+(p.category==='Property To Rent'?' <small>/ month</small>':'')+'</div>'+shareButton+'<button type="button" class="home-add-cart" data-add-product="'+escapeHTML(p.id)+'" aria-label="Add '+escapeHTML(p.name)+' to cart" title="Add to cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg></button></div></div></article>';
+return '<article class="home-product-card'+(property?' home-property-card':'')+'" data-open-home-product="'+escapeHTML(p.id)+'" tabindex="0" role="link" aria-label="Open '+escapeHTML(p.name)+' details"><div class="home-product-photo">'+(img?'<img src="'+escapeHTML(img)+'" alt="'+escapeHTML(p.name)+'" loading="lazy" decoding="async">':'<span class="home-no-photo">Photo not supplied</span>')+(property?'<span class="home-listing-type">'+(p.category==='Property To Rent'?'To Let':'For Sale')+'</span>':'')+'<button type="button" class="home-wishlist-toggle'+(saved?' is-saved':'')+'" data-home-wishlist="'+escapeHTML(p.id)+'" aria-label="'+(saved?'Remove from wishlist':'Add to wishlist')+'" aria-pressed="'+String(saved)+'" title="Save to wishlist">'+(saved?'♥':'♡')+'</button></div><div class="home-product-info"><div class="home-product-category">'+escapeHTML(property?'PROPERTY':(p.category||'Marketplace product'))+'</div><h3>'+escapeHTML(p.name)+'</h3>'+sellerMarkup+(trusted?'<div class="home-trust-label"><span aria-hidden="true">◆</span> <span class="brand-novaai"><span>NOVA</span><span>AI</span></span> TRUST SHIELD · VERIFIED SELLER</div>':'<div class="home-trust-label trust-pending">SELLER DETAILS</div>')+'<div class="home-product-buy-row"><div class="home-product-price">'+money(p.price)+(p.category==='Property To Rent'?' <small>/ month</small>':'')+'</div>'+shareButton+'<button type="button" class="home-add-cart" data-add-product="'+escapeHTML(p.id)+'" aria-label="Add '+escapeHTML(p.name)+' to cart" title="Add to cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg></button></div></div></article>';
 }
 function wireCards(items){
 grid.querySelectorAll('[data-open-home-product]').forEach(card=>{const open=()=>{const product=items.find(item=>String(item.id)===card.dataset.openHomeProduct),destination=product&&isPropertyProduct(product)?'./property-details.html?id=':'./index.html?product=';window.location.href=destination+encodeURIComponent(card.dataset.openHomeProduct);};card.addEventListener('click',e=>{if(e.target.closest('button'))return;open();});card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});});
 grid.querySelectorAll('[data-home-wishlist]').forEach(button=>button.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();toggleHomeWishlist(button.dataset.homeWishlist,button);}));
 grid.querySelectorAll('[data-add-product]').forEach(button=>button.addEventListener('click',e=>{e.stopPropagation();const product=items.find(item=>String(item.id)===button.dataset.addProduct);if(product)addToCart(product);}));
 }
-function renderHomeSections(items,storesBySeller,client){
+function renderHomeSections(items,storesBySeller){
  const groups=categoryGroups(items);
- grid.innerHTML=groups.map(group=>'<section class="home-category-section" data-home-category="'+escapeHTML(group.id)+'"><div class="section-kicker"><h2>'+escapeHTML(group.title)+'</h2><div style="display:flex;align-items:center;gap:9px"><a href="'+group.href+'">View All <span aria-hidden="true">→</span></a></div></div>'+(group.items.length?'<div class="home-carousel" aria-label="'+escapeHTML(group.title)+' products">'+group.items.map(p=>renderCard(p,storesBySeller)).join('')+'</div>':'<div class="home-products-message">'+escapeHTML(group.empty)+'</div>')+'</section>').join('');
+ grid.innerHTML=groups.map(group=>'<section class="home-category-section" data-home-category="'+escapeHTML(group.id)+'"><div class="section-kicker"><h2>'+escapeHTML(group.title)+'</h2><a href="'+group.href+'">View All <span aria-hidden="true">→</span></a></div>'+(group.items.length?'<div class="home-carousel" aria-label="'+escapeHTML(group.title)+' products">'+group.items.map(p=>renderCard(p,storesBySeller)).join('')+'</div>':'<div class="home-products-message">'+escapeHTML(group.empty)+'</div>')+'</section>').join('');
  wireCards(items);
- grid.querySelectorAll('[data-home-category="retail-nearby"],[data-home-category="motors-nearby"],[data-home-category="property-nearby"]').forEach(section=>{
-  const groupId=section.dataset.homeCategory,button=document.createElement('button');button.type='button';button.className='home-nearby-action';button.textContent='Use my location';section.querySelector('.section-kicker>div').prepend(button);
-  button.addEventListener('click',()=>{
-   if(!navigator.geolocation){section.querySelector('.home-products-message').textContent='Location is not supported by this browser. Browse approved listings using View All.';return;}
-   button.disabled=true;button.textContent='Finding location…';
-   navigator.geolocation.getCurrentPosition(async pos=>{
-    try{
-     const locResult=await client.from('seller_public_locations').select('user_id,latitude,longitude,public_location_enabled,approval_status').eq('public_location_enabled',true).eq('approval_status','approved');
-     if(locResult.error)throw locResult.error;
-     const approvedLocations=new Map((locResult.data||[]).map(l=>[String(l.user_id),l]));
-     const km=(a,b,c,d)=>{const r=v=>v*Math.PI/180,x=r(c-a),y=r(d-b),h=Math.sin(x/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(y/2)**2;return 6371*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));};
-     const selected=groups.find(g=>g.id===groupId),pool=groupId.startsWith('retail')?items.filter(isRetailProduct):groupId.startsWith('motors')?items.filter(isMotorProduct):items.filter(isPropertyProduct);
-     const nearby=pool.map(p=>{if(!storesBySeller.has(String(p.seller_id)))return null;const l=approvedLocations.get(String(p.seller_id));if(!l||l.latitude==null||l.longitude==null)return null;return {...p,_distance:km(pos.coords.latitude,pos.coords.longitude,Number(l.latitude),Number(l.longitude))};}).filter(p=>p&&p._distance<=25).sort((a,b)=>a._distance-b._distance);
-     const target=section.querySelector('.home-products-message');
-     if(nearby.length){target.outerHTML='<div class="home-carousel" aria-label="'+escapeHTML(selected.title)+' products">'+nearby.map(p=>renderCard(p,storesBySeller)).join('')+'</div>';wireCards(items);}
-     else target.textContent='No approved listings with administrator-approved public seller locations were found within 25 km. Browse all listings using View All.';
-     button.textContent='Location checked';button.disabled=true;
-    }catch(error){button.disabled=false;button.textContent='Try location again';section.querySelector('.home-products-message').textContent='Nearby listings could not be loaded safely. Browse approved listings using View All.';console.warn('Nearby Home section:',error);}
-   },()=>{button.disabled=false;button.textContent='Use my location';section.querySelector('.home-products-message').textContent='Location permission was not granted. Browse approved listings using View All.';},{enableHighAccuracy:false,timeout:20000,maximumAge:300000});
-  });
- });
 }
 async function loadHomeProducts(){
 const requestedId=new URLSearchParams(window.location.search).get('product');
@@ -932,8 +870,8 @@ try{const storeResult=await client.from('seller_stores').select('user_id,store_n
 const storesBySeller=new Map(stores.map(store=>[String(store.user_id),store]));
 const items=rows.filter(p=>p.status==='approved'&&p.seller_id&&p.name&&Number(p.price)>0);
 if(!items.length){grid.innerHTML='<div class="home-products-message">There are no eligible approved listings to display right now. Please check back soon.</div>';return;}
-renderHomeSections(items,storesBySeller,client);
-const categorySources={retail:items.find(p=>!isPropertyProduct(p)&&!['Auto','Motors & Vehicles'].includes(p.category)),motors:items.find(p=>['Auto','Motors & Vehicles'].includes(p.category)),property:items.find(p=>isPropertyProduct(p)),more:items.find(p=>!isPropertyProduct(p)&&!['Auto','Motors & Vehicles'].includes(p.category)&&productPhotos(p).length>0&&String(p.id)!==String(items.find(x=>!isPropertyProduct(x)&&!['Auto','Motors & Vehicles'].includes(x.category))?.id))||items.find(p=>productPhotos(p).length>0)};
+renderHomeSections(items,storesBySeller);
+const categorySources={retail:items.find(p=>!isPropertyProduct(p)&&!['Auto','Motors & Vehicles'].includes(p.category)),motors:items.find(p=>['Auto','Motors & Vehicles'].includes(p.category)),property:items.find(p=>isPropertyProduct(p))};
 Object.entries(categorySources).forEach(([key,product])=>{const tile=document.querySelector('[data-home-category-tile="'+key+'"] img'),photo=product&&productPhotos(product)[0];if(tile&&photo){tile.src=photo;tile.alt=key+' marketplace listings';tile.parentElement.classList.add('has-photo');}});
 updateCartCount();
 }catch(error){console.error('Homepage product loading:',error);grid.innerHTML='<div class="home-products-message">We could not load marketplace products right now. Please try again later or browse the full marketplace.</div>';}
