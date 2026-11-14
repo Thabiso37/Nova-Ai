@@ -42,7 +42,7 @@ function navigate(id){
 function showGate(message){$("sp2080GateTitle").textContent="Application status";$("sp2080GateText").textContent=message||"Your marketplace application is awaiting administrator approval.";navigate("gate")}
 function refresh(state){
  createShell();mountExisting();
- const u=window.user,store=window.storeData,perms=window.marketplacePermissions||[];
+ const state=window.NOVAAISellerState?.()||{}; const u=state.user,store=state.storeData,perms=state.marketplacePermissions||[];
  if(!u){approved=false;showGate("Sign in or apply as a new seller to access your seller workspace.");return}
  market=store?.primary_marketplace;
  const allowed=!!market&&typeof window.hasMarketplaceAccess==="function"&&window.hasMarketplaceAccess(market);
