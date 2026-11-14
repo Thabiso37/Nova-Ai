@@ -22,7 +22,7 @@ main{padding:18px;min-width:0}.welcome{display:grid;grid-template-columns:minmax
 </style>
 </head>
 <body>
-<div class="preview-bar"><strong>ISOLATED PREVIEW · DEMO ONLY</strong><label for="market-demo">Test approved seller profile:</label><select id="market-demo" aria-label="Preview marketplace variation"><option value="retail">Retail seller</option><option value="motors">Motors seller</option><option value="property">Property seller</option></select><small>This selector is a preview test tool, not a seller dashboard control.</small></div>
+<div class="preview-bar"><strong>ISOLATED PREVIEW · DEMO ONLY</strong><label for="market-demo">Test approved seller profile:</label><select id="market-demo" aria-label="Preview marketplace variation"><option value="retail">Retail seller</option><option value="motors">Motors seller</option><option value="property">Property seller</option></select><label><input id="parts-demo" type="checkbox" style="accent-color:#19e5ff"> Preview-only Car Parts permission</label><small>This selector is a preview test tool, not a seller dashboard control.</small></div>
 <div class="app">
 <header class="top">
   <div><div class="brand">NOVA<span>AI</span></div><div class="brand-sub">Your Marketplace. Your Opportunity.</div></div>
@@ -75,7 +75,7 @@ main{padding:18px;min-width:0}.welcome{display:grid;grid-template-columns:minmax
 (function(){
  const profiles={
   retail:{name:"Retail",caption:"Retail seller workspace",tool:"My Products",toolShort:"Products",icon:"▣",desc:"Manage your Retail product listings and catalogue.",other:["My Products"]},
-  motors:{name:"Motors",caption:"Motors seller workspace",tool:"My Vehicles",toolShort:"Vehicles",icon:"▱",desc:"Manage your approved Motors vehicle listings.",other:["My Vehicles","My Car Parts"]},
+  motors:{name:"Motors",caption:"Motors seller workspace",tool:"My Vehicles",toolShort:"Vehicles",icon:"▱",desc:"Manage your approved Motors vehicle listings.",other:["My Vehicles"]},
   property:{name:"Property",caption:"Property seller workspace",tool:"My Properties",toolShort:"Properties",icon:"⌂",desc:"Manage your approved Property listings.",other:["My Properties"]}
  };
  let profile="retail",current="dashboard";
@@ -90,6 +90,7 @@ main{padding:18px;min-width:0}.welcome{display:grid;grid-template-columns:minmax
  }
  function render(){
   const p=profiles[profile];
+  const partsAllowed=profile==="motors" && $("parts-demo").checked;
   $("hero-market").textContent=p.name;
   $("tools-caption").textContent=p.caption;
   $("dashboard-tiles").innerHTML=[
@@ -103,17 +104,19 @@ main{padding:18px;min-width:0}.welcome{display:grid;grid-template-columns:minmax
    {icon:"⬡",title:"Account & Security",sub:"Manage your account",view:"account"},
    {icon:"☏",title:"Help & Support",sub:"Get assistance",view:"support"}
   ].map(t=>'<button class="tile '+(t.disabled?'disabled':'')+'" '+(t.disabled?'disabled aria-disabled="true" title="Future feature"':'data-view="'+t.view+'"')+'><span class="tile-ico">'+t.icon+'</span><span><b>'+t.title+'</b><small>'+t.sub+'</small></span><span class="'+(t.disabled?'future':'arrow')+'">'+(t.disabled?'Future':'›')+'</span></button>').join("");
-  $("desktop-market-tools").innerHTML=p.other.map((name,i)=>'<button class="nav" data-view="market-tool"><span class="ico">'+(i===0?p.icon:"⚙")+'</span>'+name+'</button>').join("");
+  const visibleTools=partsAllowed?[...p.other,"My Car Parts"]:p.other;
+  $("desktop-market-tools").innerHTML=visibleTools.map((name,i)=>'<button class="nav" data-view="market-tool"><span class="ico">'+(i===0?p.icon:"⚙")+'</span>'+name+'</button>').join("");
   $("bottom-tool-label").textContent=p.toolShort;
   $("bottom-market-tool").querySelector("span:first-child").textContent=p.icon;
   document.querySelectorAll(".nav[data-view],.mobile-bottom [data-view]").forEach(el=>el.addEventListener("click",()=>show(el.dataset.view)));
   document.querySelectorAll("#dashboard-tiles [data-view]").forEach(el=>el.addEventListener("click",()=>show(el.dataset.view)));
-  if(profile==="motors"){
+  if(partsAllowed){
    const carParts=document.createElement("button");carParts.className="tile";carParts.dataset.view="market-tool";carParts.innerHTML='<span class="tile-ico">⚙</span><span><b>My Car Parts</b><small>Only where permitted</small></span><span class="arrow">›</span>';
    $("dashboard-tiles").appendChild(carParts);carParts.addEventListener("click",()=>{ $("tool-title").textContent="My Car Parts";$("tool-description").textContent="This tool is shown only in the Motors preview and remains subject to actual seller permissions.";show("market-tool")});
   }
  }
  document.addEventListener("click",e=>{const el=e.target.closest("[data-view]");if(el&&!el.disabled){const v=el.dataset.view;if(v==="market-tool"&&el.closest("#desktop-market-tools")){$("tool-title").textContent=el.textContent.trim();$("tool-description").textContent="Motors-specific tool preview. Actual permissions must be checked by the existing backend."}show(v)}});
+ $("parts-demo").addEventListener("change",()=>{render();show("dashboard")});
  $("market-demo").addEventListener("change",e=>{profile=e.target.value;render();show("dashboard");$("toast").textContent="Preview variation: "+profiles[profile].name+" · No seller permissions changed.";$("toast").style.display="block";setTimeout(()=>{$("toast").style.display="none"},2400)});
  render();
 })();
