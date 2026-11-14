@@ -144,12 +144,12 @@ try{
   console.log("LIVE APPROVED REFERENCE SECTION "+section+" COUNT: "+await locator.count());
   if(await locator.count())console.log("LIVE APPROVED REFERENCE SECTION "+section+" TEXT: "+await locator.first().innerText());
  }
- const referencePriceTokens=referencePrices.join("\n").match(/R\\s*[\\d,]+\\.\\d{2}/g)||[];
+ const referencePriceTokens=referencePrices.join("\n").match(/R\s*[\d,]+\.\d{2}/g)||[];
  assert(referencePriceTokens.length>=5,"Approved Preview 2 reference did not expose the expected decimal-point South African listing prices");
  assert(referencePriceTokens.includes("R 185.00")&&referencePriceTokens.includes("R 500.00")&&referencePriceTokens.includes("R 200.00")&&referencePriceTokens.includes("R 50.00")&&referencePriceTokens.includes("R 7.00"),"Approved Preview 2 reference prices differ from the reviewed listing values: "+referencePriceTokens.join(", "));
  console.log("PASS approved Preview 2 reference currency: decimal point; rendered examples: "+referencePriceTokens.slice(0,5).join(", "));
  const restoredPrices=await home.locator(".home-product-card").allInnerTexts();
- const restoredPriceTokens=restoredPrices.join("\n").match(/R\\s*[\\d,]+\\.\\d{2}/g)||[];
+ const restoredPriceTokens=restoredPrices.join("\n").match(/R\s*[\d,]+\.\d{2}/g)||[];
  assert.deepEqual(restoredPriceTokens,referencePriceTokens,"Restoration listing prices/formatting must exactly match the original approved Preview 2 reference");
  await reference.close();
  await home.waitForSelector(".home-product-card .home-product-share",{timeout:15000});
