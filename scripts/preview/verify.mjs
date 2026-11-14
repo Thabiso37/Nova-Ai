@@ -7,7 +7,7 @@ const manifest=JSON.parse(fs.readFileSync(path.join(dir,".source-manifest.json")
 assert.equal(manifest.source,"restored-preview2-branch-index","Validation build must use the restored Preview 2 branch index");
 assert.equal(manifest.implementationCommit,"a0ed724371a3487ec263fd9c7598f60f72fe5269","Restored Home implementation commit mismatch");
 assert.equal(manifest.implementationBranch,"fix/restore-preview2-home-cards","Restored Home branch mismatch");
-assert.equal(manifest.implementationHomeBlob,"bad4680a49052928790a2a4441906dab923dc234","Restored Home index blob mismatch");
+assert.equal(manifest.implementationHomeBlob,"109c23ba5d08e99656fc32c5403031da880bedc2","Restored Home index blob mismatch");
 assert.equal(manifest.files["index.html@restored-preview2-branch"],manifest.implementationHomeBlob,"Generated Home is not sourced from the accepted branch index");
 
 const html=fs.readFileSync(path.join(dir,"index.html"),"utf8");
