@@ -21,6 +21,8 @@ try{
   await page.locator('#sp2080OpenAuth').click();
   if(!(await page.locator('#sp2080Account').evaluate(el=>el.classList.contains('active'))))throw new Error('Sign-in gate did not open Account view');
   if(!(await page.locator('#authForm').isVisible()))throw new Error('Authentication form not visible from Account');
+  // Follow the normal seller entry path: select one marketplace before submitting the existing sign-in form.
+  await page.evaluate(market=>window.chooseMarketplace(market),variant.market);
   await page.locator('#email').fill('preview@example.invalid');await page.locator('#password').fill('fixture-password');
   await page.evaluate(market=>{window.__fixtureStore={id:'fixture-store-'+market,store_name:'Preview Store',store_slug:'preview-store',status:'approved',primary_marketplace:market};window.__fixturePermissions=[{marketplace:market,status:'approved'}]},variant.market);
   await page.locator('#authForm button[type="submit"]').click();
