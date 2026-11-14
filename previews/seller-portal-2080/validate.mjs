@@ -33,6 +33,14 @@ try {
       if (overflow) throw new Error(viewport.label + '/' + variant.name + ': horizontal overflow');
       if (!(await page.locator('.mobile-bottom').isVisible())) throw new Error('Android bottom navigation is not visible');
       await page.screenshot({ path: 'artifacts/seller-portal-' + variant.value + '-' + viewport.label + '.png', fullPage: true });
+      if (variant.value === 'motors') {
+        if (tiles.includes('My Car Parts')) throw new Error('Car Parts must not appear without its separate preview permission');
+        await page.locator('#parts-demo').check();
+        const permittedTiles = await page.locator('#dashboard-tiles').innerText();
+        if (!permittedTiles.includes('My Car Parts')) throw new Error('Car Parts did not appear after explicit preview permission');
+        await page.screenshot({ path: 'artifacts/seller-portal-motors-car-parts-permitted-' + viewport.label + '.png', fullPage: true });
+        await page.locator('#parts-demo').uncheck();
+      }
       await page.locator('.mobile-bottom button[data-view="store"]').click();
       if (!(await page.locator('#view-store').isVisible())) throw new Error('Bottom navigation My Store did not open');
       if (errors.length) throw new Error('Browser errors: ' + errors.join('; '));
