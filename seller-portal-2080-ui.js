@@ -16,7 +16,12 @@ function createShell(){
  const bottom=$("sp2080Bottom");[["dashboard","Home"],["store","My Store"],["listings","Listings"],["account","Account"],["support","Support"]].forEach(([id,l])=>{const b=document.createElement("button");b.type="button";b.dataset.spview=id;b.innerHTML='<span>'+({dashboard:"⌂",store:"▤",listings:"◇",account:"⚙",support:"☏"}[id])+'</span><span>'+l+'</span>';bottom.append(b)});
  const picker=$("marketplacePicker");if(picker){picker.classList.add("sp2080-registration");shell.before(picker)}
  const workspace=$("sellerWorkspace");if(workspace){workspace.classList.add("hidden")}
- $("sp2080OpenAuth").addEventListener("click",()=>{const p=$("marketplacePicker");p?.scrollIntoView({behavior:"smooth"});$("authForm")?.scrollIntoView({behavior:"smooth"})});
+ $("sp2080OpenAuth").addEventListener("click",()=>{
+  navigate("account");
+  const account=$("sellerAccountPanel");account?.classList.remove("hidden");
+  const focusAuth=()=>{const form=$("authForm"),email=$("email");form?.scrollIntoView({behavior:"smooth",block:"center"});email?.focus({preventScroll:true})};
+  if(typeof requestAnimationFrame==="function")requestAnimationFrame(focusAuth);else focusAuth();
+ });
  shell.addEventListener("click",e=>{const b=e.target.closest("[data-spview]");if(b&&!b.disabled)navigate(b.dataset.spview)});
 }
 function mountExisting(){
@@ -34,10 +39,19 @@ function navigate(id){
  const target=$("sp2080"+({dashboard:"Dashboard",store:"Store",listings:"Listings",access:"Access",analytics:"Analytics",notifications:"Notifications",account:"Account",support:"Support",gate:"Gate"}[id]||"Dashboard"));
  target?.classList.add("active");
  document.querySelectorAll("[data-spview]").forEach(x=>x.classList.toggle("active",x.dataset.spview===id));
- if(id==="store"){ $("sellerPublicLocationPanel")?.classList.remove("hidden");$("marketplaceAccessStatus")?.classList.add("hidden");$("sellerAccountPanel")?.classList.add("hidden");$("sellerInventoryPanel")?.classList.add("hidden")}
- if(id==="access"){$("marketplaceAccessStatus")?.classList.remove("hidden");$("sellerPublicLocationPanel")?.classList.add("hidden")}
- if(id==="account"){$("sellerAccountPanel")?.classList.remove("hidden")}
- if(id==="listings"){$("sellerInventoryPanel")?.classList.remove("hidden");$("sellerInventoryHeading")?.classList.remove("hidden");$("sellerInventoryTabs")?.classList.remove("hidden");$("sellerListingEditorPage")?.classList.remove("hidden");$("sellerModerationPage")?.classList.remove("hidden");$("sellerOrdersPage")?.classList.remove("hidden")}
+ const inventory=$("sellerInventoryPanel"),heading=$("sellerInventoryHeading"),tabs=$("sellerInventoryTabs");
+ const editor=$("sellerListingEditorPage"),moderation=$("sellerModerationPage"),orders=$("sellerOrdersPage");
+ const location=$("sellerPublicLocationPanel"),access=$("marketplaceAccessStatus"),account=$("sellerAccountPanel");
+ inventory?.classList.add("hidden");heading?.classList.add("hidden");tabs?.classList.add("hidden");
+ editor?.classList.add("hidden");moderation?.classList.add("hidden");orders?.classList.add("hidden");
+ location?.classList.add("hidden");access?.classList.add("hidden");account?.classList.add("hidden");
+ if(id==="store")location?.classList.remove("hidden");
+ if(id==="access")access?.classList.remove("hidden");
+ if(id==="account")account?.classList.remove("hidden");
+ if(id==="listings"){
+  inventory?.classList.remove("hidden");heading?.classList.remove("hidden");tabs?.classList.remove("hidden");
+  editor?.classList.remove("hidden");moderation?.classList.remove("hidden");orders?.classList.remove("hidden");
+ }
 }
 function showGate(message){$("sp2080GateTitle").textContent="Application status";$("sp2080GateText").textContent=message||"Your marketplace application is awaiting administrator approval.";navigate("gate")}
 function refresh(){
