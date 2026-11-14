@@ -91,6 +91,28 @@ try{
  await reference.waitForSelector(".home-product-card",{timeout:20000});
  const referencePrices=await reference.locator(".home-product-card").allInnerTexts();
  console.log("LIVE APPROVED REFERENCE CARD TEXT: "+referencePrices.join(" || "));
+ fs.mkdirSync("preview-screenshots",{recursive:true});
+ const captureSection=async(page,selector,name)=>{
+  const el=page.locator(selector);
+  await el.waitFor({state:"visible",timeout:15000});
+  await el.screenshot({path:"preview-screenshots/"+name+".png"});
+  return el.evaluate(section=>{
+   const card=section.querySelector(".home-product-card");
+   const photo=card?.querySelector(".home-product-photo");
+   const info=card?.querySelector(".home-product-info");
+   const rect=e=>{if(!e)return null;const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}};
+   const style=e=>e?{fontFamily:getComputedStyle(e).fontFamily,fontSize:getComputedStyle(e).fontSize,fontWeight:getComputedStyle(e).fontWeight,lineHeight:getComputedStyle(e).lineHeight,color:getComputedStyle(e).color,background:getComputedStyle(e).backgroundColor}:null;
+   return {sectionText:section.innerText,section:rect(section),card:rect(card),photo:rect(photo),info:rect(info),cardStyle:style(card),nameStyle:style(card?.querySelector(".home-product-name")),priceStyle:style(card?.querySelector(".home-product-price")),image:photo?.querySelector("img")?{src:photo.querySelector("img").currentSrc,naturalWidth:photo.querySelector("img").naturalWidth,naturalHeight:photo.querySelector("img").naturalHeight}:null};
+  });
+ };
+ const refPremium=await captureSection(reference,'[data-home-category="premium-properties"]',"reference-premium-properties");
+ const refFeatured=await captureSection(reference,'[data-home-category="featured-products"]',"reference-featured-products");
+ console.log("VISUAL METRICS LIVE REFERENCE PREMIUM: "+JSON.stringify(refPremium));
+ console.log("VISUAL METRICS LIVE REFERENCE FEATURED: "+JSON.stringify(refFeatured));
+ const restoredPremium=await captureSection(home,'[data-home-category="premium-properties"]',"restoration-premium-properties");
+ const restoredFeatured=await captureSection(home,'[data-home-category="featured-products"]',"restoration-featured-products");
+ console.log("VISUAL METRICS RESTORATION PREMIUM: "+JSON.stringify(restoredPremium));
+ console.log("VISUAL METRICS RESTORATION FEATURED: "+JSON.stringify(restoredFeatured));
  for(const section of ["premium-properties","featured-products"]){
   const locator=reference.locator('[data-home-category="'+section+'"]');
   console.log("LIVE APPROVED REFERENCE SECTION "+section+" COUNT: "+await locator.count());
