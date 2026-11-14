@@ -141,7 +141,8 @@ try{
  const propertyText=await propertyCard.innerText();
  const propertyExpected=["Property","PROPERTY","TRUST SHIELD","R 185,00"];
  const propertyMissing=propertyExpected.filter(value=>!propertyText.includes(value));
- assert.equal(propertyMissing.length,0,"Actual Premium Properties card is missing expected fields: "+JSON.stringify(propertyMissing)+". Rendered card text: "+JSON.stringify(propertyText)+". Snapshot product: "+JSON.stringify(window.__NOVAAI_PREVIEW_FIXTURES__?.products?.find(p=>String(p.id)==="61"))+". Snapshot seller: "+JSON.stringify(window.__NOVAAI_PREVIEW_FIXTURES__?.sellers?.find(s=>s.user_id==="25e830fe-f387-4525-934e-af45fc6ac10f")));
+ const propertyFixture=await home.evaluate(()=>({product:window.__NOVAAI_PREVIEW_FIXTURES__?.products?.find(p=>String(p.id)==="61"),seller:window.__NOVAAI_PREVIEW_FIXTURES__?.sellers?.find(s=>s.user_id==="25e830fe-f387-4525-934e-af45fc6ac10f")}));
+ assert.equal(propertyMissing.length,0,"Actual Premium Properties card is missing expected fields: "+JSON.stringify(propertyMissing)+". Rendered card text: "+JSON.stringify(propertyText)+". Snapshot records: "+JSON.stringify(propertyFixture));
  const retailText=await retailCard.innerText();
  assert(retailText.includes("test phone a12")&&retailText.includes("ACCESSORIES")&&retailText.includes("Alaska store")&&retailText.includes("TRUST SHIELD")&&retailText.includes("R 500,00"),"Actual Featured Products name/category/seller/Trust Shield/price are missing");
  const shareUrl=await firstCard.locator("[data-nova-product-share]").getAttribute("data-share-url");
