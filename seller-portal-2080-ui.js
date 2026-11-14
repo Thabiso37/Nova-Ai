@@ -28,7 +28,7 @@ function mountExisting(){
  const workspace=$("sellerWorkspace");if(workspace)workspace.classList.add("hidden");
 }
 function navigate(id){
- if(!approved && !["account","support"].includes(id)){showGate("Marketplace approval is required before seller tools can be opened.");return}
+ if(!approved && !["account","support","gate"].includes(id)){showGate("Marketplace approval is required before seller tools can be opened.");return}
  active=id;
  document.querySelectorAll(".sp2080-view").forEach(x=>x.classList.remove("active"));
  const target=$("sp2080"+({dashboard:"Dashboard",store:"Store",listings:"Listings",access:"Access",analytics:"Analytics",notifications:"Notifications",account:"Account",support:"Support",gate:"Gate"}[id]||"Dashboard"));
