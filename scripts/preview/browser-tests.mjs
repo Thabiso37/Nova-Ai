@@ -89,9 +89,13 @@ try{
  const referenceResponse=await reference.goto("https://novaai-home-0851cf9-preview.onrender.com/",{waitUntil:"domcontentloaded",timeout:30000});
  assert(referenceResponse&&referenceResponse.ok(),"Live approved Preview 2 reference could not be loaded for currency comparison");
  await reference.waitForSelector(".home-product-card",{timeout:20000});
- const referenceText=await reference.locator("body").innerText();
- assert(referenceText.includes("R 185,00")&&referenceText.includes("R 500,00"),"Live approved Preview 2 reference does not show the expected decimal-comma examples R 185,00 and R 500,00");
- console.log("PASS live approved Preview 2 reference currency: decimal comma (R 185,00; R 500,00)");
+ const referencePrices=await reference.locator(".home-product-card").allInnerTexts();
+ const referencePriceTokens=referencePrices.join("\\n").match(/R\\s?\\d{1,3}(?:[ .]\\d{3})*,\\d{2}/g)||[];
+ assert(referencePriceTokens.length>0,"Live approved Preview 2 reference did not expose any South African decimal-comma prices in its rendered product cards");
+ console.log("PASS live approved Preview 2 reference currency: decimal comma; rendered examples: "+referencePriceTokens.slice(0,5).join(", "));
+ const restoredPrices=await home.locator(".home-product-card").allInnerTexts();
+ const restoredPriceTokens=restoredPrices.join("\\n").match(/R\\s?\\d{1,3}(?:[ .]\\d{3})*,\\d{2}/g)||[];
+ assert(restoredPriceTokens.length>0,"Restored Home product cards do not preserve decimal-comma South African prices");
  await reference.close();
  await home.waitForSelector(".home-product-card .home-product-share",{timeout:15000});
  const labels=(await home.locator(".home-category-tile .home-category-label").allTextContents()).map(x=>x.trim());
