@@ -85,6 +85,14 @@ try{
  }
 
  const home=pages.find(x=>x.file==="index.html").page;
+ const reference=await browser.newPage({viewport:{width:1280,height:900}});
+ const referenceResponse=await reference.goto("https://novaai-home-0851cf9-preview.onrender.com/",{waitUntil:"domcontentloaded",timeout:30000});
+ assert(referenceResponse&&referenceResponse.ok(),"Live approved Preview 2 reference could not be loaded for currency comparison");
+ await reference.waitForSelector(".home-product-card",{timeout:20000});
+ const referenceText=await reference.locator("body").innerText();
+ assert(referenceText.includes("R 185,00")&&referenceText.includes("R 500,00"),"Live approved Preview 2 reference does not show the expected decimal-comma examples R 185,00 and R 500,00");
+ console.log("PASS live approved Preview 2 reference currency: decimal comma (R 185,00; R 500,00)");
+ await reference.close();
  await home.waitForSelector(".home-product-card .home-product-share",{timeout:15000});
  const labels=(await home.locator(".home-category-tile .home-category-label").allTextContents()).map(x=>x.trim());
  assert.deepEqual(labels,["Retail","Motors","Property","More"],"Actual Preview 2 category order must be Retail, Motors, Property, More");
@@ -139,12 +147,12 @@ try{
   assert(g.infoTop>=g.photoBottom-2&&g.infoHeight>=150,"Preview 2 information panel must remain below the image");
  }
  const propertyText=await propertyCard.innerText();
- const propertyExpected=["Property","PROPERTY","TRUST SHIELD","R 185.00"];
+ const propertyExpected=["Property","PROPERTY","TRUST SHIELD","R 185,00"];
  const propertyMissing=propertyExpected.filter(value=>!propertyText.includes(value));
  const propertyFixture=await home.evaluate(()=>({product:window.__NOVAAI_PREVIEW_FIXTURES__?.products?.find(p=>String(p.id)==="61"),seller:window.__NOVAAI_PREVIEW_FIXTURES__?.sellers?.find(s=>s.user_id==="25e830fe-f387-4525-934e-af45fc6ac10f")}));
  assert.equal(propertyMissing.length,0,"Actual Premium Properties card is missing expected fields: "+JSON.stringify(propertyMissing)+". Rendered card text: "+JSON.stringify(propertyText)+". Snapshot records: "+JSON.stringify(propertyFixture));
  const retailText=await retailCard.innerText();
- assert(retailText.includes("test phone a12")&&retailText.includes("ACCESSORIES")&&retailText.includes("Alaska store")&&retailText.includes("TRUST SHIELD")&&retailText.includes("R 500.00"),"Actual Featured Products name/category/seller/Trust Shield/price are missing");
+ assert(retailText.includes("test phone a12")&&retailText.includes("ACCESSORIES")&&retailText.includes("Alaska store")&&retailText.includes("TRUST SHIELD")&&retailText.includes("R 500,00"),"Actual Featured Products name/category/seller/Trust Shield/price are missing");
  const shareUrl=await firstCard.locator("[data-nova-product-share]").getAttribute("data-share-url");
  assert(shareUrl&&new URL(shareUrl).origin===origin,"Home product Share URL must remain inside isolated preview");
  const native=await home.evaluate(async url=>{
