@@ -798,7 +798,7 @@ form.addEventListener('submit',function(e){e.preventDefault();filterProducts(tru
 (function(){
 'use strict';const grid=document.getElementById('homeProductGrid');if(!grid)return;
 const escapeHTML=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
-const money=value=>'R '+new Intl.NumberFormat('en-ZA',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(value)||0).replace('.',',');
+const money=value=>'R '+new Intl.NumberFormat('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(value)||0);
 const safeImage=value=>{try{const u=new URL(value);return ['https:','http:'].includes(u.protocol)?u.href:''}catch(e){return ''}};
 const cartKey='novaMarketplaceCartV1';
 function readCart(){try{const v=JSON.parse(localStorage.getItem(cartKey)||'[]');return Array.isArray(v)?v:[]}catch(e){return [];}}
