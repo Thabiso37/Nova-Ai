@@ -34,6 +34,11 @@ try{
   if(await page.locator('#sellerWorkspace .selected-market-bar').isVisible().catch(()=>false))throw new Error('Legacy marketplace bar visible beside 2080 dashboard');
   if(await page.locator('html').evaluate(el=>el.scrollWidth>innerWidth))throw new Error('Horizontal overflow at '+size.label);
   await page.screenshot({path:'artifacts/approved-'+variant.market+'-'+size.label+'.png',fullPage:true});
+  await page.locator('[data-spview="store"]:visible').first().click();
+  if(!(await page.locator('#sp2080Store').evaluate(el=>el.classList.contains('active')))||!(await page.locator('#sellerPublicLocationPanel').isVisible()))throw new Error('My Store/Public Location workflow not visible');
+  await page.locator('[data-spview="dashboard"]:visible').first().click();
+  await page.locator('#sp2080Tiles [data-spview="access"]').click();
+  if(!(await page.locator('#sp2080Access').evaluate(el=>el.classList.contains('active')))||!(await page.locator('#marketplaceAccessStatus').isVisible()))throw new Error('Marketplace Access workflow not visible');
   await page.locator('[data-spview="account"]:visible').first().click();await page.locator('[data-spview="listings"]:visible').first().click();
   if(!(await page.locator('#sp2080Listings').evaluate(el=>el.classList.contains('active'))))throw new Error('Listings view inactive');
   for(const id of ['sellerInventoryPanel','sellerInventoryHeading','sellerInventoryTabs','sellerListingEditorPage','sellerModerationPage','sellerOrdersPage'])if(!(await page.locator('#'+id).isVisible()))throw new Error('Workflow hidden after Account -> Listings: '+id);
@@ -45,17 +50,20 @@ try{
   if(errors.length)throw new Error(errors.join('; '));
   results.push({viewport:size.label,marketplace:variant.label,accountGate:true,authenticationForm:true,listingsAndOrders:true,legacyNavigationHidden:true,marketplaceSwitcherHidden:true,noHorizontalOverflow:true,mockWrites:0});await page.close();
  }
- for(const variant of variants){
+ for(const variant of variants)for(const restriction of ['store-pending','permission-pending']){
   const page=await browser.newPage({viewport:{width:393,height:852},isMobile:true,hasTouch:true});await installMocks(page);await page.goto(pathToFileURL(sellerFile).href);await page.waitForFunction(()=>!!window.NOVAAISeller2080);
-  await page.evaluate(market=>{window.__fixtureStore={id:'fixture-store-'+market,store_name:'Preview Store',store_slug:'preview-store',status:'approved',primary_marketplace:market};window.__fixturePermissions=[{marketplace:market,status:'pending'}]},variant.market);
-  await page.evaluate(async(market)=>window.updateUser({id:'isolated-fixture-user',email:'preview@example.invalid',user_metadata:{full_name:'Preview Seller'}}),variant.market);
+  await page.evaluate(({market,restriction})=>{
+   window.__fixtureStore={id:'fixture-store-'+market,store_name:'Preview Store',store_slug:'preview-store',status:restriction==='store-pending'?'pending':'approved',primary_marketplace:market};
+   window.__fixturePermissions=[{marketplace:market,status:restriction==='permission-pending'?'pending':'approved'}];
+  },{market:variant.market,restriction});
+  await page.evaluate(async()=>window.updateUser({id:'isolated-fixture-user',email:'preview@example.invalid',user_metadata:{full_name:'Preview Seller'}}));
   await page.waitForFunction(()=>document.getElementById('sp2080Gate')?.classList.contains('active'));await page.evaluate(()=>window.NOVAAISeller2080.navigate('listings'));
-  if(!(await page.locator('#sp2080Gate').evaluate(el=>el.classList.contains('active'))))throw new Error('Pending permission did not block Listings: '+variant.label);
-  if(await page.locator('#publish').isEnabled())throw new Error('Publish enabled without approved permission: '+variant.label);
+  if(!(await page.locator('#sp2080Gate').evaluate(el=>el.classList.contains('active'))))throw new Error(restriction+' did not block Listings: '+variant.label);
+  if(await page.locator('#publish').isEnabled())throw new Error('Publish enabled without full approval: '+variant.label+'/'+restriction);
   await page.evaluate(other=>window.chooseMarketplace(other),variant.denied);
   if((await page.evaluate(()=>window.NOVAAISellerState())).storeData.primary_marketplace!==variant.market)throw new Error('Cross-market selection changed primary marketplace');
   if(await page.evaluate(()=>window.__mockWrites)!==0)throw new Error('Unexpected mocked database write in restriction test');
-  results.push({marketplace:variant.label,pendingPermissionBlocksListings:true,publishDisabled:true,crossMarketplaceRejected:true,mockWrites:0});await page.close();
+  results.push({marketplace:variant.label,restriction,blocksListings:true,publishDisabled:true,crossMarketplaceRejected:true,mockWrites:0});await page.close();
  }
  console.log('SELLER_PORTAL_2080_REGRESSION_RESULTS='+JSON.stringify(results));
 }finally{await browser.close()}
