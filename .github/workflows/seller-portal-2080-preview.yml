@@ -1,0 +1,34 @@
+name: NOVAAI Seller Portal 2080 isolated preview validation
+on:
+  push:
+    branches:
+      - preview/seller-portal-2080-phase1
+    paths:
+      - previews/seller-portal-2080/**
+      - .github/workflows/seller-portal-2080-preview.yml
+permissions:
+  contents: read
+jobs:
+  android-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright
+        run: npm install --no-save playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Validate Android marketplace variations and capture screenshots
+        working-directory: previews/seller-portal-2080
+        run: node validate.mjs
+      - name: Upload Android preview screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: novaai-seller-portal-2080-android-preview
+          path: previews/seller-portal-2080/artifacts/*.png
+          if-no-files-found: error
+          retention-days: 14
