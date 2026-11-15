@@ -28,9 +28,11 @@ function mockScript(userId="customer-1"){
 }
 async function openPage(browser,userId,viewport){
  const page=await browser.newPage({viewport});
+ page.setDefaultTimeout(10000);
  await page.addInitScript(mockScript(userId));
- await page.route("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",route=>route.fulfill({status:200,contentType:"application/javascript",body:"window.supabase={createClient:()=>window.__client};"}));
- await page.goto(file);
+ await page.route("**/npm/@supabase/supabase-js@2**",route=>route.fulfill({status:200,contentType:"application/javascript",body:"window.supabase={createClient:()=>window.__client};"}));
+ await page.route("https://nxplffvklkopwfjaqexo.supabase.co/**",route=>route.abort());
+ await page.goto(file,{waitUntil:"domcontentloaded"});
  await page.waitForSelector(".nova-store-identity h1");
  await page.waitForSelector("#novaStoreProducts .nova-store-product");
  return page;
