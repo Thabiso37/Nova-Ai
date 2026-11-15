@@ -52,21 +52,17 @@ async function toggleEngagement(sb,table,storeId,userId,button,activeLabel,inact
   if(readError)throw readError;
   if(existing){const {error}=await sb.from(table).delete().eq("store_user_id",storeId).eq("customer_id",userId);if(error)throw error;}
   else {const {error}=await sb.from(table).insert({store_user_id:storeId,customer_id:userId});if(error)throw error;}
-  await refreshEngagement(sb,storeId,userId);
- }catch(error){button.title="This action is not available yet. Please try again later.";console.warn("[NOVAAI Store engagement]",error);}
+  const updated=await refreshEngagement(sb,storeId,userId),status=document.getElementById("storeEngagementStatus");if(status&&updated)status.textContent=existing?(table==="seller_store_likes"?"Like removed.":"You unfollowed this store."):(table==="seller_store_likes"?"You liked this store.":"You are now following this store.");
+ }catch(error){button.title="This action is not available yet. Please try again later.";const status=document.getElementById("storeEngagementStatus");if(status)status.textContent="This action could not be completed. Please try again.";console.warn("[NOVAAI Store engagement]",error);}
  finally{button.disabled=false;}
 }
 async function refreshEngagement(sb,storeId,userId){
- const {data,error}=await sb.rpc("get_seller_store_engagement",{p_store_user_id:storeId});
- const row=Array.isArray(data)?data[0]:data;
- const ok=!error&&!!row;
- const likeCount=document.getElementById("storeLikeCount"),followCount=document.getElementById("storeFollowerCount");
- if(likeCount)likeCount.textContent=ok?String(row.likes_count??0):"—";
- if(followCount)followCount.textContent=ok?String(row.followers_count??0):"—";
+ const {data,error}=await sb.rpc("get_seller_store_engagement",{p_store_user_id:storeId});const row=Array.isArray(data)?data[0]:data,ok=!error&&!!row;
+ const likeCount=document.getElementById("storeLikeCount"),followCount=document.getElementById("storeFollowerCount");if(likeCount)likeCount.textContent=ok?String(row.likes_count??0):"—";if(followCount)followCount.textContent=ok?String(row.followers_count??0):"—";
  const likeButton=document.getElementById("storeLikeButton"),followButton=document.getElementById("storeFollowButton");
- if(likeButton){likeButton.textContent=row?.liked?"Liked":"Like Store";likeButton.setAttribute("aria-pressed",String(!!row?.liked));}
- if(followButton){followButton.textContent=row?.following?"Following":"Follow Store";followButton.setAttribute("aria-pressed",String(!!row?.following));}
- return ok;
+ const heart='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.8c0 5.2-8.8 11-8.8 11S3.2 14 3.2 8.8A4.8 4.8 0 0 1 12 6.1a4.8 4.8 0 0 1 8.8 2.7Z"/></svg>',followIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v7M15.5 11.5h7"/></svg>';
+ if(likeButton){likeButton.innerHTML=heart+'<span>'+(row?.liked?"Liked":"Like Store")+'</span>';likeButton.classList.toggle("is-active",!!row?.liked);likeButton.setAttribute("aria-pressed",String(!!row?.liked));}
+ if(followButton){followButton.innerHTML=followIcon+'<span>'+(row?.following?"Following":"Follow Store")+'</span>';followButton.classList.toggle("is-active",!!row?.following);followButton.setAttribute("aria-pressed",String(!!row?.following));}return ok;
 }
 async function loadStorePage(){
  const root=document.getElementById("novaStorePage");if(!root)return;
@@ -89,11 +85,11 @@ async function loadStorePage(){
   if(store.store_logo_url){const logo=document.createElement("img");logo.className="nova-store-logo";logo.src=store.store_logo_url;logo.alt=store.store_name+" logo";identity.append(logo);}
   const info=document.createElement("div");const title=document.createElement("h1");title.textContent=store.store_name;info.append(title);
   const phone=document.createElement("p");phone.className="nova-store-contact";phone.textContent=store.phone?"Public contact: "+store.phone:"Public contact information not supplied.";info.append(phone);
-  const counts=document.createElement("div");counts.className="nova-store-counts";counts.innerHTML='<span><b id="storeLikeCount">—</b> likes</span><span><b id="storeFollowerCount">—</b> followers</span>';info.append(counts);
+  const counts=document.createElement("div");counts.className="nova-store-counts";counts.innerHTML='<span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.8c0 5.2-8.8 11-8.8 11S3.2 14 3.2 8.8A4.8 4.8 0 0 1 12 6.1a4.8 4.8 0 0 1 8.8 2.7Z"/></svg><b id="storeLikeCount">—</b> likes</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v7M15.5 11.5h7"/></svg><b id="storeFollowerCount">—</b> followers</span>';info.append(counts);
   const actions=document.createElement("div");actions.className="nova-store-actions";
-  const like=document.createElement("button");like.id="storeLikeButton";like.type="button";like.textContent="Like Store";
-  const follow=document.createElement("button");follow.id="storeFollowButton";follow.type="button";follow.textContent="Follow Store";
-  actions.append(like,follow);info.append(actions);identity.append(info);root.append(banner,identity);
+  const like=document.createElement("button");like.id="storeLikeButton";like.type="button";like.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.8c0 5.2-8.8 11-8.8 11S3.2 14 3.2 8.8A4.8 4.8 0 0 1 12 6.1a4.8 4.8 0 0 1 8.8 2.7Z"/></svg><span>Like Store</span>';
+  const follow=document.createElement("button");follow.id="storeFollowButton";follow.type="button";follow.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v7M15.5 11.5h7"/></svg><span>Follow Store</span>';
+  actions.append(like,follow);const engagementStatus=document.createElement("p");engagementStatus.id="storeEngagementStatus";engagementStatus.className="nova-store-engagement-status";engagementStatus.setAttribute("aria-live","polite");info.append(actions,engagementStatus);identity.append(info);root.append(banner,identity);
   const productHeading=document.createElement("h2");productHeading.className="nova-store-products-heading";productHeading.textContent="Products from this Store";root.append(productHeading);
   const productGrid=document.createElement("div");productGrid.className="nova-store-products";productGrid.id="novaStoreProducts";root.append(productGrid);
   const {data:products,error:productsError}=await sb.from("Products").select("id,name,description,price,category,image_url,images,seller_id,status").eq("seller_id",store.user_id).eq("status","approved").order("created_at",{ascending:false});
