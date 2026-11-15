@@ -47,7 +47,7 @@ source=source.replace('console.log("Generated isolated preview files in preview-
 for(const file of fs.readdirSync(out)){if(!/\\.(html|js|json|css)$/i.test(file))continue;const t=fs.readFileSync(path.join(out,file),"utf8");if(/nxplffvklkopwfjaqexo\\.supabase\\.co|sb_publishable_|sb_secret_/i.test(t))throw new Error("Production Supabase endpoint or credential remains in "+file);}
 console.log("Generated isolated PR #39 preview. Production Supabase endpoints and remote image URLs removed; auth, writes, Storage, RPC, orders and analytics disabled.");
 `);
-const temp=path.join(root,"/tmp/novaai-pr39-build.mjs");
+const temp=path.join(root,".pr39-preview-build.tmp.mjs");
 fs.writeFileSync(temp,source);
 const result=spawnSync(process.execPath,[temp],{cwd:root,stdio:"inherit",env:process.env});
 if(result.status!==0)process.exit(result.status||1);
