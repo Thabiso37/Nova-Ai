@@ -92,33 +92,65 @@ create policy "Customers can unfollow own stores" on public.seller_store_follows
   for delete to authenticated
   using (customer_id = (select auth.uid()));
 
--- Aggregate-only public endpoint: returns counts and only the caller's own
--- relationship state. It never returns customer IDs or relationship rows.
-create or replace function public.get_seller_store_engagement(p_store_user_id uuid)
+-- Public RPC wrapper is SECURITY INVOKER. The narrowly scoped aggregate
+-- implementation lives in a non-exposed schema so PostgREST exposes only the
+-- wrapper, not a SECURITY DEFINER function in the public API schema.
+create schema if not exists novaai_private;
+revoke all on schema novaai_private from public;
+grant usage on schema novaai_private to anon, authenticated;
+
+create or replace function novaai_private.get_seller_store_engagement_aggregate(
+  p_store_user_id uuid
+)
 returns table(likes_count bigint, followers_count bigint, liked boolean, following boolean)
 language sql
 stable
 security definer
-set search_path = pg_catalog, public, auth
+set search_path = pg_catalog
 as $function$
   select
-    (select count(*) from public.seller_store_likes l where l.store_user_id = p_store_user_id),
-    (select count(*) from public.seller_store_follows f where f.store_user_id = p_store_user_id),
+    (select count(*)
+       from public.seller_store_likes l
+      where l.store_user_id = p_store_user_id),
+    (select count(*)
+       from public.seller_store_follows f
+      where f.store_user_id = p_store_user_id),
     exists (
-      select 1 from public.seller_store_likes l
-      where l.store_user_id = p_store_user_id
-        and l.customer_id = (select auth.uid())
+      select 1
+        from public.seller_store_likes l
+       where l.store_user_id = p_store_user_id
+         and l.customer_id = (select auth.uid())
     ),
     exists (
-      select 1 from public.seller_store_follows f
-      where f.store_user_id = p_store_user_id
-        and f.customer_id = (select auth.uid())
+      select 1
+        from public.seller_store_follows f
+       where f.store_user_id = p_store_user_id
+         and f.customer_id = (select auth.uid())
     )
   where exists (
-    select 1 from public.seller_stores s
-    where s.user_id = p_store_user_id
-      and s.status = 'approved'
+    select 1
+      from public.seller_stores s
+     where s.user_id = p_store_user_id
+       and s.status = 'approved'
   );
+$function$;
+
+revoke all on function novaai_private.get_seller_store_engagement_aggregate(uuid) from public;
+grant execute on function novaai_private.get_seller_store_engagement_aggregate(uuid)
+  to anon, authenticated;
+
+-- Keep the PostgREST-facing signature stable for the existing frontend.
+-- This wrapper has no elevated privileges; the private helper returns only
+-- approved-store aggregate counts and the caller's own relationship booleans.
+create or replace function public.get_seller_store_engagement(p_store_user_id uuid)
+returns table(likes_count bigint, followers_count bigint, liked boolean, following boolean)
+language sql
+stable
+security invoker
+set search_path = pg_catalog
+as $function$
+  select *
+    from novaai_private.get_seller_store_engagement_aggregate(p_store_user_id);
 $function$;
 
 revoke all on function public.get_seller_store_engagement(uuid) from public;
