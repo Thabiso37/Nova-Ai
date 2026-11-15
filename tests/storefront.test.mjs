@@ -6,6 +6,27 @@ const root=process.cwd();
 const page=fs.readFileSync(path.join(root,"store-page.html"),"utf8");
 const js=fs.readFileSync(path.join(root,"novaai-storefront.js"),"utf8");
 const sql=fs.readFileSync(path.join(root,"docs/sql/20261115-seller-storefront-branding.sql"),"utf8");
+const home=fs.readFileSync(path.join(root,"index.html"),"utf8");
+const retail=fs.readFileSync(path.join(root,"retail.html"),"utf8");
+const motors=fs.readFileSync(path.join(root,"seller-motors-houses.html"),"utf8");
+const seller=fs.readFileSync(path.join(root,"seller.html"),"utf8");
+const branding=fs.readFileSync(path.join(root,"novaai-store-branding.js"),"utf8");
+test("all existing marketplace cards expose a seller identity for View Store links",()=>{
+ for(const [name,source] of [["Home",home],["Retail",retail],["Motors and Property",motors]]){
+  assert.match(source,/data-store-owner-id/,name+" cards missing seller owner id");
+  assert.match(source,/novaai-storefront\.js/,name+" missing Store Page integration");
+ }
+});
+test("Seller Portal branding controls cover upload, preview, replacement and removal",()=>{
+ assert.match(seller,/novaai-store-branding\.js/);
+ assert.match(seller,/NOVAAI_SUPABASE_CLIENT=sb/);
+ assert.match(branding,/novaStoreLogoPreview/);
+ assert.match(branding,/novaStoreBannerPreview/);
+ assert.match(branding,/Upload \/ Replace logo/);
+ assert.match(branding,/Upload \/ Replace banner/);
+ assert.match(branding,/novaStoreLogoRemove/);
+ assert.match(branding,/novaStoreBannerRemove/);
+});
 test("store page is a dedicated page and has no directory route",()=>{
  assert.match(page,/id="novaStorePage"/);
  assert.match(js,/store-page\.html\?store=/);
@@ -17,6 +38,7 @@ test("storefront only queries approved stores and approved seller products",()=>
 });
 test("product cards use existing public detail routes",()=>{
  assert.match(js,/property-details\.html\?id=/);
+ assert.match(js,/index\.html\?product=/);
  assert.match(js,/index\.html\?product=/);
 });
 test("like/follow persistence is unique and customer-scoped",()=>{
