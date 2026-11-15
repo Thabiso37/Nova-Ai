@@ -92,10 +92,10 @@ test("Retail product detail includes description, public seller location, store 
  assert.match(retail,/modalCallSeller/);assert.match(retail,/modalWhatsAppSeller/);assert.match(retail,/property-contact-action/);
 });
 test("Retail video upload UI is separate from photo inputs and Storage proposal is seller-scoped",()=>{
- assert.match(seller,/retailProductVideoFile/);assert.match(seller,/video\/mp4,video\/webm/);assert.match(seller,/50\*1024\*1024/);assert.match(seller,/duration>90/);
+ assert.match(seller,/retailProductVideoFile/);assert.match(seller,/video\/mp4,video\/webm/);assert.match(seller,/50\*1024\*1024/);assert.match(seller,/d>90/);
  assert.match(retail,/modalProductVideoPlayer/);assert.match(retail,/videoWrap\.hidden=!videoUrl/);
  assert.match(videoSql,/product_video_url/);assert.match(videoSql,/novaai-retail-product-videos/);assert.match(videoSql,/primary_marketplace='retail'/);assert.match(videoSql,/mp\.status='approved'/);assert.match(videoSql,/on conflict \(id\) do nothing/i);
 });
 test("Store Page engagement uses professional icons and retains customer authentication restrictions",()=>{
- assert.match(js,/button\.innerHTML=heart/);assert.match(js,/button\.innerHTML=followIcon/);assert.match(js,/canEngage=signedIn&&!ownStore&&engagementReady/);assert.match(js,/storeEngagementStatus/);
+ assert.match(js,/likeButton\.innerHTML=heart/);assert.match(js,/followButton\.innerHTML=followIcon/);assert.match(js,/canEngage=signedIn&&!ownStore&&engagementReady/);assert.match(js,/storeEngagementStatus/);
 });
