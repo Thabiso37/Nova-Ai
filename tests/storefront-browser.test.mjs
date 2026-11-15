@@ -115,6 +115,26 @@ test("A seller cannot like or follow their own store and mobile layout does not 
  }finally{await browser.close();}
 });
 
+
+test("Retail product-detail modal fits a 360px Android viewport without horizontal overflow",async()=>{
+ const browser=await chromium.launch({headless:true});
+ try{
+  const page=await browser.newPage({viewport:{width:360,height:800},deviceScaleFactor:1,isMobile:true,hasTouch:true});
+  const errors=[];page.on("pageerror",e=>errors.push(e.message));
+  await page.goto("http://127.0.0.1:"+server.address().port+"/retail.html",{waitUntil:"domcontentloaded"});
+  await page.waitForFunction(()=>document.getElementById("dbStatus")?.textContent.includes("REAL MARKETPLACE CONNECTED"));
+  await page.locator('[data-open-product="db-40"]').click();
+  await page.waitForSelector("#productModal.open");
+  const dimensions=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,modal:document.querySelector("#productModal .modal-content")?.getBoundingClientRect().width}));
+  assert.ok(dimensions.scroll<=dimensions.width+1,JSON.stringify(dimensions));
+  assert.ok(dimensions.modal<=dimensions.width+1,JSON.stringify(dimensions));
+  assert.equal(await page.locator("#modalProductDescription").textContent(),"T shirt");
+  assert.equal(await page.locator("#modalProductVideo").isHidden(),true);
+  assert.deepEqual(errors,[]);
+  await page.close();
+ }finally{await browser.close();}
+});
+
 test("Retail product-detail modal renders an approved listing and captures a responsive screenshot",async()=>{
  const browser=await chromium.launch({headless:true});
  try{
