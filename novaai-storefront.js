@@ -19,7 +19,7 @@ function addStoreLinks(root,stores){
   const link=document.createElement("a");link.href="./store-page.html?store="+encodeURIComponent(store.store_slug);
   link.className="nova-store-card-link";link.dataset.novaViewStore="";link.textContent="View Store";
   link.setAttribute("aria-label","View "+store.store_name+" store");
-  const host=card.querySelector(".home-product-info,.retail-product-info,.vehicle-card-body,.property-card-info,.property-card-body")||card;
+  const host=card.querySelector(".home-product-info,.retail-product-info,.prodbody,.vehicle-card-body,.property-card-info,.property-card-body")||card;
   host.append(link);
  });
 }
