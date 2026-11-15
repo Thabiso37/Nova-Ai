@@ -34,7 +34,7 @@ test("branding Storage is constrained to the authenticated seller folder",()=>{
 });
 test("Store Page exposes no store description or private seller address",()=>{
  assert.doesNotMatch(page,/store\.description|store_description|delivery_address|street_address/i);
- assert.match(page,/Public contact:/);
+ assert.match(js,/Public contact:/);
  assert.match(js,/eq\("status","approved"\)/);
 });
 test("no existing commerce tables are altered",()=>{
