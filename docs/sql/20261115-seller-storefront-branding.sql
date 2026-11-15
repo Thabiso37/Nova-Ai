@@ -38,7 +38,11 @@ alter table public.seller_store_likes enable row level security;
 alter table public.seller_store_follows enable row level security;
 
 revoke all privileges on table public.seller_store_likes from public, anon, authenticated;
+revoke all privileges (store_user_id, customer_id, created_at)
+  on table public.seller_store_likes from public, anon, authenticated;
 revoke all privileges on table public.seller_store_follows from public, anon, authenticated;
+revoke all privileges (store_user_id, customer_id, created_at)
+  on table public.seller_store_follows from public, anon, authenticated;
 grant select, insert, delete on table public.seller_store_likes to authenticated;
 grant select, insert, delete on table public.seller_store_follows to authenticated;
 
