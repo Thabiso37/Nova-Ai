@@ -28,5 +28,10 @@ jobs:
           node --check novaai-storefront.js
           node --check novaai-store-branding.js
           node --check tests/storefront.test.mjs
+          node --check tests/storefront-browser.test.mjs
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
       - name: Run storefront regression tests
-        run: node --test tests/storefront.test.mjs
+        run: node --test tests/storefront.test.mjs tests/storefront-browser.test.mjs
