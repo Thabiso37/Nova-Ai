@@ -34,8 +34,8 @@ function mockScript(userId="customer-1"){
   "window.__client={auth:{getUser:async()=>({data:{user:{id:userId}},error:null})}," +
   "rpc:async()=>({data:[{likes_count:likes.size,followers_count:follows.size,liked:likes.has(userId),following:follows.has(userId)}],error:null})," +
   "from(table){const q={table,filters:{},action:'select',select(){return this},eq(k,v){this.filters[k]=v;return this}," +
-  "order:async()=>({data:result(table,this.filters),error:null})," +
-  "maybeSingle:async()=>({data:table==='seller_stores'?store:(this.filters.customer_id===userId&&(table==='seller_store_likes'?likes.has(userId):follows.has(userId))?{store_user_id:'seller-1'}:null),error:null})," +
+  "order:async()=>({data:result(table,q.filters),error:null})," +
+  "maybeSingle:async()=>({data:table==='seller_stores'?store:(q.filters.customer_id===userId&&(table==='seller_store_likes'?likes.has(userId):follows.has(userId))?{store_user_id:'seller-1'}:null),error:null})," +
   "insert:async()=>{(table==='seller_store_likes'?likes:follows).add(userId);return {error:null}},delete(){this.action='delete';return this}," +
   "then(resolve,reject){if(this.action==='delete')(table==='seller_store_likes'?likes:follows).delete(userId);return Promise.resolve({data:null,error:null}).then(resolve,reject)}};return q;}};" +
   "window.supabase={createClient:()=>window.__client};})();";
