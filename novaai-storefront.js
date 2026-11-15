@@ -56,18 +56,16 @@ async function toggleEngagement(sb,table,storeId,userId,button,activeLabel,inact
  finally{button.disabled=false;}
 }
 async function refreshEngagement(sb,storeId,userId){
- const [likes,followers,liked,followed]=await Promise.all([
-  sb.from("seller_store_likes").select("customer_id",{count:"exact",head:true}).eq("store_user_id",storeId),
-  sb.from("seller_store_follows").select("customer_id",{count:"exact",head:true}).eq("store_user_id",storeId),
-  userId?sb.from("seller_store_likes").select("customer_id").eq("store_user_id",storeId).eq("customer_id",userId).maybeSingle():Promise.resolve({data:null,error:null}),
-  userId?sb.from("seller_store_follows").select("customer_id").eq("store_user_id",storeId).eq("customer_id",userId).maybeSingle():Promise.resolve({data:null,error:null})
- ]);
+ const {data,error}=await sb.rpc("get_seller_store_engagement",{p_store_user_id:storeId});
+ const row=Array.isArray(data)?data[0]:data;
+ const ok=!error&&!!row;
  const likeCount=document.getElementById("storeLikeCount"),followCount=document.getElementById("storeFollowerCount");
- if(likeCount)likeCount.textContent=likes.error?"—":String(likes.count??0);
- if(followCount)followCount.textContent=followers.error?"—":String(followers.count??0);
+ if(likeCount)likeCount.textContent=ok?String(row.likes_count??0):"—";
+ if(followCount)followCount.textContent=ok?String(row.followers_count??0):"—";
  const likeButton=document.getElementById("storeLikeButton"),followButton=document.getElementById("storeFollowButton");
- if(likeButton){likeButton.textContent=liked.data?"Liked":"Like Store";likeButton.setAttribute("aria-pressed",String(!!liked.data));}
- if(followButton){followButton.textContent=followed.data?"Following":"Follow Store";followButton.setAttribute("aria-pressed",String(!!followed.data));}
+ if(likeButton){likeButton.textContent=row?.liked?"Liked":"Like Store";likeButton.setAttribute("aria-pressed",String(!!row?.liked));}
+ if(followButton){followButton.textContent=row?.following?"Following":"Follow Store";followButton.setAttribute("aria-pressed",String(!!row?.following));}
+ return ok;
 }
 async function loadStorePage(){
  const root=document.getElementById("novaStorePage");if(!root)return;
@@ -101,10 +99,10 @@ async function loadStorePage(){
   if(productsError)throw productsError;
   (products||[]).forEach(p=>productGrid.append(renderProduct(p)));
   if(!(products||[]).length){const empty=document.createElement("p");empty.className="nova-store-empty";empty.textContent="This store has no public products available right now.";productGrid.append(empty);}
-  const engagementTablesReady=await refreshEngagement(sb,store.user_id,user?.id);
+  const engagementReady=await refreshEngagement(sb,store.user_id,user?.id);
   const signedIn=!!user;
-  [like,follow].forEach(button=>{button.disabled=!signedIn;button.title=signedIn?"":"Sign in to interact with this store.";});
-  if(!signedIn){const hint=document.createElement("p");hint.className="nova-store-signin-hint";hint.textContent="Sign in to like or follow this store.";actions.after(hint);}
+  [like,follow].forEach(button=>{button.disabled=!signedIn||!engagementReady;button.title=!signedIn?"Sign in to interact with this store.":!engagementReady?"Store engagement setup is awaiting approval.":"";});
+  if(!signedIn||!engagementReady){const hint=document.createElement("p");hint.className="nova-store-signin-hint";hint.textContent=!signedIn?"Sign in to like or follow this store.":"Store likes and follows will become available after the database setup is approved.";actions.after(hint);}
   like.addEventListener("click",()=>toggleEngagement(sb,"seller_store_likes",store.user_id,user.id,like,"Liked","Like Store"));
   follow.addEventListener("click",()=>toggleEngagement(sb,"seller_store_follows",store.user_id,user.id,follow,"Following","Follow Store"));
  }catch(error){console.error("[NOVAAI Store Page]",error);root.textContent="The Store Page could not be loaded. Please try again later.";}
