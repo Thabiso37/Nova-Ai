@@ -33,7 +33,7 @@ for(const page of pages){
   fs.mkdirSync(path.dirname(to),{recursive:true});
   let content=fs.readFileSync(from);
   if(/\\.(js|css|html)$/i.test(rel)){
-   let text=content.toString("utf8").replace(/https:\\\\/\\\\/nxplffvklkopwfjaqexo\\\\.supabase\\\\.co/g,"https://blocked.invalid").replace(/sb_(?:publishable|secret)_[A-Za-z0-9_-]+/g,"PREVIEW_NO_KEY").replace(/eyJ[A-Za-z0-9_-]{20,}\\\\.[A-Za-z0-9_-]{20,}\\\\.[A-Za-z0-9_-]{10,}/g,"PREVIEW_NO_KEY");
+   let text=content.toString("utf8").replaceAll("https://nxplffvklkopwfjaqexo.supabase.co","https://blocked.invalid").replace(/sb_(?:publishable|secret)_[A-Za-z0-9_-]+/g,"PREVIEW_NO_KEY").replace(/eyJ[A-Za-z0-9_-]{20,}\\.[A-Za-z0-9_-]{20,}\\.[A-Za-z0-9_-]{10,}/g,"PREVIEW_NO_KEY");
    if(/nxplffvklkopwfjaqexo\\.supabase\\.co|sb_publishable_|sb_secret_/i.test(text))throw new Error("Production Supabase endpoint/key remains in preview asset "+rel);
    content=Buffer.from(text);
   }
