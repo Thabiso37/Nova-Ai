@@ -1342,7 +1342,7 @@ function renderRetailMarketGrid(list) {
   document.getElementById("retailProductsGrid").innerHTML = list.length ? list.map(p => {
     const imgList = Array.isArray(p.images) && p.images.length ? p.images : (p.image_url ? [p.image_url] : []);
     const firstImg = safeImg(imgList[0]);
-    return `<article class="product product-open-card" data-open-product="${esc(p.id)}" tabindex="0" aria-label="Open ${esc(p.name)} details">
+    return `<article class="product product-open-card" data-store-owner-id="${esc(p.sellerId)}" data-open-product="${esc(p.id)}" tabindex="0" aria-label="Open ${esc(p.name)} details">
 <div class="prodimg" style="position:relative">
   <button type="button" class="wishlist-btn" data-wishlist="${esc(p.id)}" aria-label="Add to wishlist" style="position:absolute;top:10px;right:10px;z-index:2;width:34px;height:34px;border:1px solid #e1e6ee;border-radius:50%;background:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.1)">♡</button>
   ${firstImg?`<img loading="lazy" src="${esc(firstImg)}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}
@@ -1373,7 +1373,7 @@ function render(){
   document.getElementById("products").innerHTML=list.length?list.map(p=>{
     const imgList = Array.isArray(p.images) && p.images.length ? p.images : (p.image_url ? [p.image_url] : []);
     const firstImg = safeImg(imgList[0]);
-    return `<article class="product product-open-card" data-open-product="${esc(p.id)}" tabindex="0" aria-label="Open ${esc(p.name)} details">
+    return `<article class="product product-open-card" data-store-owner-id="${esc(p.sellerId)}" data-open-product="${esc(p.id)}" tabindex="0" aria-label="Open ${esc(p.name)} details">
 <div class="prodimg" style="position:relative">
   <button type="button" class="wishlist-btn" data-wishlist="${esc(p.id)}" aria-label="Add to wishlist" style="position:absolute;top:10px;right:10px;z-index:2;width:34px;height:34px;border:1px solid #e1e6ee;border-radius:50%;background:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.1)">♡</button>
   ${firstImg?`<img loading="lazy" src="${esc(firstImg)}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:""}
@@ -2226,6 +2226,7 @@ body.wishlist-view #wishlistAdSlot{display:none!important}
 @media(prefers-reduced-motion:reduce){.nova-footer-ad-image{transition:none}}
 </style>
 <script src="./novaai-product-sharing.js?v=3" defer></script>
+<script src="./novaai-storefront.js?v=1"></script>
 </body>
 </html>
 
