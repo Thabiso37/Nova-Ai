@@ -9,7 +9,7 @@ const variants=[{market:'retail',label:'Retail',tool:'My Products',denied:'motor
 const sizes=[{width:393,height:852,label:'393x852'},{width:360,height:800,label:'360x800'},{width:1440,height:1000,label:'desktop-1440x1000'}];
 const mockSupabase=`window.__mockWrites=0;window.supabase={createClient:()=>({
  auth:{getSession:async()=>({data:{session:null},error:null}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),signInWithPassword:async()=>({data:{user:{id:'isolated-fixture-user',email:'preview@example.invalid',user_metadata:{full_name:'Preview Seller'}}},error:null}),signOut:async()=>({error:null}),resetPasswordForEmail:async()=>({error:null}),updateUser:async()=>({data:{user:window.__fixtureUser},error:null})},
- from:(table)=>{const q={select(){return this},eq(){return this},in(){return this},order:async()=>({data:[],error:null}),maybeSingle:async()=>({data:table==='seller_stores'?window.__fixtureStore:table==='seller_public_locations'?(window.__fixtureLocation||null):null,error:null}),single:async()=>({data:null,error:null}),insert(){window.__mockWrites++;return this},update(){window.__mockWrites++;return this},delete(){window.__mockWrites++;return this},then(resolve){resolve({data:table==='seller_marketplace_permissions'?(window.__fixturePermissions||[]):[],error:null})}};return q},
+ from:(table)=>{const q={select(){return this},eq(k,v){if(table==='seller_public_locations')window.__locationLookupFilter={column:k,value:v};return this},in(){return this},order:async()=>({data:[],error:null}),maybeSingle:async()=>({data:table==='seller_stores'?window.__fixtureStore:table==='seller_public_locations'?(window.__fixtureLocation||null):null,error:null}),single:async()=>({data:null,error:null}),insert(){window.__mockWrites++;return this},update(){window.__mockWrites++;return this},delete(){window.__mockWrites++;return this},then(resolve){resolve({data:table==='seller_marketplace_permissions'?(window.__fixturePermissions||[]):[],error:null})}};return q},
  rpc:async()=>({data:[],error:null}),storage:{from:()=>({upload:async()=>({error:null}),getPublicUrl:()=>({data:{publicUrl:''}})})}
 })};`;
 const results=[];
@@ -38,6 +38,7 @@ try{
   if(!(await page.locator('#sp2080Store').evaluate(el=>el.classList.contains('active')))||!(await page.locator('#sellerPublicLocationPanel').isVisible()))throw new Error('My Store/Public Location workflow not visible');
   await page.waitForFunction(()=>document.getElementById('sellerLocProvince')?.value==='Gauteng'&&document.getElementById('sellerLocCity')?.value==='Pretoria'&&document.getElementById('sellerLocSuburb')?.value==='Centurion');
   if(!(await page.locator('#sellerLocPublic').isChecked()))throw new Error('Saved public-location consent was not restored');
+  if(await page.evaluate(()=>window.__locationLookupFilter?.column)!=='user_id'||await page.evaluate(()=>window.__locationLookupFilter?.value)!=='isolated-fixture-user')throw new Error('Public location query was not scoped to the authenticated seller');
   const approvedLocationStatus=await page.locator('#sellerLocStatus').innerText();
   if(!approvedLocationStatus.includes('Approved location area')||!approvedLocationStatus.includes('GPS pin unavailable')||approvedLocationStatus.includes('visible in Nearby Search'))throw new Error('Approved location status is inaccurate when coordinates are absent: '+approvedLocationStatus);
   await page.evaluate(()=>window.loadSellerPublicLocation());
@@ -61,10 +62,10 @@ try{
   const page=await browser.newPage({viewport:{width:393,height:852},isMobile:true,hasTouch:true});await installMocks(page);await page.goto(pathToFileURL(sellerFile).href);await page.waitForFunction(()=>!!window.NOVAAISeller2080);
   await page.evaluate(({market,restriction})=>{
    window.__fixtureStore={id:'fixture-store-'+market,store_name:'Preview Store',store_slug:'preview-store',status:restriction==='store-pending'?'pending':'approved',primary_marketplace:market};
-   window.__fixturePermissions=[{marketplace:market,status:restriction==='permission-pending'?'pending':'approved'}];
+   window.__fixturePermissions=[{marketplace:market,status:restriction==='permission-pending'?'pending':'approved'}];window.__fixtureLocation={province:'Gauteng',city:'Pretoria',suburb:'Centurion',latitude:null,longitude:null,public_location_enabled:true,approval_status:'pending'};
   },{market:variant.market,restriction});
   await page.evaluate(async()=>window.updateUser({id:'isolated-fixture-user',email:'preview@example.invalid',user_metadata:{full_name:'Preview Seller'}}));
-  await page.waitForFunction(()=>document.getElementById('sp2080Gate')?.classList.contains('active'));await page.evaluate(()=>window.NOVAAISeller2080.navigate('listings'));
+  await page.waitForFunction(()=>document.getElementById('sp2080Gate')?.classList.contains('active'));await page.evaluate(()=>window.NOVAAISeller2080.navigate('store'));await page.waitForFunction(()=>document.getElementById('sellerLocStatus')?.textContent.includes('Pending administrator approval'));if((await page.locator('#sellerLocStatus').innerText()).includes('Approved location area'))throw new Error('Pending public location was presented as approved');await page.evaluate(()=>window.NOVAAISeller2080.navigate('listings'));
   if(!(await page.locator('#sp2080Gate').evaluate(el=>el.classList.contains('active'))))throw new Error(restriction+' did not block Listings: '+variant.label);
   if(await page.locator('#publish').isEnabled())throw new Error('Publish enabled without full approval: '+variant.label+'/'+restriction);
   await page.evaluate(other=>window.chooseMarketplace(other),variant.denied);
