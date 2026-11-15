@@ -1,10 +1,20 @@
-import test from "node:test";
+import test, {after} from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import path from "node:path";
-import {pathToFileURL} from "node:url";
+import {createServer} from "node:http";
 import {chromium} from "playwright";
 
-const file=pathToFileURL(path.resolve("store-page.html")).href+"?store=raider-retail";
+const server=createServer((req,res)=>{
+ const pathname=new URL(req.url,"http://127.0.0.1").pathname;
+ const target=pathname==="/novaai-storefront.js"?"novaai-storefront.js":pathname==="/store-page.html"?"store-page.html":null;
+ if(!target){res.writeHead(404);res.end("Not found");return;}
+ res.setHeader("Content-Type",target.endsWith(".js")?"application/javascript":"text/html");
+ res.end(fs.readFileSync(path.resolve(target)));
+});
+await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));
+const file="http://127.0.0.1:"+server.address().port+"/store-page.html?store=raider-retail";
+after(()=>new Promise(resolve=>server.close(resolve)));
 const products=[
  {id:101,name:"Retail item",price:120,category:"Clothing",image_url:"",images:[],seller_id:"seller-1",status:"approved"},
  {id:102,name:"Property item",price:950000,category:"Property For Sale",image_url:"",images:[],seller_id:"seller-1",status:"approved"}
