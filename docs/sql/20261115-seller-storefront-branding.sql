@@ -37,10 +37,10 @@ create index if not exists seller_store_follows_customer_id_idx
 alter table public.seller_store_likes enable row level security;
 alter table public.seller_store_follows enable row level security;
 
-revoke all on public.seller_store_likes from anon, public;
-revoke all on public.seller_store_follows from anon, public;
-grant select, insert, delete on public.seller_store_likes to authenticated;
-grant select, insert, delete on public.seller_store_follows to authenticated;
+revoke all privileges on table public.seller_store_likes from public, anon, authenticated;
+revoke all privileges on table public.seller_store_follows from public, anon, authenticated;
+grant select, insert, delete on table public.seller_store_likes to authenticated;
+grant select, insert, delete on table public.seller_store_follows to authenticated;
 
 drop policy if exists "Public can count store likes" on public.seller_store_likes;
 drop policy if exists "Customers can view own store likes" on public.seller_store_likes;
