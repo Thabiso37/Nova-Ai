@@ -1412,7 +1412,7 @@ function openProductDetails(p) {
   document.getElementById("modalProductPrice").textContent=cash(p.price);
   document.getElementById("modalProductBrand").textContent=p.seller||"Independent seller";
   document.getElementById("modalProductCategory").textContent=p.category||"Marketplace product";
-  document.getElementById("modalSellerName").textContent=p.seller||"Independent seller";
+  document.getElementById("modalSellerName").textContent=(sellerStoresById[String(p.sellerId)]?.store_name)||p.seller||"Independent seller";
   document.getElementById("modalProductDescription").textContent=String(p.description??"").trim()?String(p.description):"The seller has not supplied a product description.";
   document.getElementById("modalProductPriceTop").textContent=cash(p.price);
   const videoWrap=document.getElementById("modalProductVideo"),videoPlayer=document.getElementById("modalProductVideoPlayer"),videoUrl=/^https:\/\//i.test(String(p.productVideoUrl||""))?String(p.productVideoUrl):"";
