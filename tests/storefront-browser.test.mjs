@@ -28,13 +28,21 @@ function mockScript(userId="customer-1"){
 }
 async function openPage(browser,userId,viewport){
  const page=await browser.newPage({viewport});
+ const pageErrors=[];
+ page.on("pageerror",error=>pageErrors.push(error.message));
+ page.on("console",message=>{if(message.type()==="error")pageErrors.push(message.text());});
  page.setDefaultTimeout(10000);
  await page.addInitScript(mockScript(userId));
  await page.route("**/npm/@supabase/supabase-js@2**",route=>route.fulfill({status:200,contentType:"application/javascript",body:"window.supabase={createClient:()=>window.__client};"}));
  await page.route("https://nxplffvklkopwfjaqexo.supabase.co/**",route=>route.abort());
  await page.goto(file,{waitUntil:"domcontentloaded"});
- await page.waitForSelector(".nova-store-identity h1");
- await page.waitForSelector("#novaStoreProducts .nova-store-product");
+ try{
+  await page.waitForSelector(".nova-store-identity h1",{timeout:8000});
+  await page.waitForSelector("#novaStoreProducts .nova-store-product",{timeout:8000});
+ }catch(error){
+  const state=await page.locator("#novaStorePage").textContent().catch(()=>"<missing store root>");
+  throw new Error("Store Page did not render: "+state+"; browser errors: "+pageErrors.join(" | "));
+ }
  return page;
 }
 test("Store Page renders approved identity, public phone, product details and accurate counts",async()=>{
