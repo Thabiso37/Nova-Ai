@@ -1,17 +1,20 @@
 let sellerLocationLoadSequence=0;
 let sellerLocationRecord=null;
+let sellerLocationLoadedUserId=null;
 
 async function loadSellerPublicLocation(){
  const box=document.getElementById("sellerLocStatus");
  const targetUser=user;
  if(!targetUser){if(box)box.textContent="Sign in to manage your public seller location.";return null;}
  const request=++sellerLocationLoadSequence;
+ sellerLocationLoadedUserId=null;
  if(box)box.textContent="Loading your saved public location…";
  const {data,error}=await sb.from("seller_public_locations")
   .select("province,city,suburb,latitude,longitude,public_location_enabled,approval_status")
   .eq("user_id",targetUser.id).maybeSingle();
  if(request!==sellerLocationLoadSequence||user!==targetUser)return null;
  if(error){if(box)box.textContent="Location settings could not be loaded. Please try again.";console.error("[NOVAAI seller public location]",error);return null;}
+ sellerLocationLoadedUserId=targetUser.id;
  const v=data||{};
  sellerLocationRecord=data?{...v}:null;
  const set=(id,value)=>{const el=document.getElementById(id);if(el)el.value=value??"";};
@@ -53,6 +56,10 @@ document.getElementById("sellerLocUseGps").addEventListener("click",function(){
 document.getElementById("sellerLocSave").addEventListener("click",async function(){
  const box=document.getElementById("sellerLocStatus"),targetUser=user;
  if(!targetUser){box.textContent="Sign in before saving your location.";return;}
+ if(sellerLocationLoadedUserId!==targetUser.id){
+  await loadSellerPublicLocation();
+  if(user!==targetUser||sellerLocationLoadedUserId!==targetUser.id){box.textContent="Your saved location could not be confirmed. Please reload My Store before saving.";return;}
+ }
  const lat=document.getElementById("sellerLocLatitude").value.trim(),lon=document.getElementById("sellerLocLongitude").value.trim();
  const province=document.getElementById("sellerLocProvince").value||null;
  const city=document.getElementById("sellerLocCity").value.trim()||null;
