@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script src="./novaai-store-branding.js?v=1" defer></script>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>NOVAAI | Seller Portals</title>
 <style>
@@ -171,7 +172,7 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
 #myProductsList .seller-property-card:nth-child(2) .seller-property-body::after{content:none}
 </style>
 <link rel="stylesheet" href="seller-portal-2080.css?v=1">
-</head>
+<style>#retailVideoField[hidden]{display:none!important}.seller-video-help{display:block;margin-top:6px;color:#667085;font-size:11px;line-height:1.5}.seller-video-preview{display:block;width:min(100%,280px);aspect-ratio:1/1;object-fit:contain;margin-top:10px;border-radius:12px;background:#10284b}.seller-video-preview[hidden]{display:none!important}.seller-video-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:9px}#retailVideoProgress{width:min(100%,220px);height:9px;accent-color:#174ea6}#retailVideoStatus{font-size:12px;color:#475467}</style></head>
 <body>
 <div class="top">🛡️ NOVA AI TRUST SHIELD · SECURE MARKETPLACE PORTAL</div>
 <header><div class="head"><a class="logo" href="index.html">NOVA<span>AI</span></a><a class="btn outline" href="index.html">← Marketplace</a></div></header>
@@ -303,6 +304,7 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
   <input id="photoFiles" type="file" accept="image/*" multiple>
 </div>  
 
+      <div class="field" id="retailVideoField"><label for="retailProductVideoFile">Optional product video (Retail only)</label><input id="retailProductVideoFile" type="file" accept="video/mp4,video/webm"><small class="seller-video-help">MP4 or WebM · up to 50 MB · maximum 90 seconds. Preview before saving. Separate from product photographs.</small><video id="retailProductVideoPreview" class="seller-video-preview" controls playsinline preload="metadata" hidden></video><div class="seller-video-controls"><progress id="retailVideoProgress" max="100" hidden></progress><span id="retailVideoStatus" role="status" aria-live="polite"></span><button type="button" id="retailVideoRemove" class="btn outline" hidden>Remove video</button></div></div>
       <div class="field">
         <label>Description *</label>
         <textarea id="description" required></textarea>
@@ -376,6 +378,7 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const sb = window.supabase.createClient("https://nxplffvklkopwfjaqexo.supabase.co","sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ");
+window.NOVAAI_SUPABASE_CLIENT=sb;
 const retailCats = ["Accessories","Clothing Shoes & Accessories","Cellphones","Computers & Laptops","Electronics","Fashion","Groceries","Home & Living","Office & Stationery","Sports","TV Audio & Video","Toys & Games"];
 const motorCategories = ["Auto","Motors & Vehicles"];
 const propertyCategories = ["Property For Sale","Property To Rent"];
@@ -474,6 +477,7 @@ function setListingMarket(market) {
   document.getElementById("marketMotorsTab").classList.toggle("hidden", market !== "motors");
   document.getElementById("marketPropertyTab").classList.toggle("hidden", market !== "property");
   document.getElementById("sellerInventoryHeading").textContent = "Manage your " + marketplaceLabels[market] + " inventory";
+  updateRetailVideoVisibility();
   document.getElementById("myMarketplaceListingsHeading").textContent = "My " + marketplaceLabels[market] + " Listings";
   const category = document.getElementById("category");
   const label = document.getElementById("categoryLabel");
@@ -526,9 +530,17 @@ let faceBlob = null, user = null, storeData = null;
 let editingProductId = null;
 let editingProductCategory = null;
 let editingProductMarket = null;
+let editingProductVideoUrl="";let retailVideoOriginalUrl="";let removeExistingRetailVideo=false;let retailVideoObjectUrl="";
 let authVersion = 0;
 window.NOVAAISellerState = () => ({user,storeData,marketplacePermissions});
 setListingMarket(selectedMarket || "retail");
+function updateRetailVideoVisibility(){const field=document.getElementById("retailVideoField");if(field)field.hidden=listingMarket!=="retail";}
+function resetRetailVideoEditor(){const input=document.getElementById("retailProductVideoFile"),preview=document.getElementById("retailProductVideoPreview"),status=document.getElementById("retailVideoStatus"),progress=document.getElementById("retailVideoProgress"),remove=document.getElementById("retailVideoRemove");if(input)input.value="";if(preview){preview.pause();preview.removeAttribute("src");preview.load();preview.hidden=true;}if(status)status.textContent="";if(progress){progress.hidden=true;progress.removeAttribute("value");}if(remove)remove.hidden=true;if(retailVideoObjectUrl){URL.revokeObjectURL(retailVideoObjectUrl);retailVideoObjectUrl="";}editingProductVideoUrl="";retailVideoOriginalUrl="";removeExistingRetailVideo=false;}
+async function inspectRetailVideo(file){if(!file)return;if(!["video/mp4","video/webm"].includes(file.type))throw new Error("Choose an MP4 or WebM video.");if(file.size>50*1024*1024)throw new Error("Video must be 50 MB or smaller.");const url=URL.createObjectURL(file);return new Promise((resolve,reject)=>{const video=document.createElement("video");video.preload="metadata";video.onloadedmetadata=()=>{const d=Number(video.duration);URL.revokeObjectURL(url);if(!Number.isFinite(d)||d<=0||d>90)reject(new Error("Video must be no longer than 90 seconds."));else resolve(d);};video.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("The selected video could not be read."));};video.src=url;});}
+function retailVideoPathFromUrl(url){try{const u=new URL(url),marker="/storage/v1/object/public/novaai-retail-product-videos/";const i=u.pathname.indexOf(marker);return i<0?null:decodeURIComponent(u.pathname.slice(i+marker.length));}catch(e){return null;}}
+const retailVideoInput=document.getElementById("retailProductVideoFile");if(retailVideoInput)retailVideoInput.addEventListener("change",async()=>{const file=retailVideoInput.files?.[0],status=document.getElementById("retailVideoStatus"),preview=document.getElementById("retailProductVideoPreview"),remove=document.getElementById("retailVideoRemove");if(!file)return;try{const duration=await inspectRetailVideo(file);if(retailVideoObjectUrl)URL.revokeObjectURL(retailVideoObjectUrl);retailVideoObjectUrl=URL.createObjectURL(file);preview.src=retailVideoObjectUrl;preview.hidden=false;remove.hidden=false;status.textContent="Video ready · "+Math.round(duration)+" seconds · preview before saving.";}catch(error){retailVideoInput.value="";preview.hidden=true;status.textContent=error.message;}});
+const retailVideoRemoveButton=document.getElementById("retailVideoRemove");if(retailVideoRemoveButton)retailVideoRemoveButton.addEventListener("click",()=>{removeExistingRetailVideo=true;editingProductVideoUrl="";const input=document.getElementById("retailProductVideoFile");if(input)input.value="";const preview=document.getElementById("retailProductVideoPreview");preview.pause();preview.removeAttribute("src");preview.load();preview.hidden=true;document.getElementById("retailVideoStatus").textContent="Video will be removed when you save this Retail listing.";retailVideoRemoveButton.hidden=true;});
+
 function switchPortal() { return; }
 const video = document.getElementById("webcam"), canvas = document.getElementById("snapshotCanvas"), preview = document.getElementById("facePreview");
 
@@ -840,12 +852,15 @@ document.getElementById("sellerForm").onsubmit = async e => {
   }
 
   const files = document.getElementById("photoFiles").files;
-  let imgs = [];
+  const retailVideoFile=document.getElementById("retailProductVideoFile")?.files?.[0]||null;
+  let imgs = [],videoUrlToSave=editingProductVideoUrl,uploadedRetailVideoPath=null;
+  const previousRetailVideoUrl=retailVideoOriginalUrl;
 
   submitButton.disabled = true;
   msgEl.textContent = "Checking product details...";
 
   try {
+    if(listingMarket==="retail"&&retailVideoFile){await inspectRetailVideo(retailVideoFile);const vs=document.getElementById("retailVideoStatus"),progress=document.getElementById("retailVideoProgress");vs.textContent="Uploading video…";progress.hidden=false;progress.removeAttribute("value");const ext=retailVideoFile.type==="video/webm"?"webm":"mp4";uploadedRetailVideoPath=user.id+"/"+Date.now()+"-retail-video."+ext;const {error:ve}=await sb.storage.from("novaai-retail-product-videos").upload(uploadedRetailVideoPath,retailVideoFile,{upsert:false,contentType:retailVideoFile.type});if(ve)throw new Error("Video upload is awaiting the dedicated bucket and seller-owner Storage policies. No existing image bucket permissions were changed.");videoUrlToSave=sb.storage.from("novaai-retail-product-videos").getPublicUrl(uploadedRetailVideoPath).data.publicUrl;progress.hidden=true;vs.textContent="Video uploaded. Saving listing…";}else if(listingMarket==="retail"&&removeExistingRetailVideo){videoUrlToSave=null;}
     // Editing an existing rejected product
     if (editingProductId !== null) {
       if(!requireMarketplaceAccess(editingProductMarket||listingMarket)) throw new Error("You are not authorised to edit listings in this marketplace.");
@@ -903,24 +918,13 @@ document.getElementById("sellerForm").onsubmit = async e => {
       const categoryToSave = editingProductId && editingProductMarket === "retail"
         ? editingProductCategory
         : document.getElementById("category").value;
-      const { error } = await sb
-        .from("Products")
-        .update({
-          name: document.getElementById("productName").value.trim(),
-          description: (document.getElementById("description").value.trim() + marketDetailsFromForm()).trim(),
-          price: Number(document.getElementById("price").value),
-          category: categoryToSave,
-          image_url: imgs[0],
-          images: imgs,
-          seller_name: document.getElementById("sellerName").value.trim(),
-          status: "pending",
-          rejection_reason: null
-        })
-        .eq("id", editingProductId)
-        .eq("seller_id", user.id);
+      const updatePayload={name:document.getElementById("productName").value.trim(),description:(document.getElementById("description").value.trim()+marketDetailsFromForm()).trim(),price:Number(document.getElementById("price").value),category:categoryToSave,image_url:imgs[0],images:imgs,seller_name:document.getElementById("sellerName").value.trim(),status:"pending",rejection_reason:null};
+      if(listingMarket==="retail"&&(retailVideoFile||removeExistingRetailVideo))updatePayload.product_video_url=videoUrlToSave;
+      const {error}=await sb.from("Products").update(updatePayload).eq("id",editingProductId).eq("seller_id",user.id);
 
       if (error) throw error;
 
+      if(previousRetailVideoUrl&&(retailVideoFile||removeExistingRetailVideo)){const oldPath=retailVideoPathFromUrl(previousRetailVideoUrl);if(oldPath){const {error:removeError}=await sb.storage.from("novaai-retail-product-videos").remove([oldPath]);if(removeError)document.getElementById("retailVideoStatus").textContent="Listing saved, but the previous video could not be deleted from Storage.";}}
       editingProductId = null;
       editingProductCategory = null;
       editingProductMarket = null;
@@ -949,17 +953,9 @@ document.getElementById("sellerForm").onsubmit = async e => {
         imgs.push(urlData.publicUrl);
       }
 
-      const { error } = await sb.from("Products").insert({
-        name: document.getElementById("productName").value.trim(),
-        description: (document.getElementById("description").value.trim() + marketDetailsFromForm()).trim(),
-        price: Number(document.getElementById("price").value),
-        category: document.getElementById("category").value,
-        image_url: imgs[0],
-        images: imgs,
-        seller_name: document.getElementById("sellerName").value.trim(),
-        seller_id: user.id,
-        status: "pending"
-      });
+      const newProductPayload={name:document.getElementById("productName").value.trim(),description:(document.getElementById("description").value.trim()+marketDetailsFromForm()).trim(),price:Number(document.getElementById("price").value),category:document.getElementById("category").value,image_url:imgs[0],images:imgs,seller_name:document.getElementById("sellerName").value.trim(),seller_id:user.id,status:"pending"};
+      if(listingMarket==="retail"&&retailVideoFile)newProductPayload.product_video_url=videoUrlToSave;
+      const {error}=await sb.from("Products").insert(newProductPayload);
 
       if (error) throw error;
 
@@ -967,6 +963,7 @@ document.getElementById("sellerForm").onsubmit = async e => {
     }
 
     form.reset();
+    resetRetailVideoEditor();
     preview.style.display = "none";
     faceBlob = null;
 
@@ -977,6 +974,8 @@ document.getElementById("sellerForm").onsubmit = async e => {
     await loadMyProducts();
 
   } catch (error) {
+    if(uploadedRetailVideoPath){try{await sb.storage.from("novaai-retail-product-videos").remove([uploadedRetailVideoPath]);}catch(cleanupError){}}
+    const videoStatus=document.getElementById("retailVideoStatus");if(videoStatus&&retailVideoFile)videoStatus.textContent=error.message;
     msgEl.textContent = "Could not save product: " + error.message;
   } finally {
     submitButton.disabled = false;
@@ -1085,12 +1084,9 @@ function changeSellerListingImage(button, direction) {
 async function editProduct(id) {
   if (!user) return;
 
-  const { data: product, error } = await sb
-    .from("Products")
-    .select("id,name,description,price,category,seller_name,status")
-    .eq("id", id)
-    .eq("seller_id", user.id)
-    .single();
+  let productResult=await sb.from("Products").select("id,name,description,price,category,seller_name,status,product_video_url").eq("id",id).eq("seller_id",user.id).single();
+  if(productResult.error&&/product_video_url|column .* does not exist|schema cache/i.test(productResult.error.message||""))productResult=await sb.from("Products").select("id,name,description,price,category,seller_name,status").eq("id",id).eq("seller_id",user.id).single();
+  const {data:product,error}=productResult;
 
   if (error || !product) {
     document.getElementById("myProductsMsg").textContent =
@@ -1124,6 +1120,7 @@ async function editProduct(id) {
     categorySelect.add(new Option(product.category, product.category));
   }
   categorySelect.value = product.category || "";
+  editingProductVideoUrl=product.product_video_url||"";retailVideoOriginalUrl=editingProductVideoUrl;removeExistingRetailVideo=false;const vp=document.getElementById("retailProductVideoPreview"),vs=document.getElementById("retailVideoStatus"),vr=document.getElementById("retailVideoRemove");if(market==="retail"&&editingProductVideoUrl){vp.src=editingProductVideoUrl;vp.hidden=false;vr.hidden=false;vs.textContent="Current product video. Choose a replacement or remove it.";}else{vp.hidden=true;vr.hidden=true;vs.textContent="";}
   document.getElementById("sellerName").value = product.seller_name || "";
 
   document.getElementById("publish").textContent =
@@ -1592,6 +1589,7 @@ async function updateFulfillmentStatus(orderId) {
 </script>
 <script src="seller-location.js?v=2"></script>
 <script src="seller-portal-2080-ui.js?v=2"></script>
+
 </body>
 </html>
 

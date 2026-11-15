@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10284b"><title>NOVAAI | Store</title>
+<style>
+:root{--navy:#10284b;--blue:#174ea6;--yellow:#f5b900;--ink:#172033;--muted:#667085;--line:#e3e8f0}
+*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:var(--ink);font-family:Inter,system-ui,Arial,sans-serif;padding-bottom:32px}
+a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+header{background:var(--navy);color:#fff;padding:14px max(16px,calc((100% - 1100px)/2));display:flex;justify-content:space-between;align-items:center}
+.brand{font-size:22px;font-weight:900}.brand span{color:var(--yellow)}.back{font-size:13px;font-weight:700}
+main{max-width:1100px;margin:20px auto;padding:0 16px}
+.nova-store-banner{height:clamp(130px,28vw,260px);background:#dbe6f6;border-radius:16px;overflow:hidden}.nova-store-banner img{width:100%;height:100%;object-fit:cover}
+.nova-store-identity{display:flex;gap:16px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:-12px;position:relative}
+.nova-store-logo{width:88px;height:88px;object-fit:cover;border-radius:14px;border:1px solid var(--line);background:#f5f7fb}
+h1{margin:0;color:var(--navy);font-size:clamp(20px,4vw,30px)}.nova-store-contact{margin:8px 0;color:var(--muted);font-size:13px}
+.nova-store-counts{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px}.nova-store-counts>span{display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid #e3eaf3;border-radius:11px;background:#f7f9fc;color:#526174;font-size:12px;font-weight:750}.nova-store-counts svg{width:17px;height:17px;fill:none;stroke:#174ea6;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.nova-store-counts b{color:var(--navy);font-size:15px}
+.nova-store-actions{display:flex;gap:9px;margin-top:13px;flex-wrap:wrap}.nova-store-actions button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:43px;padding:10px 16px;border:1px solid #174ea6;border-radius:11px;background:#174ea6;color:white;font-weight:850;font-size:13px;box-shadow:0 4px 12px #174ea61c}.nova-store-actions button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.nova-store-actions button[aria-pressed=true]{background:#fff4c7;color:#10284b;border-color:#f5b900}.nova-store-actions button:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}.nova-store-engagement-status{min-height:18px;margin:8px 0 0;color:#18794e;font-size:11px;font-weight:750}
+@media(max-width:600px){.nova-store-actions button{flex:1 1 140px}.nova-store-counts{gap:7px}.nova-store-counts>span{flex:1 1 120px;justify-content:center}}
+.nova-store-products-heading{margin:25px 0 12px;color:var(--navy);font-size:20px}.nova-store-products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.nova-store-product{background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;min-width:0}.nova-store-product-main{display:flex;flex-direction:column;gap:8px;padding:10px}.nova-store-product img{width:100%;height:150px;object-fit:cover;border-radius:8px;background:#edf1f7}.nova-store-product strong{font-size:13px;line-height:1.35}.nova-store-product span{color:var(--blue);font-size:16px;font-weight:900}
+.nova-store-loading,.nova-store-empty{background:#fff;border:1px solid var(--line);padding:22px;border-radius:12px;color:var(--muted)}.nova-store-signin-hint{font-size:12px;color:var(--muted)}
+.nova-store-card-link{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:7px 11px;margin-top:9px;border:1px solid #c9d8ef;border-radius:8px;color:var(--blue);font-size:12px;font-weight:800;background:#f5f8ff;position:relative;z-index:2}
+@media(max-width:600px){main{margin:12px auto;padding:0 12px}.nova-store-identity{align-items:flex-start;padding:13px;gap:12px}.nova-store-logo{width:64px;height:64px}.nova-store-products{gap:8px}.nova-store-product-main{padding:8px}.nova-store-product img{height:118px}}
+</style>
+</head>
+<body>
+<header><div class="brand">NOVA<span>AI</span></div><a class="back" href="./index.html">← NOVAAI MARKET</a></header>
+<main id="novaStorePage"><div class="nova-store-loading">Loading Store Page…</div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>window.NOVAAI_SUPABASE_CLIENT=window.supabase.createClient("https://nxplffvklkopwfjaqexo.supabase.co","sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ");</script>
+<script src="./novaai-storefront.js?v=1"></script>
+</body></html>

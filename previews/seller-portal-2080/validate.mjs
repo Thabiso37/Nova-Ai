@@ -13,11 +13,16 @@ const mockSupabase=`window.__mockWrites=0;window.__locationUpserts=0;window.__la
  rpc:async()=>({data:[],error:null}),storage:{from:()=>({upload:async()=>({error:null}),getPublicUrl:()=>({data:{publicUrl:''}})})}
 })};`;
 const results=[];
+let testIteration=0;
 async function installMocks(page){await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',route=>route.fulfill({contentType:'application/javascript',body:mockSupabase}))}
 try{
  for(const size of sizes)for(const variant of variants){
+  const iteration=++testIteration;
   const page=await browser.newPage({viewport:{width:size.width,height:size.height},deviceScaleFactor:1,isMobile:size.width<500,hasTouch:size.width<500});
-  const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>{window.__persistedStore={id:'fixture-store-retail',store_name:'Preview Store',store_slug:'preview-store',status:'approved',primary_marketplace:'retail'};window.__persistedPermissions=[{marketplace:'retail',status:'approved'}];window.__persistedLocation={province:'Gauteng',city:'Pretoria',suburb:'Centurion',latitude:null,longitude:null,public_location_enabled:true,approval_status:'approved'};});await installMocks(page);await page.goto(pathToFileURL(sellerFile).href);await page.waitForFunction(()=>!!window.NOVAAISeller2080);
+  const consoleErrors=[];const pageErrors=[];const rejectedPromises=[];
+  page.on('console',msg=>{if(msg.type()==='error')consoleErrors.push(msg.text())});
+  page.on('pageerror',e=>pageErrors.push(e.stack||e.message));
+  await page.addInitScript(()=>{window.__previewRejectedPromises=[];window.addEventListener('unhandledrejection',event=>{const reason=event.reason;window.__previewRejectedPromises.push(reason?.stack||reason?.message||String(reason))});window.__persistedStore={id:'fixture-store-retail',store_name:'Preview Store',store_slug:'preview-store',status:'approved',primary_marketplace:'retail'};window.__persistedPermissions=[{marketplace:'retail',status:'approved'}];window.__persistedLocation={province:'Gauteng',city:'Pretoria',suburb:'Centurion',latitude:null,longitude:null,public_location_enabled:true,approval_status:'approved'};});await installMocks(page);await page.goto(pathToFileURL(sellerFile).href);await page.waitForFunction(()=>!!window.NOVAAISeller2080);
   await page.locator('#sp2080OpenAuth').click();
   if(!(await page.locator('#sp2080Account').evaluate(el=>el.classList.contains('active'))))throw new Error('Sign-in gate did not open Account view');
   if(!(await page.locator('#authForm').isVisible()))throw new Error('Authentication form not visible from Account');
@@ -26,7 +31,13 @@ try{
   await page.locator('#email').fill('preview@example.invalid');await page.locator('#password').fill('fixture-password');
   await page.evaluate(market=>{window.__fixtureStore={id:'fixture-store-'+market,store_name:'Preview Store',store_slug:'preview-store',status:'approved',primary_marketplace:market};window.__persistedStore=window.__fixtureStore;window.__fixturePermissions=[{marketplace:market,status:'approved'}];window.__persistedPermissions=window.__fixturePermissions;window.__fixtureLocation={province:'Gauteng',city:'Pretoria',suburb:'Centurion',latitude:null,longitude:null,public_location_enabled:true,approval_status:'approved'};window.__persistedLocation=window.__fixtureLocation},variant.market);
   await page.locator('#authForm button[type="submit"]').click();
-  await page.waitForFunction(()=>document.getElementById('sp2080Approval')?.textContent.includes('APPROVED'));
+  try{
+   await page.waitForFunction(()=>document.getElementById('sp2080Approval')?.textContent.includes('APPROVED'));
+  }catch(error){
+   const diagnostic=await page.evaluate(market=>{let sellerState=null;try{sellerState=typeof window.NOVAAISellerState==='function'?window.NOVAAISellerState():null}catch(e){sellerState={stateReadError:e?.stack||String(e)}};return{marketplaceVariant:market,viewport:{width:innerWidth,height:innerHeight,devicePixelRatio},authenticatedUser:sellerState?.user??sellerState?.authUser??null,storeData:sellerState?.storeData??null,marketplacePermissions:sellerState?.marketplacePermissions??null,approvalText:document.getElementById('sp2080Approval')?.textContent??null,rejectedPromises:window.__previewRejectedPromises||[]}},variant.market).catch(e=>({diagnosticReadError:e?.stack||String(e)}));
+   console.error('SELLER_PORTAL_2080_APPROVAL_DIAGNOSTIC='+JSON.stringify({iteration,marketplace:variant.market,viewport:{width:size.width,height:size.height,label:size.label},...diagnostic,consoleErrors,pageErrors,waitError:error?.stack||String(error)},null,2));
+   throw error;
+  }
   if(await page.locator('#sp2080MarketName').innerText()!==variant.label)throw new Error('Incorrect approved marketplace label');
   if(!(await page.locator('#sp2080Tiles').innerText()).includes(variant.tool))throw new Error('Marketplace-specific listing tile missing');
   if(await page.locator('#changeMarketplaceButton').isVisible().catch(()=>false))throw new Error('Authenticated marketplace switcher visible');
@@ -81,7 +92,7 @@ try{
   if(!(await page.locator('#loadOrdersBtn').isVisible()))throw new Error('Orders refresh control hidden');
   await page.locator('#loadOrdersBtn').click();await page.screenshot({path:'artifacts/listings-orders-'+variant.market+'-'+size.label+'.png',fullPage:true});
   const expectedWrites=size.label==='393x852'&&variant.market==='retail'?1:0;if(await page.evaluate(()=>window.__mockWrites)!==expectedWrites)throw new Error('Unexpected mocked database write count: '+await page.evaluate(()=>window.__mockWrites));
-  if(errors.length)throw new Error(errors.join('; '));
+  if(consoleErrors.length||pageErrors.length)throw new Error([...consoleErrors,...pageErrors].join('; '));
   results.push({viewport:size.label,marketplace:variant.label,accountGate:true,authenticationForm:true,listingsAndOrders:true,legacyNavigationHidden:true,marketplaceSwitcherHidden:true,noHorizontalOverflow:true,mockWrites:await page.evaluate(()=>window.__mockWrites)});await page.close();
  }
  for(const variant of variants)for(const restriction of ['store-pending','permission-pending']){

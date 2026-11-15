@@ -1,0 +1,44 @@
+name: NOVAAI Storefront Validation
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "novaai-storefront.js"
+      - "novaai-store-branding.js"
+      - "store-page.html"
+      - "docs/sql/20261115-seller-storefront-branding.sql"
+      - "tests/storefront.test.mjs"
+      - "seller.html"
+      - "retail.html"
+      - "seller-motors-houses.html"
+      - "index.html"
+      - ".github/workflows/storefront-validation.yml"
+  push:
+    branches: [feature/seller-storefront-branding]
+jobs:
+  storefront:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check JavaScript syntax
+        run: |
+          node --check novaai-storefront.js
+          node --check novaai-store-branding.js
+          node --check tests/storefront.test.mjs
+          node --check tests/storefront-browser.test.mjs
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Run storefront regression tests
+        run: node --test tests/storefront.test.mjs tests/storefront-browser.test.mjs
+      - name: Upload Store Page screenshot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: novaai-pr39-storefront-screenshots
+          path: artifacts/*.png
+          if-no-files-found: ignore
