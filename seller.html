@@ -376,6 +376,7 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const sb = window.supabase.createClient("https://nxplffvklkopwfjaqexo.supabase.co","sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ");
+window.NOVAAI_SUPABASE_CLIENT=sb;
 const retailCats = ["Accessories","Clothing Shoes & Accessories","Cellphones","Computers & Laptops","Electronics","Fashion","Groceries","Home & Living","Office & Stationery","Sports","TV Audio & Video","Toys & Games"];
 const motorCategories = ["Auto","Motors & Vehicles"];
 const propertyCategories = ["Property For Sale","Property To Rent"];
@@ -1592,6 +1593,7 @@ async function updateFulfillmentStatus(orderId) {
 </script>
 <script src="seller-location.js?v=2"></script>
 <script src="seller-portal-2080-ui.js?v=2"></script>
+<script src="novaai-store-branding.js?v=1"></script>
 </body>
 </html>
 
