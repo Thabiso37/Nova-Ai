@@ -42,8 +42,7 @@ async function openPage(browser,userId,viewport){
  page.on("pageerror",error=>pageErrors.push(error.message));
  page.on("console",message=>{if(message.type()==="error")pageErrors.push(message.text());});
  page.setDefaultTimeout(10000);
- await page.addInitScript(mockScript(userId));
- await page.route(/supabase-js/,route=>route.fulfill({status:200,contentType:"application/javascript",body:"window.supabase={createClient:()=>window.__client};"}));
+ await page.route(/supabase-js/,route=>route.fulfill({status:200,contentType:"application/javascript",body:mockScript(userId)}));
  await page.route("https://nxplffvklkopwfjaqexo.supabase.co/**",route=>route.abort());
  await page.goto(file,{waitUntil:"domcontentloaded"});
  try{
