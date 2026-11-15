@@ -24,8 +24,13 @@ function oldAssetPath(url){const marker="/storage/v1/object/public/"+bucket+"/";
 async function loadExisting(){
  const sb=client(),u=state().user;if(!sb||!u)return;
  const status=$("novaBrandingStatus");status.textContent="Loading store branding…";
- const result=await sb.from("seller_stores").select("store_name,phone,status,store_logo_url,store_banner_url").eq("user_id",u.id).maybeSingle();
- if(result.error){status.textContent=/column .* does not exist|schema cache/i.test(result.error.message||"")?"Branding database setup is awaiting approval. Existing store details remain unchanged.":"Store branding could not be loaded.";return;}
+ let result=await sb.from("seller_stores").select("store_name,phone,status,store_logo_url,store_banner_url").eq("user_id",u.id).maybeSingle();
+ let brandingUnavailable=false;
+ if(result.error&&/column .* does not exist|schema cache/i.test(result.error.message||"")){
+  brandingUnavailable=true;
+  result=await sb.from("seller_stores").select("store_name,phone,status").eq("user_id",u.id).maybeSingle();
+ }
+ if(result.error){status.textContent="Store details could not be loaded.";return;}
  const d=result.data||{};
  $("novaStorePublicDetails").textContent="Approved store: "+(d.store_name||"Unavailable")+" · Public contact: "+(d.phone||"Not supplied")+" · Approval: "+(d.status||"Unavailable");
  [["logo",d.store_logo_url],["banner",d.store_banner_url]].forEach(([kind,url])=>{const img=$(kind==="logo"?"novaStoreLogoPreview":"novaStoreBannerPreview");if(url){img.src=url;img.hidden=false;}});
@@ -33,7 +38,7 @@ async function loadExisting(){
  const row=Array.isArray(reputation.data)?reputation.data[0]:reputation.data;
  $("novaSellerLikeCount").textContent=reputation.error?"—":String(row?.likes_count??0);
  $("novaSellerFollowerCount").textContent=reputation.error?"—":String(row?.followers_count??0);
- status.textContent="";
+ status.textContent=brandingUnavailable?"Branding upload setup is awaiting approval. Existing approved store details are shown unchanged.":"";
 }
 async function upload(kind){
  const sb=client(),s=state(),u=s.user,store=s.storeData,file=$(kind==="logo"?"novaStoreLogoFile":"novaStoreBannerFile").files?.[0],status=$("novaBrandingStatus");
