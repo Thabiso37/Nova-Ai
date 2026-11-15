@@ -35,3 +35,10 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Run storefront regression tests
         run: node --test tests/storefront.test.mjs tests/storefront-browser.test.mjs
+      - name: Upload Store Page screenshot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: novaai-pr39-storefront-screenshots
+          path: artifacts/*.png
+          if-no-files-found: ignore

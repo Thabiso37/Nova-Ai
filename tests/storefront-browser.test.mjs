@@ -18,6 +18,7 @@ const server=createServer((req,res)=>{
 });
 await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));
 const baseFile="http://127.0.0.1:"+server.address().port+"/store-page.html?store=raider-retail";
+fs.mkdirSync("artifacts",{recursive:true});
 after(()=>new Promise(resolve=>server.close(resolve)));
 const products=[
  {id:101,name:"Retail item",price:120,category:"Clothing",image_url:"",images:[],seller_id:"seller-1",status:"approved"},
@@ -65,6 +66,9 @@ test("Store Page renders approved identity, public phone, product details and ac
   assert.equal(await page.locator("#storeLikeCount").textContent(),"1");
   assert.equal(await page.locator("#storeFollowerCount").textContent(),"2");
   assert.equal(await page.locator(".nova-store-product").count(),2);
+  assert.ok(await page.locator("#storeLikeButton svg").count());
+  assert.ok(await page.locator("#storeFollowButton svg").count());
+  await page.screenshot({path:"artifacts/pr39-store-page-engagement-393.png",fullPage:true});
   assert.match(await page.locator(".nova-store-product a").nth(0).getAttribute("href"),/index\.html\?product=101/);
   assert.match(await page.locator(".nova-store-product a").nth(1).getAttribute("href"),/property-details\.html\?id=102/);
   assert.equal(await page.locator("body").evaluate(el=>el.innerText.includes("delivery_address")),false);

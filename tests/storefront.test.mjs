@@ -11,6 +11,7 @@ const retail=fs.readFileSync(path.join(root,"retail.html"),"utf8");
 const motors=fs.readFileSync(path.join(root,"seller-motors-houses.html"),"utf8");
 const seller=fs.readFileSync(path.join(root,"seller.html"),"utf8");
 const branding=fs.readFileSync(path.join(root,"novaai-store-branding.js"),"utf8");
+const videoSql=fs.readFileSync(path.join(root,"docs/sql/20261115-retail-product-videos.sql"),"utf8");
 test("all existing marketplace cards expose a seller identity for View Store links",()=>{
  for(const [name,source] of [["Home",home],["Retail",retail],["Motors and Property",motors]]){
   assert.match(source,/data-store-owner-id/,name+" cards missing seller owner id");
@@ -84,4 +85,17 @@ test("Store Page exposes no store description or private seller address",()=>{
 });
 test("no existing commerce tables are altered",()=>{
  assert.doesNotMatch(sql,/alter\s+table\s+public\.(products|orders|order_items|seller_fulfillments)/i);
+});
+
+test("Retail product detail includes description, public seller location, store navigation and secure contact controls",()=>{
+ assert.match(home,/nova-retail-detail/);assert.match(home,/Product description/);assert.match(home,/seller has not supplied a product description/i);assert.match(home,/seller_public_locations/);
+ assert.match(retail,/modalCallSeller/);assert.match(retail,/modalWhatsAppSeller/);assert.match(retail,/property-contact-action/);
+});
+test("Retail video upload UI is separate from photo inputs and Storage proposal is seller-scoped",()=>{
+ assert.match(seller,/retailProductVideoFile/);assert.match(seller,/video\/mp4,video\/webm/);assert.match(seller,/50\*1024\*1024/);assert.match(seller,/duration>90/);
+ assert.match(retail,/modalProductVideoPlayer/);assert.match(retail,/videoWrap\.hidden=!videoUrl/);
+ assert.match(videoSql,/product_video_url/);assert.match(videoSql,/novaai-retail-product-videos/);assert.match(videoSql,/primary_marketplace='retail'/);assert.match(videoSql,/mp\.status='approved'/);assert.match(videoSql,/on conflict \(id\) do nothing/i);
+});
+test("Store Page engagement uses professional icons and retains customer authentication restrictions",()=>{
+ assert.match(js,/button\.innerHTML=heart/);assert.match(js,/button\.innerHTML=followIcon/);assert.match(js,/canEngage=signedIn&&!ownStore&&engagementReady/);assert.match(js,/storeEngagementStatus/);
 });
