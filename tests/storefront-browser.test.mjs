@@ -5,16 +5,25 @@ import path from "node:path";
 import {createServer} from "node:http";
 import {chromium} from "playwright";
 
+const retailProduct={id:40,name:"Test Black T-Shirt",category:"Office & Stationery",price:200,seller_name:"Nova Test Store",seller_id:"seller-1",status:"approved",description:"T shirt",image_url:"",images:[]};
+const retailStore={user_id:"seller-1",store_name:"Raider Retail",store_slug:"raider-retail",description:"",phone:"012 555 0101",status:"approved"};
+const retailLocation={user_id:"seller-1",province:"Gauteng",city:"Pretoria",suburb:"Centurion",public_location_enabled:true,approval_status:"approved"};
+function retailMockScript(){return `(()=>{const tables={Products:[${JSON.stringify(retailProduct)}],seller_stores:[${JSON.stringify(retailStore)}],seller_public_locations:[${JSON.stringify(retailLocation)}]};class Q{constructor(t){this.t=t;this.filters=[];}select(){return this;}eq(k,v){this.filters.push(x=>String(x[k])===String(v));return this;}in(k,vs){this.filters.push(x=>(vs||[]).map(String).includes(String(x[k])));return this;}order(){return this;}rows(){return (tables[this.t]||[]).filter(x=>this.filters.every(f=>f(x)));}maybeSingle(){return Promise.resolve({data:this.rows()[0]||null,error:null});}then(resolve,reject){return Promise.resolve({data:this.rows(),error:null}).then(resolve,reject);}}const client={from:t=>new Q(t),rpc:async()=>({data:null,error:{message:"RPC disabled in browser fixture"}}),auth:{getSession:async()=>({data:{session:null},error:null}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),getUser:async()=>({data:{user:null},error:null}),signOut:async()=>({error:null})},storage:{from:()=>({getPublicUrl:()=>({data:{publicUrl:""}}),upload:async()=>({error:{message:"Storage disabled"}}),remove:async()=>({error:{message:"Storage disabled"}})})}};window.supabase={createClient:()=>client};window.NOVAAI_SUPABASE_CLIENT=client;})();`;}
 const server=createServer((req,res)=>{
  const requestUrl=new URL(req.url,"http://127.0.0.1");
+ if(requestUrl.pathname==="/retail.html"){
+  let html=fs.readFileSync(path.resolve("retail.html"),"utf8");
+  html=html.replace(/<script src="https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2"[^>]*><\/script>/i,'<script>'+retailMockScript()+'</script>');
+  html=html.replace(/<script src="\.\/(?:nearby-search\.js|novaai-ad-slots\.js[^"]*|novaai-share-visits\.js[^"]*|novaai-product-sharing\.js[^"]*|novaai-storefront\.js[^"]*)"[^>]*><\/script>/gi,"");
+  res.setHeader("Content-Type","text/html");res.end(html);return;
+ }
  if(requestUrl.pathname!=="/store-page.html"){res.writeHead(404);res.end("Not found");return;}
  const userId=requestUrl.searchParams.get("test_user")||"customer-1";
  let html=fs.readFileSync(path.resolve("store-page.html"),"utf8");
  const storefrontSource=fs.readFileSync(path.resolve("novaai-storefront.js"),"utf8");
  html=html.replace('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>','<script>'+mockScript(userId)+'</script>');
  html=html.replace('<script src="./novaai-storefront.js?v=1"></script>','<script>'+storefrontSource+'</script>');
- res.setHeader("Content-Type","text/html");
- res.end(html);
+ res.setHeader("Content-Type","text/html");res.end(html);
 });
 await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));
 const baseFile="http://127.0.0.1:"+server.address().port+"/store-page.html?store=raider-retail";
@@ -102,6 +111,28 @@ test("A seller cannot like or follow their own store and mobile layout does not 
   assert.equal(await page.locator("#storeFollowButton").isDisabled(),true);
   const dimensions=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}));
   assert.ok(dimensions.scroll<=dimensions.width+1,JSON.stringify(dimensions));
+  await page.close();
+ }finally{await browser.close();}
+});
+
+test("Retail product-detail modal renders an approved listing and captures a responsive screenshot",async()=>{
+ const browser=await chromium.launch({headless:true});
+ try{
+  const page=await browser.newPage({viewport:{width:393,height:852},deviceScaleFactor:1,isMobile:true,hasTouch:true});
+  const errors=[];page.on("pageerror",e=>errors.push(e.message));
+  await page.goto("http://127.0.0.1:"+server.address().port+"/retail.html",{waitUntil:"domcontentloaded"});
+  await page.waitForFunction(()=>document.getElementById("dbStatus")?.textContent.includes("REAL MARKETPLACE CONNECTED"));
+  await page.locator('[data-open-product="db-40"]').click();
+  await page.waitForSelector("#productModal.open");
+  assert.equal(await page.locator("#modalProductName").textContent(),"Test Black T-Shirt");
+  assert.equal(await page.locator("#modalProductDescription").textContent(),"T shirt");
+  assert.equal(await page.locator("#modalSellerName").textContent(),"Raider Retail");
+  assert.match(await page.locator("#modalSellerLocation").textContent(),/Centurion, Pretoria, Gauteng/);
+  assert.equal(await page.locator("#modalProductVideo").isHidden(),true);
+  assert.ok(await page.locator("#modalCallSeller svg").count());
+  assert.ok(await page.locator("#modalWhatsAppSeller svg").count());
+  await page.screenshot({path:"artifacts/pr39-retail-product-detail-393.png",fullPage:true});
+  assert.deepEqual(errors,[]);
   await page.close();
  }finally{await browser.close();}
 });
