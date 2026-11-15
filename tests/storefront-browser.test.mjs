@@ -125,7 +125,7 @@ test("Retail product-detail modal fits a 360px Android viewport without horizont
   await page.waitForFunction(()=>document.getElementById("dbStatus")?.textContent.includes("REAL MARKETPLACE CONNECTED"));
   await page.locator('[data-open-product="db-40"]').click();
   await page.waitForSelector("#productModal.open");
-  const dimensions=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,modal:document.querySelector("#productModal .modal-content")?.getBoundingClientRect().width}));
+  const dimensions=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,modal:document.querySelector("#productModal .product-modal-card")?.getBoundingClientRect().width}));
   assert.ok(dimensions.scroll<=dimensions.width+1,JSON.stringify(dimensions));
   assert.ok(dimensions.modal<=dimensions.width+1,JSON.stringify(dimensions));
   assert.equal(await page.locator("#modalProductDescription").textContent(),"T shirt");
