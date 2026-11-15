@@ -50,9 +50,32 @@ test("like/follow persistence is unique and customer-scoped",()=>{
  assert.match(sql,/customers can view own store likes/i);
  assert.doesNotMatch(sql,/for select to anon, authenticated using \(true\)/i);
 });
-test("branding Storage is constrained to the authenticated seller folder",()=>{
- assert.match(sql,/\(storage\.foldername\(name\)\)\[1\] = \(select auth\.uid\(\)\)::text/i);
- assert.match(sql,/file_size_limit[\s\S]*5242880/);
+test("branding Storage mutations require an existing seller owner and matching auth folder",()=>{
+ const policies=[...sql.matchAll(/create policy "Sellers (?:upload|update|remove) own NOVAAI store branding"[\\s\\S]*?;/gi)].map(m=>m[0]);
+ assert.equal(policies.length,3);
+ for(const policy of policies){
+  assert.match(policy,/to authenticated/i);
+  assert.match(policy,/bucket_id = 'novaai-store-branding'/i);
+  assert.match(policy,/\\(storage\\.foldername\\(name\\)\\)\\[1\\] = \\(select auth\\.uid\\(\\)\\)::text/i);
+  assert.match(policy,/exists\\s*\\(\\s*select 1\\s*from public\\.seller_stores s\\s*where s\\.user_id = \\(select auth\\.uid\\(\\)\\)/i);
+ }
+ assert.match(policies.find(p=>/update/i.test(p)),/using[\\s\\S]*with check/i);
+ assert.match(sql,/file_size_limit[\\s\\S]*5242880/);
+});
+test("branding bucket creation never overwrites existing configuration",()=>{
+ assert.match(sql,/on conflict \\(id\\) do nothing/i);
+ assert.doesNotMatch(sql,/on conflict \\(id\\) do update/i);
+ assert.match(sql,/actual_bucket\\.public is distinct from true/i);
+ assert.match(sql,/actual_bucket\\.file_size_limit is distinct from 5242880/i);
+ assert.match(sql,/actual_bucket\\.allowed_mime_types is distinct from expected_mime_types/i);
+ assert.match(sql,/raise exception[\\s\\S]*Existing novaai-store-branding bucket configuration/i);
+});
+test("engagement tables have customer lookup indexes and preserve approved-store privacy controls",()=>{
+ assert.match(sql,/seller_store_likes_customer_id_idx[\\s\\S]*on public\\.seller_store_likes \\(customer_id\\)/i);
+ assert.match(sql,/seller_store_follows_customer_id_idx[\\s\\S]*on public\\.seller_store_follows \\(customer_id\\)/i);
+ assert.match(sql,/s\\.status = 'approved'/i);
+ assert.match(sql,/security definer[\\s\\S]*returns table\\(likes_count bigint, followers_count bigint, liked boolean, following boolean\\)/i);
+ assert.doesNotMatch(sql,/returns table[\\s\\S]*customer_id/i);
 });
 test("Store Page exposes no store description or private seller address",()=>{
  assert.doesNotMatch(page,/store\.description|store_description|delivery_address|street_address/i);
