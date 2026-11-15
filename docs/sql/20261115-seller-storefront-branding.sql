@@ -230,7 +230,7 @@ create policy "Sellers remove own NOVAAI store branding" on storage.objects
 --   <auth.uid()>/banner-<timestamp>.<jpg|png|webp>
 -- and stores getPublicUrl(path) from this exact project's Supabase endpoint.
 -- This invoker trigger validates the exact convention and verifies the object
--- exists. NULL is deliberately accepted to support logo/banner removal.
+-- exists. NULL is accepted for removal, with the same approved-seller gate.
 create or replace function public.guard_seller_store_branding_urls()
 returns trigger
 language plpgsql
@@ -242,6 +242,30 @@ declare
   v_prefix text;
   v_filename text;
 begin
+  -- Sellers must remain approved when changing either branding URL, including
+  -- clearing it to NULL. Trusted database/service roles and NOVAAI admins retain
+  -- their administrative ability to manage store records.
+  if (
+    (tg_op = 'INSERT' and
+      (new.store_logo_url is not null or new.store_banner_url is not null))
+    or
+    (tg_op = 'UPDATE' and (
+      new.store_logo_url is distinct from old.store_logo_url
+      or new.store_banner_url is distinct from old.store_banner_url
+    ))
+  ) and current_user not in ('postgres', 'service_role')
+    and not public.is_novaai_admin()
+    and not exists (
+      select 1
+      from public.seller_stores s
+      where s.user_id = new.user_id
+        and s.status = 'approved'
+    ) then
+    raise exception
+      'Only an approved seller can add, replace or remove store branding.'
+      using errcode = '42501';
+  end if;
+
   v_prefix :=
     'https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/novaai-store-branding/'
     || new.user_id::text || '/';
