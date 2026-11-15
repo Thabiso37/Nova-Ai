@@ -530,12 +530,12 @@ let faceBlob = null, user = null, storeData = null;
 let editingProductId = null;
 let editingProductCategory = null;
 let editingProductMarket = null;
-let editingProductVideoUrl="";let removeExistingRetailVideo=false;let retailVideoObjectUrl="";
+let editingProductVideoUrl="";let retailVideoOriginalUrl="";let removeExistingRetailVideo=false;let retailVideoObjectUrl="";
 let authVersion = 0;
 window.NOVAAISellerState = () => ({user,storeData,marketplacePermissions});
 setListingMarket(selectedMarket || "retail");
 function updateRetailVideoVisibility(){const field=document.getElementById("retailVideoField");if(field)field.hidden=listingMarket!=="retail";}
-function resetRetailVideoEditor(){const input=document.getElementById("retailProductVideoFile"),preview=document.getElementById("retailProductVideoPreview"),status=document.getElementById("retailVideoStatus"),progress=document.getElementById("retailVideoProgress"),remove=document.getElementById("retailVideoRemove");if(input)input.value="";if(preview){preview.pause();preview.removeAttribute("src");preview.load();preview.hidden=true;}if(status)status.textContent="";if(progress){progress.hidden=true;progress.removeAttribute("value");}if(remove)remove.hidden=true;if(retailVideoObjectUrl){URL.revokeObjectURL(retailVideoObjectUrl);retailVideoObjectUrl="";}editingProductVideoUrl="";removeExistingRetailVideo=false;}
+function resetRetailVideoEditor(){const input=document.getElementById("retailProductVideoFile"),preview=document.getElementById("retailProductVideoPreview"),status=document.getElementById("retailVideoStatus"),progress=document.getElementById("retailVideoProgress"),remove=document.getElementById("retailVideoRemove");if(input)input.value="";if(preview){preview.pause();preview.removeAttribute("src");preview.load();preview.hidden=true;}if(status)status.textContent="";if(progress){progress.hidden=true;progress.removeAttribute("value");}if(remove)remove.hidden=true;if(retailVideoObjectUrl){URL.revokeObjectURL(retailVideoObjectUrl);retailVideoObjectUrl="";}editingProductVideoUrl="";retailVideoOriginalUrl="";removeExistingRetailVideo=false;}
 async function inspectRetailVideo(file){if(!file)return;if(!["video/mp4","video/webm"].includes(file.type))throw new Error("Choose an MP4 or WebM video.");if(file.size>50*1024*1024)throw new Error("Video must be 50 MB or smaller.");const url=URL.createObjectURL(file);return new Promise((resolve,reject)=>{const video=document.createElement("video");video.preload="metadata";video.onloadedmetadata=()=>{const d=Number(video.duration);URL.revokeObjectURL(url);if(!Number.isFinite(d)||d<=0||d>90)reject(new Error("Video must be no longer than 90 seconds."));else resolve(d);};video.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("The selected video could not be read."));};video.src=url;});}
 function retailVideoPathFromUrl(url){try{const u=new URL(url),marker="/storage/v1/object/public/novaai-retail-product-videos/";const i=u.pathname.indexOf(marker);return i<0?null:decodeURIComponent(u.pathname.slice(i+marker.length));}catch(e){return null;}}
 const retailVideoInput=document.getElementById("retailProductVideoFile");if(retailVideoInput)retailVideoInput.addEventListener("change",async()=>{const file=retailVideoInput.files?.[0],status=document.getElementById("retailVideoStatus"),preview=document.getElementById("retailProductVideoPreview"),remove=document.getElementById("retailVideoRemove");if(!file)return;try{const duration=await inspectRetailVideo(file);if(retailVideoObjectUrl)URL.revokeObjectURL(retailVideoObjectUrl);retailVideoObjectUrl=URL.createObjectURL(file);preview.src=retailVideoObjectUrl;preview.hidden=false;remove.hidden=false;status.textContent="Video ready · "+Math.round(duration)+" seconds · preview before saving.";}catch(error){retailVideoInput.value="";preview.hidden=true;status.textContent=error.message;}});
@@ -854,6 +854,7 @@ document.getElementById("sellerForm").onsubmit = async e => {
   const files = document.getElementById("photoFiles").files;
   const retailVideoFile=document.getElementById("retailProductVideoFile")?.files?.[0]||null;
   let imgs = [],videoUrlToSave=editingProductVideoUrl,uploadedRetailVideoPath=null;
+  const previousRetailVideoUrl=retailVideoOriginalUrl;
 
   submitButton.disabled = true;
   msgEl.textContent = "Checking product details...";
@@ -923,6 +924,7 @@ document.getElementById("sellerForm").onsubmit = async e => {
 
       if (error) throw error;
 
+      if(previousRetailVideoUrl&&(retailVideoFile||removeExistingRetailVideo)){const oldPath=retailVideoPathFromUrl(previousRetailVideoUrl);if(oldPath){const {error:removeError}=await sb.storage.from("novaai-retail-product-videos").remove([oldPath]);if(removeError)document.getElementById("retailVideoStatus").textContent="Listing saved, but the previous video could not be deleted from Storage.";}}
       editingProductId = null;
       editingProductCategory = null;
       editingProductMarket = null;
@@ -1118,7 +1120,7 @@ async function editProduct(id) {
     categorySelect.add(new Option(product.category, product.category));
   }
   categorySelect.value = product.category || "";
-  editingProductVideoUrl=product.product_video_url||"";removeExistingRetailVideo=false;const vp=document.getElementById("retailProductVideoPreview"),vs=document.getElementById("retailVideoStatus"),vr=document.getElementById("retailVideoRemove");if(market==="retail"&&editingProductVideoUrl){vp.src=editingProductVideoUrl;vp.hidden=false;vr.hidden=false;vs.textContent="Current product video. Choose a replacement or remove it.";}else{vp.hidden=true;vr.hidden=true;vs.textContent="";}
+  editingProductVideoUrl=product.product_video_url||"";retailVideoOriginalUrl=editingProductVideoUrl;removeExistingRetailVideo=false;const vp=document.getElementById("retailProductVideoPreview"),vs=document.getElementById("retailVideoStatus"),vr=document.getElementById("retailVideoRemove");if(market==="retail"&&editingProductVideoUrl){vp.src=editingProductVideoUrl;vp.hidden=false;vr.hidden=false;vs.textContent="Current product video. Choose a replacement or remove it.";}else{vp.hidden=true;vr.hidden=true;vs.textContent="";}
   document.getElementById("sellerName").value = product.seller_name || "";
 
   document.getElementById("publish").textContent =
