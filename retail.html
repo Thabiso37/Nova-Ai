@@ -1418,7 +1418,7 @@ function openProductDetails(p) {
   const storeButton=document.getElementById("modalSellerStoreButton");
   if(p.sellerId&&sellerStoresById[String(p.sellerId)]){
     storeButton.hidden=false;
-    storeButton.onclick=()=>openCartSeller(p.sellerId);
+    storeButton.onclick=()=>{const approvedStore=sellerStoresById[String(p.sellerId)];if(approvedStore?.store_slug)window.location.href="./store-page.html?store="+encodeURIComponent(approvedStore.store_slug);};
   }else{
     storeButton.hidden=true;
     storeButton.onclick=null;
