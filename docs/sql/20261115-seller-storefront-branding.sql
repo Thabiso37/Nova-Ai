@@ -162,14 +162,15 @@ begin
 end;
 $validate_branding_bucket$;
 
--- Public reads are limited to this dedicated bucket. Writes, replacements and
--- deletions require an authenticated user who owns an existing seller_stores
--- row AND stores the object in that same user's first-level folder.
+-- Public reads are limited to this dedicated bucket. Public-read access is
+-- required for public Store Pages; no other bucket is included in this policy.
 drop policy if exists "Public can view NOVAAI store branding" on storage.objects;
 create policy "Public can view NOVAAI store branding" on storage.objects
   for select to public
   using (bucket_id = 'novaai-store-branding');
 
+-- Every write operation requires an authenticated, approved seller and a
+-- first-level object folder equal to that seller's auth.uid().
 drop policy if exists "Sellers upload own NOVAAI store branding" on storage.objects;
 create policy "Sellers upload own NOVAAI store branding" on storage.objects
   for insert to authenticated
@@ -180,9 +181,12 @@ create policy "Sellers upload own NOVAAI store branding" on storage.objects
       select 1
       from public.seller_stores s
       where s.user_id = (select auth.uid())
+        and s.status = 'approved'
     )
   );
 
+-- Supabase upsert/replace operations are subject to UPDATE as well as SELECT.
+-- Require ownership and approved status for both the old and new object paths.
 drop policy if exists "Sellers update own NOVAAI store branding" on storage.objects;
 create policy "Sellers update own NOVAAI store branding" on storage.objects
   for update to authenticated
@@ -193,6 +197,7 @@ create policy "Sellers update own NOVAAI store branding" on storage.objects
       select 1
       from public.seller_stores s
       where s.user_id = (select auth.uid())
+        and s.status = 'approved'
     )
   )
   with check (
@@ -202,6 +207,7 @@ create policy "Sellers update own NOVAAI store branding" on storage.objects
       select 1
       from public.seller_stores s
       where s.user_id = (select auth.uid())
+        and s.status = 'approved'
     )
   );
 
@@ -215,8 +221,84 @@ create policy "Sellers remove own NOVAAI store branding" on storage.objects
       select 1
       from public.seller_stores s
       where s.user_id = (select auth.uid())
+        and s.status = 'approved'
     )
   );
+
+-- The Seller Portal currently uploads to:
+--   <auth.uid()>/logo-<timestamp>.<jpg|png|webp>
+--   <auth.uid()>/banner-<timestamp>.<jpg|png|webp>
+-- and stores getPublicUrl(path) from this exact project's Supabase endpoint.
+-- This invoker trigger validates the exact convention and verifies the object
+-- exists. NULL is deliberately accepted to support logo/banner removal.
+create or replace function public.guard_seller_store_branding_urls()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $function$
+declare
+  v_item record;
+  v_prefix text;
+  v_filename text;
+begin
+  v_prefix :=
+    'https://nxplffvklkopwfjaqexo.supabase.co/storage/v1/object/public/novaai-store-branding/'
+    || new.user_id::text || '/';
+
+  for v_item in
+    select 'logo'::text as kind, new.store_logo_url as url
+    union all
+    select 'banner'::text, new.store_banner_url
+  loop
+    -- NULL is a supported state: the seller has removed this branding image.
+    if v_item.url is null then
+      continue;
+    end if;
+
+    if left(v_item.url, char_length(v_prefix)) is distinct from v_prefix then
+      raise exception
+        'Store branding URLs must use this project's public branding bucket and the owning seller folder.'
+        using errcode = '42501';
+    end if;
+
+    v_filename := substr(v_item.url, char_length(v_prefix) + 1);
+
+    if v_item.kind = 'logo'
+       and v_filename !~ '^logo-[0-9]+\\.(jpg|png|webp)$' then
+      raise exception 'Invalid store logo object path.' using errcode = '42501';
+    end if;
+
+    if v_item.kind = 'banner'
+       and v_filename !~ '^banner-[0-9]+\\.(jpg|png|webp)$' then
+      raise exception 'Invalid store banner object path.' using errcode = '42501';
+    end if;
+
+    if not exists (
+      select 1
+      from storage.objects o
+      where o.bucket_id = 'novaai-store-branding'
+        and o.name = new.user_id::text || '/' || v_filename
+    ) then
+      raise exception
+        'The referenced branding object does not exist in the owning seller folder.'
+        using errcode = '23503';
+    end if;
+  end loop;
+
+  return new;
+end;
+$function$;
+
+-- Ordinary seller profile edits and admin status/name/phone edits do not fire
+-- this trigger. If an administrator transfers store ownership, the branding
+-- URLs must be cleared or replaced in the same update to avoid stale ownership.
+drop trigger if exists guard_seller_store_branding_urls on public.seller_stores;
+create trigger guard_seller_store_branding_urls
+before insert or update of store_logo_url, store_banner_url, user_id
+on public.seller_stores
+for each row
+execute function public.guard_seller_store_branding_urls();
 
 commit;
 
@@ -227,12 +309,18 @@ commit;
 -- 3. Customers can read/delete only their own likes/follows and can insert only
 --    their own relationship with an approved store; self-engagement is blocked.
 -- 4. Public count access is aggregate-only; customer identities are not returned.
--- 5. Branding Storage INSERT/UPDATE/DELETE is restricted to authenticated owners
---    of an existing seller_stores row and their own auth.uid() folder. Ordinary
---    customer accounts without a seller_stores row cannot manage bucket objects.
--- 6. The bucket is created only if absent. An existing bucket is never reconfigured;
+-- 5. Branding Storage INSERT/UPDATE/DELETE requires an authenticated seller with
+--    an approved store and an auth.uid()-owned first-level folder. Public reads
+--    are limited to this dedicated branding bucket.
+-- 6. Branding URL trigger rejects external/other-seller paths, verifies the
+--    existing object and accepts NULL for removal. It matches the current
+--    Seller Portal naming convention and exact Supabase project URL.
+-- 7. The bucket is created only if absent. An existing bucket is never reconfigured;
 --    a mismatch raises an exception and rolls back the transaction.
--- 7. The bucket is public-read for rendering approved store branding. Public Store
+-- 8. The bucket is public-read for rendering approved store branding. Public Store
 --    Page queries must continue to expose branding URLs only for approved stores.
--- 8. No existing Storage bucket, product, order, order item, fulfilment or payment
---    object is changed by this script.
+-- 9. Existing seller approval/ownership/marketplace triggers and seller/admin RLS
+--    policies are not replaced. Existing product-image Storage policies are not
+--    dropped or changed by this script.
+-- 10. No existing Storage bucket, product, order, order item, fulfilment or payment
+--     object is changed by this script.
