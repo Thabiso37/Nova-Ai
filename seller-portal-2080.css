@@ -38,3 +38,6 @@ body.sp2080>.top,body.sp2080>header{display:none!important}
 
 /* The 2080 shell owns seller navigation; retain the marketplace picker for registration. */
 body.sp2080 #sellerWorkspace>.seller-page-nav,body.sp2080 #sellerWorkspace>.selected-market-bar{display:none!important}
+
+/* Public-location status is sourced from the authenticated seller record. */
+.sp2080-content #sellerLocStatus{display:block;min-height:42px;padding:10px 12px;margin-top:12px;border:1px solid #276eac;border-radius:9px;background:#03112d;color:#d7eaff;font-size:12px;line-height:1.5}
