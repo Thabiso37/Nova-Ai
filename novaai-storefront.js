@@ -101,9 +101,9 @@ async function loadStorePage(){
   (products||[]).forEach(p=>productGrid.append(renderProduct(p)));
   if(!(products||[]).length){const empty=document.createElement("p");empty.className="nova-store-empty";empty.textContent="This store has no public products available right now.";productGrid.append(empty);}
   const engagementReady=await refreshEngagement(sb,store.user_id,user?.id);
-  const signedIn=!!user;
-  [like,follow].forEach(button=>{button.disabled=!signedIn||!engagementReady;button.title=!signedIn?"Sign in to interact with this store.":!engagementReady?"Store engagement setup is awaiting approval.":"";});
-  if(!signedIn||!engagementReady){const hint=document.createElement("p");hint.className="nova-store-signin-hint";hint.textContent=!signedIn?"Sign in to like or follow this store.":"Store likes and follows will become available after the database setup is approved.";actions.after(hint);}
+  const signedIn=!!user,ownStore=signedIn&&user.id===store.user_id,canEngage=signedIn&&!ownStore&&engagementReady;
+  [like,follow].forEach(button=>{button.disabled=!canEngage;button.title=!signedIn?"Sign in to interact with this store.":ownStore?"You cannot like or follow your own store.":!engagementReady?"Store engagement setup is awaiting approval.":"";});
+  if(!canEngage){const hint=document.createElement("p");hint.className="nova-store-signin-hint";hint.textContent=!signedIn?"Sign in to like or follow this store.":ownStore?"You cannot like or follow your own store.":"Store likes and follows will become available after the database setup is approved.";actions.after(hint);}
   like.addEventListener("click",()=>toggleEngagement(sb,"seller_store_likes",store.user_id,user.id,like,"Liked","Like Store"));
   follow.addEventListener("click",()=>toggleEngagement(sb,"seller_store_follows",store.user_id,user.id,follow,"Following","Follow Store"));
  }catch(error){console.error("[NOVAAI Store Page]",error);root.textContent="The Store Page could not be loaded. Please try again later.";}
