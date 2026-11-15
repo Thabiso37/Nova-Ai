@@ -34,8 +34,9 @@ grant select, insert, delete on public.seller_store_likes to authenticated;
 grant select, insert, delete on public.seller_store_follows to authenticated;
 
 drop policy if exists "Public can count store likes" on public.seller_store_likes;
-create policy "Public can count store likes" on public.seller_store_likes
-  for select to anon, authenticated using (true);
+drop policy if exists "Customers can view own store likes" on public.seller_store_likes;
+create policy "Customers can view own store likes" on public.seller_store_likes
+  for select to authenticated using (customer_id = (select auth.uid()));
 drop policy if exists "Customers can like approved stores" on public.seller_store_likes;
 create policy "Customers can like approved stores" on public.seller_store_likes
   for insert to authenticated with check (
@@ -49,8 +50,9 @@ create policy "Customers can remove own store likes" on public.seller_store_like
   for delete to authenticated using (customer_id = (select auth.uid()));
 
 drop policy if exists "Public can count store follows" on public.seller_store_follows;
-create policy "Public can count store follows" on public.seller_store_follows
-  for select to anon, authenticated using (true);
+drop policy if exists "Customers can view own store follows" on public.seller_store_follows;
+create policy "Customers can view own store follows" on public.seller_store_follows
+  for select to authenticated using (customer_id = (select auth.uid()));
 drop policy if exists "Customers can follow approved stores" on public.seller_store_follows;
 create policy "Customers can follow approved stores" on public.seller_store_follows
   for insert to authenticated with check (
@@ -62,6 +64,25 @@ create policy "Customers can follow approved stores" on public.seller_store_foll
 drop policy if exists "Customers can unfollow own stores" on public.seller_store_follows;
 create policy "Customers can unfollow own stores" on public.seller_store_follows
   for delete to authenticated using (customer_id = (select auth.uid()));
+
+
+-- Aggregate-only public endpoint: never returns customer identities.
+create or replace function public.get_seller_store_engagement(p_store_user_id uuid)
+returns table(likes_count bigint, followers_count bigint, liked boolean, following boolean)
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, auth
+as $function$
+  select
+    (select count(*) from public.seller_store_likes l where l.store_user_id = p_store_user_id),
+    (select count(*) from public.seller_store_follows f where f.store_user_id = p_store_user_id),
+    exists(select 1 from public.seller_store_likes l where l.store_user_id = p_store_user_id and l.customer_id = auth.uid()),
+    exists(select 1 from public.seller_store_follows f where f.store_user_id = p_store_user_id and f.customer_id = auth.uid())
+  where exists(select 1 from public.seller_stores s where s.user_id = p_store_user_id and s.status = 'approved');
+$function$;
+revoke all on function public.get_seller_store_engagement(uuid) from public;
+grant execute on function public.get_seller_store_engagement(uuid) to anon, authenticated;
 
 -- A dedicated public-read bucket; each authenticated seller may manage only
 -- objects inside their own auth.uid() folder. Images are limited to 5 MiB.
