@@ -45,7 +45,7 @@ function navigate(id){
  inventory?.classList.add("hidden");heading?.classList.add("hidden");tabs?.classList.add("hidden");
  editor?.classList.add("hidden");moderation?.classList.add("hidden");orders?.classList.add("hidden");
  location?.classList.add("hidden");access?.classList.add("hidden");account?.classList.add("hidden");
- if(id==="store")location?.classList.remove("hidden");
+ if(id==="store"){location?.classList.remove("hidden");if(typeof window.loadSellerPublicLocation==="function")window.loadSellerPublicLocation().catch(error=>console.error("[NOVAAI Seller Portal 2080 location refresh]",error));}
  if(id==="access")access?.classList.remove("hidden");
  if(id==="account")account?.classList.remove("hidden");
  if(id==="listings"){
