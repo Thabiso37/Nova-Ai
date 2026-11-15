@@ -56,7 +56,7 @@ try{
    await page.locator('[data-spview="store"]:visible').first().click();
    await page.waitForFunction(()=>document.getElementById('sellerLocStatus')?.textContent.includes('Approved location area'));
    if(await page.evaluate(()=>window.__fixtureLocation.approval_status)!=='approved')throw new Error('Ordinary page refresh reset approved location status');
-   if(await page.evaluate(()=>window.__locationUpserts)!==0)throw new Error('Ordinary page refresh wrote to public-location record');
+   if(await page.evaluate(()=>window.__mockWrites)!==0)throw new Error('Ordinary page refresh wrote to seller records');
    await page.locator('#sellerLocSuburb').fill('Hatfield');await page.locator('#sellerLocSave').click();
    if(await page.evaluate(()=>window.__locationUpserts)!==1)throw new Error('Intentional approved-location change was not saved for review');
    if(await page.evaluate(()=>window.__lastLocationPayload.approval_status)!==undefined)throw new Error('Seller save attempted to write administrator approval status');
@@ -74,9 +74,9 @@ try{
   if(!(await page.locator('#myProductsList').isVisible()))throw new Error('Existing listings list hidden');
   if(!(await page.locator('#loadOrdersBtn').isVisible()))throw new Error('Orders refresh control hidden');
   await page.locator('#loadOrdersBtn').click();await page.screenshot({path:'artifacts/listings-orders-'+variant.market+'-'+size.label+'.png',fullPage:true});
-  if(await page.evaluate(()=>window.__mockWrites)!==0)throw new Error('Unexpected mocked database write');
+  const expectedWrites=size.label==='393x852'&&variant.market==='retail'?1:0;if(await page.evaluate(()=>window.__mockWrites)!==expectedWrites)throw new Error('Unexpected mocked database write count: '+await page.evaluate(()=>window.__mockWrites));
   if(errors.length)throw new Error(errors.join('; '));
-  results.push({viewport:size.label,marketplace:variant.label,accountGate:true,authenticationForm:true,listingsAndOrders:true,legacyNavigationHidden:true,marketplaceSwitcherHidden:true,noHorizontalOverflow:true,mockWrites:0});await page.close();
+  results.push({viewport:size.label,marketplace:variant.label,accountGate:true,authenticationForm:true,listingsAndOrders:true,legacyNavigationHidden:true,marketplaceSwitcherHidden:true,noHorizontalOverflow:true,mockWrites:await page.evaluate(()=>window.__mockWrites)});await page.close();
  }
  for(const variant of variants)for(const restriction of ['store-pending','permission-pending']){
   const page=await browser.newPage({viewport:{width:393,height:852},isMobile:true,hasTouch:true});await installMocks(page);await page.goto(pathToFileURL(sellerFile).href);await page.waitForFunction(()=>!!window.NOVAAISeller2080);
