@@ -1,0 +1,32 @@
+name: NOVAAI Storefront Validation
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "novaai-storefront.js"
+      - "novaai-store-branding.js"
+      - "store-page.html"
+      - "docs/sql/20261115-seller-storefront-branding.sql"
+      - "tests/storefront.test.mjs"
+      - "seller.html"
+      - "retail.html"
+      - "seller-motors-houses.html"
+      - "index.html"
+      - ".github/workflows/storefront-validation.yml"
+  push:
+    branches: [feature/seller-storefront-branding]
+jobs:
+  storefront:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check JavaScript syntax
+        run: |
+          node --check novaai-storefront.js
+          node --check novaai-store-branding.js
+          node --check tests/storefront.test.mjs
+      - name: Run storefront regression tests
+        run: node --test tests/storefront.test.mjs
