@@ -74,7 +74,7 @@ test("engagement tables have customer lookup indexes and preserve approved-store
  assert.match(sql,/seller_store_likes_customer_id_idx[\s\S]*on public\.seller_store_likes \(customer_id\)/i);
  assert.match(sql,/seller_store_follows_customer_id_idx[\s\S]*on public\.seller_store_follows \(customer_id\)/i);
  assert.match(sql,/s\.status = 'approved'/i);
- assert.match(sql,/security definer[\s\S]*returns table\(likes_count bigint, followers_count bigint, liked boolean, following boolean\)/i);
+ assert.match(sql,/returns table\(likes_count bigint, followers_count bigint, liked boolean, following boolean\)[\s\S]*security definer/i);
  assert.doesNotMatch(sql,/returns table\([^)]*customer_id/i);
 });
 test("Store Page exposes no store description or private seller address",()=>{
