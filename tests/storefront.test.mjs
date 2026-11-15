@@ -12,11 +12,12 @@ const motors=fs.readFileSync(path.join(root,"seller-motors-houses.html"),"utf8")
 const seller=fs.readFileSync(path.join(root,"seller.html"),"utf8");
 const branding=fs.readFileSync(path.join(root,"novaai-store-branding.js"),"utf8");
 const videoSql=fs.readFileSync(path.join(root,"docs/sql/20261115-retail-product-videos.sql"),"utf8");
-test("all existing marketplace cards expose a seller identity for View Store links",()=>{
- for(const [name,source] of [["Home",home],["Retail",retail],["Motors and Property",motors]]){
+test("Home and Retail cards expose seller identity for View Store links without changing Motors or Property cards",()=>{
+ for(const [name,source] of [["Home",home],["Retail",retail]]){
   assert.match(source,/data-store-owner-id/,name+" cards missing seller owner id");
   assert.match(source,/novaai-storefront\.js/,name+" missing Store Page integration");
  }
+ assert.doesNotMatch(motors,/data-store-owner-id/,"Motors and Property cards must remain outside this enhancement");
 });
 test("Seller Portal branding controls cover upload, preview, replacement and removal",()=>{
  assert.match(seller,/novaai-store-branding\.js/);
