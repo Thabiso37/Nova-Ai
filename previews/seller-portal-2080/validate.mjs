@@ -34,7 +34,7 @@ try{
   try{
    await page.waitForFunction(()=>document.getElementById('sp2080Approval')?.textContent.includes('APPROVED'));
   }catch(error){
-   const diagnostic=await page.evaluate(()=>{let sellerState=null;try{sellerState=typeof window.NOVAAISellerState==='function'?window.NOVAAISellerState():null}catch(e){sellerState={stateReadError:e?.stack||String(e)}};return{marketplaceVariant:variant.market,viewport:{width:innerWidth,height:innerHeight,devicePixelRatio},authenticatedUser:sellerState?.user??sellerState?.authUser??null,storeData:sellerState?.storeData??null,marketplacePermissions:sellerState?.marketplacePermissions??null,approvalText:document.getElementById('sp2080Approval')?.textContent??null,rejectedPromises:window.__previewRejectedPromises||[]}}).catch(e=>({diagnosticReadError:e?.stack||String(e)}));
+   const diagnostic=await page.evaluate(market=>{let sellerState=null;try{sellerState=typeof window.NOVAAISellerState==='function'?window.NOVAAISellerState():null}catch(e){sellerState={stateReadError:e?.stack||String(e)}};return{marketplaceVariant:market,viewport:{width:innerWidth,height:innerHeight,devicePixelRatio},authenticatedUser:sellerState?.user??sellerState?.authUser??null,storeData:sellerState?.storeData??null,marketplacePermissions:sellerState?.marketplacePermissions??null,approvalText:document.getElementById('sp2080Approval')?.textContent??null,rejectedPromises:window.__previewRejectedPromises||[]}},variant.market).catch(e=>({diagnosticReadError:e?.stack||String(e)}));
    console.error('SELLER_PORTAL_2080_APPROVAL_DIAGNOSTIC='+JSON.stringify({iteration,marketplace:variant.market,viewport:{width:size.width,height:size.height,label:size.label},...diagnostic,consoleErrors,pageErrors,waitError:error?.stack||String(error)},null,2));
    throw error;
   }
@@ -92,7 +92,7 @@ try{
   if(!(await page.locator('#loadOrdersBtn').isVisible()))throw new Error('Orders refresh control hidden');
   await page.locator('#loadOrdersBtn').click();await page.screenshot({path:'artifacts/listings-orders-'+variant.market+'-'+size.label+'.png',fullPage:true});
   const expectedWrites=size.label==='393x852'&&variant.market==='retail'?1:0;if(await page.evaluate(()=>window.__mockWrites)!==expectedWrites)throw new Error('Unexpected mocked database write count: '+await page.evaluate(()=>window.__mockWrites));
-  if(errors.length)throw new Error(errors.join('; '));
+  if(consoleErrors.length||pageErrors.length)throw new Error([...consoleErrors,...pageErrors].join('; '));
   results.push({viewport:size.label,marketplace:variant.label,accountGate:true,authenticationForm:true,listingsAndOrders:true,legacyNavigationHidden:true,marketplaceSwitcherHidden:true,noHorizontalOverflow:true,mockWrites:await page.evaluate(()=>window.__mockWrites)});await page.close();
  }
  for(const variant of variants)for(const restriction of ['store-pending','permission-pending']){
