@@ -265,12 +265,12 @@ begin
     v_filename := substr(v_item.url, char_length(v_prefix) + 1);
 
     if v_item.kind = 'logo'
-       and v_filename !~ '^logo-[0-9]+\\.(jpg|png|webp)$' then
+       and v_filename !~ '^logo-[0-9]+[.](jpg|png|webp)$' then
       raise exception 'Invalid store logo object path.' using errcode = '42501';
     end if;
 
     if v_item.kind = 'banner'
-       and v_filename !~ '^banner-[0-9]+\\.(jpg|png|webp)$' then
+       and v_filename !~ '^banner-[0-9]+[.](jpg|png|webp)$' then
       raise exception 'Invalid store banner object path.' using errcode = '42501';
     end if;
 
