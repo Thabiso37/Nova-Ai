@@ -18,6 +18,7 @@ test("Home and Retail cards expose seller identity for View Store links without 
   assert.match(source,/novaai-storefront\.js/,name+" missing Store Page integration");
  }
  assert.doesNotMatch(motors,/data-store-owner-id/,"Motors and Property cards must remain outside this enhancement");
+ assert.doesNotMatch(motors,/novaai-storefront\\.js/,"Motors and Property must not load the Store Page enhancement");
 });
 test("Seller Portal branding controls cover upload, preview, replacement and removal",()=>{
  assert.match(seller,/novaai-store-branding\.js/);
