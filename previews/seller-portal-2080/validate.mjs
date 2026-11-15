@@ -9,7 +9,7 @@ const variants=[{market:'retail',label:'Retail',tool:'My Products',denied:'motor
 const sizes=[{width:393,height:852,label:'393x852'},{width:360,height:800,label:'360x800'},{width:1440,height:1000,label:'desktop-1440x1000'}];
 const mockSupabase=`window.__mockWrites=0;window.supabase={createClient:()=>({
  auth:{getSession:async()=>({data:{session:null},error:null}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),signInWithPassword:async()=>({data:{user:{id:'isolated-fixture-user',email:'preview@example.invalid',user_metadata:{full_name:'Preview Seller'}}},error:null}),signOut:async()=>({error:null}),resetPasswordForEmail:async()=>({error:null}),updateUser:async()=>({data:{user:window.__fixtureUser},error:null})},
- from:(table)=>{const q={select(){return this},eq(){return this},in(){return this},order:async()=>({data:[],error:null}),maybeSingle:async()=>({data:table==='seller_stores'?window.__fixtureStore:null,error:null}),single:async()=>({data:null,error:null}),insert(){window.__mockWrites++;return this},update(){window.__mockWrites++;return this},delete(){window.__mockWrites++;return this},then(resolve){resolve({data:table==='seller_marketplace_permissions'?(window.__fixturePermissions||[]):[],error:null})}};return q},
+ from:(table)=>{const q={select(){return this},eq(){return this},in(){return this},order:async()=>({data:[],error:null}),maybeSingle:async()=>({data:table==='seller_stores'?window.__fixtureStore:table==='seller_public_locations'?(window.__fixtureLocation||null):null,error:null}),single:async()=>({data:null,error:null}),insert(){window.__mockWrites++;return this},update(){window.__mockWrites++;return this},delete(){window.__mockWrites++;return this},then(resolve){resolve({data:table==='seller_marketplace_permissions'?(window.__fixturePermissions||[]):[],error:null})}};return q},
  rpc:async()=>({data:[],error:null}),storage:{from:()=>({upload:async()=>({error:null}),getPublicUrl:()=>({data:{publicUrl:''}})})}
 })};`;
 const results=[];
@@ -24,7 +24,7 @@ try{
   // Follow the normal seller entry path: select one marketplace before submitting the existing sign-in form.
   await page.evaluate(market=>window.chooseMarketplace(market),variant.market);
   await page.locator('#email').fill('preview@example.invalid');await page.locator('#password').fill('fixture-password');
-  await page.evaluate(market=>{window.__fixtureStore={id:'fixture-store-'+market,store_name:'Preview Store',store_slug:'preview-store',status:'approved',primary_marketplace:market};window.__fixturePermissions=[{marketplace:market,status:'approved'}]},variant.market);
+  await page.evaluate(market=>{window.__fixtureStore={id:'fixture-store-'+market,store_name:'Preview Store',store_slug:'preview-store',status:'approved',primary_marketplace:market};window.__fixturePermissions=[{marketplace:market,status:'approved'}];window.__fixtureLocation={province:'Gauteng',city:'Pretoria',suburb:'Centurion',latitude:null,longitude:null,public_location_enabled:true,approval_status:'approved'}},variant.market);
   await page.locator('#authForm button[type="submit"]').click();
   await page.waitForFunction(()=>document.getElementById('sp2080Approval')?.textContent.includes('APPROVED'));
   if(await page.locator('#sp2080MarketName').innerText()!==variant.label)throw new Error('Incorrect approved marketplace label');
@@ -36,6 +36,13 @@ try{
   await page.screenshot({path:'artifacts/approved-'+variant.market+'-'+size.label+'.png',fullPage:true});
   await page.locator('[data-spview="store"]:visible').first().click();
   if(!(await page.locator('#sp2080Store').evaluate(el=>el.classList.contains('active')))||!(await page.locator('#sellerPublicLocationPanel').isVisible()))throw new Error('My Store/Public Location workflow not visible');
+  await page.waitForFunction(()=>document.getElementById('sellerLocProvince')?.value==='Gauteng'&&document.getElementById('sellerLocCity')?.value==='Pretoria'&&document.getElementById('sellerLocSuburb')?.value==='Centurion');
+  if(!(await page.locator('#sellerLocPublic').isChecked()))throw new Error('Saved public-location consent was not restored');
+  const approvedLocationStatus=await page.locator('#sellerLocStatus').innerText();
+  if(!approvedLocationStatus.includes('Approved location area')||!approvedLocationStatus.includes('GPS pin unavailable')||approvedLocationStatus.includes('visible in Nearby Search'))throw new Error('Approved location status is inaccurate when coordinates are absent: '+approvedLocationStatus);
+  await page.evaluate(()=>window.loadSellerPublicLocation());
+  if(await page.locator('#sellerLocSuburb').inputValue()!=='Centurion')throw new Error('Refreshing My Store did not reload the saved location');
+
   await page.locator('[data-spview="dashboard"]:visible').first().click();
   await page.locator('#sp2080Tiles [data-spview="access"]').click();
   if(!(await page.locator('#sp2080Access').evaluate(el=>el.classList.contains('active')))||!(await page.locator('#marketplaceAccessStatus').isVisible()))throw new Error('Marketplace Access workflow not visible');
