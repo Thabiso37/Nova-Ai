@@ -25,6 +25,7 @@ function addStoreLinks(root,stores){
 }
 async function enhanceCards(){
  const sb=client();if(!sb||document.documentElement.dataset.novaStoreLinks==="loading")return;
+ if(!document.getElementById("novaStoreCardLinkStyles")){const style=document.createElement("style");style.id="novaStoreCardLinkStyles";style.textContent=".nova-store-card-link{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:7px 11px;margin-top:9px;border:1px solid #c9d8ef;border-radius:8px;color:#174ea6;font-size:12px;font-weight:800;background:#f5f8ff;position:relative;z-index:2}.nova-store-card-link:focus-visible{outline:3px solid #f5b900;outline-offset:2px}";document.head.append(style);}
  document.documentElement.dataset.novaStoreLinks="loading";
  try{
   const stores=await approvedStores();addStoreLinks(document,stores);
