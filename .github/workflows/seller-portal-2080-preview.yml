@@ -9,6 +9,15 @@ on:
       - seller-portal-2080.css
       - seller-portal-2080-ui.js
       - .github/workflows/seller-portal-2080-preview.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - previews/seller-portal-2080/**
+      - seller.html
+      - seller-portal-2080.css
+      - seller-portal-2080-ui.js
+      - .github/workflows/seller-portal-2080-preview.yml
 permissions:
   contents: read
 jobs:
