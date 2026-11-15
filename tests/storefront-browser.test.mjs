@@ -6,14 +6,18 @@ import {createServer} from "node:http";
 import {chromium} from "playwright";
 
 const server=createServer((req,res)=>{
- const pathname=new URL(req.url,"http://127.0.0.1").pathname;
- const target=pathname==="/novaai-storefront.js"?"novaai-storefront.js":pathname==="/store-page.html"?"store-page.html":null;
- if(!target){res.writeHead(404);res.end("Not found");return;}
- res.setHeader("Content-Type",target.endsWith(".js")?"application/javascript":"text/html");
- res.end(fs.readFileSync(path.resolve(target)));
+ const requestUrl=new URL(req.url,"http://127.0.0.1");
+ if(requestUrl.pathname!=="/store-page.html"){res.writeHead(404);res.end("Not found");return;}
+ const userId=requestUrl.searchParams.get("test_user")||"customer-1";
+ let html=fs.readFileSync(path.resolve("store-page.html"),"utf8");
+ const storefrontSource=fs.readFileSync(path.resolve("novaai-storefront.js"),"utf8");
+ html=html.replace('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>','<script>'+mockScript(userId)+'</script>');
+ html=html.replace('<script src="./novaai-storefront.js?v=1"></script>','<script>'+storefrontSource+'</script>');
+ res.setHeader("Content-Type","text/html");
+ res.end(html);
 });
 await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));
-const file="http://127.0.0.1:"+server.address().port+"/store-page.html?store=raider-retail";
+const baseFile="http://127.0.0.1:"+server.address().port+"/store-page.html?store=raider-retail";
 after(()=>new Promise(resolve=>server.close(resolve)));
 const products=[
  {id:101,name:"Retail item",price:120,category:"Clothing",image_url:"",images:[],seller_id:"seller-1",status:"approved"},
@@ -42,14 +46,12 @@ async function openPage(browser,userId,viewport){
  page.on("pageerror",error=>pageErrors.push(error.message));
  page.on("console",message=>{if(message.type()==="error")pageErrors.push(message.text());});
  page.setDefaultTimeout(10000);
- await page.route(/supabase-js/,route=>route.fulfill({status:200,contentType:"application/javascript",body:mockScript(userId)}));
- await page.route("https://nxplffvklkopwfjaqexo.supabase.co/**",route=>route.abort());
- await page.goto(file,{waitUntil:"domcontentloaded"});
+ await page.goto(baseFile+"&test_user="+encodeURIComponent(userId),{waitUntil:"domcontentloaded"});
  try{
   await page.waitForSelector(".nova-store-identity h1",{timeout:8000});
   await page.waitForSelector("#novaStoreProducts .nova-store-product",{timeout:8000});
  }catch(error){
-  const state=await page.locator("#novaStorePage").textContent().catch(()=>"<missing store root>");
+  const state=await page.locator("#novaStorePage").textContent().catch(()=>" <missing store root>");
   throw new Error("Store Page did not render: "+state+"; browser errors: "+pageErrors.join(" | "));
  }
  return page;
