@@ -4,7 +4,7 @@ import path from "node:path";
 import {pathToFileURL} from "node:url";
 import {chromium} from "playwright";
 
-const file=pathToFileURL(path.resolve("store-page.html")).href;
+const file=pathToFileURL(path.resolve("store-page.html")).href+"?store=raider-retail";
 const products=[
  {id:101,name:"Retail item",price:120,category:"Clothing",image_url:"",images:[],seller_id:"seller-1",status:"approved"},
  {id:102,name:"Property item",price:950000,category:"Property For Sale",image_url:"",images:[],seller_id:"seller-1",status:"approved"}
