@@ -64,6 +64,27 @@ document.getElementById("sellerLocSave").addEventListener("click",async function
  if(consent&&(!province||!city)){box.textContent="Select a province and enter a city/town before making the area public.";return;}
  const alreadyApproved=sellerLocationRecord?.public_location_enabled===true&&String(sellerLocationRecord?.approval_status||"").toLowerCase()==="approved";
  if(consent&&!alreadyApproved&&!confirm("Confirm this is a public business/listing area and not your private residential address."))return;
+
+ // Avoid an UPDATE/UPSERT when the seller has not changed any persisted value.
+ // Some existing database review triggers re-queue approval on location UPDATEs;
+ // a no-op save must therefore never reach the database.
+ const sameText=(a,b)=>String(a??"").trim()===String(b??"").trim();
+ const sameCoordinate=(a,b)=>{
+  if(a===null||a===undefined||a===""||b===null||b===undefined||b==="")return (a===null||a===undefined||a==="")&&(b===null||b===undefined||b==="");
+  return Number(a)===Number(b);
+ };
+ const saved=sellerLocationRecord;
+ const unchanged=!!saved&&
+  sameText(saved.province,province)&&sameText(saved.city,city)&&sameText(saved.suburb,suburb)&&
+  sameCoordinate(saved.latitude,payload.latitude)&&sameCoordinate(saved.longitude,payload.longitude)&&
+  saved.public_location_enabled===consent;
+ if(unchanged){
+  await loadSellerPublicLocation();
+  if(box)box.textContent=alreadyApproved
+   ? "Approved location area remains approved. No changes were needed; administrator approval and consent were preserved."
+   : box.textContent;
+  return;
+ }
  box.textContent="Saving…";
  const {error}=await sb.from("seller_public_locations").upsert(payload,{onConflict:"user_id"});
  if(user!==targetUser)return;
