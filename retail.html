@@ -1048,7 +1048,14 @@ html.nova-ads-pending [data-nova-ad-slot] * {
   visibility:hidden !important;
 }
 </style>
-</head>
+<style>
+.nova-retail-modal-title{margin:5px 0;color:#10284b;font-size:22px;line-height:1.2}.nova-retail-modal-price{color:#10284b;font-size:26px;font-weight:950;margin:6px 0 12px}
+.nova-retail-modal-card,.nova-retail-modal-seller{padding:15px;border:1px solid #e2e9f2;border-radius:14px;background:#fff;box-shadow:0 4px 14px #10284b08}.nova-retail-modal-card h3{margin:0 0 9px;color:#10284b;font-size:15px}.nova-retail-modal-card .nova-detail-description{white-space:pre-wrap;line-height:1.75}
+.nova-retail-modal-video{width:min(100%,340px);aspect-ratio:1/1;padding:12px;margin:12px 0;border:1px solid #dce5f0;border-radius:16px;background:#f5f8fc;overflow:hidden}.nova-retail-modal-video[hidden]{display:none!important}.nova-retail-modal-video h3{margin:0 0 8px;color:#10284b;font-size:14px}.nova-retail-modal-video video{display:block;width:100%;height:calc(100% - 22px);object-fit:contain;border-radius:10px;background:#07152f}
+.nova-retail-modal-seller{margin:14px 0}.nova-retail-modal-seller>strong{display:block;margin:6px 0;color:#10284b;font-size:17px}.nova-retail-modal-seller p{color:#667085;font-size:12px}.nova-retail-modal-contact{display:flex;gap:9px;flex-wrap:wrap}
+.nova-retail-contact-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:11px 14px;border:1px solid #174ea6;border-radius:10px;background:#174ea6;color:#fff;font-size:12px;font-weight:850}.nova-retail-contact-button.whatsapp{border-color:#198754;background:#198754}.nova-retail-contact-button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:480px){.nova-retail-modal-contact button{flex:1 1 135px}.nova-retail-modal-card,.nova-retail-modal-seller{padding:12px}}
+</style></head>
 <body>
 
 <div id="productModal" class="product-modal" role="dialog" aria-modal="true" aria-labelledby="modalProductName">
@@ -1063,13 +1070,13 @@ html.nova-ads-pending [data-nova-ad-slot] * {
       <div class="nova-product-label" id="modalProductBrand">novaaibadge</div>
       <h2 id="modalProductName">Product name</h2>
       <div class="nova-rating-row"><span class="rating-count" id="modalReviewCountText">Customer rating: Not rated yet</span></div>
-      <div id="reviewsDrawer" class="info-drawer open"><strong>Customer reviews:</strong> Reviews will appear here once the marketplace review feature is available. No rating or review count is being displayed as verified.</div>
       <div class="nova-detail-category" id="modalProductCategory"></div>
-      <div class="nova-detail-seller"><strong>Seller:</strong> <span id="modalSellerName"></span> <span class="nova-approved-label">Approved seller store</span></div>
-      <div class="info-drawer open nova-detail-reviews"><strong>Customer reviews:</strong> Reviews will appear here once the marketplace review feature is available. No rating or review count is being displayed as verified.</div>
-      <div class="nova-detail-description" id="modalProductDescription"></div>
+      <h2 class="nova-retail-modal-title" id="modalProductName">Product name</h2>
+      <div class="nova-retail-modal-price" id="modalProductPriceTop">R 0.00</div>
+      <section class="nova-retail-modal-card"><h3>Product description</h3><div class="nova-detail-description" id="modalProductDescription"></div></section>
+      <div id="modalProductVideo" class="nova-retail-modal-video" hidden><h3>Product video</h3><video id="modalProductVideoPlayer" controls playsinline preload="metadata"></video></div>
+      <section class="nova-retail-modal-seller"><div class="nova-retail-section-kicker">APPROVED SELLER</div><strong id="modalSellerName"></strong><p id="modalSellerLocation">Public seller location not supplied.</p><button type="button" class="btn outline nova-view-store" id="modalSellerStoreButton" hidden>View Store</button><div class="nova-retail-modal-contact"><button type="button" id="modalCallSeller" class="nova-retail-contact-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-3 2a15 15 0 0 0 6 6l2-3 5 2v4c0 1-1 2-2 2C10 21 3 14 3 5c0-1 1-2 2-2Z"/></svg>Call Seller</button><button type="button" id="modalWhatsAppSeller" class="nova-retail-contact-button whatsapp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20l1.2-4.2A8.5 8.5 0 1 1 20 11.5Z"/><path d="M8.2 7.8c.3-.5.6-.5.9-.5h.5l1.1 2.4-.8.9c.7 1.3 1.7 2.2 3 2.8l.8-.9 2.4 1.1v.5c0 .4-.2.8-.6 1-1 .5-2.5.1-4.2-.8-1.7-.9-3.3-2.5-4-4.1-.5-1.2-.2-2 .9-2.4Z"/></svg>WhatsApp Seller</button></div></section>
       <div class="info-drawer open nova-detail-policy"><strong>Shipping and stock:</strong> Shipping times, delivery fees and available stock quantity are not confirmed in this listing. Please check the order details before placing an order.</div>
-      <button type="button" class="btn outline nova-view-store" id="modalSellerStoreButton" hidden>View Store</button>
       <div class="modal-bottom-bar">
         <div class="modal-price-display">
           <span class="muted" style="font-size:11px">Price:</span>
@@ -1407,7 +1414,14 @@ function openProductDetails(p) {
   document.getElementById("modalProductBrand").textContent=p.seller||"Independent seller";
   document.getElementById("modalProductCategory").textContent=p.category||"Marketplace product";
   document.getElementById("modalSellerName").textContent=p.seller||"Independent seller";
-  document.getElementById("modalProductDescription").textContent=p.description||"The seller has not provided a product description.";
+  document.getElementById("modalProductDescription").textContent=String(p.description??"").trim()?String(p.description):"The seller has not supplied a product description.";
+  document.getElementById("modalProductPriceTop").textContent=cash(p.price);
+  const videoWrap=document.getElementById("modalProductVideo"),videoPlayer=document.getElementById("modalProductVideoPlayer"),videoUrl=/^https:\/\//i.test(String(p.productVideoUrl||""))?String(p.productVideoUrl):"";
+  videoPlayer.pause();videoPlayer.removeAttribute("src");videoPlayer.load();videoWrap.hidden=!videoUrl;if(videoUrl){videoPlayer.src=videoUrl;videoPlayer.load();}
+  document.getElementById("modalSellerLocation").textContent=p.publicLocation||"Public seller location not supplied.";
+  const contact=action=>{if(!p.dbId)return;const u=new URL("https://nxplffvklkopwfjaqexo.supabase.co/functions/v1/property-contact-action");u.searchParams.set("listing_id",String(p.dbId));u.searchParams.set("action",action);window.location.assign(u.toString());};
+  document.getElementById("modalCallSeller").onclick=()=>contact("call");document.getElementById("modalWhatsAppSeller").onclick=()=>contact("whatsapp");
+  document.getElementById("modalCallSeller").disabled=!p.dbId;document.getElementById("modalWhatsAppSeller").disabled=!p.dbId;
   galleryScroll.innerHTML=images.length?images.map(img=>'<div class="nova-gallery-slide"><img src="'+esc(img)+'" alt="'+esc(p.name||"Product photo")+'"></div>').join(""):'<div class="nova-gallery-slide"><div class="muted">No product photo supplied</div></div>';
   dotsContainer.innerHTML=images.map((_,i)=>'<span class="nova-gallery-dot '+(i===0?"active":"")+'"></span>').join("");
   lightboxScroll.innerHTML=images.length?images.map(img=>'<div class="lightbox-slide"><img src="'+esc(img)+'" alt="Fullscreen '+esc(p.name||"product photo")+'"></div>').join(""):'<div class="lightbox-slide"><div class="muted" style="color:white">No product photo supplied</div></div>';
@@ -2016,13 +2030,12 @@ console.log(
 async function loadShared() {
 try {
 
+    let productQuery=await sb.from("Products").select("id,name,description,price,category,image_url,images,seller_name,seller_id,status,product_video_url").eq("status","approved").order("created_at",{ascending:false});
+    if(productQuery.error&&/product_video_url|column .* does not exist|schema cache/i.test(productQuery.error.message||""))productQuery=await sb.from("Products").select("id,name,description,price,category,image_url,images,seller_name,seller_id,status").eq("status","approved").order("created_at",{ascending:false});
     const [productResult, storeResult] = await Promise.all([
-      sb.from("Products")
-        .select("id,name,description,price,category,image_url,images,seller_name,seller_id,status")
-        .eq("status", "approved")
-        .order("created_at", { ascending: false }),
+      Promise.resolve(productQuery),
       sb.from("seller_stores")
-        .select("user_id,store_name,store_slug,description,status")
+        .select("user_id,store_name,store_slug,description,phone,status")
         .eq("status", "approved")
     ]);
 
@@ -2059,6 +2072,7 @@ try {
         sellerId: product.seller_id,
         publicLocation: publicLocations[String(product.seller_id)]||"",
         description: product.description || "",
+        productVideoUrl: product.product_video_url || "",
         images: Array.isArray(product.images) && product.images.length
           ? product.images
           : (product.image_url ? [product.image_url] : [])
