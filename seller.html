@@ -645,6 +645,7 @@ document.getElementById("myProductsList").innerHTML = "";
 document.getElementById("myProductsMsg").textContent = "Sign in to view items.";
 document.getElementById("sellerOrdersList").innerHTML = "";
 document.getElementById("sellerOrdersMsg").textContent = "Sign in to view orders.";
+refreshSeller2080();
 return true;
 }
 
@@ -688,6 +689,7 @@ document.getElementById("approvalBox").textContent =
 "No seller store registered.";
 document.getElementById("userMsg").textContent =
 "No seller store found for this account.";
+refreshSeller2080();
 return true;
 }
 
@@ -1591,7 +1593,7 @@ async function updateFulfillmentStatus(orderId) {
 
 </script>
 <script src="seller-location.js"></script>
-<script src="seller-portal-2080-ui.js?v=1"></script>
+<script src="seller-portal-2080-ui.js?v=2"></script>
 </body>
 </html>
 
