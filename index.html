@@ -945,10 +945,19 @@ if(homeAuthButton&&!homeAuthButton.dataset.authWatchAttached){
     homeAuthButton.setAttribute('aria-label',signedIn?'You are signed in to NOVAAI':'Sign in to NOVAAI');
     homeAuthButton.title=signedIn?'You are signed in':'Sign in to NOVAAI';
   };
+  let homeAuthEventVersion=0;
+  client.auth.onAuthStateChange((_event,session)=>{
+    const eventVersion=++homeAuthEventVersion;
+    queueMicrotask(()=>{
+      if(eventVersion===homeAuthEventVersion)showHomeAuthState(session);
+    });
+  });
   client.auth.getSession().then(({data,error})=>{
-    if(!error)showHomeAuthState(data&&data.session);
-  }).catch(()=>{});
-  client.auth.onAuthStateChange((_event,session)=>showHomeAuthState(session));
+    if(error)return;
+    if(homeAuthEventVersion===0)showHomeAuthState(data&&data.session);
+  }).catch(error=>{
+    console.warn("NOVAAI home session restore could not be checked:",error?.message||error);
+  });
 }
 if(requestedId){
 document.body.classList.add('product-view-active');let detailResult=await client.from('Products').select('id,name,description,price,category,image_url,images,seller_name,seller_id,status,product_video_url').eq('id',requestedId).eq('status','approved').maybeSingle();if(detailResult.error&&/product_video_url|column .* does not exist|schema cache/i.test(detailResult.error.message||''))detailResult=await client.from('Products').select('id,name,description,price,category,image_url,images,seller_name,seller_id,status').eq('id',requestedId).eq('status','approved').maybeSingle();const detail=detailResult.data,detailError=detailResult.error;if(detailError)throw detailError;
