@@ -756,64 +756,25 @@ body:not(.product-view-active) .home-listing-type{position:absolute!important;z-
 @media(max-width:760px){.nova-retail-detail .home-detail-layout{grid-template-columns:minmax(0,1fr);padding:14px;gap:14px}.nova-retail-detail .home-detail-image{height:clamp(240px,78vw,360px)}.nova-retail-video-card{width:min(100%,340px);margin:0 auto}.nova-retail-contact-button{flex:1 1 140px}}
 @media(max-width:380px){.nova-retail-contact-actions{display:grid;grid-template-columns:1fr}.nova-retail-contact-button{width:100%;padding:10px}.nova-retail-info-card,.nova-retail-seller-card{padding:12px}}
 
-/* FINAL FIX: replace the full-card Retail/Motors photos with two compact square thumbnails. */
-body:not(.product-view-active) .home-category-tile.has-thumbnails .home-category-image{z-index:0!important;inset:0!important;background:radial-gradient(ellipse at 55% 35%,#167fc8 0%,#0a2c55 56%,#06152e 100%)!important}
-body:not(.product-view-active) .home-category-tile.has-thumbnails .home-category-image>img{display:none!important;visibility:hidden!important;opacity:0!important}
-body:not(.product-view-active) .home-category-tile.has-thumbnails .home-category-image:before{z-index:1!important}
-body:not(.product-view-active) .home-category-tile.has-thumbnails .home-category-image:after{z-index:2!important}
-body:not(.product-view-active) .home-category-tile.has-thumbnails .home-category-thumbnails{position:absolute!important;z-index:5!important;top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;transform:translate(-50%,-58%)!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;width:min(76%,220px)!important;max-width:220px!important}
-body:not(.product-view-active) .home-category-tile.has-thumbnails .home-category-thumbnail{display:block!important;position:relative!important;aspect-ratio:1/1!important;width:100%!important;min-width:0!important;overflow:hidden!important;border:1px solid #8ce5ff!important;border-radius:12px!important;background:#eef6ff!important;box-shadow:0 5px 16px #0009!important}
-body:not(.product-view-active) .home-category-tile.has-thumbnails .home-category-thumbnail img{display:block!important;position:relative!important;width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;padding:4px!important;opacity:1!important;filter:none!important;transform:none!important}
-@media(max-width:760px){body:not(.product-view-active) .home-category-tile.has-thumbnails .home-category-thumbnails{width:min(72%,170px)!important;gap:7px!important}.home-category-tile.has-thumbnails .home-category-thumbnail{border-radius:9px!important}}
-
-/* NOVAAI compact one-line category navigation: Retail, Motors, Property, More. */
-body:not(.product-view-active) .home-category-tiles{
- display:grid!important;
- grid-template-columns:repeat(4,minmax(0,1fr))!important;
- gap:8px!important;
- margin:0 0 22px!important;
- align-items:stretch!important;
-}
-body:not(.product-view-active) .home-category-tile{
- display:flex!important;
- position:relative!important;
- align-items:center!important;
- justify-content:center!important;
- min-width:0!important;
- min-height:58px!important;
- height:58px!important;
- aspect-ratio:auto!important;
- overflow:hidden!important;
- border:1px solid #48caff88!important;
- border-radius:12px!important;
- background:linear-gradient(145deg,#123d70,#06152e)!important;
- box-shadow:0 4px 12px #0004,0 0 10px #078cff20!important;
-}
-body:not(.product-view-active) .home-category-image,
-body:not(.product-view-active) .home-category-image img,
-body:not(.product-view-active) .home-category-thumbnails{display:none!important}
-body:not(.product-view-active) .home-category-label{
- position:relative!important;
- inset:auto!important;
- z-index:2!important;
- display:block!important;
- padding:5px 2px!important;
- margin:0!important;
- color:#f4f9ff!important;
- text-align:center!important;
- font-size:clamp(11px,2.8vw,14px)!important;
- line-height:1.1!important;
- font-weight:850!important;
- white-space:nowrap!important;
- text-shadow:none!important;
-}
+/* NOVAAI compact category strip with subtle category-specific illustrated backgrounds. */
+body:not(.product-view-active) .home-category-tiles{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:7px!important;margin:0 0 22px!important;align-items:stretch!important}
+body:not(.product-view-active) .home-category-tile{display:flex!important;position:relative!important;align-items:center!important;justify-content:center!important;min-width:0!important;height:64px!important;min-height:64px!important;aspect-ratio:auto!important;overflow:hidden!important;border:1px solid #55cfff99!important;border-radius:12px!important;background:#071b36!important;box-shadow:0 4px 12px #0005,0 0 12px #078cff20!important;isolation:isolate!important}
+body:not(.product-view-active) .home-category-image{display:block!important;position:absolute!important;z-index:0!important;inset:0!important;opacity:1!important;background-color:#082448!important;background-repeat:no-repeat!important;background-position:center!important;background-size:cover!important}
+body:not(.product-view-active) .home-category-image img{display:none!important}
+body:not(.product-view-active) .home-category-tile.retail .home-category-image{background-image:radial-gradient(ellipse at 72% 18%,#f5b90055,transparent 35%),linear-gradient(135deg,#174ea6,#071b36)!important}
+body:not(.product-view-active) .home-category-tile.motors .home-category-image{background-image:radial-gradient(ellipse at 72% 20%,#50c8ff55,transparent 36%),linear-gradient(135deg,#17618b,#06182f)!important}
+body:not(.product-view-active) .home-category-tile.property .home-category-image{background-image:radial-gradient(ellipse at 72% 20%,#8ce0c755,transparent 36%),linear-gradient(135deg,#176b69,#071b36)!important}
+body:not(.product-view-active) .home-category-tile.more .home-category-image{background-image:radial-gradient(ellipse at 72% 20%,#b49aff66,transparent 38%),linear-gradient(135deg,#493a87,#071b36)!important}
+body:not(.product-view-active) .home-category-tile .home-category-image:before{content:"";position:absolute;inset:0;opacity:.8;pointer-events:none;background-repeat:no-repeat;background-position:right 9px center;background-size:48px 48px}
+body:not(.product-view-active) .home-category-tile.retail .home-category-image:before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 25h40l-4 29H16zM9 25l5-13h36l5 13M25 25v-6a7 7 0 0 1 14 0v6'/%3E%3C/svg%3E")}
+body:not(.product-view-active) .home-category-tile.motors .home-category-image:before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 38 5-14q2-5 7-5h22q5 0 7 5l5 14v12H9zM8 38h48M19 50v4m26-4v4M17 31h30'/%3E%3Ccircle cx='19' cy='43' r='3'/%3E%3Ccircle cx='45' cy='43' r='3'/%3E%3C/svg%3E")}
+body:not(.product-view-active) .home-category-tile.property .home-category-image:before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 30 25-20 25 20M14 27v27h36V27M26 54V38h12v16M21 33h5m12 0h5'/%3E%3C/svg%3E")}
+body:not(.product-view-active) .home-category-tile.more .home-category-image:before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M32 10v44M10 32h44M16 16l32 32M48 16 16 48'/%3E%3C/svg%3E")}
+body:not(.product-view-active) .home-category-tile .home-category-image:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#04142b44,#04142b18 58%,#04142b55);pointer-events:none}
+body:not(.product-view-active) .home-category-label{position:relative!important;z-index:2!important;display:block!important;inset:auto!important;margin:0!important;padding:5px 2px!important;color:#fff!important;text-align:center!important;font-size:clamp(10px,2.7vw,13px)!important;line-height:1.1!important;font-weight:900!important;white-space:nowrap!important;text-shadow:0 2px 8px #000!important}
 body:not(.product-view-active) .home-category-arrow{display:none!important}
 body:not(.product-view-active) .home-category-tile.more .category-more-symbol{display:none!important}
-@media(max-width:380px){
- body:not(.product-view-active) .home-category-tiles{gap:5px!important}
- body:not(.product-view-active) .home-category-tile{height:52px!important;min-height:52px!important;border-radius:9px!important}
- body:not(.product-view-active) .home-category-label{font-size:10px!important}
-}
+@media(max-width:380px){body:not(.product-view-active) .home-category-tiles{gap:5px!important}body:not(.product-view-active) .home-category-tile{height:58px!important;min-height:58px!important;border-radius:9px!important}body:not(.product-view-active) .home-category-tile .home-category-image:before{background-size:40px 40px!important;background-position:right 5px center!important}body:not(.product-view-active) .home-category-label{font-size:10px!important}}
 </style></head>
 <body>
 <div class="top">MADE FOR SOUTH AFRICA <span aria-hidden="true">·</span> SHOP SMART <span aria-hidden="true">·</span> SUPPORT INDEPENDENT SELLERS</div>
