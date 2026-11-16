@@ -2,6 +2,12 @@
 <html lang="en" class="nova-ads-pending">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#10284b">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./novaai-icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./novaai-icon.svg">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="NOVAAI MARKET — Your Marketplace. Your Opportunity. Shop approved products from South African sellers.">
 <title>NOVAAI MARKET | Your Marketplace. Your Opportunity.</title>
 <style>
@@ -984,4 +990,13 @@ updateCartCount();loadHomeProducts();
 <script src="./novaai-share-visits.js?v=20261113-share-visits-1" defer></script>
 <script src="./novaai-product-sharing.js?v=3" defer></script>
 <script src="./novaai-storefront.js?v=1"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("./service-worker.js", { updateViaCache: "none" })
+      .then(function (registration) { return registration.update(); })
+      .catch(function (error) { console.warn("NOVAAI app setup could not be refreshed:", error); });
+  });
+}
+</script>
 </body></html>
