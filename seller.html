@@ -720,6 +720,35 @@ return false;
 
 storeData = data;
 
+// A successful empty result is not enough to declare the seller unregistered.
+// Confirm the current auth identity and retry once before showing that state.
+if (!storeData) {
+  const authCheck = await sb.auth.getUser();
+  if (version !== authVersion) return;
+  if (authCheck.error || authCheck.data?.user?.id !== u.id) {
+    document.getElementById("userMsg").textContent =
+      "Your sign-in is still being verified. Please wait a moment and refresh if needed.";
+    publish.disabled = true;
+    return false;
+  }
+  await new Promise(resolve => setTimeout(resolve, 350));
+  const retry = await sb.from("seller_stores")
+    .select("id,store_name,store_slug,status,primary_marketplace")
+    .eq("user_id", u.id)
+    .maybeSingle();
+  if (version !== authVersion) return;
+  if (retry.error) {
+    publish.disabled = true;
+    publish.textContent = "Store Query Error";
+    document.getElementById("approvalBox").textContent =
+      "Store lookup failed. This is a data-access error, not an approval decision.";
+    document.getElementById("userMsg").textContent =
+      formatSupabaseError("seller_stores retry SELECT", retry.error);
+    return false;
+  }
+  storeData = retry.data;
+}
+
 if (!storeData && u.user_metadata?.seller_store_name && u.user_metadata?.seller_primary_marketplace && u.user_metadata?.phone) {
   const {error:applicationError}=await sb.rpc("submit_seller_application",{p_store_name:u.user_metadata.seller_store_name,p_phone:u.user_metadata.phone,p_marketplace:u.user_metadata.seller_primary_marketplace});
   if(applicationError){document.getElementById("userMsg").textContent="Seller application could not be submitted: "+applicationError.message;publish.disabled=true;return false;}
@@ -1231,26 +1260,36 @@ window.editProduct = editProduct;
     "Product resubmitted successfully.";
 
   await loadMyProducts();
-} // Retail listings now use the authenticated seller account and Products table.
-sb.auth.getSession().then(({data,error}) => {
-  if (error) {
-    updateUser(null);
-    msg("authMsg", "Could not restore your sign-in session. Please sign in again.", true);
-    return;
-  }
-  updateUser(data?.session?.user || null);
-}).catch(error => {
-  console.error("NOVAAI seller session check failed:", error);
-  updateUser(null);
-  msg("authMsg", "Could not check your saved sign-in session. Please sign in again.", true);
-});
-sb.auth.onAuthStateChange((event,s) => {
+} // Register the auth listener before restoring the saved session so a newer
+// auth event cannot be overwritten by an older getSession() response.
+let sellerAuthEventVersion = 0;
+sb.auth.onAuthStateChange((event, session) => {
+  const eventVersion = ++sellerAuthEventVersion;
   if (event === "PASSWORD_RECOVERY") {
     document.getElementById("signedOut").classList.add("hidden");
     document.getElementById("passwordRecoveryPanel").classList.remove("hidden");
     return;
   }
-  updateUser(s?.user || null);
+  // Supabase auth callbacks should not start further Supabase requests inline.
+  queueMicrotask(() => {
+    if (eventVersion === sellerAuthEventVersion) {
+      updateUser(session?.user || null);
+    }
+  });
+});
+sb.auth.getSession().then(({data,error}) => {
+  if (error) {
+    console.error("NOVAAI seller session restore failed:", error);
+    msg("authMsg", "Your saved sign-in could not be checked just now. Your seller data has not been changed; please retry.", true);
+    return;
+  }
+  const observedAuthVersion = sellerAuthEventVersion;
+  if (observedAuthVersion === sellerAuthEventVersion) {
+    updateUser(data?.session?.user || null);
+  }
+}).catch(error => {
+  console.error("NOVAAI seller session check failed:", error);
+  msg("authMsg", "Your saved sign-in could not be checked just now. Your seller data has not been changed; please retry.", true);
 });
 
 
