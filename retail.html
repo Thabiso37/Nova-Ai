@@ -1897,15 +1897,28 @@ document.getElementById("customerAuthForm").addEventListener("submit", async e =
   }
 });
 
-sb.auth.getSession().then(({ data, error }) => {
-  if (error) console.error("Session error:", error);
-  user = data?.session?.user || null;
-  updateCustomerAccountUI();
+let customerAuthEventVersion = 0;
+sb.auth.onAuthStateChange((_event, session) => {
+  const eventVersion = ++customerAuthEventVersion;
+  queueMicrotask(() => {
+    if (eventVersion !== customerAuthEventVersion) return;
+    user = session?.user || null;
+    updateCustomerAccountUI();
+  });
 });
 
-sb.auth.onAuthStateChange((_event, session) => {
-  user = session?.user || null;
-  updateCustomerAccountUI();
+sb.auth.getSession().then(({ data, error }) => {
+  if (error) {
+    console.warn("NOVAAI customer session restore could not be checked:", error.message);
+    return;
+  }
+  const observedAuthVersion = customerAuthEventVersion;
+  if (observedAuthVersion === customerAuthEventVersion) {
+    user = data?.session?.user || null;
+    updateCustomerAccountUI();
+  }
+}).catch(error => {
+  console.warn("NOVAAI customer session restore failed:", error?.message || error);
 });
 
 updateCustomerAccountUI();
@@ -1937,7 +1950,7 @@ if (authError || !authData.user) {
 }
 
 const customerId = authData.user.id;
-console.log("NOVAAI CUSTOMER ID:", customerId);
+// Do not write customer identifiers to the browser console.
 // Retrieve customer's orders
 const { data: orders, error: ordersError } = await sb
   .from("orders")
