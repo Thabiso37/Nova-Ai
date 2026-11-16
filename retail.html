@@ -1055,6 +1055,25 @@ html.nova-ads-pending [data-nova-ad-slot] * {
 .nova-retail-modal-seller{margin:14px 0}.nova-retail-modal-seller>strong{display:block;margin:6px 0;color:#10284b;font-size:17px}.nova-retail-modal-seller p{color:#667085;font-size:12px}.nova-retail-modal-contact{display:flex;gap:9px;flex-wrap:wrap}
 .nova-retail-contact-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:11px 14px;border:1px solid #174ea6;border-radius:10px;background:#174ea6;color:#fff;font-size:12px;font-weight:850}.nova-retail-contact-button.whatsapp{border-color:#198754;background:#198754}.nova-retail-contact-button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 @media(max-width:480px){.nova-retail-modal-contact button{flex:1 1 135px}.nova-retail-modal-card,.nova-retail-modal-seller{padding:12px}}
+
+<style>
+/* Live Retail Shop by Category — category tiles are populated from approved seller listings. */
+.shop-categories{max-width:1200px;margin:4px auto 18px;padding:0 20px}
+.shop-categories-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 11px}
+.shop-categories-heading span{display:block;margin-bottom:3px;color:#667085;font-size:8px;font-weight:900;letter-spacing:1.2px}
+.shop-categories-heading h2{margin:0;color:#10284b;font-size:18px;font-weight:900}
+.shop-categories-heading button{border:0;background:transparent;color:#174ea6;font-size:11px;font-weight:850}
+.shop-category-tiles{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);grid-template-rows:1fr;gap:10px;overflow-x:auto;padding:2px 1px 9px;scroll-snap-type:x mandatory;scrollbar-width:thin}
+.shop-category-tile{display:flex;min-width:92px;max-width:116px;flex-direction:column;align-items:center;gap:7px;padding:7px 6px 9px;border:1px solid #e4eaf2;border-radius:12px;background:#fff;color:#10284b;text-align:center;box-shadow:0 3px 9px rgba(16,40,75,.05);scroll-snap-align:start}
+.shop-category-tile[aria-pressed="true"]{border-color:#174ea6;background:#eff5ff;box-shadow:0 0 0 1px #174ea6}
+.shop-category-photo{display:grid;width:68px;height:68px;place-items:center;overflow:hidden;border-radius:10px;background:#f2f5f9;color:#174ea6;font-size:24px;font-weight:900}
+.shop-category-photo img{width:100%;height:100%;object-fit:cover}
+.shop-category-name{display:-webkit-box;min-height:28px;overflow:hidden;color:#24344d;font-size:10px;line-height:1.3;font-weight:800;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.shop-category-count{color:#778399;font-size:9px}
+.shop-category-loading{color:#667085;font-size:11px}
+@media(min-width:760px){.shop-category-tiles{grid-auto-flow:row;grid-template-columns:repeat(6,minmax(0,1fr));overflow:visible}.shop-category-tile{max-width:none;min-height:126px}.shop-category-photo{width:76px;height:76px}.shop-category-name{font-size:11px}}
+@media(max-width:560px){.shop-categories{padding:0 12px;margin-top:2px}.shop-category-tiles{grid-auto-columns:92px;gap:8px}.shop-category-photo{width:64px;height:64px}.shop-categories-heading h2{font-size:16px}}
+</style>
 </style></head>
 <body>
 
@@ -1121,6 +1140,11 @@ html.nova-ads-pending [data-nova-ad-slot] * {
   </article>
   <div class="shop-tv-controls"><span class="shop-tv-onair">NOW SHOWING</span><div class="shop-tv-dots" aria-label="Choose advertisement"><button class="shop-tv-dot" type="button" aria-label="Advertisement 1" aria-current="true" data-shop-tv-go="0"></button><button class="shop-tv-dot" type="button" aria-label="Advertisement 2" aria-current="false" data-shop-tv-go="1"></button><button class="shop-tv-dot" type="button" aria-label="Advertisement 3" aria-current="false" data-shop-tv-go="2"></button></div></div>
 </div>
+
+<section id="shopCategories" class="shop-categories" aria-label="Shop by category">
+  <div class="shop-categories-heading"><div><span>EXPLORE THE MARKETPLACE</span><h2>Shop by Category</h2></div><button type="button" id="showAllShopCategories">View all</button></div>
+  <div id="shopCategoryTiles" class="shop-category-tiles" aria-live="polite"><p class="shop-category-loading">Loading live categories…</p></div>
+</section>
 
 <div id="customerAuthModal" class="hidden">
   <div class="customer-auth-card">
@@ -1342,7 +1366,40 @@ function closeRetailMarketPage() {
 }
 
 function message(id,s,bad=false){let e=document.getElementById(id);e.textContent=s;e.className="msg "+(bad?"error":"success")}
-function initCategories(){ /* Category landing page removed; catalogue filters remain available. */ }
+function initCategories(){
+  const host=document.getElementById("shopCategoryTiles");
+  if(!host)return;
+  const retailProducts=products.filter(p=>!["Auto","Motors & Vehicles","Property For Sale","Property To Rent"].includes(p.category));
+  const categories=[...new Set(retailProducts.map(p=>String(p.category||"").trim()).filter(Boolean))];
+  const preferred=C.map(item=>item[0]);
+  categories.sort((a,b)=>{
+    const ai=preferred.indexOf(a),bi=preferred.indexOf(b);
+    if(ai<0&&bi<0)return a.localeCompare(b);
+    if(ai<0)return 1;if(bi<0)return -1;return ai-bi;
+  });
+  const tiles=[{name:"All",label:"All Categories",items:retailProducts},...categories.map(name=>({name,label:name,items:retailProducts.filter(p=>p.category===name)}))];
+  host.innerHTML=tiles.map((tile,index)=>{
+    const product=tile.items.find(p=>Array.isArray(p.images)&&p.images.some(Boolean));
+    const image=product?safeImg(product.images.find(Boolean)):"";
+    const icon=index===0?"✦":(C.find(item=>item[0]===tile.name)?.[1]||"▦");
+    const selected=active===tile.name;
+    return '<button type="button" class="shop-category-tile" data-shop-category="'+esc(tile.name)+'" aria-pressed="'+String(selected)+'"><span class="shop-category-photo">'+(image?'<img loading="lazy" src="'+esc(image)+'" alt="" onerror="this.style.display=\'none\'">':esc(icon))+'</span><span class="shop-category-name">'+esc(tile.label)+'</span><span class="shop-category-count">'+tile.items.length+' '+(tile.items.length===1?'product':'products')+'</span></button>';
+  }).join("");
+  host.querySelectorAll("[data-shop-category]").forEach(button=>button.addEventListener("click",()=>{
+    active=button.dataset.shopCategory;
+    initCategories();
+    render();
+    document.getElementById("products")?.scrollIntoView({behavior:"smooth",block:"start"});
+  }));
+  const allButton=document.getElementById("showAllShopCategories");
+  if(allButton)allButton.onclick=()=>{
+    active="All";
+    document.getElementById("search").value="";
+    initCategories();
+    render();
+    document.getElementById("products")?.scrollIntoView({behavior:"smooth",block:"start"});
+  };
+}
 
 function renderRetailMarketGrid(list) {
   document.getElementById("retailProductsGrid").innerHTML = list.length ? list.map(p => {
@@ -1376,6 +1433,7 @@ function render(){
     return categoryMatch && [p.name,p.category,p.description,p.seller].join(" ").toLowerCase().includes(q);
   });
 
+  initCategories();
   document.getElementById("products").innerHTML=list.length?list.map(p=>{
     const imgList = Array.isArray(p.images) && p.images.length ? p.images : (p.image_url ? [p.image_url] : []);
     const firstImg = safeImg(imgList[0]);
