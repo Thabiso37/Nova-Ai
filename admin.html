@@ -2174,7 +2174,7 @@ sb.auth.getSession().then(({ data, error }) => {
     return;
   }
   const observedAuthVersion = adminAuthEventVersion;
-  if (observedAuthVersion === adminAuthEventVersion) {
+  if (observedAuthVersion === 0) {
     checkAdmin(data.session?.user || null);
   }
 }).catch((error) => {
