@@ -1913,7 +1913,7 @@ sb.auth.getSession().then(({ data, error }) => {
     return;
   }
   const observedAuthVersion = customerAuthEventVersion;
-  if (observedAuthVersion === customerAuthEventVersion) {
+  if (observedAuthVersion === 0) {
     user = data?.session?.user || null;
     updateCustomerAccountUI();
   }
