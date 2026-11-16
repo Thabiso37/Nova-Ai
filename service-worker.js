@@ -1,4 +1,4 @@
-const CACHE_NAME = "novaai-market-app-v1";
+const CACHE_NAME = "novaai-market-app-v2";
 const SHELL = [
   "./",
   "./index.html",
@@ -35,7 +35,13 @@ self.addEventListener("fetch", event => {
   if (url.origin !== self.location.origin) return;
 
   // Never serve stale seller login/portal documents or auth helper scripts.
-  if (/\\/(seller(?:-property|-retail|-motors)?\\.html|seller-location\\.js)$/.test(url.pathname)) {
+  const sensitiveSellerPath =
+    url.pathname.endsWith("/seller.html") ||
+    url.pathname.endsWith("/seller-retail.html") ||
+    url.pathname.endsWith("/seller-property.html") ||
+    url.pathname.endsWith("/seller-motors.html") ||
+    url.pathname.endsWith("/seller-location.js");
+  if (sensitiveSellerPath) {
     event.respondWith(fetch(request, { cache: "no-store" }));
     return;
   }
@@ -43,8 +49,13 @@ self.addEventListener("fetch", event => {
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request, { cache: "no-store" }).then(response => {
-        if (response && response.ok &&
-            /\\/(index\\.html|retail\\.html|seller-motors-houses\\.html|property-details\\.html)?$/.test(url.pathname)) {
+        const isAppDocument =
+          url.pathname.endsWith("/index.html") ||
+          url.pathname.endsWith("/retail.html") ||
+          url.pathname.endsWith("/seller-motors-houses.html") ||
+          url.pathname.endsWith("/property-details.html") ||
+          url.pathname.endsWith("/");
+        if (response && response.ok && isAppDocument) {
           const copy = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
         }
@@ -64,7 +75,7 @@ self.addEventListener("fetch", event => {
   }
 
   // Keep application scripts fresh; retain a last-known copy only as an offline fallback.
-  if (/\\.js$/.test(url.pathname)) {
+  if (url.pathname.endsWith(".js")) {
     event.respondWith(
       fetch(request, { cache: "no-store" }).then(response => {
         if (response && response.ok) {
@@ -77,7 +88,9 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  if (/\\.(webmanifest|svg|css)$/.test(url.pathname)) {
+  if (url.pathname.endsWith(".webmanifest") ||
+      url.pathname.endsWith(".svg") ||
+      url.pathname.endsWith(".css")) {
     event.respondWith(
       fetch(request).then(response => {
         if (response && response.ok) {
