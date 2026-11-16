@@ -1499,15 +1499,19 @@ function openProductDetails(p) {
   if(shareButton){shareButton.dataset.shareTitle=p.name||"Product";shareButton.dataset.sharePrice=cash(p.price);shareButton.dataset.shareLocation=p.publicLocation||"";shareButton.dataset.shareUrl=p.dbId?new URL("./retail.html?product="+encodeURIComponent(String(p.dbId)),window.location.href).toString():"";shareButton.dataset.shareProductId=p.dbId||"";shareButton.dataset.shareMarketplace="retail";shareButton.dataset.shareLocationType="detail_page";shareButton.disabled=!p.dbId;}
   modal.classList.add("open");
 }
+function wishlistProductKey(value){return String(value??"").replace(/^db-/,"");}
 function bindProductEvents() {
   document.querySelectorAll("[data-add]").forEach(b=>b.onclick=e=>{e.stopPropagation();add(b.dataset.add);});
-  let savedWishlist=JSON.parse(localStorage.getItem("novaWishlist")||"[]");
+  let savedWishlist=[];
+  try{const raw=JSON.parse(localStorage.getItem("novaWishlist")||"[]");if(Array.isArray(raw))savedWishlist=raw.map(wishlistProductKey);}catch(e){}
   document.querySelectorAll("[data-wishlist]").forEach(b=>{
-    if(savedWishlist.includes(b.dataset.wishlist)){b.textContent="♥";b.style.color="#e11d48";}
+    const key=wishlistProductKey(b.dataset.wishlist);
+    if(savedWishlist.includes(key)){b.textContent="♥";b.style.color="#e11d48";}
     b.onclick=e=>{
       e.stopPropagation();
-      let wishlist=JSON.parse(localStorage.getItem("novaWishlist")||"[]");
-      const id=b.dataset.wishlist;
+      let wishlist=[];
+      try{const raw=JSON.parse(localStorage.getItem("novaWishlist")||"[]");if(Array.isArray(raw))wishlist=raw.map(wishlistProductKey);}catch(error){}
+      const id=key;
       if(wishlist.includes(id))wishlist=wishlist.filter(x=>x!==id);else wishlist.push(id);
       localStorage.setItem("novaWishlist",JSON.stringify(wishlist));
       b.textContent=wishlist.includes(id)?"♥":"♡";
@@ -1528,10 +1532,12 @@ function bindProductEvents() {
   });
 }
 function removeWishlistItem(id){
-  const saved=JSON.parse(localStorage.getItem("novaWishlist")||"[]");
-  localStorage.setItem("novaWishlist",JSON.stringify(saved.filter(x=>String(x)!==String(id))));
+  const key=wishlistProductKey(id);
+  let saved=[];
+  try{const raw=JSON.parse(localStorage.getItem("novaWishlist")||"[]");if(Array.isArray(raw))saved=raw.map(wishlistProductKey);}catch(e){}
+  localStorage.setItem("novaWishlist",JSON.stringify(saved.filter(x=>x!==key)));
   renderWishlist();
-  document.querySelectorAll("[data-wishlist]").forEach(b=>{if(String(b.dataset.wishlist)===String(id)){b.textContent="♡";b.style.color="#17345b";}});
+  document.querySelectorAll("[data-wishlist]").forEach(b=>{if(wishlistProductKey(b.dataset.wishlist)===key){b.textContent="♡";b.style.color="#17345b";}});
 }
 function clearWishlist(){
   if(!confirm("Clear all saved wishlist items?"))return;
@@ -1547,7 +1553,8 @@ function renderWishlist(){
   if(wishlistAd)wishlistAd.remove();
   let saved=[];
   try{saved=JSON.parse(localStorage.getItem("novaWishlist")||"[]");if(!Array.isArray(saved))saved=[];}catch(e){saved=[];}
-  const favourites=saved.map(id=>products.find(p=>String(p.id)===String(id))).filter(Boolean);
+  saved=[...new Set(saved.map(wishlistProductKey))];
+  const favourites=saved.map(id=>products.find(p=>wishlistProductKey(p.dbId||p.id)===id)).filter(Boolean);
   section.innerHTML=`
     <div class="wishlist-heading"><h2>My Wishlist (${favourites.length})</h2><button type="button" class="wishlist-clear" onclick="clearWishlist()">Clear Wishlist</button></div>
     ${favourites.length?favourites.map(p=>{
@@ -1565,7 +1572,7 @@ function renderWishlist(){
   if(wishlistAd)section.insertBefore(wishlistAd,section.firstChild);
   section.querySelectorAll("[data-wishlist-open]").forEach(button=>{
     button.addEventListener("click",()=>{
-      const product=products.find(item=>String(item.id)===String(button.dataset.wishlistOpen));
+      const product=products.find(item=>wishlistProductKey(item.dbId||item.id)===wishlistProductKey(button.dataset.wishlistOpen));
       openProductDetails(product);
     });
   });
@@ -2143,6 +2150,8 @@ try {
 
     render();
     renderCart();
+    // Refresh saved products after the approved live catalogue has replaced demo placeholders.
+    renderWishlist();
 
     // Open the exact product when arriving from a homepage product card.
     const requestedProductId = new URLSearchParams(window.location.search).get("product");
