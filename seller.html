@@ -501,6 +501,7 @@ window.setMotorListingType = setMotorListingType;
 
 function setListingMarket(market) {
   if (!["retail","motors","property"].includes(market)) return;
+  if (market !== "motors") document.getElementById("motorListingTypeTabs")?.remove();
   if (user && storeData && market !== storeData.primary_marketplace) { msg("sellerMsg","This seller account is locked to "+(marketplaceLabels[storeData.primary_marketplace]||"its primary marketplace")+".",true); return; }
   listingMarket = market;
   document.getElementById("marketRetailTab").classList.toggle("active", market === "retail");
