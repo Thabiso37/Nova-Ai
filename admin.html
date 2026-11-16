@@ -2156,7 +2156,8 @@ sb.auth.onAuthStateChange((event, session) => {
     currentAdmin = null;
     document.getElementById("dashboard").classList.add("hidden");
     document.getElementById("loginPanel").classList.remove("hidden");
-  } else if (event === "SIGNED_IN") {
+  } else {
+    // Handle INITIAL_SESSION and token refresh events as well as SIGNED_IN.
     // Defer Supabase work until the auth callback has returned.
     queueMicrotask(() => {
       if (eventVersion === adminAuthEventVersion) checkAdmin(session?.user || null);
