@@ -713,6 +713,17 @@ body:not(.product-view-active) .home-signin-link:hover{
 @media(max-width:760px){
   body:not(.product-view-active) .home-signin-link{min-height:38px;padding:9px 14px;font-size:11px}
 }
+
+body:not(.product-view-active) .home-signin-link.is-signed-in{
+  border-color:rgba(75,210,160,.55);
+  background:linear-gradient(135deg,#087e68 0%,#08634f 100%);
+  color:#fff;
+  box-shadow:0 6px 18px rgba(8,126,104,.25),inset 0 1px 0 rgba(255,255,255,.18);
+}
+body:not(.product-view-active) .home-signin-link.is-signed-in:hover{
+  background:linear-gradient(135deg,#0b967b 0%,#08715a 100%);
+  border-color:#7ce2bd;
+}
 </style>
 
 <style id="nova-home-preview2-card-authority">
@@ -924,6 +935,21 @@ async function loadHomeProducts(){
 const requestedId=new URLSearchParams(window.location.search).get('product');
 try{
 if(!window.supabase)throw new Error('Marketplace service is unavailable.');const client=window.supabase.createClient('https://nxplffvklkopwfjaqexo.supabase.co','sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ');window.NOVAAI_SUPABASE_CLIENT=client;
+const homeAuthButton=document.querySelector('.home-signin-link');
+if(homeAuthButton&&!homeAuthButton.dataset.authWatchAttached){
+  homeAuthButton.dataset.authWatchAttached='true';
+  const showHomeAuthState=session=>{
+    const signedIn=!!(session&&session.user);
+    homeAuthButton.textContent=signedIn?"You're in":"Sign in";
+    homeAuthButton.classList.toggle('is-signed-in',signedIn);
+    homeAuthButton.setAttribute('aria-label',signedIn?'You are signed in to NOVAAI':'Sign in to NOVAAI');
+    homeAuthButton.title=signedIn?'You are signed in':'Sign in to NOVAAI';
+  };
+  client.auth.getSession().then(({data,error})=>{
+    if(!error)showHomeAuthState(data&&data.session);
+  }).catch(()=>{});
+  client.auth.onAuthStateChange((_event,session)=>showHomeAuthState(session));
+}
 if(requestedId){
 document.body.classList.add('product-view-active');let detailResult=await client.from('Products').select('id,name,description,price,category,image_url,images,seller_name,seller_id,status,product_video_url').eq('id',requestedId).eq('status','approved').maybeSingle();if(detailResult.error&&/product_video_url|column .* does not exist|schema cache/i.test(detailResult.error.message||''))detailResult=await client.from('Products').select('id,name,description,price,category,image_url,images,seller_name,seller_id,status').eq('id',requestedId).eq('status','approved').maybeSingle();const detail=detailResult.data,detailError=detailResult.error;if(detailError)throw detailError;
 let store=null;if(detail&&detail.seller_id){const {data:storeRow,error:storeError}=await client.from('seller_stores').select('user_id,store_name,store_slug,description,phone,status').eq('user_id',detail.seller_id).eq('status','approved').maybeSingle();if(storeError)throw storeError;store=storeRow;const {data:locationRow}=await client.from('seller_public_locations').select('province,city,suburb').eq('user_id',detail.seller_id).eq('public_location_enabled',true).eq('approval_status','approved').maybeSingle();detail.public_location=locationRow?[locationRow.suburb,locationRow.city,locationRow.province].filter(Boolean).join(', '):'';}
