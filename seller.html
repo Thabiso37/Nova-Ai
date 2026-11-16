@@ -525,6 +525,7 @@ function setListingMarket(market) {
     label.textContent = "Marketplace *";
     category.innerHTML = '<option value="Auto">Auto (Motors)</option><option value="Motors & Vehicles">Motors & Vehicles (legacy)</option>';
     document.getElementById("marketSpecificFields").innerHTML = "";
+    document.getElementById("motorListingTypeTabs")?.remove();
     document.getElementById("marketSpecificFields").insertAdjacentHTML("beforebegin", `
       <div class="tabs" id="motorListingTypeTabs" style="margin:12px 0">
         <button class="tab active" id="motorVehicleTypeButton" type="button" onclick="setMotorListingType('vehicle')">Vehicles</button>
