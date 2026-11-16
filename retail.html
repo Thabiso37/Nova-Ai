@@ -2159,6 +2159,8 @@ try {
 
     document.getElementById("catalogueMessage").textContent =
       "Products could not be loaded. Please try again.";
+    const categoryHost=document.getElementById("shopCategoryTiles");
+    if(categoryHost)categoryHost.innerHTML='<p class="shop-category-loading">Live categories are temporarily unavailable. Please try again.</p>';
 
     document.getElementById("products").innerHTML = '<div class="panel msg error" role="alert">Products could not be loaded. Please try again.</div>';
     renderCart();
@@ -2169,7 +2171,6 @@ document.getElementById("searchForm").onsubmit=e=>{e.preventDefault();render();g
 document.getElementById("search").oninput=render;
 document.getElementById("year").textContent=new Date().getFullYear();
 
-initCategories();
 renderCart();
 loadShared();
 
