@@ -80,5 +80,5 @@ function buildTiles(market){
  [[ "store","My Store","Store details and public location","▤"],["listings",title,"Manage existing marketplace listings","◇"],["analytics","Business Analytics","Verified data only · no invented figures","▥"],["reputation","Store Reputation","Future feature · unavailable","✦"],["notifications","Notifications","No unverified alerts","♧"],["access","Marketplace Access","View your application status","⬡"],["account","Account & Security","Your existing NOVAAI account","⚙"],["support","Help & Support","Seller assistance","☏"]].forEach(t=>tiles.append(makeTile(t[0],t[1],t[2],t[3],t[0]==="reputation")));
 }
 window.NOVAAISeller2080={refresh,navigate};
-document.addEventListener("DOMContentLoaded",()=>{createShell();mountExisting();refresh()});
+document.addEventListener("DOMContentLoaded",()=>{createShell();mountExisting()});
 })();
