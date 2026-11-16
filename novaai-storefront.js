@@ -71,7 +71,7 @@ async function loadStorePage(){
  if(!slug){root.textContent="This store link is invalid.";return;}
  root.innerHTML='<div class="nova-store-loading" role="status">Loading approved store…</div>';
  try{
-  let result=await sb.from("seller_stores").select("id,user_id,store_name,store_slug,phone,status,store_banner_url").eq("store_slug",slug).eq("status","approved").maybeSingle();
+  let result=await sb.from("seller_stores").select("id,user_id,store_name,store_slug,status,store_banner_url").eq("store_slug",slug).eq("status","approved").maybeSingle();
   if(result.error&&/column .* does not exist|schema cache/i.test(result.error.message||"")){
    result=await sb.from("seller_stores").select("id,user_id,store_name,store_slug,phone,status").eq("store_slug",slug).eq("status","approved").maybeSingle();
   }
