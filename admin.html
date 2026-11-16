@@ -2146,21 +2146,9 @@ document.getElementById("refreshAdCampaignsBtn").onclick=loadAdCampaigns;
 document.getElementById("refreshShareAnalytics")?.addEventListener("click", loadNovaAIShareAnalytics);
 document.getElementById("refreshVisitAnalytics")?.addEventListener("click", loadNovaAIAdVisitAnalytics);
 
-sb.auth.getSession().then(({ data, error }) => {
-  if (error) {
-    document.getElementById("loginMessage").textContent =
-      "Could not restore your session: " + error.message;
-    return;
-  }
-
-  checkAdmin(data.session?.user || null);
-}).catch((error) => {
-  console.error("NOVAAI session restore error:", error);
-  document.getElementById("loginMessage").textContent =
-    "Session restore failed: " + (error?.message || "Please refresh and try again.");
-});
-
+let adminAuthEventVersion = 0;
 sb.auth.onAuthStateChange((event, session) => {
+  const eventVersion = ++adminAuthEventVersion;
   if (event === "SIGNED_OUT") {
     adminAuthVersion++;
     adminCheckPromise = null;
@@ -2169,7 +2157,31 @@ sb.auth.onAuthStateChange((event, session) => {
     document.getElementById("dashboard").classList.add("hidden");
     document.getElementById("loginPanel").classList.remove("hidden");
   } else if (event === "SIGNED_IN") {
-    checkAdmin(session?.user || null);
+    // Defer Supabase work until the auth callback has returned.
+    queueMicrotask(() => {
+      if (eventVersion === adminAuthEventVersion) checkAdmin(session?.user || null);
+    });
+  }
+});
+
+sb.auth.getSession().then(({ data, error }) => {
+  if (error) {
+    console.error("NOVAAI session restore error:", error);
+    if (adminAuthEventVersion === 0) {
+      document.getElementById("loginMessage").textContent =
+        "Your saved sign-in could not be checked just now. Please retry.";
+    }
+    return;
+  }
+  const observedAuthVersion = adminAuthEventVersion;
+  if (observedAuthVersion === adminAuthEventVersion) {
+    checkAdmin(data.session?.user || null);
+  }
+}).catch((error) => {
+  console.error("NOVAAI session restore error:", error);
+  if (adminAuthEventVersion === 0) {
+    document.getElementById("loginMessage").textContent =
+      "Session restore failed. Please refresh and try again.";
   }
 });
 </script>
