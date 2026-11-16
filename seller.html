@@ -466,6 +466,39 @@ function returnToMarketplaceSelection() {
   history.replaceState(null, "", window.location.pathname + (query ? "?" + query : ""));
   window.scrollTo({top:0,behavior:"smooth"});
 }
+let motorListingType = "vehicle";
+function renderMotorListingFields() {
+  const host = document.getElementById("marketSpecificFields");
+  if (!host) return;
+  if (motorListingType === "parts") {
+    host.innerHTML = `
+      <div class="field"><label>Part category *</label><select id="partCategory" required><option value="">Choose part category</option><option>Engine &amp; Mechanical</option><option>Brakes &amp; Suspension</option><option>Electrical &amp; Lighting</option><option>Body Parts &amp; Mirrors</option><option>Interior &amp; Accessories</option><option>Wheels &amp; Tyres</option><option>Filters &amp; Fluids</option><option>Other Car Parts</option></select></div>
+      <div class="field"><label>Condition *</label><select id="partCondition" required><option value="">Choose condition</option><option>New</option><option>Used</option><option>Refurbished</option></select></div>
+      <div class="field"><label>Compatible vehicle make</label><input id="partMake" maxlength="80" placeholder="e.g. Toyota"></div>
+      <div class="field"><label>Compatible vehicle model</label><input id="partModel" maxlength="80" placeholder="e.g. Corolla"></div>
+      <div class="field"><label>Compatible year / range</label><input id="partYear" maxlength="40" placeholder="e.g. 2015–2019"></div>
+      <div class="field"><label>Location *</label><input id="partLocation" required maxlength="100" placeholder="e.g. Pretoria, Gauteng"></div>`;
+  } else {
+    host.innerHTML = `
+      <div class="field"><label>Year *</label><input id="vehicleYear" type="number" min="1900" max="2100" required placeholder="2021"></div>
+      <div class="field"><label>Mileage (km) *</label><input id="vehicleMileage" required placeholder="97,550 km"></div>
+      <div class="field"><label>Transmission *</label><select id="vehicleTransmission" required><option value="">Choose</option><option>Manual</option><option>Automatic</option><option>CVT</option></select></div>
+      <div class="field"><label>Fuel *</label><select id="vehicleFuel" required><option value="">Choose</option><option>Petrol</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select></div>
+      <div class="field"><label>Vehicle type *</label><select id="vehicleType" required><option value="">Choose</option><option>Car</option><option>Bakkie</option><option>SUV</option><option>Motorcycle</option><option>Van</option><option>Minibus</option></select></div>
+      <div class="field"><label>Location *</label><input id="vehicleLocation" required placeholder="Pretoria"></div>`;
+  }
+}
+function setMotorListingType(type) {
+  if (!["vehicle","parts"].includes(type)) return;
+  motorListingType = type;
+  const vehicleButton = document.getElementById("motorVehicleTypeButton");
+  const partsButton = document.getElementById("motorPartsTypeButton");
+  if (vehicleButton) vehicleButton.classList.toggle("active", type === "vehicle");
+  if (partsButton) partsButton.classList.toggle("active", type === "parts");
+  renderMotorListingFields();
+}
+window.setMotorListingType = setMotorListingType;
+
 function setListingMarket(market) {
   if (!["retail","motors","property"].includes(market)) return;
   if (user && storeData && market !== storeData.primary_marketplace) { msg("sellerMsg","This seller account is locked to "+(marketplaceLabels[storeData.primary_marketplace]||"its primary marketplace")+".",true); return; }
@@ -488,16 +521,17 @@ function setListingMarket(market) {
     category.innerHTML = retailCats.map(v => `<option value="${escapeHTML(v)}">${escapeHTML(v)}</option>`).join("");
     document.getElementById("marketSpecificFields").innerHTML = "";
   } else if (market === "motors") {
-    title.textContent = "My Motor Listings · Add a vehicle";
+    title.textContent = "My Motors Listings · Vehicles & Car Parts";
     label.textContent = "Marketplace *";
     category.innerHTML = '<option value="Auto">Auto (Motors)</option><option value="Motors & Vehicles">Motors & Vehicles (legacy)</option>';
-    document.getElementById("marketSpecificFields").innerHTML = `
-      <div class="field"><label>Year *</label><input id="vehicleYear" type="number" min="1900" max="2100" required placeholder="2021"></div>
-      <div class="field"><label>Mileage (km) *</label><input id="vehicleMileage" required placeholder="97,550 km"></div>
-      <div class="field"><label>Transmission *</label><select id="vehicleTransmission" required><option value="">Choose</option><option>Manual</option><option>Automatic</option><option>CVT</option></select></div>
-      <div class="field"><label>Fuel *</label><select id="vehicleFuel" required><option value="">Choose</option><option>Petrol</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select></div>
-      <div class="field"><label>Vehicle type *</label><select id="vehicleType" required><option value="">Choose</option><option>Car</option><option>Bakkie</option><option>SUV</option><option>Motorcycle</option><option>Van</option><option>Minibus</option></select></div>
-      <div class="field"><label>Location *</label><input id="vehicleLocation" required placeholder="Pretoria"></div>`;
+    document.getElementById("marketSpecificFields").innerHTML = "";
+    document.getElementById("marketSpecificFields").insertAdjacentHTML("beforebegin", `
+      <div class="tabs" id="motorListingTypeTabs" style="margin:12px 0">
+        <button class="tab active" id="motorVehicleTypeButton" type="button" onclick="setMotorListingType('vehicle')">Vehicles</button>
+        <button class="tab" id="motorPartsTypeButton" type="button" onclick="setMotorListingType('parts')">Car Parts</button>
+      </div>`);
+    motorListingType = "vehicle";
+    renderMotorListingFields();
   } else {
     title.textContent = "My Property Listings · Add property";
     label.textContent = "Listing type *";
@@ -513,6 +547,10 @@ function setListingMarket(market) {
   }
 }
 function marketDetailsFromForm() {
+  if (listingMarket === "motors" && motorListingType === "parts") {
+    const fields = [["Part category","partCategory"],["Condition","partCondition"],["Compatible make","partMake"],["Compatible model","partModel"],["Compatible year","partYear"],["Location","partLocation"]];
+    return "\n\nNOVAAI DETAILS\n" + [["Listing type","replacement part"], ...fields].filter(([label,id]) => id === "replacement part" || document.getElementById(id)?.value).map(([label,id]) => label + ": " + (id === "replacement part" ? id : document.getElementById(id).value.trim())).join("\n");
+  }
   if (listingMarket === "motors") {
     const fields = [["Vehicle type","vehicleType"],["Year","vehicleYear"],["Mileage","vehicleMileage"],["Transmission","vehicleTransmission"],["Fuel","vehicleFuel"],["Location","vehicleLocation"]];
     return "\n\nNOVAAI DETAILS\n" + fields.map(([label,id]) => label + ": " + (document.getElementById(id)?.value || "")).join("\n");
@@ -1110,7 +1148,13 @@ async function editProduct(id) {
   const details = String(product.description || "");
   const fillDetail = (id,label) => { const el=document.getElementById(id); if(!el)return; const line=details.split(/\r?\n/).find(row=>row.toLowerCase().startsWith(label.toLowerCase()+":")); if(line)el.value=line.slice(label.length+1).trim(); };
   if (market === "motors") {
-    fillDetail("vehicleYear","Year"); fillDetail("vehicleMileage","Mileage"); fillDetail("vehicleTransmission","Transmission"); fillDetail("vehicleFuel","Fuel"); fillDetail("vehicleType","Vehicle type"); fillDetail("vehicleLocation","Location");
+    const isParts = /^Listing type:\\s*(replacement part|accessory|car part|car accessory)$/im.test(details);
+    setMotorListingType(isParts ? "parts" : "vehicle");
+    if (isParts) {
+      fillDetail("partCategory","Part category"); fillDetail("partCondition","Condition"); fillDetail("partMake","Compatible make"); fillDetail("partModel","Compatible model"); fillDetail("partYear","Compatible year"); fillDetail("partLocation","Location");
+    } else {
+      fillDetail("vehicleYear","Year"); fillDetail("vehicleMileage","Mileage"); fillDetail("vehicleTransmission","Transmission"); fillDetail("vehicleFuel","Fuel"); fillDetail("vehicleType","Vehicle type"); fillDetail("vehicleLocation","Location");
+    }
   } else if (market === "property") {
     fillDetail("propertyType","Property type"); fillDetail("propertyBedrooms","Bedrooms"); fillDetail("propertyBathrooms","Bathrooms"); fillDetail("propertyParking","Parking"); fillDetail("propertyFloorArea","Floor area m2"); fillDetail("propertyErfSize","Erf size m2"); fillDetail("propertyLocation","Location");
   }
