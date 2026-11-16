@@ -1057,22 +1057,23 @@ html.nova-ads-pending [data-nova-ad-slot] * {
 @media(max-width:480px){.nova-retail-modal-contact button{flex:1 1 135px}.nova-retail-modal-card,.nova-retail-modal-seller{padding:12px}}
 
 <style>
-/* Live Retail Shop by Category — category tiles are populated from approved seller listings. */
-.shop-categories{max-width:1200px;margin:4px auto 18px;padding:0 20px}
-.shop-categories-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 11px}
+/* Retail category cards match the NOVAAI Home category-card size and visual treatment. */
+.shop-categories{max-width:1440px;margin:4px auto 22px;padding:0 clamp(13px,2.4vw,32px)}
+.shop-categories-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px}
 .shop-categories-heading span{display:block;margin-bottom:3px;color:#667085;font-size:8px;font-weight:900;letter-spacing:1.2px}
 .shop-categories-heading h2{margin:0;color:#10284b;font-size:18px;font-weight:900}
 .shop-categories-heading button{border:0;background:transparent;color:#174ea6;font-size:11px;font-weight:850}
-.shop-category-tiles{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);grid-template-rows:1fr;gap:10px;overflow-x:auto;padding:2px 1px 9px;scroll-snap-type:x mandatory;scrollbar-width:thin}
-.shop-category-tile{display:flex;min-width:92px;max-width:116px;flex-direction:column;align-items:center;gap:7px;padding:7px 6px 9px;border:1px solid #e4eaf2;border-radius:12px;background:#fff;color:#10284b;text-align:center;box-shadow:0 3px 9px rgba(16,40,75,.05);scroll-snap-align:start}
-.shop-category-tile[aria-pressed="true"]{border-color:#174ea6;background:#eff5ff;box-shadow:0 0 0 1px #174ea6}
-.shop-category-photo{display:grid;width:68px;height:68px;place-items:center;overflow:hidden;border-radius:10px;background:#f2f5f9;color:#174ea6;font-size:24px;font-weight:900}
-.shop-category-photo img{width:100%;height:100%;object-fit:cover}
-.shop-category-name{display:-webkit-box;min-height:28px;overflow:hidden;color:#24344d;font-size:10px;line-height:1.3;font-weight:800;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.shop-category-count{color:#778399;font-size:9px}
+.shop-category-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(10px,1.6vw,20px);margin:0 0 20px}
+.shop-category-tile{position:relative;min-width:0;min-height:clamp(110px,14vw,180px);overflow:hidden;display:flex;align-items:flex-end;padding:0;border:1px solid #168cff;border-radius:18px;background:linear-gradient(135deg,#0a2d5a,#06152e);box-shadow:0 0 17px #078cff33;isolation:isolate;text-align:left;scroll-snap-align:unset}
+.shop-category-tile[aria-pressed="true"]{outline:2px solid #f5b900;outline-offset:2px}
+.shop-category-photo{position:absolute;z-index:-1;inset:0;display:block;width:auto;height:auto;overflow:hidden;border-radius:0;background:linear-gradient(135deg,#0c4a8a,#06152e)}
+.shop-category-photo:after{content:"";position:absolute;inset:35% 0 0;background:linear-gradient(180deg,transparent,#04132aee)}
+.shop-category-photo img{width:100%;height:100%;object-fit:cover;opacity:.9;transition:transform .45s ease}
+.shop-category-tile:hover .shop-category-photo img{transform:scale(1.05)}
+.shop-category-name{position:relative;z-index:1;display:block;min-height:0;padding:12px 16px;color:#fff;font-size:clamp(12px,1.8vw,20px);line-height:1.2;font-weight:900;text-shadow:0 2px 10px #000; -webkit-line-clamp:unset}
+.shop-category-count{position:absolute;right:12px;bottom:13px;z-index:1;color:#fff;font-size:10px;font-weight:800;text-shadow:0 1px 6px #000}
 .shop-category-loading{color:#667085;font-size:11px}
-@media(min-width:760px){.shop-category-tiles{grid-auto-flow:row;grid-template-columns:repeat(6,minmax(0,1fr));overflow:visible}.shop-category-tile{max-width:none;min-height:126px}.shop-category-photo{width:76px;height:76px}.shop-category-name{font-size:11px}}
-@media(max-width:560px){.shop-categories{padding:0 12px;margin-top:2px}.shop-category-tiles{grid-auto-columns:92px;gap:8px}.shop-category-photo{width:64px;height:64px}.shop-categories-heading h2{font-size:16px}}
+@media(max-width:560px){.shop-categories{padding:0 12px;margin-top:2px}.shop-category-tiles{gap:9px}.shop-category-tile{min-height:clamp(104px,28vw,142px);border-radius:13px}.shop-category-name{padding:9px;font-size:12px}.shop-category-count{right:8px;bottom:8px;font-size:9px}}
 </style>
 </style></head>
 <body>
@@ -1370,20 +1371,19 @@ function initCategories(){
   const host=document.getElementById("shopCategoryTiles");
   if(!host)return;
   const retailProducts=products.filter(p=>!["Auto","Motors & Vehicles","Property For Sale","Property To Rent"].includes(p.category));
-  const categories=[...new Set(retailProducts.map(p=>String(p.category||"").trim()).filter(Boolean))];
-  const preferred=C.map(item=>item[0]);
-  categories.sort((a,b)=>{
-    const ai=preferred.indexOf(a),bi=preferred.indexOf(b);
-    if(ai<0&&bi<0)return a.localeCompare(b);
-    if(ai<0)return 1;if(bi<0)return -1;return ai-bi;
-  });
-  const tiles=[{name:"All",label:"All Categories",items:retailProducts},...categories.map(name=>({name,label:name,items:retailProducts.filter(p=>p.category===name)}))];
-  host.innerHTML=tiles.map((tile,index)=>{
-    const product=tile.items.find(p=>Array.isArray(p.images)&&p.images.some(Boolean));
-    const image=product?safeImg(product.images.find(Boolean)):"";
-    const icon=index===0?"✦":(C.find(item=>item[0]===tile.name)?.[1]||"▦");
-    const selected=active===tile.name;
-    return '<button type="button" class="shop-category-tile" data-shop-category="'+esc(tile.name)+'" aria-pressed="'+String(selected)+'"><span class="shop-category-photo">'+(image?'<img loading="lazy" src="'+esc(image)+'" alt="" onerror="this.style.display=\'none\'">':esc(icon))+'</span><span class="shop-category-name">'+esc(tile.label)+'</span><span class="shop-category-count">'+tile.items.length+' '+(tile.items.length===1?'product':'products')+'</span></button>';
+  const groups=[
+    {name:"All Categories",key:"All",image:"https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=900&q=85",match:()=>true},
+    {name:"Clothing",key:"Clothing",image:"https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85",match:p=>/clothing|apparel|fashion|shoes/i.test(p.category+" "+p.name+" "+p.description)},
+    {name:"Sneakers",key:"Sneakers",image:"https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85",match:p=>/sneaker|trainer|running shoe|air max|footwear/i.test(p.name+" "+p.category+" "+p.description)},
+    {name:"Accessories",key:"Accessories",image:"https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85",match:p=>/accessor|bag|watch|jewell|jewelry|sunglass|belt|wallet|handbag/i.test(p.category+" "+p.name+" "+p.description)},
+    {name:"Beauty & Care",key:"Beauty & Care",image:"https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=900&q=85",match:p=>/beauty|personal care|derma|skincare|skin care|cosmetic|makeup|hair care|perfume/i.test(p.category+" "+p.name+" "+p.description)},
+    {name:"Electronics",key:"Electronics",image:"https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=900&q=85",match:p=>/electronic|cellphone|phone|computer|laptop|tv audio|video|camera|photography|appliance|headphone|speaker/i.test(p.category+" "+p.name+" "+p.description)},
+    {name:"Home & Living",key:"Home & Living",image:"https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=900&q=85",match:p=>/home|living|furniture|garden|pool|patio|kitchen|small appliance|decor|bedding|luggage|travel/i.test(p.category+" "+p.name+" "+p.description)}
+  ];
+  host.innerHTML=groups.map(group=>{
+    const count=retailProducts.filter(group.match).length;
+    const selected=active===group.key;
+    return '<button type="button" class="shop-category-tile" data-shop-category="'+esc(group.key)+'" aria-pressed="'+String(selected)+'"><span class="shop-category-photo"><img loading="lazy" src="'+esc(group.image)+'" alt="'+esc(group.name)+' category photograph" onerror="this.style.display=\'none\'"></span><span class="shop-category-name">'+esc(group.name)+'</span><span class="shop-category-count">'+count+' '+(count===1?'product':'products')+'</span></button>';
   }).join("");
   host.querySelectorAll("[data-shop-category]").forEach(button=>button.addEventListener("click",()=>{
     active=button.dataset.shopCategory;
@@ -1429,7 +1429,7 @@ function render(){
   const q=document.getElementById("search").value.toLowerCase();
   const retailProducts = products.filter(p => !["Auto","Motors & Vehicles","Property For Sale","Property To Rent"].includes(p.category));
   const list=retailProducts.filter(p=>{
-    const categoryMatch = (active==="All" || p.category===active);
+    const categoryMatch = (active==="All" || (active==="All Categories") || (active==="Clothing" && /clothing|apparel|fashion|shoes/i.test(p.category+" "+p.name+" "+p.description)) || (active==="Sneakers" && /sneaker|trainer|running shoe|air max|footwear/i.test(p.name+" "+p.category+" "+p.description)) || (active==="Accessories" && /accessor|bag|watch|jewell|jewelry|sunglass|belt|wallet|handbag/i.test(p.category+" "+p.name+" "+p.description)) || (active==="Beauty & Care" && /beauty|personal care|derma|skincare|skin care|cosmetic|makeup|hair care|perfume/i.test(p.category+" "+p.name+" "+p.description)) || (active==="Electronics" && /electronic|cellphone|phone|computer|laptop|tv audio|video|camera|photography|appliance|headphone|speaker/i.test(p.category+" "+p.name+" "+p.description)) || (active==="Home & Living" && /home|living|furniture|garden|pool|patio|kitchen|small appliance|decor|bedding|luggage|travel/i.test(p.category+" "+p.name+" "+p.description)));
     return categoryMatch && [p.name,p.category,p.description,p.seller].join(" ").toLowerCase().includes(q);
   });
 
