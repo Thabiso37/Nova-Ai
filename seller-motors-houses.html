@@ -626,6 +626,7 @@ html.nova-ads-pending [data-nova-ad-slot] * {
       <button type="button" class="motors-chip" onclick="setMotorsPartCategory('cars',this)">Cars</button>
       <button type="button" class="motors-chip" onclick="setMotorsPartCategory('bakkies',this)">Bakkies</button>
       <button type="button" class="motors-chip" onclick="setMotorsPartCategory('suvs',this)">SUVs</button>
+      <button type="button" class="motors-chip" onclick="setMotorsPartCategory('parts',this)">Car Parts</button>
     </div>
     <div class="motors-results-line"><span id="motorsPartCount">0 vehicles</span></div>
   </div>
@@ -753,9 +754,10 @@ async function loadListings(marketType, searchQuery = '') {
     filtered = filtered.filter(item => {
       const name = String(item.name || '').trim();
       const description = String(item.description || '').trim();
+      const isParts = /^Listing type:\\s*(replacement part|accessory|car part|car accessory)$/im.test(description);
       return name.length > 3 && Number(item.price || 0) > 0 &&
         !/^(test|see|\d+)$/i.test(name) &&
-        automotiveWords.test(name + ' ' + description);
+        (isParts || automotiveWords.test(name + ' ' + description));
     });
   }
   if (searchQuery) {
@@ -822,6 +824,34 @@ function renderMotorsParts(rows){
   motorsPartRows=rows||[];
   const grid=document.getElementById('productGrid');
   const count=document.getElementById('motorsPartCount');
+  const isPartListing=item=>/^Listing type:\\s*(replacement part|accessory|car part|car accessory)$/im.test(String(item.description||""));
+  const parts=motorsPartRows.filter(item=>isPartListing(item)&&Number(item.price||0)>0&&String(item.name||"").trim().length>2);
+  if(motorsPartCategory==='parts'){
+    if(count)count.textContent=parts.length+' '+(parts.length===1?'part':'parts');
+    const heading=document.querySelector('#motorsVehiclesHeading h2');
+    const subheading=document.querySelector('#motorsVehiclesHeading p');
+    if(heading)heading.textContent='Car parts & accessories';
+    if(subheading)subheading.textContent='Parts and accessories listed by NOVAAI Motors sellers.';
+    if(!parts.length){grid.innerHTML='<div class="motors-empty">There are no approved car parts or accessories available yet. Sellers can add parts through the Car Parts option in the Motors seller portal.</div>';return;}
+    grid.innerHTML=parts.map(item=>{
+      const title=String(item.name||'Car part');
+      const category=vehicleSpec(item.description,'Part category');
+      const condition=vehicleSpec(item.description,'Condition');
+      const make=vehicleSpec(item.description,'Compatible make');
+      const model=vehicleSpec(item.description,'Compatible model');
+      const year=vehicleSpec(item.description,'Compatible year');
+      const location=vehicleSpec(item.description,'Location');
+      const photo=item.image_url&&String(item.image_url).startsWith('http')?'<img class="motors-part-photo" src="'+esc(item.image_url)+'" alt="'+esc(title)+'" loading="lazy">':'<div class="motors-part-photo-empty">Part photo not supplied</div>';
+      const description=String(item.description||'').split(/\\r?\\n/).filter(line=>!/^(NOVAAI DETAILS|Listing type|Part category|Condition|Compatible make|Compatible model|Compatible year|Location)\\s*:/i.test(line.trim())).join(' ').trim();
+      return '<article class="panel motors-part-card" data-product-id="'+esc(item.id)+'"><div class="motor-gallery">'+photo+marketShareButton(item,"motors","product_card").replace('<button type="button"','<button style="position:absolute;top:8px;left:8px;z-index:30" type="button"')+'</div><div class="motors-part-body"><div class="motors-part-type">'+esc(category)+'</div><h3 class="motors-part-title">'+esc(title)+'</h3><div class="motors-part-price">'+cash(item.price)+'</div><p class="motors-part-description">'+esc(description||'Car part or accessory listed by seller.')+'</p><div class="motors-part-seller">'+esc(condition)+' · '+esc([make,model,year].filter(v=>v!=='Not provided by seller').join(' '))+' · '+esc(location)+'</div><details class="vehicle-details"><summary>View Part Details</summary><p>'+esc(description||'No additional description supplied.')+'</p><p><strong>Condition:</strong> '+esc(condition)+'</p><p><strong>Compatible vehicle:</strong> '+esc([make,model,year].filter(v=>v!=='Not provided by seller').join(' ')||'Not specified')+'</p><p><strong>Location:</strong> '+esc(location)+'</p><div><strong>Seller:</strong> '+esc(item.seller_name||'NOVAAI seller')+'</div></details></div></article>';
+    }).join('');
+    grid.querySelectorAll(".motors-part-card").forEach(card=>{const details=card.querySelector(".vehicle-details");if(!details)return;details.addEventListener("toggle",()=>card.classList.toggle("vehicle-card-detail-open",details.open));});
+    return;
+  }
+  const heading=document.querySelector('#motorsVehiclesHeading h2');
+  const subheading=document.querySelector('#motorsVehiclesHeading p');
+  if(heading)heading.textContent='Vehicles for sale';
+  if(subheading)subheading.textContent='Cars, bakkies and SUVs listed by marketplace sellers.';
   const partWords=/phone mount|seat cover|floor mat|wiper|headlight|tail light|brake pad|spark plug|air filter|oil filter|accessor(y|ies)|spare part|replacement part|engine part|car part|tyre|tire|battery|mirror|radio|stereo|roof rack|bumper|exhaust|alternator|radiator|clutch/i;
   const vehicleWords=/\b(car|sedan|hatchback|bakkie|pickup|suv|4x4|double cab|single cab|motorcycle|motorbike|coupe|convertible|wagon|minibus|van)\b/i;
   const makeModel=/\b(toyota|ford|volkswagen|vw|nissan|isuzu|hyundai|kia|mazda|honda|bmw|mercedes|audi|suzuki|renault|chevrolet|mitsubishi|mahindra|tata)\b/i;
