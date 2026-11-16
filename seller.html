@@ -1284,7 +1284,7 @@ sb.auth.getSession().then(({data,error}) => {
     return;
   }
   const observedAuthVersion = sellerAuthEventVersion;
-  if (observedAuthVersion === sellerAuthEventVersion) {
+  if (observedAuthVersion === 0) {
     updateUser(data?.session?.user || null);
   }
 }).catch(error => {
