@@ -697,7 +697,7 @@ body:not(.product-view-active) .home-products-message{min-height:78px;display:fl
 @media(min-width:761px){
  body:not(.product-view-active) .home-trust-label{font-size:9px;line-height:1.2}
 }
-</style>
+\n/* Retail and Motors: show two live listing photos in separate square frames. */\nbody:not(.product-view-active) .home-category-tile.has-thumbnails .home-category-image>img{display:none!important}\nbody:not(.product-view-active) .home-category-thumbnails{position:absolute;z-index:3;top:17%;left:50%;transform:translateX(-50%);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(8px,1.2vw,14px);width:min(78%,260px)}\nbody:not(.product-view-active) .home-category-thumbnail{display:block;aspect-ratio:1/1;min-width:0;overflow:hidden;border:1px solid #78dfffaa;border-radius:13px;background:linear-gradient(145deg,#f5f9ff,#d9e9fa);box-shadow:0 5px 17px #0007,0 0 13px #24baff33}\nbody:not(.product-view-active) .home-category-thumbnail img{display:block;width:100%;height:100%;object-fit:contain;object-position:center;padding:4px;opacity:1;filter:none}\n@media(max-width:760px){body:not(.product-view-active) .home-category-thumbnails{top:16%;width:min(76%,240px);gap:9px}.home-category-thumbnail{border-radius:11px}}\n</style>
 
 <style id="nova-home-preview2-card-authority">
 /* Card presentation measured from the supplied live Preview 2 reference URL.
@@ -898,8 +898,9 @@ const storesBySeller=new Map(stores.map(store=>[String(store.user_id),store]));
 const items=rows.filter(p=>p.status==='approved'&&p.seller_id&&p.name&&Number(p.price)>0);
 if(!items.length){grid.innerHTML='<div class="home-products-message">There are no eligible approved listings to display right now. Please check back soon.</div>';return;}
 renderHomeSections(items,storesBySeller);
-const categorySources={retail:items.find(p=>!isPropertyProduct(p)&&!['Auto','Motors & Vehicles'].includes(p.category)),motors:items.find(p=>['Auto','Motors & Vehicles'].includes(p.category)),property:items.find(p=>isPropertyProduct(p))};
-Object.entries(categorySources).forEach(([key,product])=>{const tile=document.querySelector('[data-home-category-tile="'+key+'"] img'),photo=product&&productPhotos(product)[0];if(tile&&photo){tile.src=photo;tile.alt=key+' marketplace listings';tile.parentElement.classList.add('has-photo');}});
+const categorySources={retail:items.filter(p=>!isPropertyProduct(p)&&!['Auto','Motors & Vehicles'].includes(p.category)).slice(0,2),motors:items.filter(p=>['Auto','Motors & Vehicles'].includes(p.category)).slice(0,2),property:items.find(p=>isPropertyProduct(p))};
+['retail','motors'].forEach(key=>{const tile=document.querySelector('[data-home-category-tile="'+key+'"] .home-category-image'),products=categorySources[key]||[];if(!tile)return;const photos=products.map(product=>({product,url:productPhotos(product)[0]})).filter(item=>item.url);if(!photos.length)return;const grid=document.createElement('span');grid.className='home-category-thumbnails';photos.forEach(({product,url},index)=>{const frame=document.createElement('span');frame.className='home-category-thumbnail';const img=document.createElement('img');img.src=url;img.alt=(product.name||key)+' listing photo '+(index+1);img.loading='lazy';frame.appendChild(img);grid.appendChild(frame);});tile.appendChild(grid);tile.parentElement.classList.add('has-thumbnails');});
+const propertyProduct=categorySources.property,propertyTile=document.querySelector('[data-home-category-tile="property"] img'),propertyPhoto=propertyProduct&&productPhotos(propertyProduct)[0];if(propertyTile&&propertyPhoto){propertyTile.src=propertyPhoto;propertyTile.alt='Property marketplace listing';propertyTile.parentElement.classList.add('has-photo');}
 updateCartCount();
 }catch(error){console.error('Homepage product loading:',error);grid.innerHTML='<div class="home-products-message">We could not load marketplace products right now. Please try again later or browse the full marketplace.</div>';}
 }
