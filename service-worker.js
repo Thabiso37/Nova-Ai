@@ -6,6 +6,9 @@ const SHELL = [
   "./seller-motors-houses.html?market=property",
   "./property-details.html",
   "./manifest.webmanifest",
+  "./manifest-admin.webmanifest",
+  "./admin.html",
+  "./icon-admin.svg",
   "./novaai-icon.svg"
 ];
 
@@ -54,6 +57,7 @@ self.addEventListener("fetch", event => {
           url.pathname.endsWith("/retail.html") ||
           url.pathname.endsWith("/seller-motors-houses.html") ||
           url.pathname.endsWith("/property-details.html") ||
+          url.pathname.endsWith("/admin.html") ||
           url.pathname.endsWith("/");
         if (response && response.ok && isAppDocument) {
           const copy = response.clone();
@@ -65,6 +69,7 @@ self.addEventListener("fetch", event => {
         const cached = await cache.match(request, { ignoreSearch: true });
         if (cached) return cached;
         if (url.pathname.endsWith("/property-details.html")) return (await cache.match("./property-details.html")) || Response.error();
+        if (url.pathname.endsWith("/admin.html")) return (await cache.match("./admin.html")) || Response.error();
         if (url.pathname.endsWith("/seller-motors-houses.html")) return (await cache.match("./seller-motors-houses.html?market=property")) || Response.error();
         if (url.pathname.endsWith("/retail.html")) return (await cache.match("./retail.html")) || Response.error();
         if (url.pathname.endsWith("/index.html") || url.pathname.endsWith("/")) return (await cache.match("./index.html")) || Response.error();
