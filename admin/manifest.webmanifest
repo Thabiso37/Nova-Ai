@@ -1,10 +1,10 @@
 {
-  "id": "./",
+  "id": "../admin-app",
   "name": "NOVAAI ADMIN",
   "short_name": "NOVA ADMIN",
   "description": "NOVAAI MARKET administration dashboard",
   "start_url": "../admin.html",
-  "scope": "../admin/",
+  "scope": "../",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#f3f6fb",
