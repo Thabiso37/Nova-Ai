@@ -931,8 +931,6 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
 </div>
 
 <script>
-const ADMIN_ID = "2fc320e9-40b6-407f-9e71-e8a1999956a7";
-
 const sb = window.supabase.createClient(
   "https://nxplffvklkopwfjaqexo.supabase.co",
   "sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ",
@@ -989,12 +987,6 @@ async function checkAdmin(user) {
     document.getElementById("dashboard").classList.add("hidden");
     document.getElementById("loginPanel").classList.remove("hidden");
     document.getElementById("loginMessage").textContent = "Verifying administrator permissions…";
-
-    if (user.id !== ADMIN_ID) {
-      document.getElementById("loginMessage").textContent =
-        "This account is not authorised as a NOVAAI administrator.";
-      return false;
-    }
 
     try {
       const { data, error } = await sb.rpc("is_novaai_admin");
@@ -1132,7 +1124,7 @@ function editAdCampaign(id){
   document.getElementById("advertisementManagement").scrollIntoView({behavior:"smooth"});
 }
 async function saveAdCampaign(event){
-  event.preventDefault();if(!currentAdmin||currentAdmin.id!==ADMIN_ID||verifiedAdminId!==ADMIN_ID){adCampaignMessage("Administrator verification is missing. Please sign in again.");return;}
+  event.preventDefault();if(!currentAdmin||verifiedAdminId!==currentAdmin.id||verifiedAdminId!==currentAdmin.id){adCampaignMessage("Administrator verification is missing. Please sign in again.");return;}
   const value=id=>document.getElementById(id).value.trim();
   const toIso=id=>{const v=value(id);return v?new Date(v).toISOString():null;};
   const slot_ids=Array.from(document.getElementById("adCampaignSlots").selectedOptions).map(o=>o.value);
@@ -1523,7 +1515,7 @@ async function reviewSellerPublicLocation(userId, status) {
 window.reviewSellerPublicLocation = reviewSellerPublicLocation;
 
 async function loadProducts() {
-  if (!currentAdmin || currentAdmin.id !== ADMIN_ID) return;
+  if (!currentAdmin || verifiedAdminId !== currentAdmin.id) return;
   const statIds=["pendingCount","approvedCount","rejectedCount","hiddenCount"];
   statIds.forEach(id=>{const el=document.getElementById(id);if(el)el.textContent="Loading…";});
   message("Loading marketplace listings…");
@@ -1574,7 +1566,7 @@ async function loadProducts() {
 }
 
 async function loadOperationalOrderData() {
-  if (!currentAdmin || currentAdmin.id !== ADMIN_ID) return;
+  if (!currentAdmin || verifiedAdminId !== currentAdmin.id) return;
   const msg = document.getElementById("ordersMessage");
   const refresh = document.getElementById("refreshOrdersBtn");
   msg.textContent = "Loading operational order and fulfilment records…";
@@ -1785,7 +1777,7 @@ function closeImage() {
 }
 
 async function changeStatus(id, newStatus) {
-  if (!currentAdmin || currentAdmin.id !== ADMIN_ID || verifiedAdminId !== ADMIN_ID) {
+  if (!currentAdmin || verifiedAdminId !== currentAdmin.id || verifiedAdminId !== currentAdmin.id) {
     message("Administrator verification is missing. Please sign in again.");
     return;
   }
@@ -1853,7 +1845,7 @@ async function loadNovaAIShareAnalytics() {
   status.textContent = "Loading campaign share totals…";
 
   try {
-    if (!currentAdmin || currentAdmin.id !== ADMIN_ID) {
+    if (!currentAdmin || verifiedAdminId !== currentAdmin.id) {
       throw new Error("Administrator session is not verified.");
     }
 
@@ -1922,7 +1914,7 @@ async function loadNovaAIAdVisitAnalytics() {
   status.textContent = "Loading attributed visit totals…";
 
   try {
-    if (!currentAdmin || currentAdmin.id !== ADMIN_ID) {
+    if (!currentAdmin || verifiedAdminId !== currentAdmin.id) {
       throw new Error("Administrator session is not verified.");
     }
 
@@ -2074,7 +2066,7 @@ function showAdminWorkspace(workspaceId, updateHash = false) {
     history.pushState({ adminWorkspace: selected }, "", "#" + selected);
   }
   closeAdminDrawer();
-  if (selected === "reportsAnalytics" && currentAdmin?.id === ADMIN_ID) {
+  if (selected === "reportsAnalytics" && currentAdmin) {
     loadNovaAIShareAnalytics();
     loadNovaAIAdVisitAnalytics();
   }
