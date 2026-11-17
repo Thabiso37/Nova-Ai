@@ -9,9 +9,7 @@ async function loadSellerPublicLocation(){
  const request=++sellerLocationLoadSequence;
  sellerLocationLoadedUserId=null;
  if(box)box.textContent="Loading your saved public location…";
- const {data,error}=await sb.from("seller_public_locations")
-  .select("province,city,suburb,latitude,longitude,public_location_enabled,approval_status")
-  .eq("user_id",targetUser.id).maybeSingle();
+ const {data,error}=await sb.rpc("get_my_seller_public_location");
  if(request!==sellerLocationLoadSequence||user!==targetUser)return null;
  if(error){if(box)box.textContent="Location settings could not be loaded. Please try again.";console.error("[NOVAAI seller public location]",error);return null;}
  sellerLocationLoadedUserId=targetUser.id;
