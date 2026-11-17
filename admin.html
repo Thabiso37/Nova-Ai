@@ -1388,10 +1388,7 @@ async function loadSellerLocationReviews() {
   msg.textContent = "Loading seller location submissions…";
 
   try {
-    const { data: rows, error } = await sb
-      .from("seller_public_locations")
-      .select("user_id,province,city,suburb,latitude,longitude,public_location_enabled,approval_status,updated_at")
-      .order("updated_at", { ascending: false });
+    const { data: rows, error } = await sb.rpc("get_admin_seller_public_locations");
     if (error) throw error;
 
     const ids = [...new Set((rows || []).map(r => r.user_id))];
