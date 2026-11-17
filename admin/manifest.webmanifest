@@ -1,0 +1,20 @@
+{
+  "id": "./",
+  "name": "NOVAAI ADMIN",
+  "short_name": "NOVA ADMIN",
+  "description": "NOVAAI MARKET administration dashboard",
+  "start_url": "../admin.html",
+  "scope": "../admin/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f3f6fb",
+  "theme_color": "#174ea6",
+  "icons": [
+    {
+      "src": "../icon-admin.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
