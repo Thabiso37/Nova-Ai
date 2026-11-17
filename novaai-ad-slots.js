@@ -221,10 +221,11 @@
   }
   function recordAdEvent(campaignCode,eventType){
     if(!campaignCode||!['impression','click'].includes(eventType))return;
-    fetch('https://nxplffvklkopwfjaqexo.supabase.co/rest/v1/rpc/record_novaai_ad_event',{
+    if(!window.crypto||typeof window.crypto.randomUUID!=='function')return;
+    fetch('https://nxplffvklkopwfjaqexo.supabase.co/functions/v1/record-novaai-ad-event',{
       method:'POST',
-      headers:{'apikey':'sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ','Authorization':'Bearer sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ','Content-Type':'application/json'},
-      body:JSON.stringify({p_campaign_code:campaignCode,p_event_type:eventType}),
+      headers:{'apikey':'sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ','Content-Type':'application/json'},
+      body:JSON.stringify({event_id:window.crypto.randomUUID(),campaign_code:campaignCode,event_type:eventType}),
       keepalive:true
     }).catch(()=>{});
   }
