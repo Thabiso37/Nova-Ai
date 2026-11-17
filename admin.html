@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#174ea6">
-<link rel="manifest" href="./manifest-admin.webmanifest">
+<link rel="manifest" href="./admin/manifest.webmanifest">
 <link rel="icon" href="./icon-admin.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="./icon-admin.svg">
 <title>NOVAAI | Administration</title>
@@ -2193,7 +2193,7 @@ sb.auth.getSession().then(({ data, error }) => {
 
 <script>
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(() => {}));
+  window.addEventListener("load", () => navigator.serviceWorker.register("./admin/service-worker.js", { scope: "./admin/" }).catch(() => {}));
 }
 </script>
 </body>
