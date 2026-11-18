@@ -65,6 +65,8 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
 .seller-page-nav button:focus,.seller-page-nav button:hover{border-color:var(--p);background:#edf3ff}
 .seller-page-card{display:block;background:#fff;border:1px solid var(--line);border-radius:4px;padding:16px;margin:16px 0;box-shadow:0 3px 12px rgba(16,40,75,.045);min-width:0}
 .seller-page-card h3{margin-top:0;color:var(--dark)}
+#sellerSupportPage{width:100%;min-width:0;overflow:hidden}
+#sellerSupportFrame{max-width:100%}
 .seller-page-description{font-size:12px;line-height:1.5;color:#64748b;margin:0 0 12px}
 #sellerPublicLocationPanel,#marketplaceAccessStatus{border-radius:4px!important;box-shadow:0 3px 12px rgba(16,40,75,.045)}
 @media(max-width:600px){.seller-page-card{padding:13px;margin:12px 0}}
@@ -199,7 +201,7 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
 <button type="button" onclick="openSellerPage('sellerListingEditorPage')">Add Listing</button>
 <button type="button" onclick="openSellerPage('sellerModerationPage')">Product Moderation</button>
 <button type="button" onclick="openSellerPage('sellerOrdersPage')">Orders &amp; Fulfilment</button>
-<a class="btn outline" href="support.html">Help &amp; Support</a>
+<button type="button" onclick="openSellerPage('sellerSupportPage')">Help &amp; Support</button>
 </nav>
 <div class="panel" id="sellerPublicLocationPanel" style="margin:14px 0">
 <h3>Public seller location</h3>
@@ -341,6 +343,19 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
     <div id="sellerOrdersList"></div></section>
 </div>
 </div>
+<section class="seller-page-card hidden" id="sellerSupportPage" aria-label="Seller Help and Support">
+  <h3>Help &amp; Support</h3>
+  <p class="seller-page-description">NOVAAI Support Centre</p>
+  <iframe
+    id="sellerSupportFrame"
+    src="support.html"
+    title="NOVAAI Support Centre"
+    loading="lazy"
+    referrerpolicy="strict-origin-when-cross-origin"
+    onload="resizeSellerSupportFrame()"
+    style="display:block;width:100%;height:900px;min-height:75vh;border:0;border-radius:8px;background:#f3f6fb">
+  </iframe>
+</section>
 <!-- RETAIL PARTNER PORTAL -->
 <div id="portalRetail" class="grid hidden">
   <div class="panel">
@@ -421,8 +436,25 @@ function renderMarketplaceChoices(){
   });
 }
 const marketplaceLabels = {retail:"Retail Seller",motors:"Motors Seller",property:"Property Seller"};
+function resizeSellerSupportFrame() {
+  const frame = document.getElementById("sellerSupportFrame");
+  if (!frame) return;
+  try {
+    const doc = frame.contentDocument;
+    if (!doc) return;
+    const height = Math.max(
+      doc.documentElement?.scrollHeight || 0,
+      doc.body?.scrollHeight || 0
+    );
+    if (height > 0) frame.style.height = height + "px";
+  } catch (error) {
+    // Keep the responsive fallback height if the embedded page cannot be measured.
+  }
+}
+window.addEventListener("resize", resizeSellerSupportFrame);
+
 function openSellerPage(id) {
-  const validPages = ["sellerPublicLocationPanel","marketplaceAccessStatus","sellerAccountPanel","sellerListingEditorPage","sellerModerationPage","sellerOrdersPage"];
+  const validPages = ["sellerPublicLocationPanel","marketplaceAccessStatus","sellerAccountPanel","sellerListingEditorPage","sellerModerationPage","sellerOrdersPage","sellerSupportPage"];
   if (!validPages.includes(id)) return;
   const inventoryPanel = document.getElementById("sellerInventoryPanel");
   const inventoryPage = ["sellerListingEditorPage","sellerModerationPage","sellerOrdersPage"].includes(id);
@@ -435,6 +467,9 @@ function openSellerPage(id) {
   document.getElementById("sellerListingEditorPage").classList.toggle("hidden", id !== "sellerListingEditorPage");
   document.getElementById("sellerModerationPage").classList.toggle("hidden", id !== "sellerModerationPage");
   document.getElementById("sellerOrdersPage").classList.toggle("hidden", id !== "sellerOrdersPage");
+  document.getElementById("sellerSupportPage").classList.toggle("hidden", id !== "sellerSupportPage");
+  document.getElementById("portalStd").classList.toggle("hidden", id === "sellerSupportPage");
+  if (id === "sellerSupportPage") resizeSellerSupportFrame();
   const target = document.getElementById(id);
   if (target) target.scrollIntoView({behavior:"smooth",block:"start"});
   if (id === "sellerAccountPanel") window.NOVAAISeller2080?.navigate("account");
