@@ -344,6 +344,12 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
 </div>
 </div>
 <section class="seller-page-card hidden" id="sellerSupportPage" aria-label="NOVAAI Support Centre" style="padding:0;border-radius:0;overflow:hidden">
+  <div class="seller-support-backbar" style="display:flex;align-items:center;justify-content:flex-start;padding:12px 14px;background:#f3f6fb;border-bottom:1px solid #dbe3ef;min-height:56px">
+    <button type="button" onclick="openSellerPage('sellerPublicLocationPanel')" aria-label="Back to Seller Portal" style="display:inline-flex;align-items:center;gap:8px;border:1px solid #dbe3ef;border-radius:6px;background:#fff;color:#10284b;padding:10px 14px;font-size:14px;font-weight:800;cursor:pointer">
+      <span aria-hidden="true" style="font-size:20px;line-height:1">←</span>
+      <span>Back to Seller Portal</span>
+    </button>
+  </div>
   <iframe
     id="sellerSupportFrame"
     src="support.html"
@@ -1710,6 +1716,65 @@ async function updateFulfillmentStatus(orderId) {
 </script>
 <script src="seller-location.js?v=2"></script>
 <script src="seller-portal-2080-ui.js?v=5"></script>
+
+
+<script>
+/* NOVAAI seller support email handoff — browser email app only; no request storage. */
+(function(){
+  "use strict";
+  const SUPPORT_EMAIL = "novaaimarket.support@gmail.com";
+  function wireSupportFrame(frame){
+    if(!frame || frame.dataset.emailSupportWired === "true") return;
+    const attach = function(){
+      try {
+        const doc = frame.contentDocument;
+        if(!doc || !doc.getElementById("supportForm")) return;
+        const form = doc.getElementById("supportForm");
+        if(form.dataset.emailSupportWired === "true") return;
+        form.dataset.emailSupportWired = "true";
+        const emailLink = doc.querySelector("a.email");
+        if(emailLink){ emailLink.href = "mailto:" + SUPPORT_EMAIL; }
+        const notice = form.querySelector(".notice");
+        if(notice) notice.textContent = "When you select Send Support Request, your email application will open with the request prepared. You must press Send in your email application. NOVAAI does not automatically receive or store this form.";
+        const submit = form.querySelector('button[type="submit"]');
+        if(submit) submit.textContent = "Send Support Request";
+        const history = Array.from(doc.querySelectorAll(".card")).find(card => card.querySelector("h2")?.textContent.trim() === "My Support Requests");
+        if(history){
+          const p = history.querySelector("p");
+          if(p) p.textContent = "Requests sent by email are managed in the NOVAAI Support Gmail inbox. This page does not store or display a personal request history.";
+        }
+        doc.addEventListener("submit", function(event){
+          if(event.target !== form) return;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          if(!form.reportValidity()) return;
+          const category = doc.getElementById("category")?.value.trim() || "";
+          const subject = doc.getElementById("subject")?.value.trim() || "";
+          const description = doc.getElementById("description")?.value.trim() || "";
+          const mailSubject = "NOVAAI Seller Support: " + subject;
+          const body = "Support category: " + category + "\nSubject: " + subject + "\n\nProblem description:\n" + description;
+          window.location.href = "mailto:" + SUPPORT_EMAIL + "?subject=" + encodeURIComponent(mailSubject) + "&body=" + encodeURIComponent(body);
+          const feedback = doc.createElement("p");
+          feedback.className = "notice";
+          feedback.setAttribute("role","status");
+          feedback.textContent = "Your email application should open with the request prepared. Press Send there to send it to NOVAAI Support. The request has not been submitted or stored by this page.";
+          form.append(feedback);
+        }, true);
+        frame.dataset.emailSupportWired = "true";
+      } catch(error) {
+        /* Keep the existing support page visible if browser iframe access is unavailable. */
+      }
+    };
+    frame.addEventListener("load", attach);
+    if(frame.contentDocument?.readyState === "complete") attach();
+  }
+  function scan(){
+    document.querySelectorAll('iframe[title="NOVAAI Support Centre"]').forEach(wireSupportFrame);
+  }
+  scan();
+  new MutationObserver(scan).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
 
 </body>
 </html>
