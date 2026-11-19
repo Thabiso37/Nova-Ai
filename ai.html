@@ -347,36 +347,44 @@ button,input{font:inherit}
   function renderAssistantResponse(container, result) {
     container.textContent = '';
 
-    const reply = document.createElement('p');
-    reply.className = 'nova-ai-reply';
-    reply.textContent = result.reply || '';
-    container.appendChild(reply);
-
-    // Fallback: display approved public NOVAAI Storage photos included
-    // in a Markdown image in the assistant reply, instead of showing
-    // the Markdown syntax as plain text. Only this project's public
-    // Supabase Storage object URLs are accepted.
-    const markdownPhoto = String(result.reply || '').match(
-      /!\[([^\]]*)\]\((https:\/\/nxplffvklkopwfjaqexo\.supabase\.co\/storage\/v1\/object\/public\/[^)\s]+)\)/i
-    );
-
-    if (markdownPhoto) {
-      const photo = document.createElement('img');
-      photo.className = 'nova-reply-photo';
-      photo.src = markdownPhoto[2];
-      photo.alt = markdownPhoto[1] || 'NOVAAI MARKET property photograph';
-      photo.loading = 'lazy';
-      photo.style.cssText = 'display:block;width:100%;max-width:520px;max-height:340px;object-fit:contain;margin:12px 0;border:1px solid #dce3ed;border-radius:12px;background:#eef2f7;';
-      photo.onerror = function() {
-        photo.alt = 'The listing photograph could not be loaded.';
-        photo.style.display = 'none';
-      };
-      container.appendChild(photo);
-    }
-
     const listings = Array.isArray(result.listings)
       ? result.listings.slice(0, 10)
       : [];
+
+    const rawReply = String(result.reply || '');
+    const containsRawListingMarkup =
+      /\\|\\s*(?:📸\\s*)?Photo\\s*\\|/i.test(rawReply) ||
+      /<\\s*(?:img|a)\\b/i.test(rawReply) ||
+      /!\\[[^\\]]*\\]\\(/.test(rawReply);
+
+    const reply = document.createElement('p');
+    reply.className = 'nova-ai-reply';
+    reply.textContent = listings.length && containsRawListingMarkup
+      ? 'Here are the approved NOVAAI MARKET listings matching your search:'
+      : rawReply;
+    container.appendChild(reply);
+
+    // Only use the Markdown-photo fallback when structured listing cards
+    // are absent. This prevents the same listing photograph appearing twice.
+    if (!listings.length) {
+      const markdownPhoto = rawReply.match(
+        /!\\[([^\\]]*)\\]\\((https:\\/\\/nxplffvklkopwfjaqexo\\.supabase\\.co\\/storage\\/v1\\/object\\/public\\/[^)\\s]+)\\)/i
+      );
+
+      if (markdownPhoto) {
+        const photo = document.createElement('img');
+        photo.className = 'nova-reply-photo';
+        photo.src = markdownPhoto[2];
+        photo.alt = markdownPhoto[1] || 'NOVAAI MARKET property photograph';
+        photo.loading = 'lazy';
+        photo.style.cssText = 'display:block;width:100%;max-width:520px;max-height:340px;object-fit:contain;margin:12px 0;border:1px solid #dce3ed;border-radius:12px;background:#eef2f7;';
+        photo.onerror = function() {
+          photo.alt = 'The listing photograph could not be loaded.';
+          photo.style.display = 'none';
+        };
+        container.appendChild(photo);
+      }
+    }
 
     if (!listings.length) return;
 
@@ -434,6 +442,11 @@ button,input{font:inherit}
         .nova-listing-category {
           font-size:12px;
           color:#64748b;
+          margin-bottom:6px;
+        }
+        .nova-listing-location {
+          font-size:13px;
+          color:#475569;
           margin-bottom:12px;
         }
         .nova-listing-button {
@@ -560,6 +573,13 @@ button,input{font:inherit}
       category.className = 'nova-listing-category';
       category.textContent = String(card.category || '');
       info.appendChild(category);
+
+      if (typeof card.location === 'string' && card.location.trim()) {
+        const location = document.createElement('div');
+        location.className = 'nova-listing-location';
+        location.textContent = card.location.trim();
+        info.appendChild(location);
+      }
 
       const link = document.createElement('a');
       link.className = 'nova-listing-button';
