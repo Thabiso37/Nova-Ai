@@ -1030,11 +1030,11 @@ async function checkAdmin(user) {
       loadAdCampaigns().catch(error=>adCampaignMessage("Campaign manager error: "+(error?.message||"Unknown error")));
       if (authVersionAtStart !== adminAuthVersion) {
         currentAdmin = null;
+        verifiedAdminId = null;
         document.getElementById("dashboard").classList.add("hidden");
         document.getElementById("loginPanel").classList.remove("hidden");
         return false;
       }
-      verifiedAdminId = user.id;
       return true;
     } catch (error) {
       console.error("NOVAAI administrator verification error:", error);
