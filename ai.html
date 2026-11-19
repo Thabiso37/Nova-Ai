@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10284b">
+<meta name="description" content="Meet NOVA AI, your intelligent shopping and selling assistant on NOVAAI MARKET.">
+<title>NOVA AI | NOVAAI MARKET</title>
+<link rel="icon" href="./novaai-icon.svg" type="image/svg+xml">
+<style>
+:root {
+  --navy:#10284b;
+  --blue:#174ea6;
+  --yellow:#f5b900;
+  --ink:#172b49;
+  --muted:#718096;
+  --line:#e5ebf3;
+  --surface:#f5f8fc;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  background:#f5f7fb;
+  color:var(--ink);
+  font-family:Arial,Helvetica,sans-serif;
+}
+button,input{font:inherit}
+.topbar{
+  height:66px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:0 clamp(15px,4vw,48px);
+  background:#fff;
+  border-bottom:1px solid var(--line);
+}
+.logo{
+  text-decoration:none;
+  color:var(--blue);
+  font-size:23px;
+  font-weight:950;
+  letter-spacing:-1px;
+}
+.logo span{color:var(--yellow)}
+.logo small{
+  color:var(--navy);
+  font-size:13px;
+  letter-spacing:.4px;
+}
+.back{
+  color:var(--blue);
+  text-decoration:none;
+  font-size:13px;
+  font-weight:800;
+  padding:10px 14px;
+  border:1px solid #dce5f1;
+  border-radius:10px;
+}
+.back:hover{background:#f1f6fd}
+.layout{
+  width:min(100%,1050px);
+  min-height:calc(100vh - 66px);
+  margin:auto;
+  padding:35px 20px 25px;
+  display:flex;
+  flex-direction:column;
+}
+.welcome{text-align:center;margin:25px auto 30px;max-width:680px}
+.orb{
+  width:65px;height:65px;
+  display:grid;place-items:center;
+  margin:0 auto 18px;
+  border-radius:22px;
+  color:white;
+  font-size:25px;
+  font-weight:950;
+  background:linear-gradient(145deg,#174ea6,#10284b);
+  box-shadow:0 10px 28px #174ea633;
+  position:relative;
+}
+.orb:after{
+  content:"";
+  position:absolute;
+  width:12px;height:12px;
+  right:-3px;bottom:-3px;
+  border:3px solid #f5f7fb;
+  border-radius:50%;
+  background:#28b879;
+}
+.welcome h1{
+  margin:0 0 12px;
+  color:var(--navy);
+  font-size:clamp(27px,5vw,39px);
+  letter-spacing:-1.2px;
+}
+.welcome h1 span{color:var(--blue)}
+.welcome p{
+  margin:0;
+  color:#64748b;
+  font-size:15px;
+  line-height:1.7;
+}
+.status{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  margin-top:17px;
+  padding:7px 11px;
+  border-radius:30px;
+  background:#fff7dc;
+  color:#765600;
+  font-size:11px;
+  font-weight:800;
+}
+.status i{
+  width:7px;height:7px;
+  border-radius:50%;
+  background:#e6a900;
+}
+.section-label{
+  margin:0 0 13px;
+  color:#68788e;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+.suggestions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  width:min(100%,720px);
+  margin:0 auto 28px;
+}
+.suggestion{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  min-height:83px;
+  padding:16px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:#fff;
+  color:var(--ink);
+  text-align:left;
+  cursor:pointer;
+  transition:transform .18s,border-color .18s,box-shadow .18s;
+}
+.suggestion:hover{
+  transform:translateY(-2px);
+  border-color:#9db8df;
+  box-shadow:0 7px 20px #10284b0c;
+}
+.suggestion .icon{
+  flex:0 0 35px;
+  width:35px;height:35px;
+  display:grid;place-items:center;
+  border-radius:11px;
+  background:#edf4ff;
+  color:var(--blue);
+  font-size:17px;
+  font-weight:900;
+}
+.suggestion strong{display:block;font-size:13px;margin:2px 0 5px}
+.suggestion small{display:block;color:var(--muted);font-size:11px;line-height:1.5}
+.chat-area{
+  width:min(100%,760px);
+  margin:auto auto 0;
+}
+.messages{
+  display:none;
+  padding:18px 0;
+  margin-bottom:15px;
+}
+.message{
+  max-width:85%;
+  width:fit-content;
+  padding:13px 16px;
+  margin:10px 0;
+  border-radius:16px;
+  font-size:14px;
+  line-height:1.6;
+  overflow-wrap:anywhere;
+}
+.message.user{
+  margin-left:auto;
+  color:#fff;
+  background:var(--blue);
+  border-bottom-right-radius:5px;
+}
+.message.assistant{
+  color:var(--ink);
+  background:#fff;
+  border:1px solid var(--line);
+  border-bottom-left-radius:5px;
+}
+.composer{
+  display:flex;
+  align-items:flex-end;
+  gap:10px;
+  padding:10px;
+  border:1px solid #dce4ef;
+  border-radius:19px;
+  background:#fff;
+  box-shadow:0 9px 30px #10284b0c;
+}
+.composer textarea{
+  flex:1;
+  min-width:0;
+  min-height:43px;
+  max-height:130px;
+  resize:vertical;
+  border:0;
+  outline:0;
+  padding:12px 9px;
+  color:var(--ink);
+  background:transparent;
+  font-size:14px;
+}
+.composer textarea::placeholder{color:#98a4b5}
+.send{
+  flex:0 0 43px;
+  width:43px;height:43px;
+  border:0;
+  border-radius:13px;
+  color:var(--navy);
+  background:var(--yellow);
+  font-size:20px;
+  font-weight:900;
+  cursor:pointer;
+}
+.send:disabled{opacity:.5;cursor:not-allowed}
+.note{
+  margin:12px 0 0;
+  text-align:center;
+  color:#8995a6;
+  font-size:10px;
+  line-height:1.6;
+}
+.footer{
+  padding:22px 10px 5px;
+  text-align:center;
+  color:#8a96a7;
+  font-size:11px;
+}
+@media(max-width:600px){
+  .topbar{height:59px;padding:0 13px}
+  .logo{font-size:20px}
+  .logo small{font-size:11px}
+  .back{padding:9px 10px;font-size:11px}
+  .layout{min-height:calc(100vh - 59px);padding:22px 13px 16px}
+  .welcome{margin:20px auto 25px}
+  .welcome p{font-size:13px}
+  .suggestions{gap:9px}
+  .suggestion{min-height:91px;padding:12px;gap:9px}
+  .suggestion .icon{flex-basis:30px;width:30px;height:30px}
+  .suggestion strong{font-size:12px}
+  .suggestion small{font-size:10px}
+  .message{max-width:94%}
+}
+@media(max-width:360px){
+  .suggestions{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="logo" href="./index.html">NOVA<span>AI</span> <small>MARKET</small></a>
+  <a class="back" href="./index.html">← Back to Marketplace</a>
+</header>
+
+<main class="layout">
+  <section class="welcome" id="welcome">
+    <div class="orb">N</div>
+    <h1>Hello, I'm <span>NOVA AI.</span></h1>
+    <p>Your intelligent marketplace assistant. Let's find what you're looking for, plan your next purchase or help grow your business.</p>
+    <div class="status" id="connectionStatus"><i></i> Connecting to NOVA AI...</div>
+  </section>
+
+  <section>
+    <p class="section-label" style="text-align:center">What would you like help with?</p>
+    <div class="suggestions">
+      <button class="suggestion" data-prompt="Help me find products on NOVAAI MARKET.">
+        <span class="icon">⌕</span>
+        <span><strong>Find products</strong><small>Explore marketplace listings and shopping ideas.</small></span>
+      </button>
+      <button class="suggestion" data-prompt="Help me compare marketplace products.">
+        <span class="icon">⇄</span>
+        <span><strong>Compare products</strong><small>Make a more informed buying decision.</small></span>
+      </button>
+      <button class="suggestion" data-prompt="Help me create a plan to sell on NOVAAI MARKET.">
+        <span class="icon">↗</span>
+        <span><strong>Grow my business</strong><small>Prepare a practical selling plan.</small></span>
+      </button>
+      <button class="suggestion" data-prompt="Help me explore Motors and Property listings.">
+        <span class="icon">⌂</span>
+        <span><strong>Motors & Property</strong><small>Explore vehicles and property opportunities.</small></span>
+      </button>
+    </div>
+  </section>
+
+  <section class="chat-area" aria-label="NOVA AI conversation">
+    <div class="messages" id="messages" aria-live="polite"></div>
+    <form class="composer" id="chatForm">
+      <textarea id="messageInput" rows="1" maxlength="2000" placeholder="Message NOVA AI..." aria-label="Your message"></textarea>
+      <button class="send" type="submit" aria-label="Send message">↑</button>
+    </form>
+    <p class="note">Secure NOVAAI AI connection · Sign in to use the assistant.</p>
+  </section>
+  <footer class="footer">NOVA AI · Your marketplace assistant · NOVAAI MARKET</footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  const SUPABASE_URL = 'https://nxplffvklkopwfjaqexo.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ';
+  const AI_ENDPOINT = 'https://novaai-market-ai-backend.onrender.com/chat';
+
+  const input = document.getElementById('messageInput');
+  const form = document.getElementById('chatForm');
+  const messages = document.getElementById('messages');
+  const sendButton = form.querySelector('.send');
+  const status = document.getElementById('connectionStatus');
+  const suggestions = document.querySelectorAll('.suggestion');
+
+  let client;
+
+  function setStatus(text) {
+    status.lastChild.textContent = ' ' + text;
+  }
+
+  function addMessage(text, type) {
+    const item = document.createElement('div');
+    item.className = 'message ' + type;
+    item.textContent = text;
+    messages.appendChild(item);
+    messages.style.display = 'block';
+    item.scrollIntoView({behavior:'smooth', block:'end'});
+  }
+
+  async function getSession() {
+    const {data, error} = await client.auth.getSession();
+    if (error) throw error;
+    return data.session;
+  }
+
+  async function sendMessage(text) {
+    const clean = text.trim();
+    if (!clean || sendButton.disabled) return;
+
+    sendButton.disabled = true;
+    input.disabled = true;
+    addMessage(clean, 'user');
+    input.value = '';
+
+    const loading = document.createElement('div');
+    loading.className = 'message assistant';
+    loading.textContent = 'NOVA AI is thinking...';
+    messages.appendChild(loading);
+    messages.style.display = 'block';
+
+    try {
+      const session = await getSession();
+
+      if (!session || !session.access_token) {
+        loading.textContent = 'Please sign in to your NOVAAI MARKET account, then return here to chat.';
+        setStatus('Sign-in required');
+        return;
+      }
+
+      const response = await fetch(AI_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + session.access_token
+        },
+        body: JSON.stringify({message: clean})
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (response.status === 401) {
+        loading.textContent = 'Your session is no longer valid. Please sign in again.';
+        setStatus('Sign-in required');
+        return;
+      }
+
+      if (response.status === 429) {
+        loading.textContent = 'You have reached the current message limit. Please wait before trying again.';
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(result.error || 'The AI service returned an error (' + response.status + ').');
+      }
+
+      if (typeof result.reply !== 'string' || !result.reply.trim()) {
+        throw new Error('The AI service returned an empty response.');
+      }
+
+      loading.textContent = result.reply;
+      setStatus('Connected to NOVA AI');
+    } catch (error) {
+      loading.textContent = error.message || 'Unable to reach NOVA AI. Please try again.';
+      setStatus('Connection issue');
+    } finally {
+      sendButton.disabled = false;
+      input.disabled = false;
+      input.focus();
+    }
+  }
+
+  form.addEventListener('submit', function(event) {
+    event.preventDefault();
+    sendMessage(input.value);
+  });
+
+  suggestions.forEach(function(button) {
+    button.addEventListener('click', function() {
+      input.value = button.dataset.prompt || '';
+      input.focus();
+      input.scrollIntoView({behavior:'smooth', block:'center'});
+    });
+  });
+
+  try {
+    if (!window.supabase) throw new Error('Supabase library unavailable.');
+
+    client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    window.NOVAAI_SUPABASE_CLIENT = client;
+
+    client.auth.getSession().then(({data, error}) => {
+      if (error) throw error;
+      setStatus(data.session ? 'Connected · Signed in' : 'Sign in to start chatting');
+    }).catch(() => setStatus('Unable to check sign-in status'));
+  } catch (error) {
+    setStatus('Authentication service unavailable');
+    sendButton.disabled = true;
+  }
+})();
+</script>
+</body>
+</html>
