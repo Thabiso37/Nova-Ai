@@ -698,6 +698,7 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
 <a href="#propertyManagement"><span class="nav-icon">⌂</span>Property Management</a>
 <a href="#advertisementManagement"><span class="nav-icon">▣</span>Advertising Management</a>
 <a href="#ordersFulfilment"><span class="nav-icon">▤</span>Orders & Fulfilment</a>
+<a href="#supportManagement"><span class="nav-icon">✉</span>Support Management</a>
 <a href="#reportsAnalytics"><span class="nav-icon">▥</span>Reports & Analytics</a>
 <a href="#adminSettings"><span class="nav-icon">⚙</span>Settings</a></nav>
 
@@ -897,6 +898,16 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
   </div>
 </div></section>
 <section class="panel" id="adminSettings"><h2>Administrator Settings</h2><p class="muted">Session and access information for the currently authenticated administrator.</p><div class="record"><strong>Administrator account</strong><p id="settingsAdminEmail">Not signed in</p><p>Authorization: <strong>Supabase Auth + is_novaai_admin() + existing administrator ID check</strong></p><p>Security configuration changes are not exposed here.</p></div><button class="logout" type="button" id="settingsLogoutBtn">Sign Out</button></section>
+
+    <section class="panel" id="supportManagement">
+      <h2>Support Management</h2>
+      <p class="muted">Support conversations are managed through the dedicated NOVAAI Support Gmail inbox. Open the inbox to read and reply to seller support emails.</p>
+      <div class="actions">
+        <a class="primary" href="https://mail.google.com/mail/u/0/#inbox" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none">Open Support Inbox</a>
+      </div>
+      <p class="muted">Sellers prepare support requests in their email application and must press Send. Email conversations are managed in Gmail; this section does not create or store support tickets in NOVAAI.</p>
+    </section>
+
     <section class="panel" id="ordersFulfilment">
       <h2>Orders & Fulfilment</h2>
       <p class="muted">Read-only operational order history and seller fulfilment information. Financial and settlement information is not displayed.</p>

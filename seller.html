@@ -65,6 +65,8 @@ header{background:#fff;position:sticky;top:0;z-index:5;border-bottom:1px solid v
 .seller-page-nav button:focus,.seller-page-nav button:hover{border-color:var(--p);background:#edf3ff}
 .seller-page-card{display:block;background:#fff;border:1px solid var(--line);border-radius:4px;padding:16px;margin:16px 0;box-shadow:0 3px 12px rgba(16,40,75,.045);min-width:0}
 .seller-page-card h3{margin-top:0;color:var(--dark)}
+#sellerSupportPage{width:100%;min-width:0;overflow:hidden}
+#sellerSupportFrame{max-width:100%}
 .seller-page-description{font-size:12px;line-height:1.5;color:#64748b;margin:0 0 12px}
 #sellerPublicLocationPanel,#marketplaceAccessStatus{border-radius:4px!important;box-shadow:0 3px 12px rgba(16,40,75,.045)}
 @media(max-width:600px){.seller-page-card{padding:13px;margin:12px 0}}
@@ -199,7 +201,7 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
 <button type="button" onclick="openSellerPage('sellerListingEditorPage')">Add Listing</button>
 <button type="button" onclick="openSellerPage('sellerModerationPage')">Product Moderation</button>
 <button type="button" onclick="openSellerPage('sellerOrdersPage')">Orders &amp; Fulfilment</button>
-<a class="btn outline" href="support.html">Help &amp; Support</a>
+<button type="button" onclick="openSellerPage('sellerSupportPage')">Help &amp; Support</button>
 </nav>
 <div class="panel" id="sellerPublicLocationPanel" style="margin:14px 0">
 <h3>Public seller location</h3>
@@ -341,6 +343,23 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
     <div id="sellerOrdersList"></div></section>
 </div>
 </div>
+<section class="seller-page-card hidden" id="sellerSupportPage" aria-label="NOVAAI Support Centre" style="padding:0;border-radius:0;overflow:hidden">
+  <div class="seller-support-backbar" style="display:flex;align-items:center;justify-content:flex-start;padding:12px 14px;background:#f3f6fb;border-bottom:1px solid #dbe3ef;min-height:56px">
+    <button type="button" onclick="openSellerPage('sellerPublicLocationPanel')" aria-label="Back to Seller Portal" style="display:inline-flex;align-items:center;gap:8px;border:1px solid #dbe3ef;border-radius:6px;background:#fff;color:#10284b;padding:10px 14px;font-size:14px;font-weight:800;cursor:pointer">
+      <span aria-hidden="true" style="font-size:20px;line-height:1">←</span>
+      <span>Back to Seller Portal</span>
+    </button>
+  </div>
+  <iframe
+    id="sellerSupportFrame"
+    src="support.html"
+    title="NOVAAI Support Centre"
+    loading="eager"
+    referrerpolicy="strict-origin-when-cross-origin"
+    onload="resizeSellerSupportFrame()"
+    style="display:block;width:100%;height:1200px;min-height:75vh;max-width:100%;border:0;border-radius:0;background:#fff">
+  </iframe>
+</section>
 <!-- RETAIL PARTNER PORTAL -->
 <div id="portalRetail" class="grid hidden">
   <div class="panel">
@@ -421,8 +440,25 @@ function renderMarketplaceChoices(){
   });
 }
 const marketplaceLabels = {retail:"Retail Seller",motors:"Motors Seller",property:"Property Seller"};
+function resizeSellerSupportFrame() {
+  const frame = document.getElementById("sellerSupportFrame");
+  if (!frame) return;
+  try {
+    const doc = frame.contentDocument;
+    if (!doc) return;
+    const height = Math.max(
+      doc.documentElement?.scrollHeight || 0,
+      doc.body?.scrollHeight || 0
+    );
+    if (height > 0) frame.style.height = height + "px";
+  } catch (error) {
+    // Keep the responsive fallback height if the embedded page cannot be measured.
+  }
+}
+window.addEventListener("resize", resizeSellerSupportFrame);
+
 function openSellerPage(id) {
-  const validPages = ["sellerPublicLocationPanel","marketplaceAccessStatus","sellerAccountPanel","sellerListingEditorPage","sellerModerationPage","sellerOrdersPage"];
+  const validPages = ["sellerPublicLocationPanel","marketplaceAccessStatus","sellerAccountPanel","sellerListingEditorPage","sellerModerationPage","sellerOrdersPage","sellerSupportPage"];
   if (!validPages.includes(id)) return;
   const inventoryPanel = document.getElementById("sellerInventoryPanel");
   const inventoryPage = ["sellerListingEditorPage","sellerModerationPage","sellerOrdersPage"].includes(id);
@@ -435,6 +471,9 @@ function openSellerPage(id) {
   document.getElementById("sellerListingEditorPage").classList.toggle("hidden", id !== "sellerListingEditorPage");
   document.getElementById("sellerModerationPage").classList.toggle("hidden", id !== "sellerModerationPage");
   document.getElementById("sellerOrdersPage").classList.toggle("hidden", id !== "sellerOrdersPage");
+  document.getElementById("sellerSupportPage").classList.toggle("hidden", id !== "sellerSupportPage");
+  document.getElementById("portalStd").classList.toggle("hidden", id === "sellerSupportPage");
+  if (id === "sellerSupportPage") resizeSellerSupportFrame();
   const target = document.getElementById(id);
   if (target) target.scrollIntoView({behavior:"smooth",block:"start"});
   if (id === "sellerAccountPanel") window.NOVAAISeller2080?.navigate("account");
@@ -1676,7 +1715,66 @@ async function updateFulfillmentStatus(orderId) {
 
 </script>
 <script src="seller-location.js?v=2"></script>
-<script src="seller-portal-2080-ui.js?v=3"></script>
+<script src="seller-portal-2080-ui.js?v=5"></script>
+
+
+<script>
+/* NOVAAI seller support email handoff — browser email app only; no request storage. */
+(function(){
+  "use strict";
+  const SUPPORT_EMAIL = "novaaimarket.support@gmail.com";
+  function wireSupportFrame(frame){
+    if(!frame || frame.dataset.emailSupportWired === "true") return;
+    const attach = function(){
+      try {
+        const doc = frame.contentDocument;
+        if(!doc || !doc.getElementById("supportForm")) return;
+        const form = doc.getElementById("supportForm");
+        if(form.dataset.emailSupportWired === "true") return;
+        form.dataset.emailSupportWired = "true";
+        const emailLink = doc.querySelector("a.email");
+        if(emailLink){ emailLink.href = "mailto:" + SUPPORT_EMAIL; }
+        const notice = form.querySelector(".notice");
+        if(notice) notice.textContent = "When you select Send Support Request, your email application will open with the request prepared. You must press Send in your email application. NOVAAI does not automatically receive or store this form.";
+        const submit = form.querySelector('button[type="submit"]');
+        if(submit) submit.textContent = "Send Support Request";
+        const history = Array.from(doc.querySelectorAll(".card")).find(card => card.querySelector("h2")?.textContent.trim() === "My Support Requests");
+        if(history){
+          const p = history.querySelector("p");
+          if(p) p.textContent = "Requests sent by email are managed in the NOVAAI Support Gmail inbox. This page does not store or display a personal request history.";
+        }
+        doc.addEventListener("submit", function(event){
+          if(event.target !== form) return;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          if(!form.reportValidity()) return;
+          const category = doc.getElementById("category")?.value.trim() || "";
+          const subject = doc.getElementById("subject")?.value.trim() || "";
+          const description = doc.getElementById("description")?.value.trim() || "";
+          const mailSubject = "NOVAAI Seller Support: " + subject;
+          const body = "Support category: " + category + "\nSubject: " + subject + "\n\nProblem description:\n" + description;
+          window.location.href = "mailto:" + SUPPORT_EMAIL + "?subject=" + encodeURIComponent(mailSubject) + "&body=" + encodeURIComponent(body);
+          const feedback = doc.createElement("p");
+          feedback.className = "notice";
+          feedback.setAttribute("role","status");
+          feedback.textContent = "Your email application should open with the request prepared. Press Send there to send it to NOVAAI Support. The request has not been submitted or stored by this page.";
+          form.append(feedback);
+        }, true);
+        frame.dataset.emailSupportWired = "true";
+      } catch(error) {
+        /* Keep the existing support page visible if browser iframe access is unavailable. */
+      }
+    };
+    frame.addEventListener("load", attach);
+    if(frame.contentDocument?.readyState === "complete") attach();
+  }
+  function scan(){
+    document.querySelectorAll('iframe[title="NOVAAI Support Centre"]').forEach(wireSupportFrame);
+  }
+  scan();
+  new MutationObserver(scan).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
 
 </body>
 </html>
