@@ -449,6 +449,14 @@ button,input{font:inherit}
           color:#475569;
           margin-bottom:12px;
         }
+        .nova-listing-description {
+          color:#526174;
+          font-size:12px;
+          line-height:1.55;
+          margin:8px 0 12px;
+          white-space:pre-wrap;
+          overflow-wrap:anywhere;
+        }
         .nova-listing-button {
           display:block;
           padding:11px;
@@ -573,6 +581,13 @@ button,input{font:inherit}
       category.className = 'nova-listing-category';
       category.textContent = String(card.category || '');
       info.appendChild(category);
+
+      if (typeof card.description === 'string' && card.description.trim()) {
+        const description = document.createElement('p');
+        description.className = 'nova-listing-description';
+        description.textContent = card.description.trim();
+        info.appendChild(description);
+      }
 
       if (typeof card.location === 'string' && card.location.trim()) {
         const location = document.createElement('div');
