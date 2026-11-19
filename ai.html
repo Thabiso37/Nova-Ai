@@ -352,6 +352,28 @@ button,input{font:inherit}
     reply.textContent = result.reply || '';
     container.appendChild(reply);
 
+    // Fallback: display approved public NOVAAI Storage photos included
+    // in a Markdown image in the assistant reply, instead of showing
+    // the Markdown syntax as plain text. Only this project's public
+    // Supabase Storage object URLs are accepted.
+    const markdownPhoto = String(result.reply || '').match(
+      /!\\[([^\\]]*)\\]\\((https:\\/\\/nxplffvklkopwfjaqexo\\.supabase\\.co\\/storage\\/v1\\/object\\/public\\/[^)\\s]+)\\)/i
+    );
+
+    if (markdownPhoto) {
+      const photo = document.createElement('img');
+      photo.className = 'nova-reply-photo';
+      photo.src = markdownPhoto[2];
+      photo.alt = markdownPhoto[1] || 'NOVAAI MARKET property photograph';
+      photo.loading = 'lazy';
+      photo.style.cssText = 'display:block;width:100%;max-width:520px;max-height:340px;object-fit:contain;margin:12px 0;border:1px solid #dce3ed;border-radius:12px;background:#eef2f7;';
+      photo.onerror = function() {
+        photo.alt = 'The listing photograph could not be loaded.';
+        photo.style.display = 'none';
+      };
+      container.appendChild(photo);
+    }
+
     const listings = Array.isArray(result.listings)
       ? result.listings.slice(0, 10)
       : [];
@@ -479,17 +501,22 @@ button,input{font:inherit}
       const primary = card.image_url;
       const photoList = [];
 
-      if (typeof primary === 'string' && primary.startsWith('https://')) {
-        photoList.push(primary);
-      }
+      function addPhoto(value) {
+        const src = typeof value === 'string'
+          ? value
+          : value && typeof value === 'object'
+            ? (value.url || value.image_url || '')
+            : '';
 
-      images.forEach(function(src) {
         if (
           typeof src === 'string' &&
           src.startsWith('https://') &&
           !photoList.includes(src)
         ) photoList.push(src);
-      });
+      }
+
+      addPhoto(primary);
+      images.forEach(addPhoto);
 
       photoList.slice(0, 6).forEach(function(src) {
         const image = document.createElement('img');
