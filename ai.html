@@ -353,9 +353,9 @@ button,input{font:inherit}
 
     const rawReply = String(result.reply || '');
     const containsRawListingMarkup =
-      /\\|\\s*(?:📸\\s*)?Photo\\s*\\|/i.test(rawReply) ||
-      /<\\s*(?:img|a)\\b/i.test(rawReply) ||
-      /!\\[[^\\]]*\\]\\(/.test(rawReply);
+      /\|\s*(?:📸\s*)?Photo\s*\|/i.test(rawReply) ||
+      /<\s*(?:img|a)\b/i.test(rawReply) ||
+      /!\[[^\]]*\]\(/.test(rawReply);
 
     const reply = document.createElement('p');
     reply.className = 'nova-ai-reply';
@@ -368,7 +368,7 @@ button,input{font:inherit}
     // are absent. This prevents the same listing photograph appearing twice.
     if (!listings.length) {
       const markdownPhoto = rawReply.match(
-        /!\\[([^\\]]*)\\]\\((https:\\/\\/nxplffvklkopwfjaqexo\\.supabase\\.co\\/storage\\/v1\\/object\\/public\\/[^)\\s]+)\\)/i
+        /!\[([^\]]*)\]\((https:\/\/nxplffvklkopwfjaqexo\.supabase\.co\/storage\/v1\/object\/public\/[^)\s]+)\)/i
       );
 
       if (markdownPhoto) {
