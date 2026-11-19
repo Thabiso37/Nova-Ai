@@ -1015,6 +1015,7 @@ async function checkAdmin(user) {
 
       if (authVersionAtStart !== adminAuthVersion) return false;
       currentAdmin = user;
+      verifiedAdminId = user.id;
       document.getElementById("loginPanel").classList.add("hidden");
       document.getElementById("dashboard").classList.remove("hidden");
       initializeAdminWorkspaces();
