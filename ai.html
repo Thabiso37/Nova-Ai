@@ -357,7 +357,7 @@ button,input{font:inherit}
     // the Markdown syntax as plain text. Only this project's public
     // Supabase Storage object URLs are accepted.
     const markdownPhoto = String(result.reply || '').match(
-      /!\\[([^\\]]*)\\]\\((https:\\/\\/nxplffvklkopwfjaqexo\\.supabase\\.co\\/storage\\/v1\\/object\\/public\\/[^)\\s]+)\\)/i
+      /!\[([^\]]*)\]\((https:\/\/nxplffvklkopwfjaqexo\.supabase\.co\/storage\/v1\/object\/public\/[^)\s]+)\)/i
     );
 
     if (markdownPhoto) {
