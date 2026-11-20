@@ -23,8 +23,8 @@ test("Ad boards reveal before the background campaign request and font readiness
  assert.doesNotMatch(ads,/await\s+document\.fonts\.ready/,"no unbounded font wait is allowed");
 });
 test("Store Page selects the public phone field before rendering its WhatsApp contact",()=>{
+ assert.match(js,/select\("user_id,store_name,store_slug,status,store_banner_url,store_logo_url,phone"\)/);
  assert.match(js,/select\("user_id,store_name,store_slug,status,store_banner_url,phone"\)/);
- assert.match(js,/select\("user_id,store_name,store_slug,status,phone"\)/);
  assert.match(js,/store\.phone/);
 });
 test("Home and Retail cards expose seller identity for View Store links without changing Motors or Property cards",()=>{
@@ -114,4 +114,48 @@ test("Retail video upload UI is separate from photo inputs and Storage proposal 
 });
 test("Store Page engagement uses professional icons and retains customer authentication restrictions",()=>{
  assert.match(js,/likeButton\.innerHTML=heart/);assert.match(js,/followButton\.innerHTML=followIcon/);assert.match(js,/canEngage=signedIn&&!ownStore&&engagementReady/);assert.match(js,/storeEngagementStatus/);
+});
+
+
+test("Store Page renders its identity before waiting for public location, products or engagement",()=>{
+ const start=js.indexOf("async function loadStorePage()");
+ const end=js.indexOf("\n}",start)+2;
+ const loader=js.slice(start,end);
+ assert.ok(start>=0&&end>start);
+ assert.ok(loader.indexOf("nextView.append(banner,identity)")<loader.indexOf("const locationTask="),"store identity must be attached before secondary requests");
+ assert.match(loader,/Promise\.all\(\[authPromise,locationTask\.catch[\s\S]*?productsTask\.catch/);
+ assert.match(loader,/productGrid\.innerHTML=.*Loading this store/);
+ assert.match(loader,/if\(!hadContent\)root\.innerHTML/,"first load should show a loader without clearing an existing store");
+ assert.match(loader,/const nextView=document\.createDocumentFragment\(\)/,"refresh view must be prepared off-screen");
+ assert.match(loader,/if\(hadContent\)root\.replaceChildren\(nextView\)/,"existing store view must be swapped only after secondary requests finish");
+ assert.match(loader,/root\.removeAttribute\("aria-busy"\)/);
+});
+
+test("Homepage product route shows a stable detail skeleton and hides all homepage-only sections",()=>{
+ assert.match(home,/product-loading-shell/);
+ assert.match(home,/Loading approved product details/);
+ assert.match(home,/product-view-active #novaAiLaunchCard/);
+ assert.match(home,/product-view-active \.home-category-tiles/);
+ assert.match(home,/product-view-active \.home-seller-banner/);
+ assert.match(home,/product-view-active \.home-search-wrap/);
+ assert.match(home,/product-view-active \.nova-hero-carousel/);
+});
+
+test("Homepage product cards reserve image space and keep asynchronous image decoding",()=>{
+ assert.match(home,/\.home-product-photo\{[^}]*aspect-ratio:1\/1/);
+ assert.match(home,/loading=\"lazy\" decoding=\"async\"/);
+});
+
+
+test("Homepage product loading failures replace the skeleton with a recoverable error state",()=>{
+ assert.match(home,/if\(requestedId\)\{const main=document\.querySelector\(\x27main\x27\);if\(main\)main\.innerHTML=.*Return to homepage/);
+});
+
+test("Homepage advertising first paint remains independent from managed campaign loading",()=>{
+ const boot=ads.indexOf("function bootLiveAds()");
+ const reveal=ads.indexOf("window.__novaAdsRevealBoards();",boot);
+ const managed=ads.indexOf("loadManagedCampaigns().catch",boot);
+ assert.ok(reveal>boot&&managed>reveal);
+ assert.match(ads,/setInterval\(\(\)=>show\(active\+1\),5000\)/);
+ assert.match(home,/\.nova-hero-slide\{[^}]*min-height:190px/);
 });
