@@ -162,6 +162,9 @@ test("Advertising boards stay on a branded loading state until managed campaigns
  assert.match(ads,/\.finally\(\(\)=>\{[\s\S]*?__novaAdsRevealBoards/);
  assert.match(home,/html\.nova-ads-pending \[data-nova-ad-slot\]::after/);
  assert.match(home,/Loading advertisements/);
- assert.match(ads,/setInterval\(\(\)=>show\(active\+1\),5000\)/);
+ assert.match(ads,/function initHomeFallbackControls/);
+ assert.doesNotMatch(ads,/function initLiveSlot|function initHomeCarousel|nova-live-controls|nova-live-changing/);
+ assert.doesNotMatch(ads,/setInterval\(\(\)=>show\(active\+1\),5000\)/,"fallback creatives must not auto-rotate");
+ assert.match(ads,/setInterval\(loadManagedCampaigns,60000\)/,"managed campaigns must continue refreshing");
  assert.match(home,/\.nova-hero-slide\{[^}]*min-height:190px/);
 });

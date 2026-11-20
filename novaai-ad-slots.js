@@ -1,6 +1,6 @@
 /* NOVAAI Advertisement Placement Registry
  * Version 1 placement contract and live approved-campaign renderer.
- * Fallback boards are revealed immediately; the managed campaign feed loads in the background.
+ * Static fallback boards remain available; managed campaigns use one renderer and refresh in the background.
  */
 (function(){
   'use strict';
@@ -29,119 +29,12 @@
     }
   };
 
-  const liveMessages={
-    cart_banner:[
-      ['Special Offers','Featured Deals','Marketplace Picks'],
-      ['Discover great deals at NOVAAI','Explore offers from local sellers','Find your next favourite today']
-    ],
-    shop_footer:[
-      ['Find something you will love.','Fresh discoveries from South African sellers.','Your next great find is waiting.'],
-      ['Browse fashion, tech and home essentials.','Shop local and discover more in one place.','Explore products across the marketplace.'],
-      ['Explore Shop →','Discover local finds →','Start browsing →']
-    ],
-    motors_footer:[
-      ['Find the vehicle that moves you.','Cars, bakkies and SUVs from local sellers.','Your next journey starts here.'],
-      ['Explore vehicles and useful parts.','Compare listings and discover your next drive.','Browse local Motors listings.'],
-      ['Explore Motors →','Browse vehicles →','Find your next drive →']
-    ],
-    property_footer:[
-      ['Make room for your next chapter.','Explore homes and spaces across South Africa.','Your next address could be waiting.'],
-      ['Discover a place to call home.','Browse houses, apartments and more.','Find a space that fits your plans.'],
-      ['Explore Property →','Browse homes →','Find your space →']
-    ],
-    wishlist_banner:[
-      ['Discover more from South African sellers.','Fresh finds and local offers are waiting for you.','Your next favourite could be one tap away.'],
-      ['Promotional space ready for campaigns managed by NOVAAI.','Explore more products from independent local stores.','Save the products you love and discover something new.'],
-      ['Explore marketplace →','Discover local finds →','Shop South African sellers →']
-    ],
-    motors_banner:[
-      ['Find your next vehicle.','Your next journey starts here.','Discover a vehicle that moves you.'],
-      ['Browse vehicles listed by South African sellers, with the details they provide.','Explore cars, bakkies, SUVs and motorcycles from local sellers.','Compare listings and discover your next great drive.'],
-      ['Explore vehicles →','Browse Motors →','Find your next drive →']
-    ],
-    property_banner:[
-      ['Find a place to belong.','Your next address could be waiting here.','Explore spaces that feel like home.'],
-      ['Explore homes and spaces across South Africa.','Discover property listings from local sellers.','Browse places to live, work and invest.'],
-      ['Explore properties →','Discover property →','Find your space →']
-    ]
-  };
-  const liveImages={
-    shop_footer:[
-      'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=85',
-      'https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=1200&q=85',
-      'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=85'
-    ],
-    motors_footer:[
-      'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=85',
-      'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=1200&q=85',
-      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=85'
-    ],
-    property_footer:[
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=85',
-      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85',
-      'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=85'
-    ],
-    home_hero:[
+  const homeFallbackImages=[
       "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85",
       "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=900&q=85",
       "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=900&q=85"
-    ],
-    motors_banner:[
-      "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=1600&q=88",
-      "https://cdn3.carrogreen.com/modules/angarslider/views/img/images/87ffe42992e630a55a52d1ea15d261711d6ed605_piece%20auto%201.jpg",
-      "https://aaclinic.shop/assets/engine-parts-BlXfXwfD.jpg"
-    ]
-  };
-  function initLiveSlot(slot){
-    if(!slot||slot.dataset.novaLiveReady==='1')return;
-    const id=slot.getAttribute('data-nova-ad-slot');
-    if(!liveMessages[id])return;
-    const selectors=id==='cart_banner'
-      ? ['strong','span']
-      : id==='property_banner'
-      ? ['.property-promo-copy h2','.property-promo-copy p','.property-promo-link']
-      : id==='motors_banner'
-      ? ['.motors-hero-copy h1','.motors-hero-copy p','.motors-explore']
-      : ['.nova-footer-ad-copy strong','.nova-footer-ad-copy small','.nova-footer-ad-copy a'];
-    const nodes=selectors.map(sel=>slot.querySelector(sel));
-    if(nodes.some(n=>!n))return;
-    const original=nodes.map(n=>n.textContent);
-    const variants=liveMessages[id];
-    let active=0,timer=null;
-    slot.dataset.novaLiveReady='1';
-    slot.classList.add('nova-live-ad');
-    const controls=document.createElement('div');
-    controls.className='nova-live-controls';
-    controls.innerHTML='<span class="nova-live-onair">NOW SHOWING</span><span class="nova-live-dots"><button type="button" aria-label="Advertisement 1" aria-current="true"></button><button type="button" aria-label="Advertisement 2" aria-current="false"></button><button type="button" aria-label="Advertisement 3" aria-current="false"></button></span>';
-    slot.appendChild(controls);
-    const dots=Array.from(controls.querySelectorAll('button'));
-    function show(i){
-      active=(i+3)%3;
-      slot.classList.add('nova-live-changing');
-      window.setTimeout(()=>{
-        if(slot.dataset.novaManagedCampaign){slot.classList.remove('nova-live-changing');return;}
-        nodes.forEach((node,j)=>{node.textContent=active===0?original[j]:variants[j][active-1];});
-        if(id==='motors_banner'&&liveImages.motors_banner[active]){
-          slot.style.backgroundImage='url("'+liveImages.motors_banner[active]+'")';
-          slot.style.backgroundPosition='center 52%';
-          slot.style.backgroundSize='cover';
-        }
-        if(liveImages[id]&&liveImages[id][active]){
-          const image=slot.querySelector('.nova-footer-ad-image');
-          if(image)image.style.backgroundImage='url("'+liveImages[id][active]+'")';
-        }
-        dots.forEach((dot,k)=>dot.setAttribute('aria-current',String(k===active)));
-        slot.classList.remove('nova-live-changing');
-      },220);
-    }
-    function stop(){if(timer){clearInterval(timer);timer=null;}}
-    function start(){stop();const delay=id==='motors_banner'?5000:5200;if(!document.hidden&&(!window.matchMedia('(prefers-reduced-motion: reduce)').matches||id==='shop_footer'))timer=setInterval(()=>show(active+1),delay);}
-    dots.forEach((dot,i)=>dot.addEventListener('click',()=>{show(i);start();}));
-    slot.addEventListener('mouseenter',stop);slot.addEventListener('mouseleave',start);
-    slot.addEventListener('focusin',stop);slot.addEventListener('focusout',start);
-    document.addEventListener('visibilitychange',start);
-    show(0);start();
-  }
+    ];
+
   // Admin campaign feed: management can publish approved campaign rows through NOVAAI_ADS.announceCampaigns(rows).
   const managedTimers=Object.create(null);
   function safeHttpsUrl(value){
@@ -413,9 +306,7 @@
         let titleNode=null,descNode=null,linkNode=null,imageNode=null;
         if(id==='home_hero'){
           const slide=slot.querySelector('.nova-hero-slide');
-          // The legacy carousel may advance before the asynchronous campaign feed
-          // arrives. Activate the exact slide receiving the managed creative before
-          // setting the managed flag that stops legacy slide transitions.
+          // Activate the exact slide receiving the managed creative before marking it managed.
           slot.querySelectorAll('.nova-hero-slide').forEach((el,k)=>{
             el.classList.toggle('active',k===0);
             el.setAttribute('aria-hidden',String(k!==0));
@@ -454,7 +345,7 @@
             slot.dataset.novaOriginalHeight=String(naturalRect.height);
           }
         };
-        // Match main's media -> legacy managed flag -> measurement order for
+        // Preserve the original media -> managed state -> measurement order for
         // normally rendered boards. Wishlist is measured from its static node
         // before media because main removes that node before campaign rendering.
         if(id==='wishlist_banner'){
@@ -493,24 +384,35 @@
   api.setCampaigns=rows=>api.announceCampaigns(rows);
   api.clearManagedCampaigns=()=>api.announceCampaigns([]);
 
-  function initHomeCarousel(){
+  // Keep homepage fallback navigation without a competing timed carousel.
+  function initHomeFallbackControls(){
     const banner=document.getElementById('novaHeroCarousel');
-    if(!banner||banner.dataset.novaLiveReady==='1')return;
+    if(!banner||banner.dataset.novaFallbackControlsReady==='1')return;
     const slides=Array.from(banner.querySelectorAll('.nova-hero-slide'));
     const dots=Array.from(banner.querySelectorAll('[data-hero-slide]'));
     const prev=banner.querySelector('#novaHeroPrev'),next=banner.querySelector('#novaHeroNext');
     if(slides.length<2)return;
-    banner.dataset.novaLiveReady='1';
-    let active=0,timer=null;
-    function show(i){if(banner.dataset.novaManagedCampaign)return;active=(i+slides.length)%slides.length;slides.forEach((el,k)=>{el.classList.toggle('active',k===active);el.setAttribute('aria-hidden',String(k!==active));const art=el.querySelector('.nova-hero-art');if(art&&liveImages.home_hero[ k ]){art.style.backgroundImage='linear-gradient(90deg,rgba(16,40,75,.10),rgba(16,40,75,.10)),url("'+liveImages.home_hero[k]+'")';art.style.backgroundSize='cover';art.style.backgroundPosition='center';}});dots.forEach((el,k)=>el.classList.toggle('active',k===active));}
-    function stop(){if(timer){clearInterval(timer);timer=null;}}
-    function start(){stop();if(!document.hidden&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches)timer=setInterval(()=>show(active+1),5000);}
-    dots.forEach((dot,i)=>dot.addEventListener('click',()=>{show(i);start();}));
-    prev&&prev.addEventListener('click',()=>{show(active-1);start();});
-    next&&next.addEventListener('click',()=>{show(active+1);start();});
-    banner.addEventListener('mouseenter',stop);banner.addEventListener('mouseleave',start);
-    banner.addEventListener('focusin',stop);banner.addEventListener('focusout',start);
-    document.addEventListener('visibilitychange',start);show(0);start();
+    banner.dataset.novaFallbackControlsReady='1';
+    let active=Math.max(0,slides.findIndex(el=>el.classList.contains('active')));
+    function show(i){
+      if(banner.dataset.novaManagedCampaign)return;
+      active=(i+slides.length)%slides.length;
+      slides.forEach((el,k)=>{
+        el.classList.toggle('active',k===active);
+        el.setAttribute('aria-hidden',String(k!==active));
+        const art=el.querySelector('.nova-hero-art');
+        if(art&&homeFallbackImages[k]){
+          art.style.backgroundImage='linear-gradient(90deg,rgba(16,40,75,.10),rgba(16,40,75,.10)),url("'+homeFallbackImages[k]+'")';
+          art.style.backgroundSize='cover';
+          art.style.backgroundPosition='center';
+        }
+      });
+      dots.forEach((el,k)=>el.classList.toggle('active',k===active));
+    }
+    dots.forEach((dot,i)=>dot.addEventListener('click',()=>show(i)));
+    if(prev)prev.addEventListener('click',()=>show(active-1));
+    if(next)next.addEventListener('click',()=>show(active+1));
+    show(active);
   }
   let managedCampaignLoadSequence=0;
   async function loadManagedCampaigns(){
@@ -550,9 +452,8 @@
         window.clearTimeout(requestTimeoutId);
       }
       if(requestId!==managedCampaignLoadSequence)return;
-      // Fallback boards are already visible. Wait briefly for web fonts only
-      // before measuring/replacing them with managed campaign content.
-      // This wait never blocks the initial board reveal or the campaign request.
+      // Wait briefly for web fonts before measuring managed campaign content.
+      // This wait is bounded and does not block the campaign request.
       if(Array.isArray(campaigns)&&campaigns.length&&document.fonts&&document.fonts.ready){
         let fontTimeoutId;
         try{
@@ -576,13 +477,7 @@
     if(window.__novaAdsBooted)return;
     window.__novaAdsBooted=true;
     try{
-      initHomeCarousel();
-      ['cart_banner','property_banner','motors_banner','shop_footer','motors_footer','property_footer'].forEach(id=>initLiveSlot(document.querySelector('[data-nova-ad-slot="'+id+'"]')));
-      // Keep fallback markup behind a branded loading state until the latest feed
-      // has applied current campaigns or restored safe fallback creative.
-      window.__novaManagedCampaignsReady=true;
-      const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');
-      if(wishlist)initLiveSlot(wishlist);
+      initHomeFallbackControls();
       loadManagedCampaigns().catch(error=>{
         console.warn('NOVAAI managed advertisement refresh failed; showing safe fallback boards.',error);
         api.announceCampaigns([]);
@@ -590,13 +485,6 @@
         if(typeof window.__novaAdsRevealBoards==='function')window.__novaAdsRevealBoards();
       });
       if(!window.__novaAdRefreshTimer)window.__novaAdRefreshTimer=window.setInterval(loadManagedCampaigns,60000);
-      if(!window.__novaAdObserver&&document.body){
-        window.__novaAdObserver=new MutationObserver(()=>{
-          const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');
-          if(wishlist&&window.__novaManagedCampaignsReady)initLiveSlot(wishlist);
-        });
-        window.__novaAdObserver.observe(document.body,{childList:true,subtree:true});
-      }
     }catch(error){
       console.error('NOVAAI advertising initialisation failed; showing fallback boards.',error);
       if(typeof window.__novaAdsRevealBoards==='function')window.__novaAdsRevealBoards();
@@ -606,7 +494,7 @@
 
   window.NOVAAI_ADS=api;
   const style=document.createElement('style');
-  style.textContent='.nova-hero-art[data-nova-managed-image="1"] .hero-art-circle,.nova-hero-art[data-nova-managed-image="1"] .hero-art-card{display:none!important}.nova-live-ad{position:relative;isolation:isolate;overflow:hidden}.nova-live-ad:before{content:"";position:absolute;inset:-45%;z-index:0;pointer-events:none;background:linear-gradient(110deg,transparent 38%,rgba(255,255,255,.13) 48%,transparent 58%);transform:translateX(-65%) rotate(8deg);animation:novaAdShimmer 6s ease-in-out infinite}.nova-live-ad:after{content:"";position:absolute;z-index:0;right:-35px;top:-55px;width:145px;height:145px;border:1px solid rgba(255,255,255,.2);border-radius:50%;box-shadow:0 0 0 18px rgba(255,255,255,.035),0 0 0 38px rgba(255,255,255,.025);pointer-events:none;animation:novaAdOrbit 9s linear infinite}.nova-live-ad>*{position:relative;z-index:1}.nova-hero-art{background-size:cover!important;background-position:center!important}.nova-hero-art .hero-art-circle{opacity:.16}.nova-hero-art .hero-art-card{background:rgba(16,40,75,.88);backdrop-filter:blur(3px)}.nova-live-ad .nova-live-controls{position:absolute;z-index:5;right:12px;bottom:9px;display:flex;align-items:center;gap:9px}.nova-live-onair{font-size:7px;font-weight:900;letter-spacing:1px;color:rgba(255,255,255,.82)}.nova-live-onair:before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:#f5b900;margin-right:5px;box-shadow:0 0 8px #f5b900;animation:novaAdPulse 1.4s infinite}.nova-live-dots{display:flex;gap:5px}.nova-live-dots button{width:6px;height:6px;padding:0;border:0;border-radius:9px;background:#ffffff75}.nova-live-dots button[aria-current="true"]{width:18px;background:#f5b900}.nova-live-changing .property-promo-copy,.nova-live-changing strong,.nova-live-changing small{opacity:.25;transition:opacity .22s ease}@keyframes novaAdShimmer{0%,15%{transform:translateX(-65%) rotate(8deg)}65%,100%{transform:translateX(65%) rotate(8deg)}}@keyframes novaAdOrbit{to{transform:rotate(360deg)}}@keyframes novaAdPulse{50%{opacity:.45;box-shadow:0 0 0 6px rgba(245,185,0,.1)}}@media(prefers-reduced-motion:reduce){.nova-live-ad:before,.nova-live-ad:after,.nova-live-onair:before{animation:none!important}}';
+  style.textContent='.nova-hero-art[data-nova-managed-image="1"] .hero-art-circle,.nova-hero-art[data-nova-managed-image="1"] .hero-art-card{display:none!important}.nova-hero-art{background-size:cover!important;background-position:center!important}.nova-hero-art .hero-art-circle{opacity:.16}.nova-hero-art .hero-art-card{background:rgba(16,40,75,.88);backdrop-filter:blur(3px)}';
   style.textContent += '.nova-ad-media-host{position:relative;overflow:hidden}.nova-ad-media-host>:not([data-nova-ad-image]):not([data-nova-ad-video]){position:relative;z-index:1}';
   style.textContent += '[data-nova-ad-slot="motors_banner"][data-nova-managed-campaign] .motors-hero-copy{position:relative;z-index:1;max-width:54%}[data-nova-ad-slot="motors_banner"][data-nova-managed-campaign] .motors-avatar{display:none}[data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;min-height:58px;padding-left:70px;text-align:left}[data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]>strong,[data-nova-ad-slot="cart_banner"][data-nova-managed-campaign]>span{position:relative;z-index:1}[data-nova-ad-slot="shop_tv"][data-nova-managed-campaign] .shop-tv-art[data-nova-managed-image="1"]::before,[data-nova-ad-slot="shop_tv"][data-nova-managed-campaign] .shop-tv-art[data-nova-managed-image="1"]::after{display:none!important}[data-nova-ad-slot="shop_footer"][data-nova-managed-campaign] .nova-footer-ad-copy,[data-nova-ad-slot="motors_footer"][data-nova-managed-campaign] .nova-footer-ad-copy,[data-nova-ad-slot="property_footer"][data-nova-managed-campaign] .nova-footer-ad-copy,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-campaign] .nova-footer-ad-copy{position:relative;z-index:1;width:52%}';
   // Managed campaigns retain the board's pre-layout outer dimensions and use
@@ -622,9 +510,9 @@
   [data-nova-ad-slot="shop_tv"][data-nova-managed-layout] .shop-tv-copy{position:absolute!important;top:0!important;right:0!important;bottom:0!important;left:auto!important;width:25%!important;max-width:none!important;min-width:0!important;height:100%!important;box-sizing:border-box!important;padding:24px 3px 4px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:5px!important;overflow:visible!important;background:linear-gradient(145deg,#10284b,#174ea6)!important;overflow-wrap:break-word!important;word-break:normal!important}
   [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]{position:relative!important;display:block!important;padding:0!important;min-height:0!important}
   [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>.nova-ad-media-host{position:absolute!important;inset:0 auto 0 0!important;width:75%!important;height:100%!important;overflow:hidden!important}
-  [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>strong,[data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>span:not(.nova-live-controls):not(.nova-live-onair){position:absolute!important;left:75%!important;right:0!important;width:25%!important;box-sizing:border-box!important;padding:2px 2px!important;text-align:left!important;overflow:visible!important;overflow-wrap:break-word!important;word-break:normal!important}
+  [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>strong,[data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>span{position:absolute!important;left:75%!important;right:0!important;width:25%!important;box-sizing:border-box!important;padding:2px 2px!important;text-align:left!important;overflow:visible!important;overflow-wrap:break-word!important;word-break:normal!important}
   [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>strong{top:8px!important;font-size:14px!important;line-height:1.1!important}
-  [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>span:not(.nova-live-controls):not(.nova-live-onair){top:0!important;display:none!important}
+  [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>span{top:0!important;display:none!important}
   [data-nova-ad-slot="motors_banner"][data-nova-managed-layout] .motors-hero-copy{position:absolute!important;top:0!important;right:0!important;bottom:0!important;left:auto!important;width:25%!important;max-width:none!important;min-width:0!important;height:100%!important;box-sizing:border-box!important;margin:0!important;padding:28px 4px 8px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;gap:7px!important;overflow:visible!important;background:linear-gradient(145deg,#10284b,#174ea6)!important;overflow-wrap:break-word!important;word-break:normal!important}
   [data-nova-ad-slot="motors_banner"][data-nova-managed-layout] .motors-welcome-top{position:absolute!important;top:4px!important;right:0!important;left:75%!important;width:25%!important;box-sizing:border-box!important;justify-content:center!important;padding:0 3px!important;font-size:9px!important;z-index:2!important}
   [data-nova-ad-slot="motors_banner"][data-nova-managed-layout] .motors-avatar{display:none!important};
@@ -655,15 +543,10 @@
   [data-nova-ad-slot][data-nova-managed-layout] .motors-eyebrow,
   [data-nova-ad-slot][data-nova-managed-layout] .property-promo-kicker,
   [data-nova-ad-slot][data-nova-managed-layout] .nova-footer-ad-kicker{display:block!important;font-size:11px!important;line-height:1.15!important;letter-spacing:.2px!important;white-space:normal!important;overflow-wrap:break-word!important;word-break:normal!important}
-  [data-nova-ad-slot][data-nova-managed-layout] .nova-live-controls,
   [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-controls{position:absolute!important;z-index:8!important;top:4px!important;bottom:auto!important;left:auto!important;right:3px!important;width:calc(25% - 6px)!important;max-width:calc(25% - 6px)!important;min-width:0!important;box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:3px!important;padding:0!important}
-  [data-nova-ad-slot][data-nova-managed-layout] .nova-live-onair,
   [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-onair{display:none!important}
-  [data-nova-ad-slot][data-nova-managed-layout] .nova-live-dots,
   [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-dots{display:flex!important;align-items:center!important;justify-content:center!important;gap:3px!important}
-  [data-nova-ad-slot][data-nova-managed-layout] .nova-live-dots button,
   [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-dots button{width:5px!important;height:5px!important;min-width:5px!important;padding:0!important}
-  [data-nova-ad-slot][data-nova-managed-layout] .nova-live-dots button[aria-current="true"],
   [data-nova-ad-slot][data-nova-managed-layout] .shop-tv-dots button.active{width:12px!important;min-width:12px!important}
   [data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-controls{position:absolute!important;z-index:8!important;left:75%!important;right:4px!important;top:4px!important;bottom:auto!important;width:auto!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:3px!important;box-sizing:border-box!important}
   [data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-controls>button{width:18px!important;height:18px!important;min-width:18px!important;font-size:14px!important}
@@ -679,8 +562,7 @@
     [data-nova-ad-slot][data-nova-managed-layout] .motors-hero-copy p,
     [data-nova-ad-slot][data-nova-managed-layout] .property-promo-copy p,
     [data-nova-ad-slot][data-nova-managed-layout] .nova-footer-ad-copy small,
-    [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>span:not(.nova-live-controls):not(.nova-live-onair){display:none!important}
-    [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>.nova-live-controls{top:3px!important;right:3px!important}
+    [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>span{display:none!important}
     [data-nova-ad-slot="cart_banner"][data-nova-managed-layout]>strong{top:14px!important}
     [data-nova-ad-slot="shop_tv"][data-nova-managed-layout] .shop-tv-copy{padding-top:22px!important;gap:4px!important}
     [data-nova-ad-slot="property_banner"][data-nova-managed-layout] .property-promo-copy{padding-top:22px!important;gap:5px!important}
@@ -691,9 +573,7 @@
     [data-nova-ad-slot$="_footer"][data-nova-managed-layout] .nova-footer-ad-copy small,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-footer-ad-copy small{font-size:11.5px!important;line-height:1.15!important;letter-spacing:-.25px!important;overflow-wrap:normal!important;word-break:normal!important}
     [data-nova-ad-slot$="_footer"][data-nova-managed-layout] .nova-footer-ad-copy a,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-footer-ad-copy a{font-size:12px!important;line-height:1.1!important;padding:4px 2px!important;letter-spacing:-.2px!important;overflow-wrap:normal!important;word-break:normal!important}
   }`;
-  style.textContent += '[data-nova-ad-slot$="_footer"][data-nova-managed-layout] .nova-live-controls,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-live-controls{left:4px!important;right:auto!important;width:calc(25% - 8px)!important;max-width:calc(25% - 8px)!important;justify-content:center!important}';
   style.textContent += '[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-controls{left:calc(75% - 6px)!important;right:auto!important;width:calc(25% - 12px)!important;max-width:calc(25% - 12px)!important;gap:2px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-controls>button{width:16px!important;height:16px!important;min-width:16px!important;font-size:14px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-dots{gap:2px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-dots button{width:5px!important;height:5px!important}[data-nova-ad-slot="home_hero"][data-nova-managed-layout] .nova-hero-dots button.active{width:10px!important}';
-  style.textContent += '[data-nova-ad-slot="shop_footer"][data-nova-managed-layout] .nova-live-controls,[data-nova-ad-slot="motors_footer"][data-nova-managed-layout] .nova-live-controls,[data-nova-ad-slot="property_footer"][data-nova-managed-layout] .nova-live-controls,[data-nova-ad-slot="wishlist_banner"][data-nova-managed-layout] .nova-live-controls{left:4px!important;right:auto!important;top:4px!important;bottom:auto!important;width:calc(25% - 8px)!important;max-width:calc(25% - 8px)!important;justify-content:center!important;gap:2px!important}';
   style.textContent += `
   /* Cart: the full header is the ad board; utility buttons overlay its edges. */
   #cartModal .cart-page-header{position:relative!important;box-sizing:border-box!important;overflow:hidden!important;height:62px!important;min-height:62px!important;padding:0!important}
@@ -702,7 +582,7 @@
   #cartModal .cart-page-header>button:first-child{left:8px!important}
   #cartModal .cart-page-header>button:last-child{right:calc(25% + 8px)!important;top:8px!important;transform:none!important}
   #cartModal .cart-page-header>#cartAdBoard>strong{top:26px!important;left:75%!important;right:0!important;width:25%!important;padding:2px 1px!important;font-size:14px!important;line-height:1.15!important;overflow-wrap:normal!important;word-break:normal!important;hyphens:none!important;letter-spacing:-.2px!important}
-  #cartModal .cart-page-header>#cartAdBoard>span:not(.nova-live-controls):not(.nova-live-onair){display:none!important}
+  #cartModal .cart-page-header>#cartAdBoard>span{display:none!important}
   @media(max-width:380px){#cartModal .cart-page-header{height:101px!important;min-height:101px!important}}
   @media(max-width:340px){#cartModal .cart-page-header{height:148.5px!important;min-height:148.5px!important}}
   `;

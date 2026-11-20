@@ -294,3 +294,28 @@ test("Advertising boards hide stale fallback creative until the campaign feed re
   await page.close();
  }finally{await browser.close();}
 });
+
+
+test("All nine advertising boards keep one stable fallback without legacy carousel timers",async()=>{
+ const browser=await chromium.launch({headless:true});
+ try{
+  const page=await browser.newPage({viewport:{width:393,height:852}});
+  const errors=[];page.on("pageerror",error=>errors.push(error.message));
+  const ids=["home_hero","shop_tv","cart_banner","wishlist_banner","motors_banner","property_banner","shop_footer","motors_footer","property_footer"];
+  const markup=ids.map(id=>'<section data-nova-ad-slot="'+id+'"><strong>Fallback '+id+'</strong></section>').join("");
+  await page.setContent('<!doctype html><html><head></head><body>'+markup+'</body></html>');
+  await page.evaluate(()=>{window.fetch=async()=>({ok:true,text:async()=>"[]"});});
+  const adSource=fs.readFileSync(path.resolve("novaai-ad-slots.js"),"utf8");
+  await page.addScriptTag({content:adSource});
+  await page.waitForFunction(()=>window.NOVAAI_ADS&&document.querySelectorAll("[data-nova-ad-slot]").length===9);
+  await page.waitForTimeout(100);
+  const before=await page.locator("[data-nova-ad-slot]").evaluateAll(nodes=>nodes.map(node=>node.textContent.trim()));
+  await page.waitForTimeout(5300);
+  const after=await page.locator("[data-nova-ad-slot]").evaluateAll(nodes=>nodes.map(node=>node.textContent.trim()));
+  assert.deepEqual(await page.evaluate(()=>window.NOVAAI_ADS.getPlacements().map(item=>item.slot_id)),ids);
+  assert.deepEqual(after,before,"fallback headlines must remain stable rather than being replaced by old rotations");
+  assert.equal(await page.locator(".nova-live-controls,.nova-live-onair,.nova-live-dots").count(),0);
+  assert.deepEqual(errors,[]);
+  await page.close();
+ }finally{await browser.close();}
+});
