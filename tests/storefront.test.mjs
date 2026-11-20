@@ -168,3 +168,16 @@ test("Advertising boards stay on a branded loading state until managed campaigns
  assert.match(ads,/setInterval\(loadManagedCampaigns,60000\)/,"managed campaigns must continue refreshing");
  assert.match(home,/\.nova-hero-slide\{[^}]*min-height:190px/);
 });
+
+test("Motors and Property keep rendered listing cards visible during background refresh and on refresh failure",()=>{
+ const load=motors.indexOf("async function loadListings(marketType, searchQuery = '')");
+ const start=motors.indexOf("const hasRenderedListings = Boolean(grid.querySelector",load);
+ const loading=motors.indexOf("if (!hasRenderedListings) grid.innerHTML",start);
+ const fetch=motors.indexOf("let data = listingCache[marketType]",loading);
+ const catchStart=motors.indexOf("catch (error) {",fetch);
+ const catchEnd=motors.indexOf("\n  }\n}",catchStart);
+ assert.ok(load>=0&&start>load&&loading>start&&fetch>loading,"rendered-card check must precede loading placeholder and cache fetch");
+ assert.match(motors,/if \(!hasRenderedListings\) grid\.innerHTML = .*Loading listings/);
+ assert.ok(catchStart>fetch&&catchEnd>catchStart,"refresh failure handling must be present");
+ assert.match(motors,/if \(!grid\.querySelector\('[^']*'\)\)\s*\{\s*grid\.innerHTML = .*Listings could not be loaded/);
+});
