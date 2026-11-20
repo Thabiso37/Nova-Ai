@@ -19,9 +19,10 @@ const server=createServer((req,res)=>{
  }
  if(requestUrl.pathname!=="/store-page.html"){res.writeHead(404);res.end("Not found");return;}
  const userId=requestUrl.searchParams.get("test_user")||"customer-1";
+ const options={delayProducts:Number(requestUrl.searchParams.get("delay_products")||0),delayLocation:Number(requestUrl.searchParams.get("delay_location")||0),missingLogo:requestUrl.searchParams.get("missing_logo")==="1",failProducts:requestUrl.searchParams.get("fail_products")==="1"};
  let html=fs.readFileSync(path.resolve("store-page.html"),"utf8");
  const storefrontSource=fs.readFileSync(path.resolve("novaai-storefront.js"),"utf8");
- html=html.replace('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>','<script>'+mockScript(userId)+'</script>');
+ html=html.replace('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>','<script>'+mockScript(userId,options)+'</script>');
  html=html.replace(/<script src="\.\/novaai-storefront\.js(?:\?[^"]*)?"><\/script>/i,'<script>'+storefrontSource+'</script>');
  res.setHeader("Content-Type","text/html");res.end(html);
 });
@@ -33,19 +34,20 @@ const products=[
  {id:101,name:"Retail item",price:120,category:"Clothing",image_url:"",images:[],seller_id:"seller-1",status:"approved"},
  {id:102,name:"Property item",price:950000,category:"Property For Sale",image_url:"",images:[],seller_id:"seller-1",status:"approved"}
 ];
-function mockScript(userId="customer-1"){
+function mockScript(userId="customer-1",options={}){
  return "(() => {" +
   "const userId="+JSON.stringify(userId)+";" +
-  "const store={id:'store-1',user_id:'seller-1',store_name:'Raider Retail',store_slug:'raider-retail',phone:'012 555 0101',status:'approved',store_logo_url:null,store_banner_url:null};" +
+  "window.__testControl="+JSON.stringify(options)+";const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));" +
+  "const store={id:'store-1',user_id:'seller-1',store_name:'Raider Retail',store_slug:'raider-retail',phone:'012 555 0101',status:'approved',store_logo_url:null,store_banner_url:"data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="};" +
   "const likes=new Set(['customer-existing']),follows=new Set(['customer-existing','customer-two']);" +
   "const data="+JSON.stringify(products)+";" +
   "const result=(table,filters)=>table==='seller_stores'?[store]:table==='Products'?data.filter(p=>Object.entries(filters).every(([k,v])=>p[k]===v)):[];" +
   "window.__storeState={likes,follows};" +
   "window.__client={auth:{getUser:async()=>({data:{user:{id:userId}},error:null})}," +
   "rpc:async()=>({data:[{likes_count:likes.size,followers_count:follows.size,liked:likes.has(userId),following:follows.has(userId)}],error:null})," +
-  "from(table){const q={table,filters:{},action:'select',select(){return this},eq(k,v){this.filters[k]=v;return this}," +
-  "order:async()=>({data:result(table,q.filters),error:null})," +
-  "maybeSingle:async()=>({data:table==='seller_stores'?store:(q.filters.customer_id===userId&&(table==='seller_store_likes'?likes.has(userId):follows.has(userId))?{store_user_id:'seller-1'}:null),error:null})," +
+  "from(table){const q={table,filters:{},action:'select',columns:'',select(columns){this.columns=columns||'';return this},eq(k,v){this.filters[k]=v;return this}," +
+  "order:async()=>{if(table==='Products'){await wait(window.__testControl.delayProducts||0);if(window.__testControl.failProducts)return {data:null,error:{message:'simulated product query failure'}};}return {data:result(table,q.filters),error:null}}, " +
+  "maybeSingle:async()=>{if(table==='seller_stores'&&window.__testControl.missingLogo&&q.columns.includes('store_logo_url'))return {data:null,error:{message:'column store_logo_url does not exist'}};if(table==='seller_public_locations')await wait(window.__testControl.delayLocation||0);return {data:table==='seller_stores'?store:(q.filters.customer_id===userId&&(table==='seller_store_likes'?likes.has(userId):follows.has(userId))?{store_user_id:'seller-1'}:null),error:null}}, " +
   "insert:async()=>{(table==='seller_store_likes'?likes:follows).add(userId);return {error:null}},delete(){this.action='delete';return this}," +
   "then(resolve,reject){if(this.action==='delete')(table==='seller_store_likes'?likes:follows).delete(userId);return Promise.resolve({data:null,error:null}).then(resolve,reject)}};return q;}};" +
   "window.supabase={createClient:()=>window.__client};})();";
@@ -171,6 +173,78 @@ test("Retail product-detail modal renders an approved listing and captures a res
  }finally{await browser.close();}
 });
 
+
+
+test("Store Page reveals its identity while delayed location and products load",async()=>{
+ const browser=await chromium.launch({headless:true});
+ try{
+  const page=await browser.newPage({viewport:{width:393,height:852}});
+  await page.goto(baseFile+"&delay_products=700&delay_location=900",{waitUntil:"domcontentloaded"});
+  await page.waitForSelector(".nova-store-identity h1");
+  assert.equal(await page.locator(".nova-store-identity h1").textContent(),"Raider Retail");
+  assert.equal(await page.locator("#novaStoreProducts .nova-store-loading").count(),1);
+  assert.equal(await page.locator("#novaStoreProducts .nova-store-product").count(),0);
+  await page.waitForSelector("#novaStoreProducts .nova-store-product");
+  await page.close();
+ }finally{await browser.close();}
+});
+
+test("Store Page retains its banner when the optional logo column is unavailable",async()=>{
+ const browser=await chromium.launch({headless:true});
+ try{
+  const page=await browser.newPage({viewport:{width:393,height:852}});
+  await page.goto(baseFile+"&missing_logo=1",{waitUntil:"domcontentloaded"});
+  await page.waitForSelector(".nova-store-identity h1");
+  assert.equal(await page.locator(".nova-store-banner img").count(),1);
+  assert.equal(await page.locator(".nova-store-identity h1").textContent(),"Raider Retail");
+  await page.close();
+ }finally{await browser.close();}
+});
+
+test("Store Page refresh keeps the currently rendered identity visible until replacement products finish",async()=>{
+ const browser=await chromium.launch({headless:true});
+ try{
+  const page=await openPage(browser,"customer-1",{width:390,height:844});
+  await page.evaluate(()=>{
+   window.__oldStoreIdentity=document.querySelector(".nova-store-identity");
+   window.__testControl.delayProducts=650;
+   document.dispatchEvent(new Event("DOMContentLoaded"));
+  });
+  await page.waitForTimeout(120);
+  assert.equal(await page.evaluate(()=>window.__oldStoreIdentity?.isConnected),true,"existing identity must remain connected during refresh");
+  assert.equal(await page.locator(".nova-store-product").count(),2,"existing products must remain visible during refresh");
+  await page.waitForFunction(()=>document.querySelector(".nova-store-identity")!==window.__oldStoreIdentity);
+  assert.equal(await page.locator(".nova-store-product").count(),2);
+  await page.close();
+ }finally{await browser.close();}
+});
+
+test("Store Page shows a recoverable product message when the products request fails",async()=>{
+ const browser=await chromium.launch({headless:true});
+ try{
+  const page=await browser.newPage({viewport:{width:360,height:800}});
+  await page.goto(baseFile+"&fail_products=1",{waitUntil:"domcontentloaded"});
+  await page.waitForSelector(".nova-store-identity h1");
+  await page.waitForSelector("#novaStoreProducts .nova-store-empty[role=status]");
+  assert.match(await page.locator("#novaStoreProducts").textContent(),/could not be loaded/i);
+  assert.equal(await page.locator(".nova-store-identity h1").textContent(),"Raider Retail");
+  const dimensions=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}));
+  assert.ok(dimensions.scroll<=dimensions.width+1,JSON.stringify(dimensions));
+  await page.close();
+ }finally{await browser.close();}
+});
+
+test("Store Page layout has no horizontal overflow at 360px and 390px",async()=>{
+ const browser=await chromium.launch({headless:true});
+ try{
+  for(const width of [360,390]){
+   const page=await openPage(browser,"customer-1",{width,height:844});
+   const dimensions=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}));
+   assert.ok(dimensions.scroll<=dimensions.width+1,JSON.stringify(dimensions));
+   await page.close();
+  }
+ }finally{await browser.close();}
+});
 
 test("Advertising fallback board becomes visible while the live campaign request is still pending",async()=>{
  const browser=await chromium.launch({headless:true});
