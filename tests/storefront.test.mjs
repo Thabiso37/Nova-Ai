@@ -171,12 +171,14 @@ test("Advertising boards stay on a branded loading state until managed campaigns
 
 test("Motors and Property keep rendered listing cards visible during background refresh and on refresh failure",()=>{
  const load=motors.indexOf("async function loadListings(marketType, searchQuery = '')");
- const start=motors.indexOf("const hasRenderedListings = Boolean(grid.querySelector",load);
+ const start=motors.indexOf("const hasRenderedListings = grid.dataset.listingMarket === marketType && Boolean(grid.querySelector",load);
  const loading=motors.indexOf("if (!hasRenderedListings) grid.innerHTML",start);
  const fetch=motors.indexOf("let data = listingCache[marketType]",loading);
  const catchStart=motors.indexOf("catch (error) {",fetch);
  const catchEnd=motors.indexOf("\n  }\n}",catchStart);
  assert.ok(load>=0&&start>load&&loading>start&&fetch>loading,"rendered-card check must precede loading placeholder and cache fetch");
+ assert.match(motors,/grid\.dataset\.listingMarket === marketType/);
+ assert.match(motors,/grid\.dataset\.listingMarket = marketType/);
  assert.match(motors,/if \(!hasRenderedListings\) grid\.innerHTML = .*Loading listings/);
  assert.ok(catchStart>fetch&&catchEnd>catchStart,"refresh failure handling must be present");
  assert.match(motors,/if \(!grid\.querySelector\('[^']*'\)\)\s*\{\s*grid\.innerHTML = .*Listings could not be loaded/);
