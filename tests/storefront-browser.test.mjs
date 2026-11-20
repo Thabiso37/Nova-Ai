@@ -181,6 +181,7 @@ test("Advertising fallback board becomes visible while the live campaign request
   await page.evaluate(()=>{
    window.__campaignRequestStarted=false;
    window.fetch=()=>{window.__campaignRequestStarted=true;return new Promise(()=>{});};
+   window.__novaAdsRevealBoards=()=>document.documentElement.classList.remove("nova-ads-pending");
   });
   await page.addScriptTag({content:adSource});
   assert.equal(await page.evaluate(()=>window.__campaignRequestStarted),true,"live campaign request should have started");
