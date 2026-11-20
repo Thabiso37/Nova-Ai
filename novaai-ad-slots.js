@@ -550,8 +550,20 @@
         window.clearTimeout(requestTimeoutId);
       }
       if(requestId!==managedCampaignLoadSequence)return;
-      // Do not wait for page images, web fonts or the window load event.
-      // Fallback boards are already visible while the campaign feed loads.
+      // Fallback boards are already visible. Wait briefly for web fonts only
+      // before measuring/replacing them with managed campaign content.
+      // This wait never blocks the initial board reveal or the campaign request.
+      if(Array.isArray(campaigns)&&campaigns.length&&document.fonts&&document.fonts.ready){
+        let fontTimeoutId;
+        try{
+          await Promise.race([
+            Promise.resolve(document.fonts.ready).catch(()=>{}),
+            new Promise(resolve=>{fontTimeoutId=window.setTimeout(resolve,1200);})
+          ]);
+        }finally{
+          if(fontTimeoutId)window.clearTimeout(fontTimeoutId);
+        }
+      }
       if(requestId===managedCampaignLoadSequence)api.announceCampaigns(Array.isArray(campaigns)?campaigns:[]);
     }catch(error){
       if(requestId===managedCampaignLoadSequence){
