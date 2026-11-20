@@ -24,7 +24,7 @@ test("Ad boards reveal before the background campaign request and font readiness
 });
 test("Store Page selects the public phone field before rendering its WhatsApp contact",()=>{
  assert.match(js,/select\("user_id,store_name,store_slug,status,store_banner_url,store_logo_url,phone"\)/);
- assert.match(js,/select\("user_id,store_name,store_slug,status,phone"\)/);
+ assert.match(js,/select\("user_id,store_name,store_slug,status,store_banner_url,phone"\)/);
  assert.match(js,/store\.phone/);
 });
 test("Home and Retail cards expose seller identity for View Store links without changing Motors or Property cards",()=>{
@@ -126,6 +126,8 @@ test("Store Page renders its identity before waiting for public location, produc
  assert.match(loader,/Promise\.all\(\[authPromise,locationTask\.catch[\s\S]*?productsTask\.catch/);
  assert.match(loader,/productGrid\.innerHTML=.*Loading this store/);
  assert.match(loader,/if\(!hadContent\)root\.innerHTML/,"first load should show a loader without clearing an existing store");
+ assert.match(loader,/const nextView=document\.createDocumentFragment\(\)/,"refresh view must be prepared off-screen");
+ assert.match(loader,/if\(hadContent\)root\.replaceChildren\(nextView\)/,"existing store view must be swapped only after secondary requests finish");
  assert.match(loader,/root\.removeAttribute\("aria-busy"\)/);
 });
 
