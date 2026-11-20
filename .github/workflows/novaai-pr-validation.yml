@@ -135,6 +135,9 @@ jobs:
           print("Changed HTML validation passed; no duplicate IDs found.")
           PY
 
+      - name: Run storefront regression tests
+        run: node --test tests/storefront.test.mjs
+
       - name: Test native sharing, cancellation and clipboard without analytics dependencies
         run: |
           set -euo pipefail
