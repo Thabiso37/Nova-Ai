@@ -115,3 +115,31 @@ test("Retail video upload UI is separate from photo inputs and Storage proposal 
 test("Store Page engagement uses professional icons and retains customer authentication restrictions",()=>{
  assert.match(js,/likeButton\.innerHTML=heart/);assert.match(js,/followButton\.innerHTML=followIcon/);assert.match(js,/canEngage=signedIn&&!ownStore&&engagementReady/);assert.match(js,/storeEngagementStatus/);
 });
+
+
+test("Store Page renders its identity before waiting for public location, products or engagement",()=>{
+ const start=js.indexOf("async function loadStorePage()");
+ const end=js.indexOf("\n}",start)+2;
+ const loader=js.slice(start,end);
+ assert.ok(start>=0&&end>start);
+ assert.ok(loader.indexOf("root.append(banner,identity)")<loader.indexOf("const locationTask="),"store identity must be attached before secondary requests");
+ assert.match(loader,/Promise\.all\(\[authPromise,locationTask\.catch[\s\S]*?productsTask\.catch/);
+ assert.match(loader,/productGrid\.innerHTML=.*Loading this store/);
+ assert.match(loader,/if\(!root\.querySelector\("\.nova-store-identity"\)\)root\.innerHTML/,"refresh must not blank an already rendered store");
+ assert.match(loader,/root\.removeAttribute\("aria-busy"\)/);
+});
+
+test("Homepage product route shows a stable detail skeleton and hides all homepage-only sections",()=>{
+ assert.match(home,/product-loading-shell/);
+ assert.match(home,/Loading approved product details/);
+ assert.match(home,/product-view-active #novaAiLaunchCard/);
+ assert.match(home,/product-view-active \.home-category-tiles/);
+ assert.match(home,/product-view-active \.home-seller-banner/);
+ assert.match(home,/product-view-active \.home-search-wrap/);
+ assert.match(home,/product-view-active \.nova-hero-carousel/);
+});
+
+test("Homepage product cards reserve image space and keep asynchronous image decoding",()=>{
+ assert.match(home,/\.home-product-photo\{[^}]*aspect-ratio:1\/1/);
+ assert.match(home,/loading=\"lazy\" decoding=\"async\"/);
+});
