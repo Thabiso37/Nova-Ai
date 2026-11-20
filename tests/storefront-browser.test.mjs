@@ -352,7 +352,6 @@ test("Motors refresh preserves only cards belonging to the active market",async(
  const stat=document.createElement("span");stat.id="statCount";document.body.append(stat);
  const documentGet=document.getElementById.bind(document);
  document.getElementById=id=>id==="productGrid"?grid:id==="statCount"?stat:documentGet(id);
- const window={location:{search:""}};
  function renderMotorsParts(items){grid.innerHTML=items.map(x=>'<article class="motors-part-card" data-product-id="'+x.id+'"></article>').join("");}
  function applyPropertyFilters(){}
  `;
