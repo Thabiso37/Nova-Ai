@@ -990,9 +990,13 @@ let store=null;if(detail&&detail.seller_id){const {data:storeRow,error:storeErro
 if(!detail||!store||!detail.name||Number(detail.price)<=0){document.querySelector('main').innerHTML='<section class="home-detail"><div class="home-products-message">This product is unavailable or is no longer listed by an approved seller. <a href="./index.html">Return to homepage</a>.</div></section>';return;}
 detail.seller_store=store;renderDetail(detail);updateCartCount();return;
 }
-const productResult=await client.from('Products').select('id,name,description,price,category,image_url,images,seller_name,seller_id,status,created_at').eq('status','approved').order('created_at',{ascending:false});if(productResult.error)throw productResult.error;
-const rows=productResult.data||[];let stores=[];
-try{const storeResult=await client.from('seller_stores').select('user_id,store_name,status').eq('status','approved');if(!storeResult.error)stores=storeResult.data||[];}catch(error){console.info('Public seller-store metadata is unavailable.');}
+const productQuery=client.from('Products').select('id,name,description,price,category,image_url,images,seller_name,seller_id,status,created_at').eq('status','approved').order('created_at',{ascending:false});
+const storeQuery=client.from('seller_stores').select('user_id,store_name,status').eq('status','approved').catch(error=>({error,data:[]}));
+const [productResult,storeResult]=await Promise.all([productQuery,storeQuery]);
+if(productResult.error)throw productResult.error;
+const rows=productResult.data||[];
+const stores=storeResult.error?[]:(storeResult.data||[]);
+if(storeResult.error)console.info('Public seller-store metadata is unavailable.');
 const storesBySeller=new Map(stores.map(store=>[String(store.user_id),store]));
 const items=rows.filter(p=>p.status==='approved'&&p.seller_id&&p.name&&Number(p.price)>0);
 if(!items.length){grid.innerHTML='<div class="home-products-message">There are no eligible approved listings to display right now. Please check back soon.</div>';return;}
