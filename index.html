@@ -1028,7 +1028,7 @@ if(!items.length){grid.innerHTML='<div class="home-products-message">There are n
 renderHomeSections(items,storesBySeller);
 /* Category shortcuts are text-first compact navigation tiles; no listing photos are injected here. */
 updateCartCount();
-}catch(error){console.error('Homepage product loading:',error);grid.innerHTML='<div class="home-products-message">We could not load marketplace products right now. Please try again later or browse the full marketplace.</div>';}
+}catch(error){console.error('Homepage product loading:',error);if(requestedId){const main=document.querySelector('main');if(main)main.innerHTML='<section class="home-detail"><div class="home-products-message" role="alert">We could not load this product right now. Please check your connection and try again. <a href="./index.html">Return to homepage</a>.</div></section>';}else{grid.innerHTML='<div class="home-products-message">We could not load marketplace products right now. Please try again later or browse the full marketplace.</div>';}}
 }
 updateCartCount();loadHomeProducts();
 })();
