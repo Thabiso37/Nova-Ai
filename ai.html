@@ -196,6 +196,23 @@ button,input{font:inherit}
   border:1px solid var(--line);
   border-bottom-left-radius:5px;
 }
+.nova-ai-reply{font-size:14px;line-height:1.7;color:var(--ink);margin:0}
+.nova-ai-reply p{margin:0 0 10px}
+.nova-ai-reply p:last-child{margin-bottom:0}
+.nova-ai-reply h1,.nova-ai-reply h2,.nova-ai-reply h3,.nova-ai-reply h4{
+  margin:16px 0 8px;line-height:1.3;color:var(--navy);font-weight:800
+}
+.nova-ai-reply h1{font-size:21px}.nova-ai-reply h2{font-size:18px}.nova-ai-reply h3,.nova-ai-reply h4{font-size:16px}
+.nova-ai-reply ul,.nova-ai-reply ol{margin:7px 0 12px;padding-left:22px}
+.nova-ai-reply li{margin:4px 0;padding-left:2px}
+.nova-ai-reply blockquote{margin:10px 0;padding:9px 12px;border-left:3px solid var(--blue);background:#f4f7fc;border-radius:0 8px 8px 0;color:#42536c}
+.nova-ai-reply code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:#f0f4f9;padding:2px 5px;border-radius:5px;font-size:.92em}
+.nova-ai-reply pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;background:#f3f6fa;border:1px solid #e1e7f0;border-radius:10px;margin:10px 0}
+.nova-ai-reply pre code{background:transparent;padding:0}
+.nova-ai-reply a{color:var(--blue);text-decoration:underline;text-underline-offset:2px}
+.nova-ai-reply table{border-collapse:collapse;width:100%;margin:10px 0;display:block;overflow-x:auto}
+.nova-ai-reply th,.nova-ai-reply td{border:1px solid #dce4ef;padding:7px 9px;text-align:left;vertical-align:top}
+.nova-ai-reply th{background:#f2f6fc;color:var(--navy);font-weight:700}
 .composer{
   display:flex;
   align-items:flex-end;
@@ -344,6 +361,105 @@ button,input{font:inherit}
   }
 
 
+  // Render safe Markdown-like formatting with DOM nodes (never inject raw HTML).
+  function appendInlineFormatting(parent, text) {
+    const token = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)|\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|\*\*([^*]+)\*\*|__([^_]+)__|\x60([^\x60]+)\x60|\*([^*]+)\*|_([^_]+)_/g;
+    let last = 0, match;
+    while ((match = token.exec(text)) !== null) {
+      if (match.index > last) parent.appendChild(document.createTextNode(text.slice(last, match.index)));
+      if (match[1] !== undefined) {
+        // Listing photographs are shown by the existing safe-photo fallback below.
+        parent.appendChild(document.createTextNode('[Photo: ' + (match[1] || 'listing') + ']'));
+      } else if (match[3] !== undefined) {
+        const link = document.createElement('a');
+        link.href = match[4];
+        link.textContent = match[3];
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        parent.appendChild(link);
+      } else if (match[5] !== undefined || match[6] !== undefined) {
+        const strong = document.createElement('strong');
+        strong.textContent = match[5] !== undefined ? match[5] : match[6];
+        parent.appendChild(strong);
+      } else if (match[7] !== undefined) {
+        const code = document.createElement('code');
+        code.textContent = match[7];
+        parent.appendChild(code);
+      } else {
+        const em = document.createElement('em');
+        em.textContent = match[8] !== undefined ? match[8] : match[9];
+        parent.appendChild(em);
+      }
+      last = token.lastIndex;
+    }
+    if (last < text.length) parent.appendChild(document.createTextNode(text.slice(last)));
+  }
+
+  function renderMarkdownReply(container, text) {
+    const lines = String(text || '').replace(/\r/g, '').split('\n');
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+      if (!line.trim()) { i++; continue; }
+      if (/^\s*\x60\x60\x60/.test(line)) {
+        const codeLines = [];
+        i++;
+        while (i < lines.length && !/^\s*\x60\x60\x60/.test(lines[i])) codeLines.push(lines[i++]);
+        if (i < lines.length) i++;
+        const pre = document.createElement('pre'), code = document.createElement('code');
+        code.textContent = codeLines.join('\n');
+        pre.appendChild(code); container.appendChild(pre); continue;
+      }
+      const heading = line.match(/^\s*(#{1,4})\s+(.+)$/);
+      if (heading) {
+        const h = document.createElement('h' + heading[1].length);
+        appendInlineFormatting(h, heading[2]); container.appendChild(h); i++; continue;
+      }
+      if (/^\s*>\s?/.test(line)) {
+        const quote = document.createElement('blockquote');
+        while (i < lines.length && /^\s*>\s?/.test(lines[i]) && lines[i].trim()) {
+          const p = document.createElement('p');
+          appendInlineFormatting(p, lines[i].replace(/^\s*>\s?/, ''));
+          quote.appendChild(p); i++;
+        }
+        container.appendChild(quote); continue;
+      }
+      const unordered = line.match(/^\s*[-*+]\s+(.+)$/);
+      const ordered = line.match(/^\s*\d+[.)]\s+(.+)$/);
+      if (unordered || ordered) {
+        const list = document.createElement(ordered ? 'ol' : 'ul');
+        while (i < lines.length) {
+          const m = lines[i].match(ordered ? /^\s*\d+[.)]\s+(.+)$/ : /^\s*[-*+]\s+(.+)$/);
+          if (!m) break;
+          const li = document.createElement('li');
+          appendInlineFormatting(li, m[1]); list.appendChild(li); i++;
+        }
+        container.appendChild(list); continue;
+      }
+      if (/^\s*\|.*\|\s*$/.test(line) && i + 1 < lines.length && /^\s*\|?\s*:?-{2,}/.test(lines[i + 1])) {
+        const rows = [];
+        rows.push(line);
+        i += 2; // skip header and separator
+        while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) rows.push(lines[i++]);
+        const table = document.createElement('table'), thead = document.createElement('thead'), tbody = document.createElement('tbody');
+        const cells = row => row.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(v => v.trim());
+        const header = document.createElement('tr');
+        cells(rows[0]).forEach(value => { const th=document.createElement('th'); appendInlineFormatting(th,value); header.appendChild(th); });
+        thead.appendChild(header); table.appendChild(thead);
+        rows.slice(1).forEach(row => { const tr=document.createElement('tr'); cells(row).forEach(value => { const td=document.createElement('td'); appendInlineFormatting(td,value); tr.appendChild(td); }); tbody.appendChild(tr); });
+        table.appendChild(tbody); container.appendChild(table); continue;
+      }
+      const paragraph = document.createElement('p');
+      appendInlineFormatting(paragraph, line.trim());
+      i++;
+      while (i < lines.length && lines[i].trim() && !/^\s*(#{1,4}\s+|>\s?|[-*+]\s+|\d+[.)]\s+|\x60\x60\x60|\|.*\|\s*$)/.test(lines[i])) {
+        paragraph.appendChild(document.createElement('br'));
+        appendInlineFormatting(paragraph, lines[i].trim()); i++;
+      }
+      container.appendChild(paragraph);
+    }
+  }
+
   function renderAssistantResponse(container, result) {
     container.textContent = '';
 
@@ -357,11 +473,12 @@ button,input{font:inherit}
       /<\s*(?:img|a)\b/i.test(rawReply) ||
       /!\[[^\]]*\]\(/.test(rawReply);
 
-    const reply = document.createElement('p');
+    const reply = document.createElement('div');
     reply.className = 'nova-ai-reply';
-    reply.textContent = listings.length && containsRawListingMarkup
+    const replyText = listings.length && containsRawListingMarkup
       ? 'Here are the approved NOVAAI MARKET listings matching your search:'
       : rawReply;
+    renderMarkdownReply(reply, replyText);
     container.appendChild(reply);
 
     // Only use the Markdown-photo fallback when structured listing cards
