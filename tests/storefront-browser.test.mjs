@@ -38,7 +38,7 @@ function mockScript(userId="customer-1",options={}){
  return "(() => {" +
   "const userId="+JSON.stringify(userId)+";" +
   "window.__testControl="+JSON.stringify(options)+";const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));" +
-  "const store={id:'store-1',user_id:'seller-1',store_name:'Raider Retail',store_slug:'raider-retail',phone:'012 555 0101',status:'approved',store_logo_url:null,store_banner_url:"data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="};" +
+  "const store={id:'store-1',user_id:'seller-1',store_name:'Raider Retail',store_slug:'raider-retail',phone:'012 555 0101',status:'approved',store_logo_url:null,store_banner_url:'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='};" +
   "const likes=new Set(['customer-existing']),follows=new Set(['customer-existing','customer-two']);" +
   "const data="+JSON.stringify(products)+";" +
   "const result=(table,filters)=>table==='seller_stores'?[store]:table==='Products'?data.filter(p=>Object.entries(filters).every(([k,v])=>p[k]===v)):[];" +
