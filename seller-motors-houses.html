@@ -697,8 +697,12 @@ function marketShareButton(item,market,shareLocation="product_card",detail=false
 async function loadListings(marketType, searchQuery = '') {
   const runId = ++listingLoadRun;
   const grid = document.getElementById('productGrid');
-  grid.innerHTML = "<div class='msg' role='status'>Loading listings...</div>";
-  if (!sb) { grid.innerHTML = "<div class='msg' role='status'>Reconnect to the internet to load live marketplace listings.</div>"; return; }
+  const hasRenderedListings = Boolean(grid.querySelector('[data-product-id], .retail-product-card, .motors-part-card, .property-card'));
+  if (!hasRenderedListings) grid.innerHTML = "<div class='msg' role='status'>Loading listings...</div>";
+  if (!sb) {
+    if (!hasRenderedListings) grid.innerHTML = "<div class='msg' role='status'>Reconnect to the internet to load live marketplace listings.</div>";
+    return;
+  }
 
   try {
     let data = listingCache[marketType];
@@ -802,7 +806,12 @@ async function loadListings(marketType, searchQuery = '') {
   `).join("");
   } catch (error) {
     if (runId !== listingLoadRun) return;
-    grid.innerHTML = "<div class='msg' role='alert'>Listings could not be loaded. Please try again.</div>";
+    if (!grid.querySelector('[data-product-id], .retail-product-card, .motors-part-card, .property-card')) {
+      grid.innerHTML = "<div class='msg' role='alert'>Listings could not be loaded. Please try again.</div>";
+    } else {
+      const staleNotice = grid.querySelector('[data-listings-refresh-status]');
+      if (staleNotice) staleNotice.textContent = "Showing previously loaded listings. Refresh failed.";
+    }
     console.error("[NOVAAI] Marketplace listings load failed", error);
   }
 }
