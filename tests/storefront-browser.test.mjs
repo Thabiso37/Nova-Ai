@@ -21,7 +21,7 @@ const server=createServer((req,res)=>{
   let html=fs.readFileSync(path.resolve("index.html"),"utf8");
   const homeMock='<script>(()=>{const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));const client={auth:{onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),getSession:async()=>({data:{session:null},error:null})},from:table=>({select(){return this},eq(){return this},maybeSingle:()=>new Promise(resolve=>setTimeout(()=>resolve({data:null,error:null}),1200)),order(){return this},then(resolve,reject){return Promise.resolve({data:[],error:null}).then(resolve,reject)}}),rpc:async()=>({data:null,error:null})};window.supabase={createClient:()=>client};})();</script>';
   html=html.replace('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>',homeMock);
-  html=html.replace(/<script src="[^"]+"><\\/script>/gi,"");
+  html=html.replace(/<script src="[^"]+"><\/script>/gi,"");
   res.setHeader("Content-Type","text/html");res.end(html);return;
  }
  if(requestUrl.pathname!=="/store-page.html"){res.writeHead(404);res.end("Not found");return;}
