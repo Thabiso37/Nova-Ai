@@ -20,7 +20,7 @@ test("Home and Retail cards expose seller identity for View Store links without 
  assert.doesNotMatch(motors,/data-store-owner-id/,"Motors and Property cards must remain outside this enhancement");
  assert.doesNotMatch(motors,/novaai-storefront\\.js/,"Motors and Property must not load the Store Page enhancement");
 });
-test("Seller Portal branding controls cover upload, preview, replacement and removal",()=>{
+test("Seller Portal exposes secure banner upload, preview, replacement and removal",()=>{
  assert.match(seller,/novaai-store-branding\.js/);
  assert.match(seller,/NOVAAI_SUPABASE_CLIENT=sb/);
  assert.match(branding,/novaStoreBannerPreview/);
@@ -81,7 +81,7 @@ test("engagement tables have customer lookup indexes and preserve approved-store
 });
 test("Store Page exposes no store description or private seller address",()=>{
  assert.doesNotMatch(page,/store\.description|store_description|delivery_address|street_address/i);
- assert.match(js,/Public contact\\s/);
+ assert.match(js,/Public contact\s/);
  assert.match(js,/eq\("status","approved"\)/);
 });
 test("no existing commerce tables are altered",()=>{
