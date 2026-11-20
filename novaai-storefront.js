@@ -75,7 +75,7 @@ async function loadStorePage(){
  try{
   let result=await sb.from("seller_stores").select("user_id,store_name,store_slug,status,store_banner_url,store_logo_url,phone").eq("store_slug",slug).eq("status","approved").maybeSingle();
   if(result.error&&/column .* does not exist|schema cache/i.test(result.error.message||"")){
-   result=await sb.from("seller_stores").select("user_id,store_name,store_slug,status,store_logo_url,phone").eq("store_slug",slug).eq("status","approved").maybeSingle();
+   result=await sb.from("seller_stores").select("user_id,store_name,store_slug,status,phone").eq("store_slug",slug).eq("status","approved").maybeSingle();
   }
   if(result.error)throw result.error;
   const store=result.data;if(!store){root.textContent="This approved store is unavailable.";return;}
