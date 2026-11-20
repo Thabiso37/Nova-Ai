@@ -276,12 +276,12 @@ test("Homepage product route shows the skeleton immediately and hides homepage s
  }finally{await browser.close();}
 });
 
-test("Advertising fallback board becomes visible while the live campaign request is still pending",async()=>{
+test("Advertising boards hide stale fallback creative until the campaign feed resolves",async()=>{
  const browser=await chromium.launch({headless:true});
  try{
   const page=await browser.newPage({viewport:{width:393,height:852}});
   const adSource=fs.readFileSync(path.resolve("novaai-ad-slots.js"),"utf8");
-  await page.setContent('<!doctype html><html class="nova-ads-pending"><head><style>.nova-ads-pending [data-nova-ad-slot]{visibility:hidden}</style></head><body><div data-nova-ad-slot="cart_banner"><strong>Fallback headline</strong><span>Fallback copy</span></div></body></html>');
+  await page.setContent('<!doctype html><html class="nova-ads-pending"><head><style>.nova-ads-pending [data-nova-ad-slot]{position:relative;visibility:visible;background:#174ea6}.nova-ads-pending [data-nova-ad-slot] *{visibility:hidden}.nova-ads-pending [data-nova-ad-slot]::after{content:"Loading advertisements…";position:absolute;inset:0;display:grid;place-items:center}</style></head><body><div data-nova-ad-slot="cart_banner"><strong>Old fallback headline</strong><span>Old fallback copy</span></div></body></html>');
   await page.evaluate(()=>{
    window.__campaignRequestStarted=false;
    window.fetch=()=>{window.__campaignRequestStarted=true;return new Promise(()=>{});};
@@ -289,9 +289,8 @@ test("Advertising fallback board becomes visible while the live campaign request
   });
   await page.addScriptTag({content:adSource});
   assert.equal(await page.evaluate(()=>window.__campaignRequestStarted),true,"live campaign request should have started");
-  assert.equal(await page.locator('[data-nova-ad-slot="cart_banner"]').evaluate(el=>getComputedStyle(el).visibility),"visible");
-  assert.ok((await page.locator('[data-nova-ad-slot="cart_banner"]').innerText()).trim().length>0,"visible fallback board should contain text");
-  assert.equal(await page.locator("html").evaluate(el=>el.classList.contains("nova-ads-pending")),false);
+  assert.equal(await page.locator('[data-nova-ad-slot="cart_banner"] strong').evaluate(el=>getComputedStyle(el).visibility),"hidden","stale fallback text must not flash while refresh is pending");
+  assert.equal(await page.locator("html").evaluate(el=>el.classList.contains("nova-ads-pending")),true,"loading gate stays active until the campaign feed settles");
   await page.close();
  }finally{await browser.close();}
 });

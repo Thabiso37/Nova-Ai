@@ -578,17 +578,16 @@
     try{
       initHomeCarousel();
       ['cart_banner','property_banner','motors_banner','shop_footer','motors_footer','property_footer'].forEach(id=>initLiveSlot(document.querySelector('[data-nova-ad-slot="'+id+'"]')));
-      // Prepare every visible fallback board first, then release the first paint.
-      // The approved campaign feed must never hold the page's advertising slots hidden.
+      // Keep fallback markup behind a branded loading state until the latest feed
+      // has applied current campaigns or restored safe fallback creative.
       window.__novaManagedCampaignsReady=true;
       const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');
       if(wishlist)initLiveSlot(wishlist);
-      if(typeof window.__novaAdsRevealBoards==='function')window.__novaAdsRevealBoards();
-
-      // Load managed campaigns independently; valid campaigns replace the fallback
-      // only after the feed responds. A failed feed leaves the fallback visible.
       loadManagedCampaigns().catch(error=>{
-        console.warn('NOVAAI managed advertisement refresh failed; fallback boards remain visible.',error);
+        console.warn('NOVAAI managed advertisement refresh failed; showing safe fallback boards.',error);
+        api.announceCampaigns([]);
+      }).finally(()=>{
+        if(typeof window.__novaAdsRevealBoards==='function')window.__novaAdsRevealBoards();
       });
       if(!window.__novaAdRefreshTimer)window.__novaAdRefreshTimer=window.setInterval(loadManagedCampaigns,60000);
       if(!window.__novaAdObserver&&document.body){
