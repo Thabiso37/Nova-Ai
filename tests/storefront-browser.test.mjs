@@ -71,7 +71,8 @@ test("Store Page renders approved identity, public phone, product details and ac
  try{
   const page=await openPage(browser,"customer-1",{width:393,height:852});
   assert.equal(await page.locator("h1").textContent(),"Raider Retail");
-  assert.match(await page.locator(".nova-store-contact").textContent(),/012 555 0101/);
+  assert.equal(await page.locator(".nova-store-public-whatsapp").getAttribute("href"),"https://wa.me/27125550101");
+  assert.equal(await page.locator(".nova-store-public-whatsapp").getAttribute("aria-label"),"Contact this store on WhatsApp");
   assert.equal(await page.locator("#storeLikeCount").textContent(),"1");
   assert.equal(await page.locator("#storeFollowerCount").textContent(),"2");
   assert.equal(await page.locator(".nova-store-product").count(),2);
