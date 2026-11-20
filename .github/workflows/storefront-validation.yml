@@ -19,10 +19,11 @@ jobs:
   storefront:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: '24'
+          package-manager-cache: false
       - name: Check JavaScript syntax
         run: |
           node --check novaai-storefront.js
@@ -37,7 +38,7 @@ jobs:
         run: node --test tests/storefront.test.mjs tests/storefront-browser.test.mjs
       - name: Upload Store Page screenshot evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: novaai-pr39-storefront-screenshots
           path: artifacts/*.png

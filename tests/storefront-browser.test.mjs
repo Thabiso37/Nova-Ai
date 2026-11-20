@@ -22,7 +22,7 @@ const server=createServer((req,res)=>{
  let html=fs.readFileSync(path.resolve("store-page.html"),"utf8");
  const storefrontSource=fs.readFileSync(path.resolve("novaai-storefront.js"),"utf8");
  html=html.replace('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>','<script>'+mockScript(userId)+'</script>');
- html=html.replace('<script src="./novaai-storefront.js?v=1"></script>','<script>'+storefrontSource+'</script>');
+ html=html.replace(/<script src="\.\/novaai-storefront\.js(?:\?[^"]*)?"><\/script>/i,'<script>'+storefrontSource+'</script>');
  res.setHeader("Content-Type","text/html");res.end(html);
 });
 await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));
@@ -71,7 +71,8 @@ test("Store Page renders approved identity, public phone, product details and ac
  try{
   const page=await openPage(browser,"customer-1",{width:393,height:852});
   assert.equal(await page.locator("h1").textContent(),"Raider Retail");
-  assert.match(await page.locator(".nova-store-contact").textContent(),/012 555 0101/);
+  assert.equal(await page.locator(".nova-store-public-whatsapp").getAttribute("href"),"https://wa.me/27125550101");
+  assert.equal(await page.locator(".nova-store-public-whatsapp").getAttribute("aria-label"),"Contact this store on WhatsApp");
   assert.equal(await page.locator("#storeLikeCount").textContent(),"1");
   assert.equal(await page.locator("#storeFollowerCount").textContent(),"2");
   assert.equal(await page.locator(".nova-store-product").count(),2);
@@ -166,6 +167,27 @@ test("Retail product-detail modal renders an approved listing and captures a res
   assert.ok(await page.locator("#modalWhatsAppSeller svg").count());
   await page.screenshot({path:"artifacts/pr39-retail-product-detail-393.png",fullPage:true});
   assert.deepEqual(errors,[]);
+  await page.close();
+ }finally{await browser.close();}
+});
+
+
+test("Advertising fallback board becomes visible while the live campaign request is still pending",async()=>{
+ const browser=await chromium.launch({headless:true});
+ try{
+  const page=await browser.newPage({viewport:{width:393,height:852}});
+  const adSource=fs.readFileSync(path.resolve("novaai-ad-slots.js"),"utf8");
+  await page.setContent('<!doctype html><html class="nova-ads-pending"><head><style>.nova-ads-pending [data-nova-ad-slot]{visibility:hidden}</style></head><body><div data-nova-ad-slot="cart_banner"><strong>Fallback headline</strong><span>Fallback copy</span></div></body></html>');
+  await page.evaluate(()=>{
+   window.__campaignRequestStarted=false;
+   window.fetch=()=>{window.__campaignRequestStarted=true;return new Promise(()=>{});};
+   window.__novaAdsRevealBoards=()=>document.documentElement.classList.remove("nova-ads-pending");
+  });
+  await page.addScriptTag({content:adSource});
+  assert.equal(await page.evaluate(()=>window.__campaignRequestStarted),true,"live campaign request should have started");
+  assert.equal(await page.locator('[data-nova-ad-slot="cart_banner"]').evaluate(el=>getComputedStyle(el).visibility),"visible");
+  assert.ok((await page.locator('[data-nova-ad-slot="cart_banner"]').innerText()).trim().length>0,"visible fallback board should contain text");
+  assert.equal(await page.locator("html").evaluate(el=>el.classList.contains("nova-ads-pending")),false);
   await page.close();
  }finally{await browser.close();}
 });
