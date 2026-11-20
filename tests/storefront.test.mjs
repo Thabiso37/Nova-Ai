@@ -151,11 +151,14 @@ test("Homepage product loading failures replace the skeleton with a recoverable 
  assert.match(home,/if\(requestedId\)\{const main=document\.querySelector\(\x27main\x27\);if\(main\)main\.innerHTML=.*Return to homepage/);
 });
 
-test("Homepage advertising first paint remains independent from managed campaign loading",()=>{
+test("Advertising boards stay on a branded loading state until managed campaigns or fallback are ready",()=>{
  const boot=ads.indexOf("function bootLiveAds()");
- const reveal=ads.indexOf("window.__novaAdsRevealBoards();",boot);
  const managed=ads.indexOf("loadManagedCampaigns().catch",boot);
- assert.ok(reveal>boot&&managed>reveal);
+ const reveal=ads.indexOf("window.__novaAdsRevealBoards()",managed);
+ assert.ok(managed>boot&&reveal>managed,"campaign loading must start before board reveal");
+ assert.match(ads,/\.finally\(\(\)=>\{[\s\S]*?__novaAdsRevealBoards/);
+ assert.match(home,/html\.nova-ads-pending \[data-nova-ad-slot\]::after/);
+ assert.match(home,/Loading advertisements/);
  assert.match(ads,/setInterval\(\(\)=>show\(active\+1\),5000\)/);
  assert.match(home,/\.nova-hero-slide\{[^}]*min-height:190px/);
 });
