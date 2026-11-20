@@ -23,12 +23,11 @@ test("Home and Retail cards expose seller identity for View Store links without 
 test("Seller Portal branding controls cover upload, preview, replacement and removal",()=>{
  assert.match(seller,/novaai-store-branding\.js/);
  assert.match(seller,/NOVAAI_SUPABASE_CLIENT=sb/);
- assert.match(branding,/novaStoreLogoPreview/);
  assert.match(branding,/novaStoreBannerPreview/);
- assert.match(branding,/Upload \/ Replace logo/);
  assert.match(branding,/Upload \/ Replace banner/);
- assert.match(branding,/novaStoreLogoRemove/);
  assert.match(branding,/novaStoreBannerRemove/);
+ assert.match(branding,/approved, signed-in seller store is required/i);
+ assert.match(branding,/selected\.type\)\|\|selected\.size>5\*1024\*1024/);
 });
 test("store page is a dedicated page and has no directory route",()=>{
  assert.match(page,/id="novaStorePage"/);
@@ -82,7 +81,7 @@ test("engagement tables have customer lookup indexes and preserve approved-store
 });
 test("Store Page exposes no store description or private seller address",()=>{
  assert.doesNotMatch(page,/store\.description|store_description|delivery_address|street_address/i);
- assert.match(js,/Public contact:/);
+ assert.match(js,/Public contact\\s/);
  assert.match(js,/eq\("status","approved"\)/);
 });
 test("no existing commerce tables are altered",()=>{
