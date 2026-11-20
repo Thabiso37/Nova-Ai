@@ -424,15 +424,28 @@ button,input{font:inherit}
         }
         container.appendChild(quote); continue;
       }
-      const unordered = line.match(/^\s*[-*+]\s+(.+)$/);
+      if (/^\s*(?:---+|___+|\x2a\x2a\x2a+)\s*$/.test(line)) {
+        const hr = document.createElement('hr');
+        hr.style.cssText = 'border:0;border-top:1px solid #e1e8f1;margin:14px 0;';
+        container.appendChild(hr); i++; continue;
+      }
+      const unordered = line.match(/^\s*[-*+•▪]\s+(.+)$/);
       const ordered = line.match(/^\s*\d+[.)]\s+(.+)$/);
       if (unordered || ordered) {
         const list = document.createElement(ordered ? 'ol' : 'ul');
         while (i < lines.length) {
-          const m = lines[i].match(ordered ? /^\s*\d+[.)]\s+(.+)$/ : /^\s*[-*+]\s+(.+)$/);
+          const m = lines[i].match(ordered ? /^\s*\d+[.)]\s+(.+)$/ : /^\s*[-*+•▪]\s+(.+)$/);
           if (!m) break;
           const li = document.createElement('li');
-          appendInlineFormatting(li, m[1]); list.appendChild(li); i++;
+          const task = m[1].match(/^\[([ xX])\]\s*(.*)$/);
+          if (task) {
+            const mark = document.createElement('span');
+            mark.textContent = task[1].toLowerCase() === 'x' ? '✓ ' : '□ ';
+            mark.style.cssText = 'font-weight:700;color:#174ea6;margin-right:4px;';
+            li.appendChild(mark);
+            appendInlineFormatting(li, task[2]);
+          } else appendInlineFormatting(li, m[1]);
+          list.appendChild(li); i++;
         }
         container.appendChild(list); continue;
       }
