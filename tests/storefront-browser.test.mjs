@@ -319,3 +319,63 @@ test("All nine advertising boards keep one stable fallback without legacy carous
   await page.close();
  }finally{await browser.close();}
 });
+
+
+test("Motors refresh preserves only cards belonging to the active market",async()=>{
+ const source=fs.readFileSync(path.resolve("seller-motors-houses.html"),"utf8");
+ const start=source.indexOf("async function loadListings(marketType, searchQuery = '')");
+ const end=source.indexOf("\\n}\\n\\nlet motorsPartCategory",start);
+ assert.ok(start>=0&&end>start,"Motors/Property listing loader must be present");
+ const loader=source.slice(start,end+2);
+ const setup=`
+ let listingLoadRun=0;
+ const listingCache=Object.create(null),listingCacheAt=Object.create(null),listingPending=Object.create(null);
+ let approvedStoreIdsCache=null,approvedStoreIdsCacheAt=0,approvedStoreIdsPending=null;
+ let publicSellerLocationsById=Object.create(null);
+ const MARKET_DATA_TTL=30000;
+ const rows=[{id:501,name:"Toyota car battery",description:"Car battery",price:1200,category:"Auto",seller_id:"seller-1",seller_name:"Test seller"}];
+ let failProducts=true;
+ class Query{
+  constructor(table){this.table=table;this.filters=[];}
+  select(){return this;}
+  eq(k,v){this.filters.push(x=>String(x[k])===String(v));return this;}
+  in(k,values){this.filters.push(x=>(values||[]).map(String).includes(String(x[k])));return this;}
+  order(){return this;}
+  then(resolve,reject){
+   if(this.table==="Products"&&failProducts)return Promise.reject(new Error("simulated refresh failure")).then(resolve,reject);
+   const data=(this.table==="Products"?rows:this.table==="seller_stores"?[{user_id:"seller-1"}]:[]).filter(x=>this.filters.every(fn=>fn(x)));
+   return Promise.resolve({data,error:null}).then(resolve,reject);
+  }
+ }
+ const sb={from:table=>new Query(table)};
+ const grid=document.createElement("div");grid.id="productGrid";document.body.append(grid);
+ const stat=document.createElement("span");stat.id="statCount";document.body.append(stat);
+ const documentGet=document.getElementById.bind(document);
+ document.getElementById=id=>id==="productGrid"?grid:id==="statCount"?stat:documentGet(id);
+ const window={location:{search:""}};
+ function renderMotorsParts(items){grid.innerHTML=items.map(x=>'<article class="motors-part-card" data-product-id="'+x.id+'"></article>').join("");}
+ function applyPropertyFilters(){}
+ `;
+ const browser=await chromium.launch({headless:true});
+ try{
+  const page=await browser.newPage({viewport:{width:393,height:852}});
+  await page.setContent("<html><body></body></html>");
+  await page.addScriptTag({content:setup+loader});
+  const sameMarket=await page.evaluate(async()=>{
+   const grid=document.getElementById("productGrid");grid.dataset.listingMarket="motors";grid.innerHTML='<article class="motors-part-card" data-product-id="old-motors"></article>';
+   await loadListings("motors");
+   return {oldCard:!!grid.querySelector('[data-product-id="old-motors"]'),error:!!grid.querySelector('[role="alert"]'),text:grid.textContent};
+  });
+  assert.equal(sameMarket.oldCard,true,"same-market cards must remain visible after a failed background refresh");
+  assert.equal(sameMarket.error,false,"a refresh failure must not replace same-market cards with an error");
+  const switchedMarket=await page.evaluate(async()=>{
+   const grid=document.getElementById("productGrid");grid.dataset.listingMarket="property";grid.innerHTML='<article class="property-card" data-product-id="old-property"></article>';
+   await loadListings("motors");
+   return {oldProperty:!!grid.querySelector(".property-card"),motorsLoading:grid.textContent.includes("Loading listings"),error:grid.querySelector('[role="alert"]')?.textContent||""};
+  });
+  assert.equal(switchedMarket.oldProperty,false,"previous-market cards must be cleared on market switch");
+  assert.equal(switchedMarket.motorsLoading,false,"failed market switch should end in an error, not a permanent loader");
+  assert.match(switchedMarket.error,/Listings could not be loaded/);
+  await page.close();
+ }finally{await browser.close();}
+});
