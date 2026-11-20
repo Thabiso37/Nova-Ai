@@ -51,8 +51,8 @@ jobs:
           {
             echo "## NOVAAI PR validation"
             echo
-            echo "- **PR head commit:** `$HEAD_SHA`"
-            echo "- **Base snapshot:** `$BASE_SHA`"
+            echo "- **PR head commit:** \`$HEAD_SHA\`"
+            echo "- **Base snapshot:** \`$BASE_SHA\`"
             echo "- **Checkout:** exact PR head commit (not the synthetic merge ref)"
             echo
             echo "### Changed files"
