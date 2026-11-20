@@ -122,7 +122,7 @@ test("Store Page renders its identity before waiting for public location, produc
  const end=js.indexOf("\n}",start)+2;
  const loader=js.slice(start,end);
  assert.ok(start>=0&&end>start);
- assert.ok(loader.indexOf("root.append(banner,identity)")<loader.indexOf("const locationTask="),"store identity must be attached before secondary requests");
+ assert.ok(loader.indexOf("nextView.append(banner,identity)")<loader.indexOf("const locationTask="),"store identity must be attached before secondary requests");
  assert.match(loader,/Promise\.all\(\[authPromise,locationTask\.catch[\s\S]*?productsTask\.catch/);
  assert.match(loader,/productGrid\.innerHTML=.*Loading this store/);
  assert.match(loader,/if\(!hadContent\)root\.innerHTML/,"first load should show a loader without clearing an existing store");
