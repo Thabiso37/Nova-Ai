@@ -324,7 +324,7 @@ test("All nine advertising boards keep one stable fallback without legacy carous
 test("Motors refresh preserves only cards belonging to the active market",async()=>{
  const source=fs.readFileSync(path.resolve("seller-motors-houses.html"),"utf8");
  const start=source.indexOf("async function loadListings(marketType, searchQuery = '')");
- const end=source.indexOf("\\n}\\n\\nlet motorsPartCategory",start);
+ const end=source.indexOf("\n}\n\nlet motorsPartCategory",start);
  assert.ok(start>=0&&end>start,"Motors/Property listing loader must be present");
  const loader=source.slice(start,end+2);
  const setup=`
