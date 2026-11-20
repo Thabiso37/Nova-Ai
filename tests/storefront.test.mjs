@@ -143,3 +143,17 @@ test("Homepage product cards reserve image space and keep asynchronous image dec
  assert.match(home,/\.home-product-photo\{[^}]*aspect-ratio:1\/1/);
  assert.match(home,/loading=\"lazy\" decoding=\"async\"/);
 });
+
+
+test("Homepage product loading failures replace the skeleton with a recoverable error state",()=>{
+ assert.match(home,/if\(requestedId\)\{const main=document\.querySelector\(\x27main\x27\);if\(main\)main\.innerHTML=.*Return to homepage/);
+});
+
+test("Homepage advertising first paint remains independent from managed campaign loading",()=>{
+ const boot=ads.indexOf("function bootLiveAds()");
+ const reveal=ads.indexOf("window.__novaAdsRevealBoards();",boot);
+ const managed=ads.indexOf("loadManagedCampaigns().catch",boot);
+ assert.ok(reveal>boot&&managed>reveal);
+ assert.match(ads,/setInterval\(\(\)=>show\(active\+1\),5000\)/);
+ assert.match(home,/\.nova-hero-slide\{[^}]*min-height:190px/);
+});
