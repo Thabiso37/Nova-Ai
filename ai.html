@@ -361,12 +361,21 @@ button,input{font:inherit}
   }
 
 
+  // Clean malformed/unhandled Markdown residue in plain-text segments without injecting HTML.
+  function cleanInlineText(value) {
+    return String(value || '')
+      .replace(/\\s+\\|\\s+/g, ' · ')
+      .replace(/^\\s*#{1,6}\\s+/, '')
+      .replace(/\\*\\*/g, '')
+      .replace(/__/g, '');
+  }
+
   // Render safe Markdown-like formatting with DOM nodes (never inject raw HTML).
   function appendInlineFormatting(parent, text) {
     const token = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)|\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|\*\*([^*]+)\*\*|__([^_]+)__|\x60([^\x60]+)\x60|\*([^*]+)\*|_([^_]+)_/g;
     let last = 0, match;
     while ((match = token.exec(text)) !== null) {
-      if (match.index > last) parent.appendChild(document.createTextNode(text.slice(last, match.index)));
+      if (match.index > last) parent.appendChild(document.createTextNode(cleanInlineText(text.slice(last, match.index))));
       if (match[1] !== undefined) {
         // Listing photographs are shown by the existing safe-photo fallback below.
         parent.appendChild(document.createTextNode('[Photo: ' + (match[1] || 'listing') + ']'));
@@ -392,7 +401,7 @@ button,input{font:inherit}
       }
       last = token.lastIndex;
     }
-    if (last < text.length) parent.appendChild(document.createTextNode(text.slice(last)));
+    if (last < text.length) parent.appendChild(document.createTextNode(cleanInlineText(text.slice(last))));
   }
 
   function renderMarkdownReply(container, text) {
