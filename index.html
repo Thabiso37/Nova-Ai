@@ -991,7 +991,7 @@ if(!detail||!store||!detail.name||Number(detail.price)<=0){document.querySelecto
 detail.seller_store=store;renderDetail(detail);updateCartCount();return;
 }
 const productQuery=client.from('Products').select('id,name,description,price,category,image_url,images,seller_name,seller_id,status,created_at').eq('status','approved').order('created_at',{ascending:false});
-const storeQuery=client.from('seller_stores').select('user_id,store_name,status').eq('status','approved').catch(error=>({error,data:[]}));
+const storeQuery=Promise.resolve(client.from('seller_stores').select('user_id,store_name,status').eq('status','approved')).catch(error=>({error,data:[]}));
 const [productResult,storeResult]=await Promise.all([productQuery,storeQuery]);
 if(productResult.error)throw productResult.error;
 const rows=productResult.data||[];
