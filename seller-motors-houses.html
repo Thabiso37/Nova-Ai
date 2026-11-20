@@ -697,7 +697,7 @@ function marketShareButton(item,market,shareLocation="product_card",detail=false
 async function loadListings(marketType, searchQuery = '') {
   const runId = ++listingLoadRun;
   const grid = document.getElementById('productGrid');
-  const hasRenderedListings = Boolean(grid.querySelector('[data-product-id], .retail-product-card, .motors-part-card, .property-card'));
+  const hasRenderedListings = grid.dataset.listingMarket === marketType && Boolean(grid.querySelector('[data-product-id], .retail-product-card, .motors-part-card, .property-card'));
   if (!hasRenderedListings) grid.innerHTML = "<div class='msg' role='status'>Loading listings...</div>";
   if (!sb) {
     if (!hasRenderedListings) grid.innerHTML = "<div class='msg' role='status'>Reconnect to the internet to load live marketplace listings.</div>";
@@ -774,20 +774,23 @@ async function loadListings(marketType, searchQuery = '') {
   }
 
   document.getElementById('statCount').textContent = filtered.length;
-  if(marketType==='property'){propertyListings=filtered;applyPropertyFilters();return;}
+  if(marketType==='property'){grid.dataset.listingMarket = marketType;propertyListings=filtered;applyPropertyFilters();return;}
 
   if (filtered.length === 0) {
+    grid.dataset.listingMarket = marketType;
     grid.innerHTML = "<div class='msg'>No listings found in this market category.</div>";
     return;
   }
 
   if (marketType === 'motors') {
+    grid.dataset.listingMarket = marketType;
     renderMotorsParts(filtered);
     const requestedId=new URLSearchParams(window.location.search).get('product');
     if(requestedId){const card=Array.from(grid.querySelectorAll('[data-product-id]')).find(node=>node.dataset.productId===requestedId);if(card){const details=card.querySelector('details');if(details)details.open=true;card.scrollIntoView({behavior:'smooth',block:'center'});}}
     return;
   }
 
+  grid.dataset.listingMarket = marketType;
   grid.innerHTML = filtered.map(item => `
     <article class="retail-product-card">
       <div class="retail-product-photo">${item.image_url ? `<img loading="lazy" decoding="async" src="${esc(item.image_url)}" alt="${esc(item.name)}">` : '<div class="retail-product-no-photo">Product image unavailable</div>'}</div>
