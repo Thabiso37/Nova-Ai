@@ -75,12 +75,12 @@ async function loadStorePage(){
  try{
   let result=await sb.from("seller_stores").select("user_id,store_name,store_slug,status,store_banner_url,store_logo_url,phone").eq("store_slug",slug).eq("status","approved").maybeSingle();
   if(result.error&&/column .* does not exist|schema cache/i.test(result.error.message||"")){
-   result=await sb.from("seller_stores").select("user_id,store_name,store_slug,status,phone").eq("store_slug",slug).eq("status","approved").maybeSingle();
+   result=await sb.from("seller_stores").select("user_id,store_name,store_slug,status,store_banner_url,phone").eq("store_slug",slug).eq("status","approved").maybeSingle();
   }
   if(result.error)throw result.error;
   const store=result.data;if(!store){root.textContent="This approved store is unavailable.";return;}
   const authPromise=sb.auth.getUser().catch(error=>({data:{user:null},error}));
-  root.replaceChildren();
+  const nextView=document.createDocumentFragment();
   const banner=document.createElement("div");banner.className="nova-store-banner";
   if(store.store_banner_url){const image=document.createElement("img");image.src=store.store_banner_url;image.alt=store.store_name+" banner";image.loading="eager";image.decoding="async";banner.append(image);}
   const identity=document.createElement("section");identity.className="nova-store-identity";
@@ -95,12 +95,14 @@ async function loadStorePage(){
   const actions=document.createElement("div");actions.className="nova-store-actions";
   const like=document.createElement("button");like.id="storeLikeButton";like.type="button";like.disabled=true;like.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.8c0 5.2-8.8 11-8.8 11S3.2 14 3.2 8.8A4.8 4.8 0 0 1 12 6.1a4.8 4.8 0 0 1 8.8 2.7Z"/></svg><span>Like Store</span>';
   const follow=document.createElement("button");follow.id="storeFollowButton";follow.type="button";follow.disabled=true;follow.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v7M15.5 11.5h7"/></svg><span>Follow Store</span>';
-  actions.append(like,follow);const engagementStatus=document.createElement("p");engagementStatus.id="storeEngagementStatus";engagementStatus.className="nova-store-engagement-status";engagementStatus.setAttribute("aria-live","polite");info.append(actions,engagementStatus);identity.append(info);root.append(banner,identity);
-  const productHeading=document.createElement("h2");productHeading.className="nova-store-products-heading";productHeading.textContent="Products from this Store";root.append(productHeading);
-  const productGrid=document.createElement("div");productGrid.className="nova-store-products";productGrid.id="novaStoreProducts";productGrid.setAttribute("aria-live","polite");productGrid.innerHTML='<div class="nova-store-loading" role="status">Loading this store’s products…</div>';root.append(productGrid);
+  actions.append(like,follow);const engagementStatus=document.createElement("p");engagementStatus.id="storeEngagementStatus";engagementStatus.className="nova-store-engagement-status";engagementStatus.setAttribute("aria-live","polite");info.append(actions,engagementStatus);identity.append(info);nextView.append(banner,identity);
+  const productHeading=document.createElement("h2");productHeading.className="nova-store-products-heading";productHeading.textContent="Products from this Store";nextView.append(productHeading);
+  const productGrid=document.createElement("div");productGrid.className="nova-store-products";productGrid.id="novaStoreProducts";productGrid.setAttribute("aria-live","polite");productGrid.innerHTML='<div class="nova-store-loading" role="status">Loading this store’s products…</div>';nextView.append(productGrid);
+  if(!hadContent)root.replaceChildren(nextView);
   const locationTask=(async()=>{const locationResult=await sb.from("seller_public_locations").select("province,city,suburb").eq("user_id",store.user_id).eq("public_location_enabled",true).eq("approval_status","approved").maybeSingle();if(locationResult.error)throw locationResult.error;if(locationResult.data){const parts=[locationResult.data.suburb,locationResult.data.city,locationResult.data.province].filter(Boolean);if(parts.length){locationLine.textContent="⌖ "+parts.join(", ");locationLine.hidden=false;}}})();
   const productsTask=(async()=>{const {data:products,error:productsError}=await sb.from("Products").select("id,name,description,price,category,image_url,images,seller_id,status").eq("seller_id",store.user_id).eq("status","approved").order("created_at",{ascending:false});if(productsError)throw productsError;productGrid.replaceChildren();(products||[]).forEach(p=>productGrid.append(renderProduct(p)));if(!(products||[]).length){const empty=document.createElement("p");empty.className="nova-store-empty";empty.textContent="This store has no public products available right now.";productGrid.append(empty);}})();
   const [authResult]=await Promise.all([authPromise,locationTask.catch(error=>console.warn("[NOVAAI Store location] Location unavailable",error)),productsTask.catch(error=>{console.error("[NOVAAI Store products]",error);productGrid.innerHTML='<p class="nova-store-empty" role="status">Store information is available, but its products could not be loaded. Please try again.</p>';})]);
+  if(hadContent)root.replaceChildren(nextView);
   const user=authResult?.data?.user||null;
   const engagementReady=await refreshEngagement(sb,store.user_id,user?.id);
   const signedIn=!!user,ownStore=signedIn&&user.id===store.user_id,canEngage=signedIn&&!ownStore&&engagementReady;
