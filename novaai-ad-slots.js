@@ -1,6 +1,6 @@
 /* NOVAAI Advertisement Placement Registry
- * Version 1 contract for the future Admin > Advertisement Management page.
- * This file does not access Supabase or publish campaigns yet.
+ * Version 1 placement contract and live approved-campaign renderer.
+ * Fallback boards are revealed immediately; the managed campaign feed loads in the background.
  */
 (function(){
   'use strict';
@@ -526,10 +526,6 @@
         reject(new Error('Campaign feed timed out after 12 seconds'));
       },12000);
     });
-    const waitFor=(promise,milliseconds)=>new Promise(resolve=>{
-      const timer=window.setTimeout(resolve,milliseconds);
-      Promise.resolve(promise).then(()=>{window.clearTimeout(timer);resolve();},()=>{window.clearTimeout(timer);resolve();});
-    });
     try{
       let campaigns;
       try{
@@ -554,26 +550,8 @@
         window.clearTimeout(requestTimeoutId);
       }
       if(requestId!==managedCampaignLoadSequence)return;
-      // Wait for the real page's initial layout assets before recording its natural
-      // board dimensions. Every wait is bounded so a broken asset cannot hold up
-      // the first-paint release indefinitely.
-      if(document.readyState!=='complete'){
-        await waitFor(new Promise(resolve=>window.addEventListener('load',resolve,{once:true})),4000);
-      }
-      if(document.fonts&&document.fonts.ready)await waitFor(document.fonts.ready,4000);
-      await Promise.all(Array.from(document.images).map(img=>{
-        if(img.complete){
-          if(!img.decode)return Promise.resolve();
-          try{return waitFor(img.decode(),4000);}catch(error){return Promise.resolve();}
-        }
-        return waitFor(new Promise(resolve=>{
-          img.addEventListener('load',resolve,{once:true});
-          img.addEventListener('error',resolve,{once:true});
-        }),4000);
-      }));
-      if(typeof requestAnimationFrame==='function'){
-        await waitFor(new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))),1000);
-      }
+      // Do not wait for page images, web fonts or the window load event.
+      // Fallback boards are already visible while the campaign feed loads.
       if(requestId===managedCampaignLoadSequence)api.announceCampaigns(Array.isArray(campaigns)?campaigns:[]);
     }catch(error){
       if(requestId===managedCampaignLoadSequence){
@@ -588,17 +566,17 @@
     try{
       initHomeCarousel();
       ['cart_banner','property_banner','motors_banner','shop_footer','motors_footer','property_footer'].forEach(id=>initLiveSlot(document.querySelector('[data-nova-ad-slot="'+id+'"]')));
-      loadManagedCampaigns().finally(()=>{
-        try{
-          window.__novaManagedCampaignsReady=true;
-          const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');
-          if(wishlist)initLiveSlot(wishlist);
-        }finally{
-          if(typeof window.__novaAdsRevealBoards==='function')window.__novaAdsRevealBoards();
-        }
-      }).catch(error=>{
-        console.error('NOVAAI advertising initialisation failed; showing fallback boards.',error);
-        if(typeof window.__novaAdsRevealBoards==='function')window.__novaAdsRevealBoards();
+      // Prepare every visible fallback board first, then release the first paint.
+      // The approved campaign feed must never hold the page's advertising slots hidden.
+      window.__novaManagedCampaignsReady=true;
+      const wishlist=document.querySelector('[data-nova-ad-slot="wishlist_banner"]');
+      if(wishlist)initLiveSlot(wishlist);
+      if(typeof window.__novaAdsRevealBoards==='function')window.__novaAdsRevealBoards();
+
+      // Load managed campaigns independently; valid campaigns replace the fallback
+      // only after the feed responds. A failed feed leaves the fallback visible.
+      loadManagedCampaigns().catch(error=>{
+        console.warn('NOVAAI managed advertisement refresh failed; fallback boards remain visible.',error);
       });
       if(!window.__novaAdRefreshTimer)window.__novaAdRefreshTimer=window.setInterval(loadManagedCampaigns,60000);
       if(!window.__novaAdObserver&&document.body){
