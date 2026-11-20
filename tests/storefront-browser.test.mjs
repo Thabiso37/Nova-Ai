@@ -17,6 +17,13 @@ const server=createServer((req,res)=>{
   html=html.replace(/<script src="\.\/(?:nearby-search\.js|novaai-ad-slots\.js[^"]*|novaai-share-visits\.js[^"]*|novaai-product-sharing\.js[^"]*|novaai-storefront\.js[^"]*)"[^>]*><\/script>/gi,"");
   res.setHeader("Content-Type","text/html");res.end(html);return;
  }
+ if(requestUrl.pathname==="/index.html"){
+  let html=fs.readFileSync(path.resolve("index.html"),"utf8");
+  const homeMock='<script>(()=>{const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));const client={auth:{onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),getSession:async()=>({data:{session:null},error:null})},from:table=>({select(){return this},eq(){return this},maybeSingle:()=>new Promise(resolve=>setTimeout(()=>resolve({data:null,error:null}),1200)),order(){return this},then(resolve,reject){return Promise.resolve({data:[],error:null}).then(resolve,reject)}}),rpc:async()=>({data:null,error:null})};window.supabase={createClient:()=>client};})();</script>';
+  html=html.replace('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>',homeMock);
+  html=html.replace(/<script src="[^"]+"><\\/script>/gi,"");
+  res.setHeader("Content-Type","text/html");res.end(html);return;
+ }
  if(requestUrl.pathname!=="/store-page.html"){res.writeHead(404);res.end("Not found");return;}
  const userId=requestUrl.searchParams.get("test_user")||"customer-1";
  const options={delayProducts:Number(requestUrl.searchParams.get("delay_products")||0),delayLocation:Number(requestUrl.searchParams.get("delay_location")||0),missingLogo:requestUrl.searchParams.get("missing_logo")==="1",failProducts:requestUrl.searchParams.get("fail_products")==="1"};
@@ -243,6 +250,29 @@ test("Store Page layout has no horizontal overflow at 360px and 390px",async()=>
    assert.ok(dimensions.scroll<=dimensions.width+1,JSON.stringify(dimensions));
    await page.close();
   }
+ }finally{await browser.close();}
+});
+
+
+test("Homepage product route shows the skeleton immediately and hides homepage sections while data is delayed",async()=>{
+ const browser=await chromium.launch({headless:true});
+ try{
+  const page=await browser.newPage({viewport:{width:360,height:800},reducedMotion:"reduce"});
+  const errors=[];page.on("pageerror",error=>errors.push(error.message));
+  await page.goto("http://127.0.0.1:"+server.address().port+"/index.html?product=101",{waitUntil:"domcontentloaded"});
+  await page.waitForSelector(".product-loading-shell");
+  await page.waitForTimeout(180);
+  assert.equal(await page.locator(".product-loading-shell").count(),1);
+  assert.match(await page.locator(".product-loading-status").textContent(),/Loading approved product details/);
+  assert.equal(await page.locator("body").evaluate(el=>el.classList.contains("product-view-active")),true);
+  for(const selector of [".home-search-wrap",".nova-hero-carousel","#novaAiLaunchCard",".home-category-tiles",".home-seller-banner"]){
+   const node=page.locator(selector).first();
+   if(await node.count())assert.equal(await node.evaluate(el=>getComputedStyle(el).display==="none"||el.hidden),true,selector+" should be hidden");
+  }
+  const dimensions=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}));
+  assert.ok(dimensions.scroll<=dimensions.width+1,JSON.stringify(dimensions));
+  assert.deepEqual(errors,[]);
+  await page.close();
  }finally{await browser.close();}
 });
 
