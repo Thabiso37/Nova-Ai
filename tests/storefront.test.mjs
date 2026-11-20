@@ -23,7 +23,7 @@ test("Ad boards reveal before the background campaign request and font readiness
  assert.doesNotMatch(ads,/await\s+document\.fonts\.ready/,"no unbounded font wait is allowed");
 });
 test("Store Page selects the public phone field before rendering its WhatsApp contact",()=>{
- assert.match(js,/select\("user_id,store_name,store_slug,status,store_banner_url,phone"\)/);
+ assert.match(js,/select\("user_id,store_name,store_slug,status,store_banner_url,store_logo_url,phone"\)/);
  assert.match(js,/select\("user_id,store_name,store_slug,status,phone"\)/);
  assert.match(js,/store\.phone/);
 });
@@ -125,7 +125,7 @@ test("Store Page renders its identity before waiting for public location, produc
  assert.ok(loader.indexOf("root.append(banner,identity)")<loader.indexOf("const locationTask="),"store identity must be attached before secondary requests");
  assert.match(loader,/Promise\.all\(\[authPromise,locationTask\.catch[\s\S]*?productsTask\.catch/);
  assert.match(loader,/productGrid\.innerHTML=.*Loading this store/);
- assert.match(loader,/if\(!root\.querySelector\("\.nova-store-identity"\)\)root\.innerHTML/,"refresh must not blank an already rendered store");
+ assert.match(loader,/if\(!hadContent\)root\.innerHTML/,"first load should show a loader without clearing an existing store");
  assert.match(loader,/root\.removeAttribute\("aria-busy"\)/);
 });
 
