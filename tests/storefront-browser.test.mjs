@@ -22,7 +22,7 @@ const server=createServer((req,res)=>{
  let html=fs.readFileSync(path.resolve("store-page.html"),"utf8");
  const storefrontSource=fs.readFileSync(path.resolve("novaai-storefront.js"),"utf8");
  html=html.replace('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>','<script>'+mockScript(userId)+'</script>');
- html=html.replace('<script src="./novaai-storefront.js?v=1"></script>','<script>'+storefrontSource+'</script>');
+ html=html.replace(/<script src="\.\/novaai-storefront\.js(?:\?[^"]*)?"><\/script>/i,'<script>'+storefrontSource+'</script>');
  res.setHeader("Content-Type","text/html");res.end(html);
 });
 await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));
