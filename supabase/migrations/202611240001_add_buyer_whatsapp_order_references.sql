@@ -8,6 +8,11 @@ ALTER TABLE public.orders
 ALTER TABLE public.seller_fulfillments
   ADD COLUMN IF NOT EXISTS seller_order_reference text;
 
+-- The existing API grants are column-scoped; expose only the new reference fields.
+-- Row-level security continues to control which order/fulfilment rows each user sees.
+GRANT SELECT (order_reference) ON TABLE public.orders TO authenticated;
+GRANT SELECT (seller_order_reference) ON TABLE public.seller_fulfillments TO authenticated;
+
 CREATE SEQUENCE IF NOT EXISTS private.novaai_order_reference_seq
   AS bigint START WITH 1 INCREMENT BY 1 NO CYCLE;
 
