@@ -1019,7 +1019,7 @@ const detail=detailResult.data;if(detailResult.error)throw detailResult.error;
 let store=null;
 if(detail&&detail.seller_id){
  const [storeResult,locationResult]=await Promise.all([
-  client.from('seller_stores').select('user_id,store_name,store_slug,description,phone,status').eq('user_id',detail.seller_id).eq('status','approved').maybeSingle(),
+  client.from('seller_stores').select('user_id,store_name,store_slug,description,status').eq('user_id',detail.seller_id).eq('status','approved').maybeSingle(),
   client.from('seller_public_locations').select('province,city,suburb').eq('user_id',detail.seller_id).eq('public_location_enabled',true).eq('approval_status','approved').maybeSingle()
  ]);
  if(storeResult.error)throw storeResult.error;
