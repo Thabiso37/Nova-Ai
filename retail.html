@@ -1718,7 +1718,7 @@ function openSellerWhatsAppOrder(seller, order, items, buyer) {
     return;
   }
   const message = [
-    "Hello " + String(seller.store_name || "seller"), "",
+    "Hello " + String(seller.store_name || "seller") + ",", "",
     "I placed an order through NOVAAI MARKET.", "",
     "Main Order Reference: " + String(order.order_reference),
     "Your Seller Order Reference: " + String(seller.seller_order_reference), "",
