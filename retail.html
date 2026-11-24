@@ -1765,9 +1765,90 @@ if (!orderId) {
   throw new Error("Supabase did not return an order number.");
 }
 
-alert(
-  "Order placed successfully!\n\nOrder reference: " + orderId
-);
+let confirmation = document.getElementById("orderWhatsAppConfirmation");
+    if (!confirmation) {
+      confirmation = document.createElement("section");
+      confirmation.id = "orderWhatsAppConfirmation";
+      confirmation.className = "notice";
+      form.insertAdjacentElement("afterend", confirmation);
+    }
+    confirmation.replaceChildren();
+    confirmation.innerHTML = "<h3>Order placed successfully!</h3><p>Order reference: " + esc(String(orderId)) + "</p><p>Review each seller's message before sending.</p>";
+
+    try {
+      const { data: savedItems, error: itemsError } = await sb
+        .from("order_items")
+        .select("seller_id,product_name,quantity")
+        .eq("order_id", orderId);
+
+      if (itemsError) throw itemsError;
+
+      const groups = new Map();
+      (savedItems || []).forEach(item => {
+        if (!item.seller_id) return;
+        const id = String(item.seller_id);
+        if (!groups.has(id)) groups.set(id, []);
+        groups.get(id).push(item);
+      });
+
+      if (!groups.size) {
+        confirmation.insertAdjacentHTML("beforeend",
+          "<p>Order saved. Seller contact details could not be loaded. Please check My Orders.</p>");
+      }
+
+      groups.forEach((sellerItems, sellerId) => {
+        const store = sellerStoresById[sellerId];
+        const card = document.createElement("div");
+        const title = document.createElement("h4");
+        title.textContent = store?.store_name || "Seller";
+        card.appendChild(title);
+
+        const list = document.createElement("ul");
+        sellerItems.forEach(item => {
+          const li = document.createElement("li");
+          li.textContent = item.product_name + " × " + item.quantity;
+          list.appendChild(li);
+        });
+        card.appendChild(list);
+
+        let phone = String(store?.phone || "").replace(/\D/g, "");
+        if (phone.startsWith("0")) phone = "27" + phone.slice(1);
+
+        if (phone.startsWith("27") && phone.length === 11) {
+          const messageText = [
+            "Hello " + (store?.store_name || "Seller") + ",",
+            "I placed an order on NOVAAI MARKET.",
+            "Order reference: " + orderId,
+            "Customer: " + customerName,
+            "Phone: " + customerPhone,
+            "Delivery address: " + deliveryAddress,
+            "My items from your store:",
+            ...sellerItems.map(item => "- " + item.product_name + " x " + item.quantity)
+          ].join("\n");
+
+          const link = document.createElement("a");
+          link.className = "btn primary";
+          link.textContent = "WhatsApp this seller";
+          link.href = "https://wa.me/" + phone + "?text=" + encodeURIComponent(messageText);
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          card.appendChild(link);
+        } else {
+          const note = document.createElement("p");
+          note.textContent = "WhatsApp number unavailable for this seller.";
+          card.appendChild(note);
+        }
+
+        confirmation.appendChild(card);
+      });
+    } catch (contactError) {
+      console.error("Seller WhatsApp details:", contactError);
+      const note = document.createElement("p");
+      note.textContent = "Order saved, but seller contact details could not be loaded. Please check My Orders.";
+      confirmation.appendChild(note);
+    }
+
+    confirmation.scrollIntoView({ behavior: "smooth" });
 
 cart = [];
 saveCart();
