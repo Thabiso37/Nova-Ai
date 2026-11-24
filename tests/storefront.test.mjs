@@ -100,7 +100,7 @@ test("engagement tables have customer lookup indexes and preserve approved-store
 });
 test("Store Page exposes no store description or private seller address",()=>{
  assert.doesNotMatch(page,/store\.description|store_description|delivery_address|street_address/i);
- assert.match(js,/Public contact\s/);
+ assert.match(js,/WhatsApp contact will open through NOVAAI secure seller contact/);
  assert.match(js,/eq\("status","approved"\)/);
 });
 test("no existing commerce tables are altered",()=>{
