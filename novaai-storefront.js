@@ -73,9 +73,9 @@ async function loadStorePage(){
  root.setAttribute("aria-busy","true");
  if(!hadContent)root.innerHTML='<div class="nova-store-loading" role="status">Loading approved store…</div>';
  try{
-  let result=await sb.from("seller_stores").select("user_id,store_name,store_slug,status,store_banner_url,store_logo_url,phone").eq("store_slug",slug).eq("status","approved").maybeSingle();
+  let result=await sb.from("seller_stores").select("user_id,store_name,store_slug,status,store_banner_url,store_logo_url,phone,whatsapp_phone").eq("store_slug",slug).eq("status","approved").maybeSingle();
   if(result.error&&/column .* does not exist|schema cache/i.test(result.error.message||"")){
-   result=await sb.from("seller_stores").select("user_id,store_name,store_slug,status,store_banner_url,phone").eq("store_slug",slug).eq("status","approved").maybeSingle();
+   result=await sb.from("seller_stores").select("user_id,store_name,store_slug,status,store_banner_url,phone,whatsapp_phone").eq("store_slug",slug).eq("status","approved").maybeSingle();
   }
   if(result.error)throw result.error;
   const store=result.data;if(!store){root.textContent="This approved store is unavailable.";return;}
@@ -87,7 +87,7 @@ async function loadStorePage(){
   if(store.store_logo_url){const logo=document.createElement("img");logo.className="nova-store-logo";logo.src=store.store_logo_url;logo.alt=store.store_name+" logo";logo.loading="eager";logo.decoding="async";identity.append(logo);}
   const info=document.createElement("div");const title=document.createElement("h1");title.textContent=store.store_name;info.append(title);
   const contact=document.createElement("p");contact.className="nova-store-contact";contact.append(document.createTextNode("Public contact "));
-  const whatsappNumber=String(store.phone||"").replace(/[^0-9]/g,"").replace(/^0/,"27");
+  const whatsappNumber=String(store.whatsapp_phone||"").replace(/[^0-9]/g,"").replace(/^0/,"27");
   if(whatsappNumber){const contactLink=document.createElement("a");contactLink.className="nova-store-public-whatsapp";contactLink.href="https://wa.me/"+whatsappNumber;contactLink.target="_blank";contactLink.rel="noopener noreferrer";contactLink.setAttribute("aria-label","Contact this store on WhatsApp");contactLink.title="Contact this store on WhatsApp";contactLink.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.7a8.5 8.5 0 0 1-12.6 7.4L3 20l1.2-4.2a8.5 8.5 0 1 1 16.3-4.1Z"/><path d="M8.4 7.8c.3-.5.6-.5.9-.5h.5l1.1 2.4-.8.9c.7 1.3 1.7 2.2 3 2.8l.8-.9 2.4 1.1v.5c0 .4-.2.8-.6 1-1 .5-2.5.1-4.2-.8-1.7-.9-3.3-2.5-4-4.1-.5-1.2-.2-2 .9-2.4Z"/></svg>';contact.append(contactLink);}else{contact.append(document.createTextNode("Not provided"));}
   info.append(contact);
   const locationLine=document.createElement("p");locationLine.className="nova-store-location";locationLine.hidden=true;locationLine.setAttribute("aria-live","polite");info.append(locationLine);

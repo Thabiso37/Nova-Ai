@@ -217,6 +217,7 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
 <div class="field"><label style="display:flex;align-items:flex-start;gap:8px"><input id="sellerLocPublic" type="checkbox" style="width:auto;margin-top:2px"><span>I approve showing this business/listing area publicly. I confirm the pin is not my private residential address.</span></label></div>
 <button class="btn" type="button" id="sellerLocSave">Save public location</button>
 <div id="sellerLocStatus" class="msg" aria-live="polite"></div></div>
+
 <div class="panel" id="marketplaceAccessStatus">
   <h3>Primary marketplace application</h3>
   <p class="muted">Your account is assigned to one marketplace only. The administrator reviews that application.</p>
@@ -257,6 +258,16 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
       <div id="approvalBox" class="notice" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">⏳ Status: Pending Admin Approval</div>
       <button class="btn outline" id="signout" style="margin-top:10px;">Sign Out</button>
       <div id="userMsg" class="msg"></div>
+<div class="panel" id="sellerWhatsAppPanel" style="margin:14px 0">
+  <h3>Store WhatsApp Contact</h3>
+  <p class="muted">Add the WhatsApp number buyers should use to contact your business directly. This number is separate from your public location.</p>
+  <div class="field">
+    <label for="sellerWhatsAppNumber">WhatsApp Business Number</label>
+    <input id="sellerWhatsAppNumber" type="tel" maxlength="20" placeholder="e.g. 082 123 4567">
+  </div>
+  <button class="btn" type="button" id="sellerWhatsAppSave">Save WhatsApp Number</button>
+  <div id="sellerWhatsAppStatus" class="msg" aria-live="polite"></div>
+</div>
     </div>
   </div>
 
@@ -386,6 +397,7 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="seller-whatsapp.js?v=1"></script>
 <script>
 const sb = window.supabase.createClient("https://nxplffvklkopwfjaqexo.supabase.co","sb_publishable_dsWU7vWNRN2Nzi5D8JzH3g_W9vNsafQ");
 window.NOVAAI_SUPABASE_CLIENT=sb;
@@ -716,7 +728,7 @@ document.getElementById("userMsg").textContent = "Checking store approval...";
 
 const { data, error } = await sb
 .from("seller_stores")
-.select("id,store_name,store_slug,status,primary_marketplace")
+.select("id,store_name,store_slug,status,primary_marketplace,phone,whatsapp_phone")
 .eq("user_id", u.id)
 .maybeSingle();
 
@@ -745,7 +757,7 @@ if (!storeData) {
   }
   await new Promise(resolve => setTimeout(resolve, 350));
   const retry = await sb.from("seller_stores")
-    .select("id,store_name,store_slug,status,primary_marketplace")
+    .select("id,store_name,store_slug,status,primary_marketplace,phone,whatsapp_phone")
     .eq("user_id", u.id)
     .maybeSingle();
   if (version !== authVersion) return;
@@ -764,7 +776,7 @@ if (!storeData) {
 if (!storeData && u.user_metadata?.seller_store_name && u.user_metadata?.seller_primary_marketplace && u.user_metadata?.phone) {
   const {error:applicationError}=await sb.rpc("submit_seller_application",{p_store_name:u.user_metadata.seller_store_name,p_phone:u.user_metadata.phone,p_marketplace:u.user_metadata.seller_primary_marketplace});
   if(applicationError){document.getElementById("userMsg").textContent="Seller application could not be submitted: "+applicationError.message;publish.disabled=true;return false;}
-  const refreshed=await sb.from("seller_stores").select("id,store_name,store_slug,status,primary_marketplace").eq("user_id",u.id).maybeSingle();
+  const refreshed=await sb.from("seller_stores").select("id,store_name,store_slug,status,primary_marketplace,phone,whatsapp_phone").eq("user_id",u.id).maybeSingle();
   if(refreshed.error){document.getElementById("userMsg").textContent="Application saved, but seller status could not be loaded: "+refreshed.error.message;return false;}
   storeData=refreshed.data;
 }
@@ -812,6 +824,7 @@ if (permissionError) {
   return false;
 }
 await loadSellerPublicLocation();
+await loadSellerWhatsAppContact();
 marketplacePermissions = permissionRows || [];
 refreshSeller2080();
 renderMarketplaceChoices();

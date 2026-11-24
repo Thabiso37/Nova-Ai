@@ -1213,40 +1213,19 @@ html.nova-ads-pending [data-nova-ad-slot] * {
         <div id="cartItems"></div>
       </section>
       <aside class="cart-summary" aria-label="Order summary">
-        <h3>Order Summary</h3>
+        <h3>Enquiry Summary</h3>
         <div class="cart-summary-row"><span>Subtotal</span><strong id="cartSubtotal">R0.00</strong></div>
-        <div class="cart-summary-row"><span>Estimated delivery</span><strong>Confirmed at checkout</strong></div>
+        <div class="cart-summary-row"><span>Delivery / collection</span><strong>Arrange directly with seller</strong></div>
         <div class="cart-summary-row cart-summary-total"><span>Total</span><strong id="total">R0.00</strong></div>
-        <p class="muted" style="font-size:11px;line-height:1.5">Delivery fees are not yet confirmed and will be shown before an order is placed.</p>
-        <button class="btn primary cart-checkout-btn" type="button" onclick="checkout()">Continue to checkout</button>
+        <p class="muted" style="font-size:11px;line-height:1.5">Contact each seller directly to confirm availability, price and delivery or collection arrangements.</p>
+        <button class="btn primary cart-checkout-btn" type="button" onclick="checkout()">Send to All Sellers</button>
         <button class="btn outline cart-clear-btn" type="button" onclick="clearCart()">Clear cart</button>
       </aside>
     </div>
     <div id="checkoutMsg" class="msg" aria-live="polite"></div>
+    <div id="cartSellerEnquiries"></div>
 
-    <form id="checkoutForm" class="hidden">
-      <h3>Customer details</h3>
-      <p class="muted">Sign in using your NOVAAI account before placing an order.</p>
 
-      <div class="field">
-        <label for="customerName">Full name *</label>
-        <input id="customerName" maxlength="100" required>
-      </div>
-
-      <div class="field">
-        <label for="customerPhone">Phone number *</label>
-        <input id="customerPhone" type="tel" maxlength="30" required>
-      </div>
-
-      <div class="field">
-        <label for="deliveryAddress">Delivery address *</label>
-        <textarea id="deliveryAddress" maxlength="500" required></textarea>
-      </div>
-
-      <p class="notice">Orders are submitted for seller confirmation. No online payment is taken at this stage.</p>
-
-      <button class="btn primary" id="placeOrderBtn" type="submit">Place order</button>
-    </form>
 
   </div>
 </div>
@@ -1678,193 +1657,107 @@ function openCartSeller(sellerId){
 function qty(id,n){let i=cart.find(x=>x.id===id);if(!i)return;i.qty+=n;if(i.qty<1)cart=cart.filter(x=>x.id!==id);saveCart();renderCart()}
 function clearCart(){cart=[];saveCart();renderCart();}
 async function checkout(){
-  const form = document.getElementById("checkoutForm");
-  if (!cart.length) { message("checkoutMsg", "Your cart is empty.", true); return; }
-  const { data: authData, error: authError } = await sb.auth.getUser();
-  if (authError || !authData.user) {
-    message("checkoutMsg", "Please sign in to continue. Your cart will be saved.", true);
-    openCustomerAuth();
+  const results = document.getElementById("cartSellerEnquiries");
+
+  if (!cart.length) {
+    message("checkoutMsg", "Your cart is empty.", true);
     return;
   }
-  form.classList.remove("hidden");
-  form.scrollIntoView({ behavior: "smooth" });
-}
 
-document.getElementById("checkoutForm").addEventListener("submit", async e => {
-  e.preventDefault();
+  results.replaceChildren();
 
-  const form = e.target;
-  const button = form.querySelector('[type="submit"]');
+  const groups = new Map();
 
-  try {
-    button.disabled = true;
-    button.textContent = "Placing order...";
+  cart.forEach(item => {
+    const product = cartProduct(item) || {};
+    const sellerId = String(product.sellerId || item.sellerId || "");
+    const key = sellerId || "unknown";
 
-    // Verify the signed-in customer
-    const { data: authData, error: authError } = await sb.auth.getUser();
+    if (!groups.has(key)) groups.set(key, {sellerId, items: []});
 
-    if (authError || !authData.user) {
-      throw new Error("Please sign in before placing an order.");
-    }
+    groups.get(key).items.push({
+      name: product.name || "Product",
+      price: Number(product.price) || 0,
+      quantity: Number(item.qty) || 1
+    });
+  });
 
-    if (!cart.length) {
-      throw new Error("Your cart is empty.");
-    }
+  const heading = document.createElement("h3");
+  heading.textContent = "Your seller messages";
+  results.appendChild(heading);
 
-    // Only real marketplace products can be ordered
-    const items = cart.map(item => {
-      const product = item.product || products.find(p => String(p.id) === String(item.id));
+  const explanation = document.createElement("p");
+  explanation.textContent =
+    "Choose each seller's WhatsApp button and press Send in WhatsApp. Messages are not sent automatically.";
+  results.appendChild(explanation);
 
-      if (!product || !product.dbId) {
-        throw new Error(
-          "Your cart contains a demo product. Remove it before checkout."
-        );
-      }
+  groups.forEach(group => {
+    const store = sellerStoresById[String(group.sellerId)];
+    const storeName = store?.store_name || "Seller";
+    const card = document.createElement("section");
+    card.className = "notice";
 
-      const quantity = Number(item.qty);
+    const title = document.createElement("h4");
+    title.textContent = storeName;
+    card.appendChild(title);
 
-      if (!Number.isInteger(quantity) || quantity < 1) {
-        throw new Error("One of your product quantities is invalid.");
-      }
+    const list = document.createElement("ul");
+    let total = 0;
 
-      return {
-        product_id: Number(product.dbId),
-        quantity: quantity
-      };
+    group.items.forEach(item => {
+      const subtotal = item.price * item.quantity;
+      total += subtotal;
+      const li = document.createElement("li");
+      li.textContent = item.name + " × " + item.quantity + " — " + cash(subtotal);
+      list.appendChild(li);
     });
 
-    const customerName =
-      document.getElementById("customerName").value.trim();
+    card.appendChild(list);
 
-    const customerPhone =
-      document.getElementById("customerPhone").value.trim();
+    const totalLine = document.createElement("p");
+    totalLine.textContent = "Your items total: " + cash(total);
+    card.appendChild(totalLine);
 
-    const deliveryAddress =
-      document.getElementById("deliveryAddress").value.trim();
+    let phone = String(store?.whatsapp_phone || "").replace(/\D/g, "");
+    if (phone.startsWith("0")) phone = "27" + phone.slice(1);
 
-    if (!customerName || !customerPhone || !deliveryAddress) {
-      throw new Error("Please complete all delivery details.");
-    }
+    if (store && phone.startsWith("27") && phone.length === 11) {
+      const messageText = [
+        "Hello " + storeName + " 👋",
+        "",
+        "I'm interested in buying these products from NOVAAI MARKET:",
+        "",
+        ...group.items.map(item =>
+          "• " + item.name + " × " + item.quantity +
+          "\n  Price: " + cash(item.price) + " each"
+        ),
+        "",
+        "Total: " + cash(total),
+        "",
+        "Please confirm availability and let me know how we can arrange payment and collection/delivery.",
+        "",
+        "Thank you."
+      ].join("\n");
 
-    // Create the real order in Supabase
-const { data: orderId, error: orderError } = await sb.rpc(
-  "place_order",
-  {
-    p_customer_name: customerName,
-    p_customer_phone: customerPhone,
-    p_delivery_address: deliveryAddress,
-    p_items: items,
-    p_buyer_selected_location:
-      ""
-  }
-);
-
-if (orderError) throw orderError;
-
-if (!orderId) {
-  throw new Error("Supabase did not return an order number.");
-}
-
-let confirmation = document.getElementById("orderWhatsAppConfirmation");
-    if (!confirmation) {
-      confirmation = document.createElement("section");
-      confirmation.id = "orderWhatsAppConfirmation";
-      confirmation.className = "notice";
-      form.insertAdjacentElement("afterend", confirmation);
-    }
-    confirmation.replaceChildren();
-    confirmation.innerHTML = "<h3>Order placed successfully!</h3><p>Order reference: " + esc(String(orderId)) + "</p><p>Review each seller's message before sending.</p>";
-
-    try {
-      const { data: savedItems, error: itemsError } = await sb
-        .from("order_items")
-        .select("seller_id,product_name,quantity")
-        .eq("order_id", orderId);
-
-      if (itemsError) throw itemsError;
-
-      const groups = new Map();
-      (savedItems || []).forEach(item => {
-        if (!item.seller_id) return;
-        const id = String(item.seller_id);
-        if (!groups.has(id)) groups.set(id, []);
-        groups.get(id).push(item);
-      });
-
-      if (!groups.size) {
-        confirmation.insertAdjacentHTML("beforeend",
-          "<p>Order saved. Seller contact details could not be loaded. Please check My Orders.</p>");
-      }
-
-      groups.forEach((sellerItems, sellerId) => {
-        const store = sellerStoresById[sellerId];
-        const card = document.createElement("div");
-        const title = document.createElement("h4");
-        title.textContent = store?.store_name || "Seller";
-        card.appendChild(title);
-
-        const list = document.createElement("ul");
-        sellerItems.forEach(item => {
-          const li = document.createElement("li");
-          li.textContent = item.product_name + " × " + item.quantity;
-          list.appendChild(li);
-        });
-        card.appendChild(list);
-
-        let phone = String(store?.phone || "").replace(/\D/g, "");
-        if (phone.startsWith("0")) phone = "27" + phone.slice(1);
-
-        if (phone.startsWith("27") && phone.length === 11) {
-          const messageText = [
-            "Hello " + (store?.store_name || "Seller") + ",",
-            "I placed an order on NOVAAI MARKET.",
-            "Order reference: " + orderId,
-            "Customer: " + customerName,
-            "Phone: " + customerPhone,
-            "My items from your store:",
-            ...sellerItems.map(item => "- " + item.product_name + " x " + item.quantity)
-          ].join("\n");
-
-          const link = document.createElement("a");
-          link.className = "btn primary";
-          link.textContent = "WhatsApp this seller";
-          link.href = "https://wa.me/" + phone + "?text=" + encodeURIComponent(messageText);
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          card.appendChild(link);
-        } else {
-          const note = document.createElement("p");
-          note.textContent = "WhatsApp number unavailable for this seller.";
-          card.appendChild(note);
-        }
-
-        confirmation.appendChild(card);
-      });
-    } catch (contactError) {
-      console.error("Seller WhatsApp details:", contactError);
+      const link = document.createElement("a");
+      link.className = "btn primary";
+      link.textContent = "WhatsApp " + storeName;
+      link.href = "https://wa.me/" + phone + "?text=" + encodeURIComponent(messageText);
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      card.appendChild(link);
+    } else {
       const note = document.createElement("p");
-      note.textContent = "Order saved, but seller contact details could not be loaded. Please check My Orders.";
-      confirmation.appendChild(note);
+      note.textContent = "WhatsApp contact is unavailable for this seller.";
+      card.appendChild(note);
     }
 
-    confirmation.scrollIntoView({ behavior: "smooth" });
+    results.appendChild(card);
+  });
 
-cart = [];
-saveCart();
-renderCart();
-
-form.reset();
-form.classList.add("hidden");
-
-  } catch (error) {
-    console.error("Checkout error:", error);
-    alert("Order failed: " + error.message);
-
-  } finally {
-    button.disabled = false;
-    button.textContent = "Place Order";
-  }
-});
+  results.scrollIntoView({behavior: "smooth"});
+  message("checkoutMsg", "Your messages are ready. Your cart has been kept.");
+}
 
 function toast(s){let t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2400)}
 let customerAuthMode = "signin";
@@ -2194,7 +2087,7 @@ try {
     const [productResult, storeResult] = await Promise.all([
       Promise.resolve(productQuery),
       sb.from("seller_stores")
-        .select("user_id,store_name,store_slug,description,phone,status")
+        .select("user_id,store_name,store_slug,description,phone,whatsapp_phone,status")
         .eq("status", "approved")
     ]);
 
