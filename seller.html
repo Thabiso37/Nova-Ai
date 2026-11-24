@@ -237,17 +237,7 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
         <div class="field"><label>Store / Business Name *</label><input id="sellerApplicationStoreName" maxlength="100"></div>
         <div class="field"><label>Mobile Number *</label><input id="sellerPhone" type="tel"></div>
         <div class="field"><label>Choose ONE primary marketplace *</label><select id="applicationMarketplace" required><option value="">Select marketplace</option><option value="retail">RETAIL</option><option value="motors">MOTORS</option><option value="property">PROPERTY</option></select></div>
-        <div class="field" style="text-align:center;border:1px dashed var(--p);padding:10px;border-radius:8px;">
-          <label>📸 Seller Application Photo *</label>
-          <video id="webcam" autoplay playsinline width="100%" style="max-height:140px;display:none;background:#000;border-radius:6px;"></video>
-          <canvas id="snapshotCanvas" style="display:none;"></canvas>
-          <img id="facePreview" style="max-height:120px;display:none;margin:auto;border-radius:6px;" alt="">
-          <div style="margin-top:6px;">
-            <button type="button" class="btn outline" id="startCam" style="font-size:11px;padding:6px 10px;">Turn on Camera</button>
-            <button type="button" class="btn" id="captureCam" style="font-size:11px;padding:6px 10px;display:none;">Capture Photo</button>
-          </div>
-          <div id="faceStatus" class="error" style="font-size:11px;margin-top:4px;">Seller application photo required.</div>
-        </div>
+
         </div>
         <button class="btn" type="submit" style="width:100%;margin-top:10px;">Sign In to NOVAAI</button>
         <button class="btn outline" type="button" id="signup" style="width:100%;margin-top:6px;">Apply as a New Seller</button>
@@ -606,7 +596,7 @@ function marketDetailsFromForm() {
 function getBaseDescription(value) {
   return String(value || "").split("\n\nNOVAAI DETAILS\n")[0];
 }
-let faceBlob = null, user = null, storeData = null;
+let user = null, storeData = null;
 let editingProductId = null;
 let editingProductCategory = null;
 let editingProductMarket = null;
@@ -622,28 +612,7 @@ const retailVideoInput=document.getElementById("retailProductVideoFile");if(reta
 const retailVideoRemoveButton=document.getElementById("retailVideoRemove");if(retailVideoRemoveButton)retailVideoRemoveButton.addEventListener("click",()=>{removeExistingRetailVideo=true;editingProductVideoUrl="";const input=document.getElementById("retailProductVideoFile");if(input)input.value="";const preview=document.getElementById("retailProductVideoPreview");preview.pause();preview.removeAttribute("src");preview.load();preview.hidden=true;document.getElementById("retailVideoStatus").textContent="Video will be removed when you save this Retail listing.";retailVideoRemoveButton.hidden=true;});
 
 function switchPortal() { return; }
-const video = document.getElementById("webcam"), canvas = document.getElementById("snapshotCanvas"), preview = document.getElementById("facePreview");
 
-document.getElementById("startCam").onclick = async () => {
-  try {
-    video.srcObject = await navigator.mediaDevices.getUserMedia({video:true});
-    video.style.display="block"; document.getElementById("startCam").style.display="none";
-    document.getElementById("captureCam").style.display="inline-block";
-    document.getElementById("faceStatus").textContent = "Position yourself and capture a photo.";
-  } catch(e) { document.getElementById("faceStatus").textContent = "Camera denied."; }
-};
-
-document.getElementById("captureCam").onclick = () => {
-  canvas.width = video.videoWidth || 320; canvas.height = video.videoHeight || 240;
-  canvas.getContext("2d").drawImage(video, 0, 0);
-  canvas.toBlob(b => {
-    faceBlob = b; preview.src = URL.createObjectURL(b); preview.style.display="block";
-    video.style.display="none"; document.getElementById("captureCam").style.display="none";
-    video.srcObject?.getTracks().forEach(t => t.stop());
-    document.getElementById("faceStatus").textContent = "✔ Captured!";
-    document.getElementById("faceStatus").className = "success";
-  }, "image/jpeg", 0.85);
-};
 
 function msg(id, txt, err=false) {
   const el = document.getElementById(id); el.textContent = txt; el.className = "msg " + (err?"error":"success");
@@ -923,8 +892,8 @@ document.getElementById("signup").onclick = async () => {
   }
   let email = document.getElementById("email").value.trim().toLowerCase(), password = document.getElementById("password").value;
   let full_name = document.getElementById("sellerRealName").value.trim(), phone = document.getElementById("sellerPhone").value.trim(), store_name=document.getElementById("sellerApplicationStoreName").value.trim(), primary_marketplace=document.getElementById("applicationMarketplace").value;
-  if(!email || password.length<6 || !full_name || !store_name || !phone || !["retail","motors","property"].includes(primary_marketplace) || !faceBlob) return msg("authMsg", "Complete all application fields, choose one primary marketplace and capture your seller application photo.", true);
-  
+  if(!email || password.length<6 || !full_name || !store_name || !phone || !["retail","motors","property"].includes(primary_marketplace)) return msg("authMsg", "Complete all application fields and choose one primary marketplace.", true);
+
   // Always return confirmed sellers to this GitHub Pages project path, not the account root.
   // Preserve the selected marketplace so Property applicants return to the Property portal.
   const emailRedirectTo = new URL("seller.html", "https://thabiso37.github.io/Nova-Ai/");
@@ -938,7 +907,7 @@ document.getElementById("signup").onclick = async () => {
   if(u && data.session){
     const {error:applicationError}=await sb.rpc("submit_seller_application",{p_store_name:store_name,p_phone:phone,p_marketplace:primary_marketplace});
     if(applicationError)return msg("authMsg","Your Auth account was created, but the seller application could not be saved: "+applicationError.message,true);
-    if(faceBlob)await sb.storage.from("Nova AI").upload(`${u.id}/face.jpg`,faceBlob,{contentType:"image/jpeg",upsert:true});
+
     msg("authMsg","Seller application submitted for "+marketplaceLabels[primary_marketplace]+". Await administrator approval.");
     await updateUser(u);
   } else {
@@ -990,7 +959,7 @@ document.getElementById("sellerForm").onsubmit = async e => {
         throw new Error("This listing cannot be edited in its current state.");
       }
 
-  
+
       imgs = Array.isArray(existing.images) ? existing.images : [];
 
       if (!imgs.length && existing.image_url) {
@@ -1075,9 +1044,6 @@ document.getElementById("sellerForm").onsubmit = async e => {
 
     form.reset();
     resetRetailVideoEditor();
-    preview.style.display = "none";
-    faceBlob = null;
-
     if (submitButton) {
       submitButton.textContent = "Publish Product";
     }
@@ -1272,7 +1238,7 @@ async function deleteProduct(id) {
 window.deleteProduct = deleteProduct;
 
 window.editProduct = editProduct;
- 
+
   async function resubmitProduct(id) {
 
   if (!user) return;
@@ -1463,7 +1429,7 @@ const orderLocationMap = new Map(
 
      const buyerLocation =
   orderLocationMap.get(orderId) || "Not provided";
-      
+
       const currentStatus = fulfillment
         ? String(fulfillment.fulfillment_status || "pending").toLowerCase()
         : null;
@@ -1584,7 +1550,7 @@ if (refreshOrdersBtn) {
   refreshOrdersBtn.onclick = loadSellerOrders;
 }
 
-  
+
 async function saveShippingDetails(orderId) {
 
   const targetUser = user;
