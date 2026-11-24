@@ -1358,6 +1358,7 @@ async function loadSellerOrders() {
       .select(`
         id,
         order_id,
+        seller_order_reference,
         fulfillment_status,
         item_subtotal,
         tracking_number,
@@ -1383,7 +1384,7 @@ async function loadSellerOrders() {
 
 const { data: orders, error: ordersError } = await sb
   .from("orders")
-  .select("id, buyer_selected_location")
+  .select("id, order_reference, buyer_selected_location")
   .in("id", orderIds);
 
 if (currentVersion !== authVersion || user !== targetUser) return;
@@ -1399,6 +1400,9 @@ const orderLocationMap = new Map(
     String(order.id),
     order.buyer_selected_location
   ])
+);
+const orderReferenceMap = new Map(
+  (orders || []).map(order => [String(order.id), order.order_reference])
 );
   const groupedOrders = new Map();
 
@@ -1533,7 +1537,8 @@ const orderLocationMap = new Map(
         <div style="padding:14px;margin-top:12px;background:#fff;
           border:1px solid var(--line);border-radius:8px;">
 
-          <h3>Order #${escapeHTML(orderId.slice(0, 8))}</h3>
+          <h3>${escapeHTML(orderReferenceMap.get(orderId) || "Historical order (no reference assigned)")}</h3>
+          <p><b>Seller Order Reference:</b> ${escapeHTML(fulfillment?.seller_order_reference || "No reference assigned (historical order)")}</p>
 
    <p>
      <b>Buyer's Selected Location:</b>
