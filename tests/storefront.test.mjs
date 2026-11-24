@@ -25,10 +25,11 @@ test("Ad boards hide stale fallback creative until managed campaigns or fallback
  assert.ok(ads.indexOf("document.fonts.ready")>ads.indexOf("async function loadManagedCampaigns"));
  assert.doesNotMatch(ads,/await\s+document\.fonts\.ready/);
 });
-test("Store Page selects the public phone field before rendering its WhatsApp contact",()=>{
- assert.match(js,/select\("user_id,store_name,store_slug,status,store_banner_url,store_logo_url,phone"\)/);
- assert.match(js,/select\("user_id,store_name,store_slug,status,store_banner_url,phone"\)/);
- assert.match(js,/store\.phone/);
+test("Store Page never reads private seller contact numbers and routes WhatsApp through secure listing contact",()=>{
+ assert.doesNotMatch(js,/whatsapp_phone|store\.phone|https:\/\/wa\.me\//);
+ assert.match(js,/property-contact-action\?listing_id=/);
+ assert.match(js,/action=whatsapp/);
+ assert.match(js,/select\("user_id,store_name,store_slug,status,store_banner_url,store_logo_url"\)/);
 });
 test("Home and Retail cards expose seller identity for View Store links without changing Motors or Property cards",()=>{
  for(const [name,source] of [["Home",home],["Retail",retail]]){
@@ -109,6 +110,8 @@ test("no existing commerce tables are altered",()=>{
 test("Retail product detail includes description, public seller location, store navigation and secure contact controls",()=>{
  assert.match(home,/nova-retail-detail/);assert.match(home,/Product description/);assert.match(home,/seller has not supplied a product description/i);assert.match(home,/seller_public_locations/);
  assert.match(retail,/modalCallSeller/);assert.match(retail,/modalWhatsAppSeller/);assert.match(retail,/property-contact-action/);
+ assert.doesNotMatch(retail,/store\?\.whatsapp_phone|https:\/\/wa\.me\//);
+ assert.match(retail,/group\.listingId/);
 });
 test("Retail video upload UI is separate from photo inputs and Storage proposal is seller-scoped",()=>{
  assert.match(seller,/retailProductVideoFile/);assert.match(seller,/video\/mp4,video\/webm/);assert.match(seller,/50\*1024\*1024/);assert.match(seller,/d>90/);
