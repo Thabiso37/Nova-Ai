@@ -31,7 +31,7 @@ CREATE OR REPLACE FUNCTION private.assign_novaai_order_reference()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, public, private
+SET search_path = pg_catalog
 AS $function$
 DECLARE
   v_year text;
@@ -54,7 +54,7 @@ CREATE OR REPLACE FUNCTION private.assign_novaai_seller_order_reference()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, public, private
+SET search_path = pg_catalog
 AS $function$
 DECLARE
   v_year text;
@@ -96,7 +96,7 @@ CREATE OR REPLACE FUNCTION public.get_buyer_order_whatsapp_details(p_order_id uu
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, public, auth
+SET search_path = pg_catalog
 AS $function$
 DECLARE
   v_order public.orders%ROWTYPE;
