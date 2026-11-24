@@ -1703,6 +1703,10 @@ function normalizeSouthAfricanPhone(value) {
 }
 
 function openSellerWhatsAppOrder(seller, order, items, buyer) {
+  if (!Array.isArray(items) || items.length === 0) {
+    alert("This seller's order items are unavailable. Your NOVAAI order is still saved.");
+    return;
+  }
   const phone = normalizeSouthAfricanPhone(seller?.phone);
   if (!phone) {
     alert("This seller's WhatsApp contact is unavailable. Your NOVAAI order is still saved.");
@@ -1720,7 +1724,7 @@ function openSellerWhatsAppOrder(seller, order, items, buyer) {
     "Your Seller Order Reference: " + String(seller?.seller_order_reference || "Not available"),
     "",
     "Products:",
-    productLines || "- Order items are listed in your NOVAAI Seller Portal.",
+    productLines,
     "",
     "Buyer: " + String(buyer?.name || ""),
     "Buyer Phone: " + String(buyer?.phone || ""),
