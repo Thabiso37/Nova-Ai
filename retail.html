@@ -1700,8 +1700,8 @@ async function checkout(){
 // Buyer-initiated WhatsApp contact. Message text is generated only on button tap.
 function normalizeSouthAfricanPhone(value) {
   const digits = String(value || "").replace(/\D/g, "");
-  if (/^0[1-9]\d{8}$/.test(digits)) return "27" + digits.slice(1);
-  if (/^27[1-9]\d{8}$/.test(digits)) return digits;
+  if (/^0[1-8]\d{8}$/.test(digits)) return "27" + digits.slice(1);
+  if (/^27[1-8]\d{8}$/.test(digits)) return digits;
   return null;
 }
 
