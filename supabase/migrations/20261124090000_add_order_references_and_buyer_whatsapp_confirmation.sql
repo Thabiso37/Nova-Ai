@@ -26,11 +26,10 @@ BEGIN
     END IF;
     RETURN NEW;
   END IF;
-  IF NEW.order_reference IS NULL THEN
-    v_year := pg_catalog.to_char(pg_catalog.clock_timestamp() AT TIME ZONE 'Africa/Johannesburg', 'YYYY');
+  -- Always generate the value on INSERT; callers cannot choose or spoof references.
+  v_year := pg_catalog.to_char(pg_catalog.clock_timestamp() AT TIME ZONE 'Africa/Johannesburg', 'YYYY');
     v_number := pg_catalog.nextval('public.novaai_order_reference_seq'::pg_catalog.regclass);
-    NEW.order_reference := 'NOVA-' || v_year || '-' || CASE WHEN v_number < 100000000 THEN pg_catalog.lpad(v_number::text, 8, '0') ELSE v_number::text END;
-  END IF;
+  NEW.order_reference := 'NOVA-' || v_year || '-' || CASE WHEN v_number < 100000000 THEN pg_catalog.lpad(v_number::text, 8, '0') ELSE v_number::text END;
   RETURN NEW;
 END;
 $function$;
@@ -46,11 +45,10 @@ BEGIN
     END IF;
     RETURN NEW;
   END IF;
-  IF NEW.seller_order_reference IS NULL THEN
-    v_year := pg_catalog.to_char(pg_catalog.clock_timestamp() AT TIME ZONE 'Africa/Johannesburg', 'YYYY');
+  -- Always generate the value on INSERT; callers cannot choose or spoof references.
+  v_year := pg_catalog.to_char(pg_catalog.clock_timestamp() AT TIME ZONE 'Africa/Johannesburg', 'YYYY');
     v_number := pg_catalog.nextval('public.novaai_seller_order_reference_seq'::pg_catalog.regclass);
-    NEW.seller_order_reference := 'NOVA-S-' || v_year || '-' || CASE WHEN v_number < 100000000 THEN pg_catalog.lpad(v_number::text, 8, '0') ELSE v_number::text END;
-  END IF;
+  NEW.seller_order_reference := 'NOVA-S-' || v_year || '-' || CASE WHEN v_number < 100000000 THEN pg_catalog.lpad(v_number::text, 8, '0') ELSE v_number::text END;
   RETURN NEW;
 END;
 $function$;
