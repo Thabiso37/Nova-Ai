@@ -7,10 +7,10 @@ await mkdir('artifacts',{recursive:true});
 const browser=await chromium.launch({headless:true});
 const variants=[{market:'retail',label:'Retail',tool:'My Products',denied:'motors'},{market:'motors',label:'Motors',tool:'My Vehicles',denied:'retail'},{market:'property',label:'Property',tool:'My Properties',denied:'retail'}];
 const sizes=[{width:393,height:852,label:'393x852'},{width:360,height:800,label:'360x800'},{width:1440,height:1000,label:'desktop-1440x1000'}];
-const mockSupabase=`window.__mockWrites=0;window.__locationUpserts=0;window.__lastLocationPayload=null;window.__fixtureStore=window.__persistedStore||null;window.__fixturePermissions=window.__persistedPermissions||[];window.__fixtureLocation=window.__persistedLocation||null;window.supabase={createClient:()=>({
+const mockSupabase=`window.__mockWrites=0;window.__locationUpserts=0;window.__lastLocationPayload=null;window.__fixtureStore=window.__persistedStore||null;window.__fixturePermissions=window.__persistedPermissions||[];window.__fixtureLocation=window.__persistedLocation||null;window.__locationRpcCalls=0;window.supabase={createClient:()=>({
  auth:{getSession:async()=>({data:{session:null},error:null}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),signInWithPassword:async()=>({data:{user:{id:'isolated-fixture-user',email:'preview@example.invalid',user_metadata:{full_name:'Preview Seller'}}},error:null}),signOut:async()=>({error:null}),resetPasswordForEmail:async()=>({error:null}),updateUser:async()=>({data:{user:window.__fixtureUser},error:null})},
  from:(table)=>{const q={select(){return this},eq(k,v){if(table==='seller_public_locations')window.__locationLookupFilter={column:k,value:v};return this},in(){return this},order:async()=>({data:[],error:null}),maybeSingle:async()=>window.__locationLoadError&&table==='seller_public_locations'?({data:null,error:{message:'fixture location read failure'}}):({data:table==='seller_stores'?window.__fixtureStore:table==='seller_public_locations'?(window.__fixtureLocation||null):null,error:null}),single:async()=>({data:null,error:null}),insert(){window.__mockWrites++;return this},update(){window.__mockWrites++;return this},upsert(payload){if(table==='seller_public_locations'){window.__mockWrites++;window.__locationUpserts++;window.__lastLocationPayload={...payload};const old=window.__fixtureLocation||{};const changed=['province','city','suburb','latitude','longitude','public_location_enabled'].some(k=>String(old[k]??'')!==String(payload[k]??''));window.__fixtureLocation={...old,...payload,approval_status:changed&&String(old.approval_status||'').toLowerCase()==='approved'?'pending':old.approval_status};window.__persistedLocation=window.__fixtureLocation;}return Promise.resolve({error:null})},delete(){window.__mockWrites++;return this},then(resolve){resolve({data:table==='seller_marketplace_permissions'?(window.__fixturePermissions||[]):[],error:null})}};return q},
- rpc:async()=>({data:[],error:null}),storage:{from:()=>({upload:async()=>({error:null}),getPublicUrl:()=>({data:{publicUrl:''}})})}
+ rpc:async(fn)=>{if(fn==='get_my_seller_public_location'){window.__locationRpcCalls++;return window.__locationLoadError?({data:null,error:{message:'fixture location read failure'}}):({data:window.__fixtureLocation,error:null})}return {data:[],error:null}},storage:{from:()=>({upload:async()=>({error:null}),getPublicUrl:()=>({data:{publicUrl:''}})})}
 })};`;
 const results=[];
 let testIteration=0;
@@ -23,11 +23,10 @@ try{
   page.on('console',msg=>{if(msg.type()==='error')consoleErrors.push(msg.text())});
   page.on('pageerror',e=>pageErrors.push(e.stack||e.message));
   await page.addInitScript(()=>{window.__previewRejectedPromises=[];window.addEventListener('unhandledrejection',event=>{const reason=event.reason;window.__previewRejectedPromises.push(reason?.stack||reason?.message||String(reason))});window.__persistedStore={id:'fixture-store-retail',store_name:'Preview Store',store_slug:'preview-store',status:'approved',primary_marketplace:'retail'};window.__persistedPermissions=[{marketplace:'retail',status:'approved'}];window.__persistedLocation={province:'Gauteng',city:'Pretoria',suburb:'Centurion',latitude:null,longitude:null,public_location_enabled:true,approval_status:'approved'};});await installMocks(page);await page.goto(pathToFileURL(sellerFile).href);await page.waitForFunction(()=>!!window.NOVAAISeller2080);
-  await page.locator('#sp2080OpenAuth').click();
-  if(!(await page.locator('#sp2080Account').evaluate(el=>el.classList.contains('active'))))throw new Error('Sign-in gate did not open Account view');
-  if(!(await page.locator('#authForm').isVisible()))throw new Error('Authentication form not visible from Account');
-  // Follow the normal seller entry path: select one marketplace before submitting the existing sign-in form.
+  // Follow the real unauthenticated seller entry path first. Selecting a marketplace opens the existing sign-in panel and makes the 2080 Account view visible.
   await page.evaluate(market=>window.chooseMarketplace(market),variant.market);
+  if(!(await page.locator('#sp2080Account').evaluate(el=>el.classList.contains('active'))))throw new Error('Marketplace selection did not open the Account view');
+  if(!(await page.locator('#authForm').isVisible()))throw new Error('Authentication form not visible after marketplace selection');
   await page.locator('#email').fill('preview@example.invalid');await page.locator('#password').fill('fixture-password');
   await page.evaluate(market=>{window.__fixtureStore={id:'fixture-store-'+market,store_name:'Preview Store',store_slug:'preview-store',status:'approved',primary_marketplace:market};window.__persistedStore=window.__fixtureStore;window.__fixturePermissions=[{marketplace:market,status:'approved'}];window.__persistedPermissions=window.__fixturePermissions;window.__fixtureLocation={province:'Gauteng',city:'Pretoria',suburb:'Centurion',latitude:null,longitude:null,public_location_enabled:true,approval_status:'approved'};window.__persistedLocation=window.__fixtureLocation},variant.market);
   await page.locator('#authForm button[type="submit"]').click();
@@ -49,7 +48,7 @@ try{
   if(!(await page.locator('#sp2080Store').evaluate(el=>el.classList.contains('active')))||!(await page.locator('#sellerPublicLocationPanel').isVisible()))throw new Error('My Store/Public Location workflow not visible');
   await page.waitForFunction(()=>document.getElementById('sellerLocProvince')?.value==='Gauteng'&&document.getElementById('sellerLocCity')?.value==='Pretoria'&&document.getElementById('sellerLocSuburb')?.value==='Centurion');
   if(!(await page.locator('#sellerLocPublic').isChecked()))throw new Error('Saved public-location consent was not restored');
-  if(await page.evaluate(()=>window.__locationLookupFilter?.column)!=='user_id'||await page.evaluate(()=>window.__locationLookupFilter?.value)!=='isolated-fixture-user')throw new Error('Public location query was not scoped to the authenticated seller');
+  if(await page.evaluate(()=>window.__locationRpcCalls)<1)throw new Error('Seller public location was not loaded through the authenticated get_my_seller_public_location RPC');
   const approvedLocationStatus=await page.locator('#sellerLocStatus').innerText();
   if(!approvedLocationStatus.includes('Approved location area')||!approvedLocationStatus.includes('GPS pin unavailable')||approvedLocationStatus.includes('visible in Nearby Search'))throw new Error('Approved location status is inaccurate when coordinates are absent: '+approvedLocationStatus);
   await page.evaluate(()=>window.loadSellerPublicLocation());
@@ -61,7 +60,8 @@ try{
   if(!(await page.locator('#sellerLocStatus').innerText()).includes('No changes were needed'))throw new Error('Unchanged approved save did not report that no update was necessary');
   if(size.label==='393x852'&&variant.market==='retail'){
    await page.reload();await page.waitForFunction(()=>!!window.NOVAAISeller2080);
-   await page.locator('#sp2080OpenAuth').click();await page.evaluate(()=>window.chooseMarketplace('retail'));
+   await page.evaluate(()=>window.chooseMarketplace('retail'));
+   if(!(await page.locator('#authForm').isVisible()))throw new Error('Authentication form not visible after marketplace selection on reload');
    await page.locator('#email').fill('preview@example.invalid');await page.locator('#password').fill('fixture-password');await page.locator('#authForm button[type="submit"]').click();
    await page.waitForFunction(()=>document.getElementById('sp2080Approval')?.textContent.includes('APPROVED'));
    await page.locator('[data-spview="store"]:visible').first().click();

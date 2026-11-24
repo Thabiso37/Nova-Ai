@@ -1248,6 +1248,11 @@ html.nova-ads-pending [data-nova-ad-slot] * {
       <button class="btn primary" id="placeOrderBtn" type="submit">Place order</button>
     </form>
 
+    <section id="orderConfirmation" class="panel hidden" aria-live="polite" style="margin-top:16px;">
+      <h3>Order placed successfully</h3>
+      <div id="orderConfirmationContent"></div>
+    </section>
+
   </div>
 </div>
 <dialog id="customerOrdersModal"
@@ -1690,6 +1695,103 @@ async function checkout(){
   form.scrollIntoView({ behavior: "smooth" });
 }
 
+function normalizeSouthAfricanPhone(value) {
+  let digits = String(value || "").replace(/\D/g, "");
+  if (digits.startsWith("0027")) digits = digits.slice(2);
+  if (digits.startsWith("0") && digits.length === 10) digits = "27" + digits.slice(1);
+  return digits.startsWith("27") && digits.length === 11 && /^27[1-9]\d{8}$/.test(digits) ? digits : "";
+}
+
+function openSellerWhatsAppOrder(seller, order, items, buyer) {
+  if (!Array.isArray(items) || items.length === 0) {
+    alert("This seller's order items are unavailable. Your NOVAAI order is still saved.");
+    return;
+  }
+  const phone = normalizeSouthAfricanPhone(seller?.phone);
+  if (!phone) {
+    alert("This seller's WhatsApp contact is unavailable. Your NOVAAI order is still saved.");
+    return;
+  }
+  const productLines = (Array.isArray(items) ? items : []).map(item =>
+    "- " + String(item.product_name || "Item") + " x " + Number(item.quantity || 0)
+  ).join("\n");
+  const messageText = [
+    "Hello " + String(seller?.store_name || "Seller") + ",",
+    "",
+    "I placed an order through NOVAAI MARKET.",
+    "",
+    "Main Order Reference: " + String(order?.order_reference || "Not available"),
+    "Your Seller Order Reference: " + String(seller?.seller_order_reference || "Not available"),
+    "",
+    "Products:",
+    productLines,
+    "",
+    "Buyer: " + String(buyer?.name || ""),
+    "Buyer Phone: " + String(buyer?.phone || ""),
+    "",
+    "Please confirm product availability and contact me to arrange direct payment and collection or delivery.",
+    "",
+    "Thank you."
+  ].join("\n");
+  const url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(messageText);
+  try {
+    const popup = window.open(url, "_blank");
+    if (popup) popup.opener = null;
+    else window.location.assign(url);
+  } catch (error) {
+    window.location.assign(url);
+  }
+}
+window.openSellerWhatsAppOrder = openSellerWhatsAppOrder;
+
+function renderOrderConfirmation(orderId, rows, buyer, confirmationError) {
+  const panel = document.getElementById("orderConfirmation");
+  const content = document.getElementById("orderConfirmationContent");
+  if (!panel || !content) return;
+  const groups = Array.isArray(rows) ? rows : [];
+  const mainReference = groups.find(row => row.order_reference)?.order_reference || "";
+  const safeBuyer = { name: buyer.name, phone: buyer.phone };
+  let html = mainReference
+    ? '<p><b>Main Order Reference:</b> ' + esc(mainReference) + '</p>'
+    : '<p><b>Order saved.</b> Readable reference unavailable. Database order ID: ' + esc(orderId) + '</p>';
+  if (confirmationError) {
+    html += '<p class="notice">Your order has been saved. Seller WhatsApp details could not be loaded. Do not place the order again. Apply the database migration before using seller-specific WhatsApp buttons.</p>';
+  } else if (!groups.length) {
+    html += '<p class="notice">Your order is saved, but no seller fulfilment details were returned. Do not place the order again.</p>';
+  } else {
+    html += '<p class="muted">Each button opens a separate message for that seller only. Review and manually send it in WhatsApp. NOVAAI does not send or track messages.</p>';
+    html += groups.map((group, index) => {
+      const sellerData = {
+        store_name: group.store_name || "Seller",
+        phone: group.seller_phone || "",
+        seller_order_reference: group.seller_order_reference || ""
+      };
+      const sellerItems = Array.isArray(group.items) ? group.items : [];
+      const productHtml = sellerItems.map(item =>
+        '<li>' + esc(item.product_name || "Item") + ' × ' + Number(item.quantity || 0) + '</li>'
+      ).join("");
+      return '<article class="panel" style="margin:12px 0;padding:14px;">' +
+        '<h4>' + esc(sellerData.store_name) + '</h4>' +
+        '<p><b>Seller Order Reference:</b> ' + esc(sellerData.seller_order_reference || "Not available") + '</p>' +
+        '<p><b>Products in this seller order:</b></p><ul>' + (productHtml || '<li>Items unavailable</li>') + '</ul>' +
+        '<button type="button" class="btn primary" data-whatsapp-seller="' + index + '">Open WhatsApp for ' + esc(sellerData.store_name) + '</button>' +
+        '</article>';
+    }).join("");
+  }
+  content.innerHTML = html;
+  panel.classList.remove("hidden");
+  groups.forEach((group, index) => {
+    const button = content.querySelector('[data-whatsapp-seller="' + index + '"]');
+    if (!button) return;
+    button.addEventListener("click", () => openSellerWhatsAppOrder(
+      { store_name: group.store_name || "Seller", phone: group.seller_phone || "", seller_order_reference: group.seller_order_reference || "" },
+      { order_reference: mainReference },
+      Array.isArray(group.items) ? group.items : [],
+      safeBuyer
+    ));
+  });
+}
+
 document.getElementById("checkoutForm").addEventListener("submit", async e => {
   e.preventDefault();
 
@@ -1746,39 +1848,39 @@ document.getElementById("checkoutForm").addEventListener("submit", async e => {
       throw new Error("Please complete all delivery details.");
     }
 
-    // Create the real order in Supabase
-const { data: orderId, error: orderError } = await sb.rpc(
-  "place_order",
-  {
-    p_customer_name: customerName,
-    p_customer_phone: customerPhone,
-    p_delivery_address: deliveryAddress,
-    p_items: items,
-    p_buyer_selected_location:
-      ""
-  }
-);
+    // Create the order using the existing multi-seller checkout RPC.
+    const { data: orderId, error: orderError } = await sb.rpc("place_order", {
+      p_customer_name: customerName,
+      p_customer_phone: customerPhone,
+      p_delivery_address: deliveryAddress,
+      p_items: items,
+      p_buyer_selected_location: ""
+    });
+    if (orderError) throw orderError;
+    if (!orderId) throw new Error("Supabase did not return an order ID.");
 
-if (orderError) throw orderError;
-
-if (!orderId) {
-  throw new Error("Supabase did not return an order number.");
-}
-
-alert(
-  "Order placed successfully!\n\nOrder reference: " + orderId
-);
-
-cart = [];
-saveCart();
-renderCart();
-
-form.reset();
-form.classList.add("hidden");
+    // Checkout has succeeded. A confirmation lookup failure must not cause a retry.
+    let confirmationRows = [];
+    let confirmationError = null;
+    try {
+      const result = await sb.rpc("get_my_order_whatsapp_confirmation", { p_order_id: orderId });
+      confirmationRows = result.data || [];
+      confirmationError = result.error || null;
+    } catch (readError) {
+      confirmationError = readError;
+    }
+    renderOrderConfirmation(orderId, confirmationRows, { name: customerName, phone: customerPhone }, confirmationError);
+    message("checkoutMsg", "Your order is saved. Choose a seller below to open that seller's WhatsApp message; you must send each message yourself.");
+    cart = [];
+    saveCart();
+    renderCart();
+    form.reset();
+    form.classList.add("hidden");
+    document.getElementById("orderConfirmation").scrollIntoView({ behavior: "smooth", block: "start" });
 
   } catch (error) {
     console.error("Checkout error:", error);
-    alert("Order failed: " + error.message);
+    message("checkoutMsg", "Order failed: " + (error.message || "Please try again."), true);
 
   } finally {
     button.disabled = false;
