@@ -23,11 +23,10 @@ try{
   page.on('console',msg=>{if(msg.type()==='error')consoleErrors.push(msg.text())});
   page.on('pageerror',e=>pageErrors.push(e.stack||e.message));
   await page.addInitScript(()=>{window.__previewRejectedPromises=[];window.addEventListener('unhandledrejection',event=>{const reason=event.reason;window.__previewRejectedPromises.push(reason?.stack||reason?.message||String(reason))});window.__persistedStore={id:'fixture-store-retail',store_name:'Preview Store',store_slug:'preview-store',status:'approved',primary_marketplace:'retail'};window.__persistedPermissions=[{marketplace:'retail',status:'approved'}];window.__persistedLocation={province:'Gauteng',city:'Pretoria',suburb:'Centurion',latitude:null,longitude:null,public_location_enabled:true,approval_status:'approved'};});await installMocks(page);await page.goto(pathToFileURL(sellerFile).href);await page.waitForFunction(()=>!!window.NOVAAISeller2080);
-  await page.locator('#sp2080OpenAuth').click();
-  if(!(await page.locator('#sp2080Account').evaluate(el=>el.classList.contains('active'))))throw new Error('Sign-in gate did not open Account view');
-  if(!(await page.locator('#authForm').isVisible()))throw new Error('Authentication form not visible from Account');
-  // Follow the normal seller entry path: select one marketplace before submitting the existing sign-in form.
+  // Follow the real unauthenticated seller entry path first. Selecting a marketplace opens the existing sign-in panel and makes the 2080 Account view visible.
   await page.evaluate(market=>window.chooseMarketplace(market),variant.market);
+  if(!(await page.locator('#sp2080Account').evaluate(el=>el.classList.contains('active'))))throw new Error('Marketplace selection did not open the Account view');
+  if(!(await page.locator('#authForm').isVisible()))throw new Error('Authentication form not visible after marketplace selection');
   await page.locator('#email').fill('preview@example.invalid');await page.locator('#password').fill('fixture-password');
   await page.evaluate(market=>{window.__fixtureStore={id:'fixture-store-'+market,store_name:'Preview Store',store_slug:'preview-store',status:'approved',primary_marketplace:market};window.__persistedStore=window.__fixtureStore;window.__fixturePermissions=[{marketplace:market,status:'approved'}];window.__persistedPermissions=window.__fixturePermissions;window.__fixtureLocation={province:'Gauteng',city:'Pretoria',suburb:'Centurion',latitude:null,longitude:null,public_location_enabled:true,approval_status:'approved'};window.__persistedLocation=window.__fixtureLocation},variant.market);
   await page.locator('#authForm button[type="submit"]').click();
@@ -61,7 +60,8 @@ try{
   if(!(await page.locator('#sellerLocStatus').innerText()).includes('No changes were needed'))throw new Error('Unchanged approved save did not report that no update was necessary');
   if(size.label==='393x852'&&variant.market==='retail'){
    await page.reload();await page.waitForFunction(()=>!!window.NOVAAISeller2080);
-   await page.locator('#sp2080OpenAuth').click();await page.evaluate(()=>window.chooseMarketplace('retail'));
+   await page.evaluate(()=>window.chooseMarketplace('retail'));
+   if(!(await page.locator('#authForm').isVisible()))throw new Error('Authentication form not visible after marketplace selection on reload');
    await page.locator('#email').fill('preview@example.invalid');await page.locator('#password').fill('fixture-password');await page.locator('#authForm button[type="submit"]').click();
    await page.waitForFunction(()=>document.getElementById('sp2080Approval')?.textContent.includes('APPROVED'));
    await page.locator('[data-spview="store"]:visible').first().click();
