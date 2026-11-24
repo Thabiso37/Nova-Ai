@@ -1673,9 +1673,12 @@ async function checkout(){
     const sellerId = String(product.sellerId || item.sellerId || "");
     const key = sellerId || "unknown";
 
-    if (!groups.has(key)) groups.set(key, {sellerId, items: []});
+    if (!groups.has(key)) groups.set(key, {sellerId, items: [], listingId: ""});
 
-    groups.get(key).items.push({
+    const group = groups.get(key);
+    const candidateListingId = String(product.dbId || item.dbId || String(item.id || "").replace(/^db-/, ""));
+    if (!group.listingId && /^\d{1,18}$/.test(candidateListingId)) group.listingId = candidateListingId;
+    group.items.push({
       name: product.name || "Product",
       price: Number(product.price) || 0,
       quantity: Number(item.qty) || 1
@@ -1718,37 +1721,20 @@ async function checkout(){
     totalLine.textContent = "Your items total: " + cash(total);
     card.appendChild(totalLine);
 
-    let phone = String(store?.whatsapp_phone || "").replace(/\D/g, "");
-    if (phone.startsWith("0")) phone = "27" + phone.slice(1);
-
-    if (store && phone.startsWith("27") && phone.length === 11) {
-      const messageText = [
-        "Hello " + storeName + " 👋",
-        "",
-        "I'm interested in buying these products from NOVAAI MARKET:",
-        "",
-        ...group.items.map(item =>
-          "• " + item.name + " × " + item.quantity +
-          "\n  Price: " + cash(item.price) + " each"
-        ),
-        "",
-        "Total: " + cash(total),
-        "",
-        "Please confirm availability and let me know how we can arrange payment and collection/delivery.",
-        "",
-        "Thank you."
-      ].join("\n");
-
+    if (store && group.listingId) {
       const link = document.createElement("a");
       link.className = "btn primary";
       link.textContent = "WhatsApp " + storeName;
-      link.href = "https://wa.me/" + phone + "?text=" + encodeURIComponent(messageText);
+      const contactUrl = new URL("https://nxplffvklkopwfjaqexo.supabase.co/functions/v1/property-contact-action");
+      contactUrl.searchParams.set("listing_id", group.listingId);
+      contactUrl.searchParams.set("action", "whatsapp");
+      link.href = contactUrl.toString();
       link.target = "_blank";
       link.rel = "noopener noreferrer";
       card.appendChild(link);
     } else {
       const note = document.createElement("p");
-      note.textContent = "WhatsApp contact is unavailable for this seller.";
+      note.textContent = "WhatsApp contact is unavailable because this seller has no approved listing in your cart.";
       card.appendChild(note);
     }
 
@@ -2087,7 +2073,7 @@ try {
     const [productResult, storeResult] = await Promise.all([
       Promise.resolve(productQuery),
       sb.from("seller_stores")
-        .select("user_id,store_name,store_slug,description,phone,whatsapp_phone,status")
+        .select("user_id,store_name,store_slug,description,status")
         .eq("status", "approved")
     ]);
 
