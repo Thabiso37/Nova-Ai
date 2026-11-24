@@ -6,7 +6,7 @@ import {createServer} from "node:http";
 import {chromium} from "playwright";
 
 const retailProduct={id:40,name:"Test Black T-Shirt",category:"Office & Stationery",price:200,seller_name:"Nova Test Store",seller_id:"seller-1",status:"approved",description:"T shirt",image_url:"",images:[]};
-const retailStore={user_id:"seller-1",store_name:"Raider Retail",store_slug:"raider-retail",description:"",phone:"012 555 0101",status:"approved"};
+const retailStore={user_id:"seller-1",store_name:"Raider Retail",store_slug:"raider-retail",description:"",status:"approved"};
 const retailLocation={user_id:"seller-1",province:"Gauteng",city:"Pretoria",suburb:"Centurion",public_location_enabled:true,approval_status:"approved"};
 function retailMockScript(description=retailProduct.description){const product={...retailProduct,description};return `(()=>{const tables={Products:[${JSON.stringify(product)}],seller_stores:[${JSON.stringify(retailStore)}],seller_public_locations:[${JSON.stringify(retailLocation)}]};class Q{constructor(t){this.t=t;this.filters=[];}select(){return this;}eq(k,v){this.filters.push(x=>String(x[k])===String(v));return this;}in(k,vs){this.filters.push(x=>(vs||[]).map(String).includes(String(x[k])));return this;}order(){return this;}rows(){return (tables[this.t]||[]).filter(x=>this.filters.every(f=>f(x)));}maybeSingle(){return Promise.resolve({data:this.rows()[0]||null,error:null});}then(resolve,reject){return Promise.resolve({data:this.rows(),error:null}).then(resolve,reject);}}const client={from:t=>new Q(t),rpc:async()=>({data:null,error:{message:"RPC disabled in browser fixture"}}),auth:{getSession:async()=>({data:{session:null},error:null}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),getUser:async()=>({data:{user:null},error:null}),signOut:async()=>({error:null})},storage:{from:()=>({getPublicUrl:()=>({data:{publicUrl:""}}),upload:async()=>({error:{message:"Storage disabled"}}),remove:async()=>({error:{message:"Storage disabled"}})})}};window.supabase={createClient:()=>client};window.NOVAAI_SUPABASE_CLIENT=client;})();`;}
 const server=createServer((req,res)=>{
@@ -80,7 +80,7 @@ test("Store Page renders approved identity, public phone, product details and ac
  try{
   const page=await openPage(browser,"customer-1",{width:393,height:852});
   assert.equal(await page.locator("h1").textContent(),"Raider Retail");
-  assert.equal(await page.locator(".nova-store-public-whatsapp").getAttribute("href"),"https://wa.me/27125550101");
+  assert.match(await page.locator(".nova-store-public-whatsapp").getAttribute("href"),/functions\/v1\/property-contact-action\?listing_id=101&action=whatsapp/);
   assert.equal(await page.locator(".nova-store-public-whatsapp").getAttribute("aria-label"),"Contact this store on WhatsApp");
   assert.equal(await page.locator("#storeLikeCount").textContent(),"1");
   assert.equal(await page.locator("#storeFollowerCount").textContent(),"2");
