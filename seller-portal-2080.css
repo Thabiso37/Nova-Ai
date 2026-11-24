@@ -157,3 +157,82 @@ body.sp2080 .sp2080-tiles>.sp2080-tile[data-spview="analytics"] .sp-arrow{
  body.sp2080 .sp2080-tiles>.sp2080-tile[data-spview="store"] small,
  body.sp2080 .sp2080-tiles>.sp2080-tile[data-spview="analytics"] small{font-size:10px}
 }
+
+
+/* Business Tools dashboard cards — larger, uniform two-column layout.
+   Scoped to the generated dashboard tools container only. */
+body.sp2080 #sp2080Tiles.sp2080-tiles{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  align-items:stretch;
+  gap:18px;
+}
+body.sp2080 #sp2080Tiles.sp2080-tiles>.sp2080-tile{
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+  min-height:168px;
+  height:100%;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  border-radius:16px;
+}
+body.sp2080 #sp2080Tiles.sp2080-tiles>.sp2080-tile>span:nth-child(2){
+  display:block;
+  width:100%;
+  min-width:0;
+}
+body.sp2080 #sp2080Tiles.sp2080-tiles>.sp2080-tile .sp2080-tileico{
+  width:54px;
+  height:54px;
+  flex:0 0 54px;
+  border-radius:14px;
+  font-size:27px;
+}
+body.sp2080 #sp2080Tiles.sp2080-tiles>.sp2080-tile b{
+  font-size:15px;
+  line-height:1.4;
+}
+body.sp2080 #sp2080Tiles.sp2080-tiles>.sp2080-tile small{
+  font-size:11px;
+  line-height:1.5;
+}
+body.sp2080 #sp2080Tiles.sp2080-tiles>.sp2080-tile .sp-arrow{
+  align-self:flex-end;
+  margin-top:auto;
+  font-size:23px;
+}
+@media(max-width:760px){
+  body.sp2080 #sp2080Tiles.sp2080-tiles{gap:12px}
+  body.sp2080 #sp2080Tiles.sp2080-tiles>.sp2080-tile{
+    min-height:154px;
+    padding:15px;
+    gap:10px;
+  }
+  body.sp2080 #sp2080Tiles.sp2080-tiles>.sp2080-tile .sp2080-tileico{
+    width:46px;
+    height:46px;
+    flex-basis:46px;
+    font-size:23px;
+  }
+  body.sp2080 #sp2080Tiles.sp2080-tiles>.sp2080-tile b{font-size:13px}
+}
+@media(max-width:370px){
+  body.sp2080 #sp2080Tiles.sp2080-tiles{gap:9px}
+  body.sp2080 #sp2080Tiles.sp2080-tiles>.sp2080-tile{
+    min-height:142px;
+    padding:11px;
+    gap:8px;
+  }
+  body.sp2080 #sp2080Tiles.sp2080-tiles>.sp2080-tile .sp2080-tileico{
+    width:40px;
+    height:40px;
+    flex-basis:40px;
+    font-size:21px;
+  }
+  body.sp2080 #sp2080Tiles.sp2080-tiles>.sp2080-tile b{font-size:12px}
+  body.sp2080 #sp2080Tiles.sp2080-tiles>.sp2080-tile small{font-size:10px}
+}
