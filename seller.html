@@ -662,15 +662,17 @@ storeData = null;
 if (!u) marketplacePermissions = [];
 
 if (u) {
-  // Keep the portal visible while the existing session and seller assignment are checked.
-  // A failed or slow Supabase request must never leave both main page sections hidden.
-  const visibleMarket = selectedMarket || "retail";
-  selectedMarket = visibleMarket;
-  setListingMarket(visibleMarket);
-  document.getElementById("selectedMarketLabel").textContent = marketplaceLabels[visibleMarket];
-  document.getElementById("marketplacePicker").classList.add("hidden");
-  document.getElementById("sellerWorkspace").classList.remove("hidden");
-  document.getElementById("userMsg").textContent = "Checking your seller account…";
+  // Keep marketplace selection visible until the seller assignment is confirmed.
+    if (selectedMarket) {
+        setListingMarket(selectedMarket);
+        document.getElementById("selectedMarketLabel").textContent = marketplaceLabels[selectedMarket];
+        document.getElementById("marketplacePicker").classList.add("hidden");
+        document.getElementById("sellerWorkspace").classList.remove("hidden");
+    } else {
+        document.getElementById("marketplacePicker").classList.remove("hidden");
+        document.getElementById("sellerWorkspace").classList.add("hidden");
+    }
+    document.getElementById("userMsg").textContent = "Checking your seller account…";
 } else if (selectedMarket) {
   setListingMarket(selectedMarket);
   document.getElementById("selectedMarketLabel").textContent = marketplaceLabels[selectedMarket];
@@ -768,7 +770,12 @@ if (!storeData && u.user_metadata?.seller_store_name && u.user_metadata?.seller_
 }
 
 if (!storeData) {
-  document.getElementById("sellerWorkspace").classList.remove("hidden");
+  selectedMarket = null;
+    document.getElementById("sellerWorkspace").classList.add("hidden");
+    document.getElementById("marketplacePicker").classList.remove("hidden");
+    const params = new URLSearchParams(window.location.search);
+    params.delete("market");
+    history.replaceState(null, "", window.location.pathname + (params.toString() ? "?" + params.toString() : ""));
   document.getElementById("portalStd").classList.remove("is-authenticated");
   marketplacePermissions = [];
   renderMarketplaceChoices();
