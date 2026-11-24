@@ -1362,7 +1362,8 @@ async function loadSellerOrders() {
         item_subtotal,
         tracking_number,
         courier_name,
-        delivery_date
+        delivery_date,
+        seller_order_reference
       `)
       .eq("seller_id", targetUser.id)
       .in("order_id", orderIds);
@@ -1383,7 +1384,7 @@ async function loadSellerOrders() {
 
 const { data: orders, error: ordersError } = await sb
   .from("orders")
-  .select("id, buyer_selected_location")
+  .select("id, buyer_selected_location, order_reference")
   .in("id", orderIds);
 
 if (currentVersion !== authVersion || user !== targetUser) return;
@@ -1397,7 +1398,7 @@ if (ordersError) {
 const orderLocationMap = new Map(
   (orders || []).map(order => [
     String(order.id),
-    order.buyer_selected_location
+    { location: order.buyer_selected_location, reference: order.order_reference }
   ])
 );
   const groupedOrders = new Map();
@@ -1435,7 +1436,10 @@ const orderLocationMap = new Map(
       const fulfillment = fulfillmentMap.get(orderId);
 
      const buyerLocation =
-  orderLocationMap.get(orderId) || "Not provided";
+  (orderLocationMap.get(orderId)?.location) || "Not provided";
+
+      const orderReference = orderLocationMap.get(orderId)?.reference || null;
+      const sellerOrderReference = fulfillment?.seller_order_reference || null;
 
       const currentStatus = fulfillment
         ? String(fulfillment.fulfillment_status || "pending").toLowerCase()
@@ -1533,7 +1537,8 @@ const orderLocationMap = new Map(
         <div style="padding:14px;margin-top:12px;background:#fff;
           border:1px solid var(--line);border-radius:8px;">
 
-          <h3>Order #${escapeHTML(orderId.slice(0, 8))}</h3>
+          <h3>Order ${escapeHTML(orderReference || ("#" + orderId.slice(0, 8)))}</h3>
+          ${sellerOrderReference ? `<p><b>Your Seller Order Reference:</b> ${escapeHTML(sellerOrderReference)}</p>` : ""}
 
    <p>
      <b>Buyer's Selected Location:</b>
