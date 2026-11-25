@@ -840,6 +840,34 @@ body:not(.product-view-active) .home-category-tile:hover .home-category-image{tr
 .footer-policies .policy-draft-label{color:#a9c4e5;font-size:10px;font-weight:700}.footer-policies p{margin:0;color:#91aacb;font-size:10px;line-height:1.5}
 @media(max-width:480px){.footer-policies{margin-top:15px;padding-top:13px}.footer-policies a{max-width:290px}}
 </style>
+
+<!-- Home layout stability patch: reduce mobile compositing cost and lock carousel height. -->
+<style>
+@media (max-width: 760px) {
+  body:not(.product-view-active) header,
+  body:not(.product-view-active) .nova-bottom-nav,
+  body:not(.product-view-active) .home-product-info,
+  body:not(.product-view-active) .home-trust-label,
+  body:not(.product-view-active) .home-nearby-action {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  body:not(.product-view-active) header { box-shadow: 0 3px 10px rgba(0,0,0,.12) !important; }
+  body:not(.product-view-active) .nova-bottom-nav { box-shadow: 0 -3px 12px rgba(0,0,0,.16) !important; }
+  body:not(.product-view-active) .nova-hero-carousel {
+    height: clamp(207px, 56vw, 265px) !important;
+    min-height: 0 !important;
+  }
+  body:not(.product-view-active) .nova-hero-slide {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body:not(.product-view-active) .nova-hero-carousel,
+  body:not(.product-view-active) .home-carousel { scroll-behavior: auto !important; }
+}
+</style>
 </head>
 <body>
 <div class="top">MADE FOR SOUTH AFRICA <span aria-hidden="true">·</span> SHOP SMART <span aria-hidden="true">·</span> SUPPORT INDEPENDENT SELLERS</div>
