@@ -60,23 +60,7 @@ footer{background:var(--navy);color:#dbe5f2;text-align:center;padding:23px 16px;
 @media(max-width:760px){.head{padding:12px 13px;gap:7px}.tag{display:none}.head-actions{gap:6px}.home-signin-link,.cart-link{min-height:37px;padding:8px 10px;font-size:11px}.home-search-wrap{padding:11px 13px 7px}.home-search input{padding:10px 8px;font-size:12px}.home-search button[type=submit]{flex-basis:39px}.home-search .home-location-button{padding:0 9px;font-size:10px}main{padding:0 13px 28px}.nova-hero-carousel{margin:10px auto 17px;padding-bottom:32px}.nova-hero-slide{grid-template-columns:40% minmax(0,1fr);min-height:175px;height:clamp(175px,48vw,215px)}.nova-hero-copy{grid-column:2;padding:11px}.nova-hero-art{grid-column:1}.nova-hero-kicker{font-size:8px;letter-spacing:.7px}.nova-hero-copy h1{font-size:clamp(16px,4.5vw,22px)}.nova-hero-copy p{font-size:10px;line-height:1.35;margin-bottom:8px}.nova-hero-copy>a{padding:7px 8px;font-size:9px}.hero-art-card{width:82%;min-height:72px;padding:8px;font-size:14px}.hero-art-card small{font-size:6px}.hero-art-circle{width:130px;height:130px}.home-featured{margin:20px 0 25px}.home-category-section{margin-bottom:25px}.home-carousel{gap:10px;padding-bottom:10px}.home-product-card{flex-basis:clamp(148px,42vw,174px)}.home-product-info{padding:10px}.home-product-info h3{font-size:12px;min-height:34px}.home-product-price{font-size:16px}.home-add-cart{flex-basis:34px;width:34px;height:34px;min-height:34px}.home-seller-banner{align-items:flex-start;flex-direction:column;gap:13px;margin:27px 0 23px}.home-seller-banner a{width:100%}.home-detail-layout{grid-template-columns:1fr;padding:14px;gap:12px}.home-detail-image{height:290px}.home-detail-back{margin:15px 14px 0}}
 @media(max-width:360px){.logo{font-size:17px}.home-signin-link{padding:7px 8px}.cart-link{gap:4px;padding:7px 8px}.home-search input{font-size:11px;padding-left:7px}.home-search .home-location-button{padding:0 6px;font-size:9px}.home-product-card{flex-basis:145px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
-/* Keep outdated fallback creative out of view until the campaign feed has
-   either applied the current campaigns or confirmed that fallback is needed. */
-html.nova-ads-pending [data-nova-ad-slot]{
-  position:relative!important;visibility:visible!important;
-  background:linear-gradient(115deg,#10284b,#174ea6 55%,#10284b)!important;
-}
-html.nova-ads-pending [data-nova-ad-slot] *{visibility:hidden!important}
-html.nova-ads-pending [data-nova-ad-slot]::after{
-  content:"Loading advertisements…";position:absolute;inset:0;z-index:99;
-  display:flex;align-items:center;justify-content:center;padding:12px;
-  color:#fff;font:700 12px/1.4 system-ui,sans-serif;letter-spacing:.2px;
-  text-align:center;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.12) 50%,transparent 65%);
-  background-size:220% 100%;animation:novaAdPendingShimmer 1.6s linear infinite;
-  pointer-events:none;
-}
-@keyframes novaAdPendingShimmer{to{background-position:-220% 0}}
-@media(prefers-reduced-motion:reduce){html.nova-ads-pending [data-nova-ad-slot]::after{animation:none}}
+/* Keep fallback advertisements visible while managed campaigns load. */
 
 /* =========================================================
    NOVAAI 2080 HOME VISUAL LAYER

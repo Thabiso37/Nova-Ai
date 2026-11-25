@@ -125,16 +125,15 @@
   function setCampaignMedia(imageNode,slot,campaign,id,mediaUrl){
     const isVideo=campaign.creative_type==='video';
     let host=imageNode||slot;
-    // Use the existing photo frame for property; keep all other board media
-    // hosts in their original layout/position rather than converting them
-    // into normal-flow elements.
     if(imageNode&&imageNode.tagName==='IMG')host=imageNode.parentElement||slot;
     if(!host)return;
+
     if(!host.__novaAdMediaFallback)host.__novaAdMediaFallback={
       style:host.getAttribute('style'),
       ariaHidden:host.getAttribute('aria-hidden'),
       hadClass:host.classList.contains('nova-ad-media-host')
     };
+
     host.classList.add('nova-ad-media-host');
     const hostCss=getComputedStyle(host);
     if(hostCss.position==='static')host.style.position='relative';
@@ -142,50 +141,85 @@
     if(host.hasAttribute('aria-hidden'))host.setAttribute('aria-hidden','false');
     if(imageNode&&imageNode.tagName==='IMG')imageNode.style.display='none';
 
-    let image=host.querySelector(':scope > img[data-nova-ad-image]');
-    let video=host.querySelector(':scope > video[data-nova-ad-video]');
+    const oldMedia=Array.from(host.querySelectorAll(
+      ':scope > img[data-nova-ad-image],:scope > video[data-nova-ad-video]'
+    ));
+
+    const media=document.createElement(isVideo?'video':'img');
+
     if(isVideo){
-      if(image)image.style.display='none';
-      if(!video){
-        video=document.createElement('video');
-        video.setAttribute('data-nova-ad-video','1');
-        video.setAttribute('aria-label',String(campaign.title||'NOVAAI video advertisement').slice(0,120));
-        video.muted=true;video.defaultMuted=true;video.autoplay=true;video.loop=true;video.playsInline=true;
-        video.setAttribute('autoplay','');video.setAttribute('muted','');video.setAttribute('loop','');video.setAttribute('playsinline','');
-        video.preload='metadata';
-        video.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:0;pointer-events:none';
-        host.insertBefore(video,host.firstChild);
-        video.addEventListener('error',()=>{video.controls=true;video.style.pointerEvents='auto';});
-      }
-      if(video.src!==mediaUrl){video.src=mediaUrl;video.load();}
-      const playAttempt=video.play();
-      if(playAttempt&&typeof playAttempt.catch==='function')playAttempt.catch(()=>{video.controls=true;video.style.pointerEvents='auto';});
+      media.setAttribute('data-nova-ad-video','1');
+      media.muted=true;
+      media.defaultMuted=true;
+      media.autoplay=true;
+      media.loop=true;
+      media.playsInline=true;
+      media.preload='auto';
+      media.setAttribute('autoplay','');
+      media.setAttribute('muted','');
+      media.setAttribute('loop','');
+      media.setAttribute('playsinline','');
+      media.setAttribute('aria-label',String(campaign.title||'NOVAAI video advertisement').slice(0,120));
+      media.addEventListener('error',()=>{
+        media.controls=true;
+        media.style.pointerEvents='auto';
+      });
     }else{
-      if(video){video.pause();video.remove();}
-      if(!image){
-        image=document.createElement('img');
-        image.setAttribute('data-nova-ad-image','1');
-        image.decoding='async';image.loading='eager';
-        image.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:0';
-        host.insertBefore(image,host.firstChild);
-      }
-      image.alt=String(campaign.title||'NOVAAI featured advertisement').slice(0,120);
-      image.style.display='block';
-      if(image.src!==mediaUrl)image.src=mediaUrl;
+      media.setAttribute('data-nova-ad-image','1');
+      media.alt=String(campaign.title||'NOVAAI featured advertisement').slice(0,120);
+      media.decoding='async';
+      media.loading='eager';
     }
 
-    // Dedicated image areas keep copy/CTAs from sitting over the uploaded
-    // creative on boards whose original markup had no separate art column.
-    const media=isVideo?video:image;
+    media.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1;opacity:0;transition:opacity 450ms ease;pointer-events:none';
+
     if(id==='motors_banner'){
-      media.style.cssText='position:absolute;top:0;right:auto;bottom:0;left:0;width:75%;height:100%;object-fit:cover;display:block;z-index:0;pointer-events:none';
+      media.style.left='0';
+      media.style.right='auto';
+      media.style.width='75%';
     }else if(id==='cart_banner'){
-      media.style.cssText='position:absolute;top:0;bottom:0;left:0;width:75%;height:100%;object-fit:cover;display:block;z-index:0;pointer-events:none';
+      media.style.left='0';
+      media.style.width='75%';
     }else if(['shop_footer','motors_footer','property_footer','wishlist_banner'].includes(id)&&host.classList.contains('nova-footer-ad-image')){
-      host.style.position='absolute';host.style.left='25%';host.style.right='0';host.style.top='0';host.style.bottom='0';
-      host.style.width='75%';host.style.zIndex='0';host.style.opacity='1';
-      media.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:0;pointer-events:none';
+      host.style.position='absolute';
+      host.style.left='25%';
+      host.style.right='0';
+      host.style.top='0';
+      host.style.bottom='0';
+      host.style.width='75%';
+      host.style.zIndex='0';
+      host.style.opacity='1';
     }
+
+    media.src=mediaUrl;
+    host.insertBefore(media,host.firstChild);
+
+    requestAnimationFrame(()=>{
+      media.style.opacity='1';
+      oldMedia.forEach(old=>{
+        old.style.transition='opacity 450ms ease';
+        old.style.opacity='0';
+      });
+    });
+
+    setTimeout(()=>{
+      oldMedia.forEach(old=>{
+        if(old.tagName==='VIDEO')old.pause();
+        old.remove();
+      });
+      media.style.zIndex='0';
+    },500);
+
+    if(isVideo){
+      const playAttempt=media.play();
+      if(playAttempt&&typeof playAttempt.catch==='function'){
+        playAttempt.catch(()=>{
+          media.controls=true;
+          media.style.pointerEvents='auto';
+        });
+      }
+    }
+
     host.dataset.novaManagedImage='1';
   }
   function captureAdFallback(slot,id){
@@ -253,12 +287,53 @@
     slot.removeAttribute('data-nova-original-height');
     delete slot.__novaOriginalBoardSize;
   }
+  function preloadCampaignCreative(campaign){
+    return new Promise(resolve=>{
+      const url=safeHttpsUrl(campaign.creative_url);
+      if(!url){resolve(false);return;}
+      let finished=false;
+      let timer;
+      const media=campaign.creative_type==='video'
+        ? document.createElement('video')
+        : new Image();
+
+      const finish=ok=>{
+        if(finished)return;
+        finished=true;
+        clearTimeout(timer);
+        media.onload=null;
+        media.onerror=null;
+        media.onloadeddata=null;
+        media.onerror=null;
+        resolve(ok);
+      };
+
+      timer=setTimeout(()=>finish(false),8000);
+
+      if(campaign.creative_type==='video'){
+        media.muted=true;
+        media.preload='auto';
+        media.onloadeddata=()=>finish(true);
+        media.onerror=()=>finish(false);
+        media.src=url;
+        media.load();
+      }else{
+        media.decoding='async';
+        media.onload=()=>finish(true);
+        media.onerror=()=>finish(false);
+        media.src=url;
+      }
+    });
+  }
+
   function applyManagedCampaigns(rows,onlySlot){
     const managedSlots=["home_hero","shop_tv","cart_banner","wishlist_banner","motors_banner","property_banner","shop_footer","motors_footer","property_footer"].filter(id=>!onlySlot||id===onlySlot);
     managedSlots.forEach(id=>{
       if(managedTimers[id]){clearTimeout(managedTimers[id]);delete managedTimers[id];}
       const slot=document.querySelector('[data-nova-ad-slot="'+id+'"]')||document.getElementById(({home_hero:"novaHeroCarousel",shop_tv:"shopTvAds",cart_banner:"cartAdBoard",wishlist_banner:"wishlistAdSlot",motors_banner:"motorsWelcomeAd",property_banner:"propertyAdSlot",shop_footer:"shopFooterAd",motors_footer:"motorsFooterAd",property_footer:"propertyFooterAd"})[id]);
       if(!slot)return;
+      const renderToken=(slot.__novaAdRenderToken||0)+1;
+      slot.__novaAdRenderToken=renderToken;
       captureAdFallback(slot,id);
       const campaigns=(Array.isArray(rows)?rows:[])
         .filter(c=>c&&c.slot_id===id&&campaignIsActive(c)&&safeHttpsUrl(c.creative_url)&&safeHttpsUrl(c.destination_url))
@@ -286,7 +361,7 @@
       }
       let originalBoardSize=slot.__novaOriginalBoardSize||null;
       let index=0;
-      const show=()=>{
+      const show=async()=>{
         // Wishlist's original node is removed by main's renderer before managed
         // campaigns can replace its copy. Preserve that static board baseline.
         if(id==='wishlist_banner'&&!originalBoardSize){
@@ -299,6 +374,16 @@
           }
         }
         const c=campaigns[index];
+        const creativeReady=await preloadCampaignCreative(c);
+        if(slot.__novaAdRenderToken!==renderToken)return;
+        if(!creativeReady){
+          index=(index+1)%campaigns.length;
+          if(campaigns.length>1&&!document.hidden){
+            const retryDelay=Math.max(2,Math.min(60,Number(c.duration_seconds)||5))*1000;
+            managedTimers[id]=setTimeout(show,retryDelay);
+          }
+          return;
+        }
         const title=String(c.title||'Featured offer').slice(0,100);
         const description=String(c.description||'Discover this featured offer.').slice(0,180);
         const href=safeHttpsUrl(c.destination_url);
