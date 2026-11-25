@@ -329,16 +329,27 @@
   function applyManagedCampaigns(rows,onlySlot){
     const managedSlots=["home_hero","shop_tv","cart_banner","wishlist_banner","motors_banner","property_banner","shop_footer","motors_footer","property_footer"].filter(id=>!onlySlot||id===onlySlot);
     managedSlots.forEach(id=>{
-      if(managedTimers[id]){clearTimeout(managedTimers[id]);delete managedTimers[id];}
+      if(id!=='property_banner'&&managedTimers[id]){clearTimeout(managedTimers[id]);delete managedTimers[id];}
       const slot=document.querySelector('[data-nova-ad-slot="'+id+'"]')||document.getElementById(({home_hero:"novaHeroCarousel",shop_tv:"shopTvAds",cart_banner:"cartAdBoard",wishlist_banner:"wishlistAdSlot",motors_banner:"motorsWelcomeAd",property_banner:"propertyAdSlot",shop_footer:"shopFooterAd",motors_footer:"motorsFooterAd",property_footer:"propertyFooterAd"})[id]);
       if(!slot)return;
-      const renderToken=(slot.__novaAdRenderToken||0)+1;
-      slot.__novaAdRenderToken=renderToken;
-      captureAdFallback(slot,id);
       const campaigns=(Array.isArray(rows)?rows:[])
         .filter(c=>c&&c.slot_id===id&&campaignIsActive(c)&&safeHttpsUrl(c.creative_url)&&safeHttpsUrl(c.destination_url))
         .sort((a,b)=>(Number(b.priority)||0)-(Number(a.priority)||0)).slice(0,5);
+      const campaignSignature=id==='property_banner'?JSON.stringify(campaigns.map(c=>[
+        c.campaign_id,c.title,c.description,c.creative_type,c.creative_url,
+        c.destination_url,c.status,c.starts_at,c.ends_at,c.priority,
+        c.duration_seconds,c.cta_text,c.campaign_code
+      ])):'';
+      if(id==='property_banner'&&slot.dataset.novaAdCampaignSignature===campaignSignature&&slot.getAttribute('data-nova-ad-status')==='management_campaign_active')return;
+      if(id==='property_banner'&&managedTimers[id]){clearTimeout(managedTimers[id]);delete managedTimers[id];}
+      const renderToken=(slot.__novaAdRenderToken||0)+1;
+      slot.__novaAdRenderToken=renderToken;
+      captureAdFallback(slot,id);
       if(!campaigns.length){
+        if(id==='property_banner'){
+          delete slot.dataset.novaAdCampaignSignature;
+          document.documentElement.classList.remove('nova-property-ad-pending');
+        }
         restoreAdFallback(slot,id);
         slot.setAttribute('data-nova-ad-status','awaiting_management_campaign');return;
       }
@@ -377,6 +388,7 @@
         const creativeReady=await preloadCampaignCreative(c);
         if(slot.__novaAdRenderToken!==renderToken)return;
         if(!creativeReady){
+        if(id==='property_banner')document.documentElement.classList.remove('nova-property-ad-pending');
           index=(index+1)%campaigns.length;
           if(campaigns.length>1&&!document.hidden){
             const retryDelay=Math.max(2,Math.min(60,Number(c.duration_seconds)||5))*1000;
@@ -441,6 +453,10 @@
           if(imageNode)setCampaignMedia(imageNode,slot,c,id,imageUrl);
           slot.dataset.novaManagedCampaign=c.campaign_id||'managed-campaign';
           captureOriginalSize();
+        }
+        if(id==='property_banner'){
+          slot.dataset.novaAdCampaignSignature=campaignSignature;
+          document.documentElement.classList.remove('nova-property-ad-pending');
         }
         slot.dataset.novaManagedLayout='1';
         if(originalBoardSize){
@@ -872,6 +888,8 @@
   const novaAdShareStyle=document.createElement('style');
   novaAdShareStyle.textContent=
     '.nova-ad-share-button{position:absolute!important;top:8px!important;left:8px!important;z-index:30!important;display:grid!important;place-items:center!important;width:38px!important;height:38px!important;min-width:38px!important;padding:0!important;border:1px solid rgba(255,255,255,.72)!important;border-radius:50%!important;background:rgba(16,40,75,.9)!important;color:#fff!important;box-shadow:0 3px 12px rgba(0,0,0,.25)!important;cursor:pointer!important;touch-action:manipulation!important}' +
+    '#propertyAdSlot{position:relative!important}' +
+    '#propertyAdSlot .nova-ad-share-button{left:8px!important;right:auto!important}' +
     '.nova-ad-share-button svg{display:block!important;width:21px!important;height:21px!important}' +
     '.nova-ad-share-button:focus-visible{outline:3px solid #f5b900!important;outline-offset:3px!important}' +
     '.nova-ad-share-button.nova-share-complete{background:#f5b900!important;color:#10284b!important}' +

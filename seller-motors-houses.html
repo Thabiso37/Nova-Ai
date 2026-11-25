@@ -545,6 +545,7 @@ body.motors-mode #productGrid>.vehicle-card .vehicle-seller{
 (function(){
   'use strict';
   var root=document.documentElement;
+  if(new URLSearchParams(location.search).get('market')==='property')root.classList.add('nova-property-ad-pending');
   var revealed=false;
   var fallbackTimer;
   function revealBoards(){
@@ -572,6 +573,10 @@ body.motors-mode #productGrid>.vehicle-card .vehicle-seller{
 <style id="nova-ad-first-paint">
 html.nova-ads-pending [data-nova-ad-slot],
 html.nova-ads-pending [data-nova-ad-slot] * {
+  visibility:hidden !important;
+}
+html.nova-property-ad-pending #propertyAdSlot,
+html.nova-property-ad-pending #propertyAdSlot * {
   visibility:hidden !important;
 }
 </style>
@@ -981,7 +986,7 @@ switchMarket(initialMarket);
 </script>
 
 <script src="./nearby-search.js"></script>
-<script src="./novaai-ad-slots.js?v=20261120-fast-first-paint-1" onerror="window.__novaAdsRevealBoards&&window.__novaAdsRevealBoards()"></script>
+<script src="./novaai-ad-slots.js?v=20261125-property-no-flash-1" onerror="document.documentElement.classList.remove('nova-property-ad-pending');window.__novaAdsRevealBoards&&window.__novaAdsRevealBoards()"></script>
 <script src="./novaai-share-visits.js?v=20261113-share-visits-1" defer></script>
 <script>
 if ("serviceWorker" in navigator) {
