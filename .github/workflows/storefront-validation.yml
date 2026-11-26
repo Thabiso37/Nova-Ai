@@ -36,9 +36,7 @@ jobs:
         run: |
           npm install --no-save playwright
           npx playwright install --with-deps chromium
-      - name: Run storefront regression tests (exclude unrelated Retail product-detail modal checks)
-        env:
-          NOVAAI_SKIP_RETAIL_PRODUCT_DETAIL_TESTS: '1'
+      - name: Run storefront regression tests
         run: node --test tests/storefront.test.mjs tests/storefront-browser.test.mjs
       - name: Upload Store Page screenshot evidence
         if: always()
