@@ -2281,7 +2281,11 @@ function closeCart() {
  if(q.get('view')==='cart'){document.querySelectorAll('.nova-nav-item').forEach(a=>a.classList.remove('active'));document.querySelector('.nova-nav-item[href="./retail.html?view=cart"]')?.classList.add('active');openCart();}
 })();
 </script>
-
+<script>
+// Create the Wishlist advertising placement before the campaign feed starts.
+// renderWishlist() rebuilds this panel again when the Wishlist is opened.
+renderWishlist();
+</script>
 
 <script src="./nearby-search.js"></script>
 <script src="./novaai-ad-slots.js?v=20261126-ad-boards-visible-1" onerror="window.__novaAdsRevealBoards&&window.__novaAdsRevealBoards()"></script>
