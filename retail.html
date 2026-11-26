@@ -963,6 +963,14 @@ body{font-family:Inter,Roboto,"Segoe UI",Arial,sans-serif;background:#f5f7fb;col
 </style>
 
 <style>
+/* Retail and Wishlist lower advertising boards share one flush side-by-side row. */
+.retail-wishlist-ad-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;width:100%;margin:18px 0 0;align-items:stretch;}
+.retail-wishlist-ad-pair>.nova-footer-ad{display:flex!important;width:100%;min-width:0;margin:0!important;border-radius:0!important;}
+.retail-wishlist-ad-pair>#wishlistAdSlot{border-right:0!important;}
+.retail-wishlist-ad-pair>#shopFooterAd{border-left:0!important;}
+body.wishlist-view #retailWishlistAdPair{display:grid!important;}
+.retail-wishlist-ad-pair .nova-footer-ad-image{min-width:0;}
+@media(max-width:520px){.retail-wishlist-ad-pair{grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin-top:14px}.retail-wishlist-ad-pair>.nova-footer-ad{min-height:112px}.retail-wishlist-ad-pair .nova-footer-ad-copy{min-width:0;padding:8px}.retail-wishlist-ad-pair .nova-footer-ad-copy strong{font-size:12px;line-height:1.2}.retail-wishlist-ad-pair .nova-footer-ad-copy small{font-size:9px;line-height:1.25}.retail-wishlist-ad-pair .nova-footer-ad-copy a{font-size:9px;padding:6px 8px}}
 /* NOVAAI SHOP TV-style advertising carousel */
 #shopTvAds{
   position:relative;
@@ -1243,17 +1251,19 @@ style="width:min(92vw,700px);max-height:85vh;overflow:auto;border:0;border-radiu
 </dialog>
 
 <section id="wishlist" class="panel" style="margin:24px 0" data-nova-ad-area="wishlist">
-  <div id="wishlistAdSlot" class="nova-footer-ad" data-nova-ad-slot="wishlist_banner" role="region" aria-label="NOVAAI Wishlist advertising board"><div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker"></span><strong></strong><small></small><a href="#products"></a></div></div>
   <h2>❤️ My Wishlist</h2>
   <p>Your saved products will appear here.</p>
 </section>
+<div id="retailWishlistAdPair" class="retail-wishlist-ad-pair" aria-label="Retail and Wishlist advertisements">
+<div id="wishlistAdSlot" class="nova-footer-ad" data-nova-ad-slot="wishlist_banner" role="region" aria-label="NOVAAI Wishlist advertising board"><div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker"></span><strong></strong><small></small><a href="#products"></a></div></div>
+<div id="shopFooterAd" class="nova-footer-ad" data-nova-ad-slot="shop_footer" role="region" aria-label="NOVAAI Shop advertising board"><div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker"></span><strong></strong><small></small><a href="#products"></a></div></div>
+</div>
 </main>
 
 <footer>
 <div class="foot">
 <div><div class="logo">NOVA<span>AI</span> MARKETPLACE</div>
-<div id="shopFooterAd" class="nova-footer-ad" data-nova-ad-slot="shop_footer" role="region" aria-label="NOVAAI Shop advertising board">
-  <div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker"></span><strong></strong><small></small><a href="#products"></a></div>
+<div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker"></span><strong></strong><small></small><a href="#products"></a></div>
 </div></div>
 <div><strong>Shop smart. Sell more.</strong><p>© <span id="year"></span> NOVAAI. Built for South Africa.</p></div>
 </div>
