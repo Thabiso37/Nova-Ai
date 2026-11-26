@@ -377,7 +377,8 @@
         }
         return;
       }
-      let originalBoardSize=slot.__novaOriginalBoardSize||null;
+      // Shop footer shares the top Shop board's responsive viewport-sized frame; never freeze an older measured height.
+      let originalBoardSize=id==='shop_footer'?null:(slot.__novaOriginalBoardSize||null);
       let index=0;
       const show=async()=>{
         // Wishlist's original node is removed by main's renderer before managed
@@ -440,7 +441,7 @@
           bindCampaignClick(linkNode,id);
         }
         const captureOriginalSize=()=>{
-          if(originalBoardSize)return;
+          if(id==='shop_footer'||originalBoardSize)return;
           const naturalRect=slot.getBoundingClientRect();
           if(naturalRect.width>0&&naturalRect.height>0){
             originalBoardSize={width:naturalRect.width,height:naturalRect.height};
@@ -466,7 +467,7 @@
           document.documentElement.classList.remove('nova-property-ad-pending');
         }
         slot.dataset.novaManagedLayout='1';
-        if(originalBoardSize){
+        if(originalBoardSize&&id!=='shop_footer'){
           slot.style.setProperty('box-sizing','border-box','important');
           slot.style.setProperty('width',originalBoardSize.width+'px','important');
           slot.style.setProperty('height',originalBoardSize.height+'px','important');
