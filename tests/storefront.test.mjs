@@ -13,7 +13,7 @@ const ads=fs.readFileSync(path.join(root,"novaai-ad-slots.js"),"utf8");
 const seller=fs.readFileSync(path.join(root,"seller.html"),"utf8");
 const branding=fs.readFileSync(path.join(root,"novaai-store-branding.js"),"utf8");
 const videoSql=fs.readFileSync(path.join(root,"docs/sql/20261115-retail-product-videos.sql"),"utf8");
-test("Ad boards hide stale fallback creative until managed campaigns or fallback are ready",()=>{
+test("Ad boards remain empty until a live approved campaign is supplied",()=>{
  const boot=ads.indexOf("function bootLiveAds()");
  const campaignFetch=ads.indexOf("loadManagedCampaigns().catch",boot);
  const reveal=ads.indexOf("window.__novaAdsRevealBoards()",campaignFetch);
@@ -157,7 +157,7 @@ test("Homepage product loading failures replace the skeleton with a recoverable 
  assert.match(home,/if\(requestedId\)\{const main=document\.querySelector\(\x27main\x27\);if\(main\)main\.innerHTML=.*Return to homepage/);
 });
 
-test("Advertising boards stay on a branded loading state until managed campaigns or fallback are ready",()=>{
+test("Advertising boards stay on a branded loading state and do not restore demo fallback creatives",()=>{
  const boot=ads.indexOf("function bootLiveAds()");
  const managed=ads.indexOf("loadManagedCampaigns().catch",boot);
  const reveal=ads.indexOf("window.__novaAdsRevealBoards()",managed);
@@ -165,10 +165,18 @@ test("Advertising boards stay on a branded loading state until managed campaigns
  assert.match(ads,/\.finally\(\(\)=>\{[\s\S]*?__novaAdsRevealBoards/);
  assert.match(home,/html\.nova-ads-pending \[data-nova-ad-slot\]::after/);
  assert.match(home,/Loading advertisements/);
- assert.match(ads,/function initHomeFallbackControls/);
+ assert.doesNotMatch(ads,/function initHomeFallbackControls/);
  assert.doesNotMatch(ads,/function initLiveSlot|function initHomeCarousel|nova-live-controls|nova-live-changing/);
  assert.doesNotMatch(ads,/setInterval\(\(\)=>show\(active\+1\),5000\)/,"fallback creatives must not auto-rotate");
  assert.match(ads,/setInterval\(loadManagedCampaigns,60000\)/,"managed campaigns must continue refreshing");
+ assert.match(ads,/\.nova-ad-empty\{display:none!important\}/);
+ assert.match(ads,/knownDemoCampaignCodes/);
+ assert.match(ads,/!isDemoCampaign\(c\)/);
+ assert.doesNotMatch(retail,/const demo=|demo-[1-5]|Nike Air Max Trainer|Puma Running Hoodie|Nova Demo Store/);
+ assert.match(retail,/let products=\[\]/);
+ assert.doesNotMatch(home,/The Future is|SUPPORT LOCAL SELLERS|Great finds\. Local businesses\.|Your products deserve a marketplace\./);
+ assert.doesNotMatch(retail,/Special Offers|Discover more from South African sellers\.|Discover something worth bringing home\.|NOVAAI SPOTLIGHT/);
+ assert.doesNotMatch(motors,/Find your next vehicle\.|Find a place to belong\.|Make room for your next chapter\.|Find the vehicle that moves you\./);
  assert.match(home,/\.nova-hero-slide\{[^}]*min-height:190px/);
 });
 
