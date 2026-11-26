@@ -1131,17 +1131,8 @@ html.nova-ads-pending [data-nova-ad-slot] * {
   
 </header>
 
-<div id="shopTvAds" data-nova-ad-slot="shop_tv" data-nova-ad-format="carousel" data-nova-ad-version="1" class="shop-tv-ads" role="region" aria-label="NOVAAI featured advertisements" aria-roledescription="carousel">
-  <article class="shop-tv-slide is-active" data-theme="blue" aria-hidden="false">
-    <div class="shop-tv-copy"><span class="shop-tv-kicker">NOVAAI SPOTLIGHT</span><h2>Discover something<br>worth bringing home.</h2><p>Explore finds from South African marketplace sellers.</p><a class="shop-tv-cta" href="#products">Explore the shop&nbsp; →</a></div><span class="shop-tv-art" aria-hidden="true"></span>
-  </article>
-  <article class="shop-tv-slide" data-theme="gold" aria-hidden="true">
-    <div class="shop-tv-copy"><span class="shop-tv-kicker">SHOP LOCAL · SHOP SMART</span><h2>Great finds.<br>Independent sellers.</h2><p>Browse the marketplace and discover your next favourite.</p><a class="shop-tv-cta" href="#products">See what's available&nbsp; →</a></div><span class="shop-tv-art" aria-hidden="true"></span>
-  </article>
-  <article class="shop-tv-slide" data-theme="purple" aria-hidden="true">
-    <div class="shop-tv-copy"><span class="shop-tv-kicker">THE NOVAAI MARKETPLACE</span><h2>Your next find<br>is waiting.</h2><p>Shop products across categories in one place.</p><a class="shop-tv-cta" href="#products">Start exploring&nbsp; →</a></div><span class="shop-tv-art" aria-hidden="true"></span>
-  </article>
-  <div class="shop-tv-controls"><span class="shop-tv-onair">NOW SHOWING</span><div class="shop-tv-dots" aria-label="Choose advertisement"><button class="shop-tv-dot" type="button" aria-label="Advertisement 1" aria-current="true" data-shop-tv-go="0"></button><button class="shop-tv-dot" type="button" aria-label="Advertisement 2" aria-current="false" data-shop-tv-go="1"></button><button class="shop-tv-dot" type="button" aria-label="Advertisement 3" aria-current="false" data-shop-tv-go="2"></button></div></div>
+<div id="shopTvAds" data-nova-ad-slot="shop_tv" data-nova-ad-format="carousel" data-nova-ad-version="1" class="shop-tv-ads" role="region" aria-label="NOVAAI Shop advertising board" aria-roledescription="carousel">
+  <article class="shop-tv-slide is-active" data-theme="blue" aria-hidden="false"><div class="shop-tv-copy"><h2></h2><p></p><a class="shop-tv-cta" href="#products" aria-label="View advertisement"></a></div><span class="shop-tv-art" aria-hidden="true"></span></article>
 </div>
 
 <section id="shopCategories" class="shop-categories" aria-label="Shop by category">
@@ -1201,7 +1192,7 @@ html.nova-ads-pending [data-nova-ad-slot] * {
 
   <div class="cart-page-header">
     <button type="button" onclick="closeCart()">←</button>
-    <a id="cartAdBoard" class="cart-header-ad" data-nova-ad-slot="cart_banner" href="#products" aria-label="Cart special offers"><strong>Special Offers</strong><span>Discover great deals at NOVAAI</span></a>
+    <a id="cartAdBoard" class="cart-header-ad" data-nova-ad-slot="cart_banner" href="#products" aria-label="Cart advertising board"><strong></strong><span></span></a>
 
   </div>
 
@@ -1252,7 +1243,7 @@ style="width:min(92vw,700px);max-height:85vh;overflow:auto;border:0;border-radiu
 </dialog>
 
 <section id="wishlist" class="panel" style="margin:24px 0" data-nova-ad-area="wishlist">
-  <div id="wishlistAdSlot" class="nova-footer-ad" data-nova-ad-slot="wishlist_banner" role="region" aria-label="NOVAAI Wishlist featured advertisement"><div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker">NOVAAI WISHLIST • FEATURED</span><strong>Discover more from South African sellers.</strong><small>Fresh finds and local offers are waiting for you.</small><a href="#products">Explore marketplace →</a></div></div>
+  <div id="wishlistAdSlot" class="nova-footer-ad" data-nova-ad-slot="wishlist_banner" role="region" aria-label="NOVAAI Wishlist advertising board"><div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker"></span><strong></strong><small></small><a href="#products"></a></div></div>
   <h2>❤️ My Wishlist</h2>
   <p>Your saved products will appear here.</p>
 </section>
@@ -1261,8 +1252,8 @@ style="width:min(92vw,700px);max-height:85vh;overflow:auto;border:0;border-radiu
 <footer>
 <div class="foot">
 <div><div class="logo">NOVA<span>AI</span> MARKETPLACE</div>
-<div id="shopFooterAd" class="nova-footer-ad" data-nova-ad-slot="shop_footer" role="region" aria-label="NOVAAI Shop featured advertisement">
-  <div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker">NOVAAI SHOP • FEATURED</span><strong>Discover something worth bringing home.</strong><small>Explore great finds from South African sellers.</small><a href="#products">Explore Shop →</a></div>
+<div id="shopFooterAd" class="nova-footer-ad" data-nova-ad-slot="shop_footer" role="region" aria-label="NOVAAI Shop advertising board">
+  <div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker"></span><strong></strong><small></small><a href="#products"></a></div>
 </div></div>
 <div><strong>Shop smart. Sell more.</strong><p>© <span id="year"></span> NOVAAI. Built for South Africa.</p></div>
 </div>
@@ -1297,14 +1288,8 @@ const C=[
 ["Property For Sale","🏠"],
 ["Property To Rent","🔑"]
 ];
-const demo=[
-["demo-1","Nike Air Max Trainer","Clothing Shoes & Accessories",1899,"Nike Official Store","Official Nike athletic footwear and streetwear.","https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80"],
-["demo-2","Puma Running Hoodie","Clothing Shoes & Accessories",899,"Puma Retail","Comfortable activewear hoodie designed for peak performance.","https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80"],
-["demo-3","Pick n Pay Grocery Basket Bundle","Groceries",450,"Pick n Pay Hyper","Household essentials and grocery bundle pack.","https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=700&q=80"],
-["demo-4","Wireless Bluetooth Headphones","Electronics",349,"Nova Demo Store","Wireless listening for music, calls and everyday use.","https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80"],
-["demo-5","Minimal Desk Lamp","Home & Living",279,"Nova Demo Store","A simple lamp for a desk or bedside table.","https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=700&q=80"]
-];
-let products=demo.map(a=>({id:a[0],name:a[1],category:a[2],price:a[3],seller:a[4],description:a[5],images:[a[6]],tag:"Demo"}));
+// Only real approved database listings are displayed; no sample products are seeded.
+let products=[];
 let cart=readCart(),active="All",user=null;
 let sellerStoresById=Object.create(null);
 function readCart(){try{return JSON.parse(localStorage.getItem("novaMarketplaceCartV1")||"[]")}catch(e){return []}}
@@ -2124,7 +2109,7 @@ try {
 
     render();
     renderCart();
-    // Refresh saved products after the approved live catalogue has replaced demo placeholders.
+    // Refresh saved products after the approved live catalogue has loaded.
     renderWishlist();
 
     // Open the exact product when arriving from a homepage product card.

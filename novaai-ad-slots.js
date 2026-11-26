@@ -1,6 +1,6 @@
 /* NOVAAI Advertisement Placement Registry
  * Version 1 placement contract and live approved-campaign renderer.
- * Static fallback boards remain available; managed campaigns use one renderer and refresh in the background.
+ * Advertising boards remain empty until a live approved campaign is supplied.
  */
 (function(){
   'use strict';
@@ -29,16 +29,20 @@
     }
   };
 
-  const homeFallbackImages=[
-      "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85",
-      "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=900&q=85",
-      "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=900&q=85"
-    ];
 
   // Admin campaign feed: management can publish approved campaign rows through NOVAAI_ADS.announceCampaigns(rows).
+  const emptyBoardStyle=document.createElement('style');
+  emptyBoardStyle.textContent='.nova-ad-empty{display:none!important}';
+  document.head.appendChild(emptyBoardStyle);
   const managedTimers=Object.create(null);
   function safeHttpsUrl(value){
     try{const u=new URL(String(value||''),location.href);return u.protocol==='https:'?u.href:null;}catch(e){return null;}
+  }
+  const knownDemoCampaignCodes=new Set(["NOVA-70F75B8696","NOVA-2E67B9950D","NOVA-MOTORS-01","NOVA-E8262B3A0F","NOVA-08A1F95038","NOVA-268BBD0FF9","NOVA-F8DE3CFF62","NOVA-A2571691D1","NOVA-FB8C10789A","NOVA-PROPERTY-01","NOVA-MOTORS-02","NOVA-SHOP-03","NOVA-SHOP-02","NOVA-PROPERTY-02","NOVA-PROPERTY-03","NOVA-MOTORS-03"]);
+  function isDemoCampaign(campaign){
+    const code=String(campaign&&campaign.campaign_code||'').trim().toUpperCase();
+    const creative=String(campaign&&campaign.creative_url||'').toLowerCase();
+    return knownDemoCampaignCodes.has(code)||creative.includes('images.unsplash.com')||creative.includes('source.unsplash.com');
   }
   function campaignIsActive(c){
     if(!c||c.status!=='active')return false;
@@ -333,7 +337,7 @@
       const slot=document.querySelector('[data-nova-ad-slot="'+id+'"]')||document.getElementById(({home_hero:"novaHeroCarousel",shop_tv:"shopTvAds",cart_banner:"cartAdBoard",wishlist_banner:"wishlistAdSlot",motors_banner:"motorsWelcomeAd",property_banner:"propertyAdSlot",shop_footer:"shopFooterAd",motors_footer:"motorsFooterAd",property_footer:"propertyFooterAd"})[id]);
       if(!slot)return;
       const campaigns=(Array.isArray(rows)?rows:[])
-        .filter(c=>c&&c.slot_id===id&&campaignIsActive(c)&&safeHttpsUrl(c.creative_url)&&safeHttpsUrl(c.destination_url))
+        .filter(c=>c&&c.slot_id===id&&!isDemoCampaign(c)&&campaignIsActive(c)&&safeHttpsUrl(c.creative_url)&&safeHttpsUrl(c.destination_url))
         .sort((a,b)=>(Number(b.priority)||0)-(Number(a.priority)||0)).slice(0,5);
       const campaignSignature=id==='property_banner'?JSON.stringify(campaigns.map(c=>[
         c.campaign_id,c.title,c.description,c.creative_type,c.creative_url,
@@ -351,8 +355,11 @@
           document.documentElement.classList.remove('nova-property-ad-pending');
         }
         restoreAdFallback(slot,id);
-        slot.setAttribute('data-nova-ad-status','awaiting_management_campaign');return;
+        slot.classList.add('nova-ad-empty');
+        slot.setAttribute('data-nova-ad-status','awaiting_management_campaign');
+        return;
       }
+      slot.classList.remove('nova-ad-empty');
       // Defer hidden boards (Cart, Wishlist, Motors/Property footers) until their
       // containing view is shown, so the original natural dimensions can be measured.
       const visibleRect=slot.getBoundingClientRect();
@@ -485,36 +492,6 @@
   api.setCampaigns=rows=>api.announceCampaigns(rows);
   api.clearManagedCampaigns=()=>api.announceCampaigns([]);
 
-  // Keep homepage fallback navigation without a competing timed carousel.
-  function initHomeFallbackControls(){
-    const banner=document.getElementById('novaHeroCarousel');
-    if(!banner||banner.dataset.novaFallbackControlsReady==='1')return;
-    const slides=Array.from(banner.querySelectorAll('.nova-hero-slide'));
-    const dots=Array.from(banner.querySelectorAll('[data-hero-slide]'));
-    const prev=banner.querySelector('#novaHeroPrev'),next=banner.querySelector('#novaHeroNext');
-    if(slides.length<2)return;
-    banner.dataset.novaFallbackControlsReady='1';
-    let active=Math.max(0,slides.findIndex(el=>el.classList.contains('active')));
-    function show(i){
-      if(banner.dataset.novaManagedCampaign)return;
-      active=(i+slides.length)%slides.length;
-      slides.forEach((el,k)=>{
-        el.classList.toggle('active',k===active);
-        el.setAttribute('aria-hidden',String(k!==active));
-        const art=el.querySelector('.nova-hero-art');
-        if(art&&homeFallbackImages[k]){
-          art.style.backgroundImage='linear-gradient(90deg,rgba(16,40,75,.10),rgba(16,40,75,.10)),url("'+homeFallbackImages[k]+'")';
-          art.style.backgroundSize='cover';
-          art.style.backgroundPosition='center';
-        }
-      });
-      dots.forEach((el,k)=>el.classList.toggle('active',k===active));
-    }
-    dots.forEach((dot,i)=>dot.addEventListener('click',()=>show(i)));
-    if(prev)prev.addEventListener('click',()=>show(active-1));
-    if(next)next.addEventListener('click',()=>show(active+1));
-    show(active);
-  }
   let managedCampaignLoadSequence=0;
   async function loadManagedCampaigns(){
     const apiUrl='https://nxplffvklkopwfjaqexo.supabase.co/rest/v1/rpc/get_live_novaai_ad_campaigns';
@@ -578,16 +555,15 @@
     if(window.__novaAdsBooted)return;
     window.__novaAdsBooted=true;
     try{
-      initHomeFallbackControls();
       loadManagedCampaigns().catch(error=>{
-        console.warn('NOVAAI managed advertisement refresh failed; showing safe fallback boards.',error);
+        console.warn('NOVAAI managed advertisement refresh failed; boards remain empty until approved campaigns load.',error);
         api.announceCampaigns([]);
       }).finally(()=>{
         if(typeof window.__novaAdsRevealBoards==='function')window.__novaAdsRevealBoards();
       });
       if(!window.__novaAdRefreshTimer)window.__novaAdRefreshTimer=window.setInterval(loadManagedCampaigns,60000);
     }catch(error){
-      console.error('NOVAAI advertising initialisation failed; showing fallback boards.',error);
+      console.error('NOVAAI advertising initialisation failed; boards remain empty until approved campaigns load.',error);
       if(typeof window.__novaAdsRevealBoards==='function')window.__novaAdsRevealBoards();
     }
   }
