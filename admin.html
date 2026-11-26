@@ -794,7 +794,7 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
     <section class="panel" id="advertisementManagement">
       <h2>Advertisement Management</h2>
       <p class="muted">Manage all nine NOVAAI advertising boards separately. Each board has its own campaigns, schedule and activation controls.</p>
-      <div class="notice">Create campaigns directly from your phone. Upload an image or MP4/WebM video to NOVAAI Storage, or reuse an existing public HTTPS media URL. Choose an internal NOVAAI destination below. Campaign management remains separate from orders, payments, seller balances and product records.</div>
+      <div class="notice">Create advertising campaigns directly from your phone. Upload an image or MP4/WebM video using the file picker; NOVAAI securely stores the file and creates its media link automatically. There is no manual media-URL field. When editing a campaign, its saved media is reused unless you upload a replacement. Select one or more advertising boards and save the campaign. Advertising campaigns are separate from orders, payments, seller balances and product records.</div>
       <form id="adCampaignForm" class="ad-campaign-form">
         <input type="hidden" id="adCampaignId">
         <label for="adCampaignCode">Campaign reference (optional)</label>
@@ -1134,65 +1134,190 @@ function editAdCampaign(id){
   document.getElementById("saveAdCampaignBtn").textContent="Update campaign";
   document.getElementById("advertisementManagement").scrollIntoView({behavior:"smooth"});
 }
-async function saveAdCampaign(event){
-  event.preventDefault();if(!currentAdmin||verifiedAdminId!==currentAdmin.id||verifiedAdminId!==currentAdmin.id){adCampaignMessage("Administrator verification is missing. Please sign in again.");return;}
-  const value=id=>document.getElementById(id).value.trim();
-  const toIso=id=>{const v=value(id);return v?new Date(v).toISOString():null;};
-  const slot_ids=Array.from(document.getElementById("adCampaignSlots").selectedOptions).map(o=>o.value);
-  if(!slot_ids.length){adCampaignMessage("Select at least one advertising board.");return;}
-  const mediaInput=document.getElementById("adCampaignFile");
-  let creative_url=mediaInput.dataset.existingUrl||"";
-  const mediaFile=mediaInput.files[0];
-  const creative_type=value("adCampaignCreativeType");
-  if(mediaFile){
-    const detectedMime=adCampaignFileMime(mediaFile);
-    const allowed=creative_type==="video"?["video/mp4","video/webm"]:["image/jpeg","image/png","image/webp"];
-    if(!detectedMime||!allowed.includes(detectedMime)){adCampaignMessage("Choose a JPG, PNG or WebP image, or an MP4/WebM video matching the selected creative format.");return;}
-    if(mediaFile.size>100*1024*1024){adCampaignMessage("Media must be 100 MB or smaller.");return;}
-    const safeName=mediaFile.name.replace(/[^a-zA-Z0-9._-]/g,"-");
-    const storagePath="advertisements/"+currentAdmin.id+"/"+Date.now()+"-"+safeName;
-    try{
-      const {data:uploaded,error:uploadError}=await sb.storage.from("Nova AI").upload(storagePath,mediaFile,{contentType:detectedMime,cacheControl:"3600",upsert:false});
-      if(uploadError)throw uploadError;
-      creative_url=sb.storage.from("Nova AI").getPublicUrl(uploaded.path).data.publicUrl;
-      if(new URL(creative_url).protocol!=="https:")throw new Error("Storage did not return a public HTTPS media URL.");
-      mediaInput.dataset.existingUrl=creative_url;
-      document.getElementById("adCreativePreview").textContent="Uploaded successfully. NOVAAI media URL generated and ready to save.";
-    }catch(uploadError){adCampaignMessage("Media upload failed: "+(uploadError?.message||"Unknown error"));return;}
+async function saveAdCampaign(event) {
+  event.preventDefault();
+
+  const btn = document.getElementById("saveAdCampaignBtn");
+  if (btn.disabled) return;
+  btn.disabled = true;
+  const originalButtonText = btn.textContent;
+
+  try {
+    if (!currentAdmin || verifiedAdminId !== currentAdmin.id) {
+      adCampaignMessage("Administrator verification is missing. Please sign in again.");
+      return;
+    }
+
+    const value = id => document.getElementById(id).value.trim();
+    const toIso = id => {
+      const v = value(id);
+      return v ? new Date(v).toISOString() : null;
+    };
+    const campaignId = value("adCampaignId");
+    const codeInput = document.getElementById("adCampaignCode");
+    const suppliedCode = value("adCampaignCode");
+    const slot_ids = Array.from(
+      document.getElementById("adCampaignSlots").selectedOptions
+    ).map(option => option.value);
+
+    if (!slot_ids.length) {
+      adCampaignMessage("Select at least one advertising board.");
+      return;
+    }
+
+    // Check a user-entered reference before uploading anything. An edit may
+    // keep its own existing reference, but cannot reuse another campaign's.
+    if (suppliedCode) {
+      const duplicate = adCampaignRows.find(c =>
+        String(c.campaign_code || "").trim().toLowerCase() === suppliedCode.toLowerCase() &&
+        String(c.id) !== String(campaignId)
+      );
+      if (duplicate) {
+        adCampaignMessage("This campaign reference already exists. Edit that campaign or enter a different reference. No file was uploaded.");
+        codeInput.focus();
+        return;
+      }
+    }
+
+    const startValue = value("adCampaignStart");
+    const endValue = value("adCampaignEnd");
+    const startsAt = toIso("adCampaignStart");
+    const endsAt = toIso("adCampaignEnd");
+    if ((startValue && !startsAt) || (endValue && !endsAt)) {
+      adCampaignMessage("Enter valid campaign start and end dates.");
+      return;
+    }
+    if (startsAt && endsAt && new Date(endsAt) <= new Date(startsAt)) {
+      adCampaignMessage("End date must be after the start date. No file was uploaded.");
+      return;
+    }
+
+    const destinationKey = value("adCampaignDestination");
+    const destination_url = adCampaignDestinationUrl(destinationKey);
+    if (!destination_url || adCampaignDestinationKey(destination_url) !== destinationKey) {
+      adCampaignMessage("Choose a valid internal NOVAAI destination.");
+      return;
+    }
+
+    const mediaInput = document.getElementById("adCampaignFile");
+    const mediaFile = mediaInput.files[0];
+    const creative_type = value("adCampaignCreativeType");
+    let creative_url = mediaInput.dataset.existingUrl || "";
+
+    if (mediaFile) {
+      const detectedMime = adCampaignFileMime(mediaFile);
+      const allowed = creative_type === "video"
+        ? ["video/mp4", "video/webm"]
+        : ["image/jpeg", "image/png", "image/webp"];
+      if (!detectedMime || !allowed.includes(detectedMime)) {
+        adCampaignMessage("Choose a JPG, PNG or WebP image, or an MP4/WebM video matching the selected creative format. No file was uploaded.");
+        return;
+      }
+      if (mediaFile.size > 100 * 1024 * 1024) {
+        adCampaignMessage("Media must be 100 MB or smaller. No file was uploaded.");
+        return;
+      }
+    }
+
+    if (!mediaFile && !creative_url) {
+      adCampaignMessage("Upload an image or video before saving the campaign.");
+      return;
+    }
+
+    const duration = Number(value("adCampaignDuration")) || 5;
+    if (duration < 2 || duration > 60) {
+      adCampaignMessage("Display duration must be between 2 and 60 seconds.");
+      return;
+    }
+
+    btn.textContent = mediaFile ? "Uploading and saving…" : "Saving…";
+    adCampaignMessage(mediaFile ? "Uploading advertisement media…" : "Saving campaign…");
+
+    if (mediaFile) {
+      const detectedMime = adCampaignFileMime(mediaFile);
+      const safeName = mediaFile.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+      const storagePath = "advertisements/" + currentAdmin.id + "/" + Date.now() + "-" + safeName;
+      const { data: uploaded, error: uploadError } = await sb.storage
+        .from("Nova AI")
+        .upload(storagePath, mediaFile, {
+          contentType: detectedMime,
+          cacheControl: "3600",
+          upsert: false
+        });
+      if (uploadError) throw new Error("Media upload failed: " + uploadError.message);
+
+      creative_url = sb.storage.from("Nova AI").getPublicUrl(uploaded.path).data.publicUrl;
+      if (new URL(creative_url).protocol !== "https:") {
+        throw new Error("Storage did not return a public HTTPS media URL.");
+      }
+
+      // Keep the uploaded URL on the form if the campaign save fails. Retrying
+      // then reuses this upload instead of creating another orphaned object.
+      mediaInput.dataset.existingUrl = creative_url;
+      document.getElementById("adCreativePreview").textContent =
+        "Upload complete. Media is ready to save; retrying will reuse this uploaded file.";
+    }
+
+    try {
+      if (new URL(creative_url).protocol !== "https:") {
+        throw new Error("Media must be a valid public HTTPS URL.");
+      }
+    } catch (_) {
+      throw new Error("Media must be a valid public HTTPS URL.");
+    }
+
+    // Generate the optional reference in the browser with a cryptographically
+    // random value, rather than relying on a database-side fallback value.
+    const campaignCode = suppliedCode || (
+      "NOVA-" + crypto.randomUUID().replace(/-/g, "").slice(0, 20).toUpperCase()
+    );
+
+    const payload = {
+      id: campaignId || null,
+      campaign_code: campaignCode,
+      slot_ids,
+      slot_id: slot_ids[0],
+      creative_type,
+      duration_seconds: duration,
+      title: value("adCampaignTitle"),
+      description: value("adCampaignDescription"),
+      creative_url,
+      destination_url,
+      cta_text: value("adCampaignCta") || "Explore offer →",
+      starts_at: startsAt,
+      ends_at: endsAt,
+      priority: Number(value("adCampaignPriority")) || 0,
+      status: value("adCampaignStatus")
+    };
+
+    const { error } = await sb.rpc("admin_save_novaai_ad_campaign", {
+      p_campaign: payload
+    });
+    if (error) {
+      if (String(error.message || "").includes("novaai_ad_campaigns_campaign_code_key")) {
+        throw new Error("That campaign reference was just used by another save. Your uploaded media is kept. Clear the reference field and save again to generate a fresh reference.");
+      }
+      throw error;
+    }
+
+    adCampaignMessage("Campaign saved successfully. Active campaigns will appear on the selected live boards when their schedule allows.");
+    resetAdCampaignForm();
+    await loadAdCampaigns();
+  } catch (error) {
+    console.error("NOVAAI ad campaign save failed:", error);
+    adCampaignMessage((error?.message || "Unknown error") +
+      (document.getElementById("adCampaignFile").dataset.existingUrl
+        ? " Your uploaded media is retained on this form; retrying will not upload it again."
+        : ""));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = document.getElementById("adCampaignId").value
+      ? "Update campaign"
+      : "Save campaign";
+    if (!document.getElementById("adCampaignId").value && originalButtonText === "Update campaign") {
+      btn.textContent = "Save campaign";
+    }
   }
-  if(!creative_url){adCampaignMessage("Upload an image or video before saving the campaign.");return;}
-  try{if(new URL(creative_url).protocol!=="https:"){adCampaignMessage("Media must be a valid public HTTPS URL.");return;}}catch(_){adCampaignMessage("Media must be a valid public HTTPS URL.");return;}
-  const destinationKey=value("adCampaignDestination");
-  const destination_url=adCampaignDestinationUrl(destinationKey);
-  if(!destination_url||adCampaignDestinationKey(destination_url)!==destinationKey){adCampaignMessage("Choose a valid internal NOVAAI destination.");return;}
-  const payload={
-    id:value("adCampaignId")||null,
-    campaign_code:value("adCampaignCode")||null,
-    slot_ids,
-    slot_id:slot_ids[0],
-    creative_type,
-    duration_seconds:Number(value("adCampaignDuration"))||5,
-    title:value("adCampaignTitle"),
-    description:value("adCampaignDescription"),
-    creative_url,
-    destination_url,
-    cta_text:value("adCampaignCta")||"Explore offer →",
-    starts_at:toIso("adCampaignStart"),
-    ends_at:toIso("adCampaignEnd"),
-    priority:Number(value("adCampaignPriority"))||0,
-    status:value("adCampaignStatus")
-  };
-  if(payload.starts_at&&payload.ends_at&&new Date(payload.ends_at)<=new Date(payload.starts_at)){
-    adCampaignMessage("End date must be after the start date.");return;
-  }
-  const btn=document.getElementById("saveAdCampaignBtn");btn.disabled=true;adCampaignMessage("Saving campaign…");
-  try{
-    const {error}=await sb.rpc("admin_save_novaai_ad_campaign",{p_campaign:payload});
-    if(error)throw error;
-    adCampaignMessage("Campaign saved. Active campaigns will appear on the selected live board.");
-    resetAdCampaignForm();await loadAdCampaigns();
-  }catch(error){adCampaignMessage("Save failed: "+(error?.message||"Unknown error"));}
-  finally{btn.disabled=false;}
 }
 async function toggleAdCampaign(id){
   const c=adCampaignRows.find(x=>x.id===id);if(!c)return;
