@@ -1,4 +1,4 @@
-name: NOVAAI Seller Portal 2080 isolated preview validation
+name: NOVAAI Seller Application Browser Validation
 on:
   push:
     branches:
@@ -33,14 +33,14 @@ jobs:
         run: npm install --no-save playwright
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: Validate Android marketplace variations and capture screenshots
+      - name: Validate seller application, policy acknowledgement and mobile layouts
         working-directory: previews/seller-portal-2080
         run: node validate.mjs
       - name: Upload Android preview screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: novaai-seller-portal-2080-android-preview
+          name: novaai-seller-application-browser-evidence
           path: previews/seller-portal-2080/artifacts/*.png
           if-no-files-found: error
           retention-days: 14

@@ -740,6 +740,12 @@ body:not(.product-view-active) .home-signin-link.is-signed-in:hover{
   border-color:#7ce2bd;
 }
 </style>
+<style id="nova-home-ad-first-paint">
+html.nova-ads-pending [data-nova-ad-slot]{position:relative;visibility:visible!important}
+html.nova-ads-pending [data-nova-ad-slot] *{visibility:hidden!important}
+html.nova-ads-pending [data-nova-ad-slot]::after{content:"Loading advertisements…";position:absolute;inset:0;z-index:2;display:grid;place-items:center;padding:12px;border-radius:inherit;background:linear-gradient(135deg,#10284b,#174ea6);color:#fff;font-size:12px;font-weight:850;letter-spacing:.2px;text-align:center;visibility:visible;pointer-events:none}
+</style>
+
 
 <style id="nova-home-preview2-card-authority">
 /* Card presentation measured from the supplied live Preview 2 reference URL.

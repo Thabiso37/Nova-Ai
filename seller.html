@@ -238,6 +238,8 @@ main{width:100%;max-width:none!important;margin:0!important;padding:0!important}
         <div class="field"><label>Store / Business Name *</label><input id="sellerApplicationStoreName" maxlength="100"></div>
         <div class="field"><label>Mobile Number *</label><input id="sellerPhone" type="tel"></div>
         <div class="field"><label>Choose ONE primary marketplace *</label><select id="applicationMarketplace" required><option value="">Select marketplace</option><option value="retail">RETAIL</option><option value="motors">MOTORS</option><option value="property">PROPERTY</option></select></div>
+        <div class="field" style="margin-top:10px;padding:12px;border:1px solid #d7e3f3;border-radius:10px;background:#f8fbff;"><label style="display:flex;align-items:flex-start;gap:9px;font-weight:700;"><input id="sellerSafePolicyAccepted" type="checkbox" style="width:auto;min-width:18px;margin-top:4px;"><span>I have read and agree to follow the <a href="./safe-meeting-policy.html" target="_blank" rel="noopener noreferrer">Safe Meeting, Viewing, Collection &amp; Exchange Policy</a>. I understand that I arrange meetings and exchanges directly with buyers and must put personal safety first. *</span></label><p style="font-size:12px;margin:7px 0 0;color:#53657d;">This acknowledgement is required to submit a seller application. Policy version: 1.0.</p></div>
+        <p style="font-size:12px;color:#53657d;margin:6px 0;">Read the <a href="./legal-compliance.html#section-16" target="_blank" rel="noopener noreferrer">Privacy Notice</a> to understand how seller application information is used.</p>
 
         </div>
         <button class="btn" type="submit" style="width:100%;margin-top:10px;">Sign In to NOVAAI</button>
@@ -913,6 +915,9 @@ document.getElementById("signup").onclick = async () => {
   let email = document.getElementById("email").value.trim().toLowerCase(), password = document.getElementById("password").value;
   let full_name = document.getElementById("sellerRealName").value.trim(), phone = document.getElementById("sellerPhone").value.trim(), store_name=document.getElementById("sellerApplicationStoreName").value.trim(), primary_marketplace=document.getElementById("applicationMarketplace").value;
   if(!email || password.length<6 || !full_name || !store_name || !phone || !["retail","motors","property"].includes(primary_marketplace)) return msg("authMsg", "Complete all application fields and choose one primary marketplace.", true);
+  const safePolicyAccepted = document.getElementById("sellerSafePolicyAccepted").checked;
+  if(!safePolicyAccepted) return msg("authMsg", "Please read and accept the Safe Meeting, Viewing, Collection & Exchange Policy before submitting your seller application.", true);
+  const safePolicyAcceptedAt = new Date().toISOString();
 
   // Always return confirmed sellers to this GitHub Pages project path, not the account root.
   // Preserve the selected marketplace so Property applicants return to the Property portal.
@@ -920,7 +925,7 @@ document.getElementById("signup").onclick = async () => {
   emailRedirectTo.searchParams.set("market", primary_marketplace);
   let {data, error} = await sb.auth.signUp({email, password, options:{
     emailRedirectTo: emailRedirectTo.toString(),
-    data:{full_name, phone, seller_store_name:store_name, seller_primary_marketplace:primary_marketplace}
+    data:{full_name, phone, seller_store_name:store_name, seller_primary_marketplace:primary_marketplace, seller_safe_meeting_policy_version:"1.0", seller_safe_meeting_policy_accepted:true, seller_safe_meeting_policy_accepted_at:safePolicyAcceptedAt}
   }});
   if(error) return msg("authMsg", error.message, true);
   const u = data.user || data.session?.user;
