@@ -1288,11 +1288,10 @@ style="width:min(92vw,700px);max-height:85vh;overflow:auto;border:0;border-radiu
 
 <footer>
 <div class="foot">
-<div><div class="logo">NOVA<span>AI</span> MARKETPLACE</div>
-<div id="shopFooterAd" class="nova-footer-ad" data-nova-ad-slot="shop_footer" role="region" aria-label="NOVAAI Shop advertising board"><div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker"></span><strong></strong><small></small><a href="#products"></a></div></div>
-</div></div>
+<div><div class="logo">NOVA<span>AI</span> MARKETPLACE</div></div>
 <div><strong>Shop smart. Sell more.</strong><p>© <span id="year"></span> NOVAAI. Built for South Africa.</p></div>
 </div>
+<div id="shopFooterAd" class="nova-footer-ad" data-nova-ad-slot="shop_footer" role="region" aria-label="NOVAAI Shop advertising board"><div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker"></span><strong></strong><small></small><a href="#products"></a></div></div>
 </footer>
 
 <div id="toast" class="toast hidden"></div>
@@ -2302,17 +2301,19 @@ body.wishlist-view #wishlistAdSlot{display:flex!important}
 /* Match only the bottom Shop advert to the top Retail board:
    75% campaign image on the left and 25% copy panel on the right. */
 #shopFooterAd{
+  /* Keep the board outside the footer's max-width flex row and align it
+     with the viewport edges without a 100vw positional offset. */
   position:relative;
-  left:50%;
-  transform:translateX(-50%);
+  left:auto;
+  transform:none;
   display:block;
   box-sizing:border-box;
-  width:100vw;
+  width:calc(100% + 40px);
   max-width:none;
   height:clamp(190px,34vw,320px);
   min-height:190px;
   max-height:320px;
-  margin:14px 0 20px;
+  margin:14px -20px 0;
   background:#10284b;
 }
 #shopFooterAd:after{display:none}
