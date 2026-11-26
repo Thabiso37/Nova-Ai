@@ -616,14 +616,9 @@ html.nova-property-ad-pending #propertyAdSlot * {
   </div>
 
 <section id="motorsHub" class="motors-hub" aria-label="NOVAAI Motors vehicles for sale">
-  <div class="motors-welcome" data-nova-ad-slot="motors_banner" data-nova-ad-format="carousel" data-nova-ad-version="1" role="region" aria-label="NOVAAI Motors featured advertisement">
-    <div class="motors-welcome-top"><span>NOVAAI MOTORS</span><span class="motors-avatar">N</span></div>
-    <div class="motors-hero-copy">
-      <span class="motors-eyebrow">CARS • BAKKIES • SUVs • MOTORCYCLES</span>
-      <h1>Find your next vehicle.</h1>
-      <p>Browse vehicles listed by South African sellers, with the details they provide.</p>
-      <button type="button" class="motors-explore" onclick="document.getElementById('motorsVehiclesHeading').scrollIntoView({behavior:'smooth',block:'start'})">Explore vehicles <span aria-hidden="true">→</span></button>
-    </div>
+  <div class="motors-welcome" data-nova-ad-slot="motors_banner" data-nova-ad-format="carousel" data-nova-ad-version="1" role="region" aria-label="NOVAAI Motors advertising board">
+    <div class="motors-welcome-top"><span></span><span class="motors-avatar" aria-hidden="true"></span></div>
+    <div class="motors-hero-copy"><span class="motors-eyebrow"></span><h1></h1><p></p><button type="button" class="motors-explore" aria-label="View advertisement"></button></div>
   </div>
   <div class="motors-tools">
     <div class="motors-filter-chips" role="group" aria-label="Vehicle categories">
@@ -639,10 +634,9 @@ html.nova-property-ad-pending #propertyAdSlot * {
 </section>
 
 <section id="propertyHub" class="property-hub" hidden>
-<!-- NOVAAI Property promotional banner retained as requested -->
-<div class="property-welcome" id="propertyAdSlot" data-nova-ad-slot="property_banner" data-nova-ad-format="banner" data-nova-ad-version="1" role="region" aria-label="NOVAAI Property advertisement">
-  <div class="property-promo-photo"><img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=85" alt="Modern home"></div>
-  <div class="property-promo-copy"><span class="property-promo-kicker">A BETTER PLACE TO CALL HOME</span><h2>Find a place to belong.</h2><p>Explore homes and spaces across South Africa.</p><a href="#productGrid" class="property-promo-link">Explore properties <span aria-hidden="true">→</span></a></div>
+<div class="property-welcome" id="propertyAdSlot" data-nova-ad-slot="property_banner" data-nova-ad-format="banner" data-nova-ad-version="1" role="region" aria-label="NOVAAI Property advertising board">
+  <div class="property-promo-photo"><img alt="" aria-hidden="true"></div>
+  <div class="property-promo-copy"><span class="property-promo-kicker"></span><h2></h2><p></p><a href="#productGrid" class="property-promo-link"></a></div>
 </div>
 <div class="property-tools">
   <div class="property-search"><input id="propertySearch" placeholder="Search suburb, city or property" oninput="searchProperty(this.value)" aria-label="Search suburb, city or property"></div>
@@ -661,11 +655,11 @@ html.nova-property-ad-pending #propertyAdSlot * {
   <div id="productGrid" class="grid">
     <div class="msg">Loading marketplace listings...</div>
   </div>
-  <section id="motorsFooterAd" class="nova-footer-ad market-footer-ad" data-nova-ad-slot="motors_footer" role="region" aria-label="NOVAAI Motors featured advertisement" hidden>
-    <div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker">NOVAAI MOTORS • FEATURED</span><strong>Find the vehicle that moves you.</strong><small>Explore cars, bakkies, SUVs and parts from local sellers.</small><a href="#motorsVehiclesHeading">Explore Motors →</a></div>
+  <section id="motorsFooterAd" class="nova-footer-ad market-footer-ad" data-nova-ad-slot="motors_footer" role="region" aria-label="NOVAAI Motors advertising board" hidden>
+    <div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker"></span><strong></strong><small></small><a href="#motorsVehiclesHeading"></a></div>
   </section>
-  <section id="propertyFooterAd" class="nova-footer-ad market-footer-ad" data-nova-ad-slot="property_footer" role="region" aria-label="NOVAAI Property featured advertisement" hidden>
-    <div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker">NOVAAI PROPERTY • FEATURED</span><strong>Make room for your next chapter.</strong><small>Discover homes and spaces across South Africa.</small><a href="#propertyHub">Explore Property →</a></div>
+  <section id="propertyFooterAd" class="nova-footer-ad market-footer-ad" data-nova-ad-slot="property_footer" role="region" aria-label="NOVAAI Property advertising board" hidden>
+    <div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker"></span><strong></strong><small></small><a href="#propertyHub"></a></div>
   </section>
 </main>
 
