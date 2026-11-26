@@ -32,7 +32,7 @@
 
   // Admin campaign feed: management can publish approved campaign rows through NOVAAI_ADS.announceCampaigns(rows).
   const emptyBoardStyle=document.createElement('style');
-  emptyBoardStyle.textContent='.nova-ad-empty{display:none!important}';
+  emptyBoardStyle.textContent='.nova-ad-empty{visibility:visible!important;position:relative!important;isolation:isolate}.nova-ad-empty::after{content:'Advertising space';position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:12px;background:linear-gradient(120deg,rgba(16,40,75,.94),rgba(23,78,166,.88));color:#fff;font-size:13px;font-weight:850;letter-spacing:.2px;text-align:center;pointer-events:none}';
   document.head.appendChild(emptyBoardStyle);
   const managedTimers=Object.create(null);
   function safeHttpsUrl(value){
@@ -40,7 +40,7 @@
   }
   const knownDemoCampaignCodes=new Set(["NOVA-70F75B8696","NOVA-2E67B9950D","NOVA-MOTORS-01","NOVA-E8262B3A0F","NOVA-08A1F95038","NOVA-268BBD0FF9","NOVA-F8DE3CFF62","NOVA-A2571691D1","NOVA-FB8C10789A","NOVA-PROPERTY-01","NOVA-MOTORS-02","NOVA-SHOP-03","NOVA-SHOP-02","NOVA-PROPERTY-02","NOVA-PROPERTY-03","NOVA-MOTORS-03"]);
   function isDemoCampaign(campaign){
-    const code=String(campaign&&campaign.campaign_code||'').trim().toUpperCase();
+    const code=String(campaign&&(campaign.campaign_code||campaign.campaign_id)||'').trim().toUpperCase();
     const creative=String(campaign&&campaign.creative_url||'').toLowerCase();
     return knownDemoCampaignCodes.has(code)||creative.includes('images.unsplash.com')||creative.includes('source.unsplash.com');
   }
@@ -396,7 +396,9 @@
         const creativeReady=await preloadCampaignCreative(c);
         if(slot.__novaAdRenderToken!==renderToken)return;
         if(!creativeReady){
-        if(id==='property_banner')document.documentElement.classList.remove('nova-property-ad-pending');
+          if(id==='property_banner')document.documentElement.classList.remove('nova-property-ad-pending');
+          slot.classList.add('nova-ad-empty');
+          slot.setAttribute('data-nova-ad-status','creative_unavailable');
           index=(index+1)%campaigns.length;
           if(campaigns.length>1&&!document.hidden){
             const retryDelay=Math.max(2,Math.min(60,Number(c.duration_seconds)||5))*1000;
@@ -404,6 +406,7 @@
           }
           return;
         }
+        slot.classList.remove('nova-ad-empty');
         const title=String(c.title||'Featured offer').slice(0,100);
         const description=String(c.description||'Discover this featured offer.').slice(0,180);
         const href=safeHttpsUrl(c.destination_url);
