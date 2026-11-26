@@ -1193,9 +1193,11 @@ style="width:min(92vw,700px);max-height:85vh;overflow:auto;border:0;border-radiu
 <section id="wishlist" class="panel" style="margin:24px 0" data-nova-ad-area="wishlist">
   <h2>❤️ My Wishlist</h2>
   <p>Your saved products will appear here.</p>
-  <div id="wishlistAdSlot" class="nova-footer-ad" data-nova-ad-slot="wishlist_banner" role="region" aria-label="NOVAAI Wishlist advertising board"><div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker"></span><strong></strong><small></small><a href="#products"></a></div></div>
 </section>
+<div id="retailWishlistAdPair" class="retail-wishlist-ad-pair" aria-label="Retail and Wishlist advertisements">
+<div id="wishlistAdSlot" class="nova-footer-ad" data-nova-ad-slot="wishlist_banner" role="region" aria-label="NOVAAI Wishlist advertising board"><div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker"></span><strong></strong><small></small><a href="#products"></a></div></div>
 <div id="shopFooterAd" class="nova-footer-ad" data-nova-ad-slot="shop_footer" role="region" aria-label="NOVAAI Shop advertising board"><div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker"></span><strong></strong><small></small><a href="#products"></a></div></div>
+</div>
 </main>
 
 <footer>
@@ -1462,9 +1464,6 @@ function clearWishlist(){
 function renderWishlist(){
   const section=document.getElementById("wishlist");
   if(!section)return;
-  // Preserve the admin-managed Wishlist campaign while refreshing saved products.
-  const wishlistAd=section.querySelector('[data-nova-ad-slot="wishlist_banner"]');
-  if(wishlistAd)wishlistAd.remove();
   let saved=[];
   try{saved=JSON.parse(localStorage.getItem("novaWishlist")||"[]");if(!Array.isArray(saved))saved=[];}catch(e){saved=[];}
   saved=[...new Set(saved.map(wishlistProductKey))];
@@ -1483,7 +1482,6 @@ function renderWishlist(){
       </article>`;
     }).join(""):`<div class="wishlist-empty">Your wishlist is empty. Tap a heart on a product to save it.</div>`}
   `;
-  if(wishlistAd)section.appendChild(wishlistAd);
   section.querySelectorAll("[data-wishlist-open]").forEach(button=>{
     button.addEventListener("click",()=>{
       const product=products.find(item=>wishlistProductKey(item.dbId||item.id)===wishlistProductKey(button.dataset.wishlistOpen));
@@ -2194,11 +2192,22 @@ function closeCart() {
 </style>
 
 <style>
-/* Keep the Wishlist campaign at the bottom of the Wishlist section only. */
-body.wishlist-view #wishlistAdSlot{display:flex!important}
+/* Both advertising boards stay on the Retail page and are hidden in Wishlist-only view. */
+body.wishlist-view #retailWishlistAdPair{display:none!important}
 </style>
 
 <style>
+.retail-wishlist-ad-pair{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;width:100%;min-width:0;margin:18px 0 0;align-items:stretch;overflow:hidden;border:1px solid #234f88;border-radius:16px;background:linear-gradient(115deg,#10284b 0%,#174ea6 58%,#2869b8 100%);box-shadow:0 8px 22px rgba(16,40,75,.16);isolation:isolate;}
+.retail-wishlist-ad-pair>.nova-footer-ad{position:relative;display:flex!important;width:100%;min-width:0;min-height:142px;margin:0!important;overflow:hidden;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;}
+.retail-wishlist-ad-pair>.nova-footer-ad:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(9,27,53,.38),rgba(16,40,75,.08));pointer-events:none;}
+.retail-wishlist-ad-pair>#wishlistAdSlot{border-right:1px solid rgba(255,255,255,.22)!important;}
+.retail-wishlist-ad-pair>#shopFooterAd{border-left:0!important;}
+.retail-wishlist-ad-pair .nova-footer-ad-image{min-width:0;opacity:.55;}
+.retail-wishlist-ad-pair .nova-footer-ad-copy{position:relative;z-index:1;min-width:0;padding:17px 18px;}
+.retail-wishlist-ad-pair .nova-footer-ad-copy strong,.retail-wishlist-ad-pair .nova-footer-ad-copy small{max-width:100%;overflow-wrap:anywhere;}
+@media(min-width:700px){.retail-wishlist-ad-pair>.nova-footer-ad{min-height:170px}.retail-wishlist-ad-pair .nova-footer-ad-copy{padding:22px 26px}}
+@media(max-width:520px){.retail-wishlist-ad-pair{margin-top:14px;border-radius:12px}.retail-wishlist-ad-pair>.nova-footer-ad{min-height:118px}.retail-wishlist-ad-pair .nova-footer-ad-copy{gap:5px;padding:10px 9px}.retail-wishlist-ad-pair .nova-footer-ad-kicker{font-size:7px;letter-spacing:1px}.retail-wishlist-ad-pair .nova-footer-ad-copy strong{font-size:12px;line-height:1.2}.retail-wishlist-ad-pair .nova-footer-ad-copy small{font-size:9px;line-height:1.25}.retail-wishlist-ad-pair .nova-footer-ad-copy a{font-size:9px;padding:6px 8px}}
+@media(prefers-reduced-motion:reduce){.retail-wishlist-ad-pair .nova-footer-ad-image{transition:none}}
 /* Bottom promotional boards: Shop, Motors and Property only. */
 .nova-footer-ad{position:relative;display:flex;align-items:stretch;min-height:142px;margin:18px 0 12px;overflow:hidden;border:1px solid #234f88;border-radius:16px;background:linear-gradient(115deg,#10284b 0%,#174ea6 58%,#2869b8 100%);color:#fff;isolation:isolate;box-shadow:0 8px 22px rgba(16,40,75,.16)}
 .nova-footer-ad[hidden]{display:none!important}
