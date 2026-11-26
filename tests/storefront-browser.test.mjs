@@ -5,27 +5,9 @@ import path from "node:path";
 import {createServer} from "node:http";
 import {chromium} from "playwright";
 
-
 const retailProduct={id:40,name:"Test Black T-Shirt",category:"Office & Stationery",price:200,seller_name:"Nova Test Store",seller_id:"seller-1",status:"approved",description:"T shirt",image_url:"",images:[]};
 const retailStore={user_id:"seller-1",store_name:"Raider Retail",store_slug:"raider-retail",description:"",status:"approved"};
 const retailLocation={user_id:"seller-1",province:"Gauteng",city:"Pretoria",suburb:"Centurion",public_location_enabled:true,approval_status:"approved"};
-async function waitForRetailMarketplace(page){
- const status=page.locator("#dbStatus");
- await page.waitForFunction(()=>{
-  const text=document.getElementById("dbStatus")?.textContent||"";
-  return text.includes("REAL MARKETPLACE CONNECTED")||text.includes("MARKETPLACE CONNECTION ERROR");
- },{},{timeout:10000}).catch(async error=>{
-  const diagnostics=await page.evaluate(()=>({
-   status:document.getElementById("dbStatus")?.textContent||"<missing>",
-   message:document.getElementById("catalogueMessage")?.textContent||"<missing>",
-   productCards:document.querySelectorAll("#products .product").length
-  })).catch(()=>({page:"unavailable"}));
-  throw new Error("Retail catalogue did not reach a terminal state: "+JSON.stringify(diagnostics)+"; "+error.message);
- });
- const actual=await status.textContent();
- assert.equal(actual,"REAL MARKETPLACE CONNECTED","Retail fixture failed to connect: "+(await page.locator("#catalogueMessage").textContent()));
-}
-
 function retailMockScript(description=retailProduct.description){const product={...retailProduct,description};return `(()=>{const tables={Products:[${JSON.stringify(product)}],seller_stores:[${JSON.stringify(retailStore)}],seller_public_locations:[${JSON.stringify(retailLocation)}]};class Q{constructor(t){this.t=t;this.filters=[];}select(){return this;}eq(k,v){this.filters.push(x=>String(x[k])===String(v));return this;}in(k,vs){this.filters.push(x=>(vs||[]).map(String).includes(String(x[k])));return this;}order(){return this;}rows(){return (tables[this.t]||[]).filter(x=>this.filters.every(f=>f(x)));}maybeSingle(){return Promise.resolve({data:this.rows()[0]||null,error:null});}then(resolve,reject){return Promise.resolve({data:this.rows(),error:null}).then(resolve,reject);}}const client={from:t=>new Q(t),rpc:async()=>({data:null,error:{message:"RPC disabled in browser fixture"}}),auth:{getSession:async()=>({data:{session:null},error:null}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),getUser:async()=>({data:{user:null},error:null}),signOut:async()=>({error:null})},storage:{from:()=>({getPublicUrl:()=>({data:{publicUrl:""}}),upload:async()=>({error:{message:"Storage disabled"}}),remove:async()=>({error:{message:"Storage disabled"}})})}};window.supabase={createClient:()=>client};window.NOVAAI_SUPABASE_CLIENT=client;})();`;}
 const server=createServer((req,res)=>{
  const requestUrl=new URL(req.url,"http://127.0.0.1");
@@ -149,7 +131,7 @@ test("Retail product-detail modal clearly explains when a seller has not supplie
  try{
   const page=await browser.newPage({viewport:{width:393,height:852},deviceScaleFactor:1,isMobile:true,hasTouch:true});
   await page.goto("http://127.0.0.1:"+server.address().port+"/retail.html?no_description=1",{waitUntil:"domcontentloaded"});
-  await waitForRetailMarketplace(page);
+  await page.waitForFunction(()=>document.getElementById("dbStatus")?.textContent.includes("REAL MARKETPLACE CONNECTED"));
   await page.locator('[data-open-product="db-40"]').click();
   await page.waitForSelector("#productModal.open");
   assert.equal(await page.locator("#modalProductDescription").textContent(),"The seller has not supplied a product description.");
@@ -163,7 +145,7 @@ test("Retail product-detail modal fits a 360px Android viewport without horizont
   const page=await browser.newPage({viewport:{width:360,height:800},deviceScaleFactor:1,isMobile:true,hasTouch:true});
   const errors=[];page.on("pageerror",e=>errors.push(e.message));
   await page.goto("http://127.0.0.1:"+server.address().port+"/retail.html",{waitUntil:"domcontentloaded"});
-  await waitForRetailMarketplace(page);
+  await page.waitForFunction(()=>document.getElementById("dbStatus")?.textContent.includes("REAL MARKETPLACE CONNECTED"));
   await page.locator('[data-open-product="db-40"]').click();
   await page.waitForSelector("#productModal.open");
   const dimensions=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,modal:document.querySelector("#productModal .product-modal-card")?.getBoundingClientRect().width}));
@@ -182,7 +164,7 @@ test("Retail product-detail modal renders an approved listing and captures a res
   const page=await browser.newPage({viewport:{width:393,height:852},deviceScaleFactor:1,isMobile:true,hasTouch:true});
   const errors=[];page.on("pageerror",e=>errors.push(e.message));
   await page.goto("http://127.0.0.1:"+server.address().port+"/retail.html",{waitUntil:"domcontentloaded"});
-  await waitForRetailMarketplace(page);
+  await page.waitForFunction(()=>document.getElementById("dbStatus")?.textContent.includes("REAL MARKETPLACE CONNECTED"));
   await page.locator('[data-open-product="db-40"]').click();
   await page.waitForSelector("#productModal.open");
   assert.equal(await page.locator("#modalProductName").textContent(),"Test Black T-Shirt");
