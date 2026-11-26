@@ -32,7 +32,7 @@
 
   // Admin campaign feed: management can publish approved campaign rows through NOVAAI_ADS.announceCampaigns(rows).
   const emptyBoardStyle=document.createElement('style');
-  emptyBoardStyle.textContent='.nova-ad-empty{visibility:visible!important;position:relative!important;isolation:isolate}.nova-ad-empty::after{content:'Advertising space';position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:12px;background:linear-gradient(120deg,rgba(16,40,75,.94),rgba(23,78,166,.88));color:#fff;font-size:13px;font-weight:850;letter-spacing:.2px;text-align:center;pointer-events:none}';
+  emptyBoardStyle.textContent='.nova-ad-empty{visibility:visible!important;position:relative!important;isolation:isolate}.nova-ad-empty::after{content:"Advertising space";position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:12px;background:linear-gradient(120deg,rgba(16,40,75,.94),rgba(23,78,166,.88));color:#fff;font-size:13px;font-weight:850;letter-spacing:.2px;text-align:center;pointer-events:none}';
   document.head.appendChild(emptyBoardStyle);
   const managedTimers=Object.create(null);
   function safeHttpsUrl(value){
