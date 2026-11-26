@@ -822,8 +822,6 @@ html{scroll-behavior:smooth;scroll-padding-top:92px}body{font-family:Inter,ui-sa
         <input id="adCampaignFile" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm">
         <small class="muted">Choose a file from your Android phone. Maximum size: 100 MB. The secure NOVAAI Storage URL is generated automatically after upload.</small>
         <div id="adCreativePreview" class="muted" aria-live="polite">No new media selected. For an existing campaign, its saved media is reused unless you upload a replacement.</div>
-        <label for="adCampaignImage">Existing media URL (optional fallback)</label>
-        <input id="adCampaignImage" type="url" inputmode="url" placeholder="Only needed if reusing an existing public HTTPS media URL">
         <label for="adCampaignDestination">NOVAAI destination</label>
         <select id="adCampaignDestination" required>
           <option value="">Choose where the advertisement should open</option>
@@ -1062,6 +1060,7 @@ function adCampaignFileMime(file){const ext=(file.name.split(".").pop()||"").toL
 function resetAdCampaignForm(){
   const form=document.getElementById("adCampaignForm");if(!form)return;
   form.reset();document.getElementById("adCampaignId").value="";
+  document.getElementById("adCampaignFile").dataset.existingUrl="";
   Array.from(document.getElementById("adCampaignSlots").options).forEach(o=>o.selected=false);
   document.getElementById("adCampaignCreativeType").value="image";document.getElementById("adCampaignDuration").value=5;
   document.getElementById("adCreativePreview").textContent="No new media selected. For an existing campaign, its saved media is reused unless you upload a replacement.";
@@ -1121,7 +1120,7 @@ function editAdCampaign(id){
   Array.from(document.getElementById("adCampaignSlots").options).forEach(o=>o.selected=selectedSlots.includes(o.value));
   document.getElementById("adCampaignTitle").value=c.title||"";
   document.getElementById("adCampaignDescription").value=c.description||"";
-  document.getElementById("adCampaignImage").value=c.creative_url||"";
+  document.getElementById("adCampaignFile").dataset.existingUrl=c.creative_url||"";
   document.getElementById("adCampaignCreativeType").value=c.creative_type||"image";
   document.getElementById("adCampaignDuration").value=Number(c.duration_seconds)||5;
   document.getElementById("adCampaignFile").value="";
@@ -1141,8 +1140,9 @@ async function saveAdCampaign(event){
   const toIso=id=>{const v=value(id);return v?new Date(v).toISOString():null;};
   const slot_ids=Array.from(document.getElementById("adCampaignSlots").selectedOptions).map(o=>o.value);
   if(!slot_ids.length){adCampaignMessage("Select at least one advertising board.");return;}
-  let creative_url=value("adCampaignImage");
-  const mediaFile=document.getElementById("adCampaignFile").files[0];
+  const mediaInput=document.getElementById("adCampaignFile");
+  let creative_url=mediaInput.dataset.existingUrl||"";
+  const mediaFile=mediaInput.files[0];
   const creative_type=value("adCampaignCreativeType");
   if(mediaFile){
     const detectedMime=adCampaignFileMime(mediaFile);
@@ -1156,11 +1156,11 @@ async function saveAdCampaign(event){
       if(uploadError)throw uploadError;
       creative_url=sb.storage.from("Nova AI").getPublicUrl(uploaded.path).data.publicUrl;
       if(new URL(creative_url).protocol!=="https:")throw new Error("Storage did not return a public HTTPS media URL.");
-      document.getElementById("adCampaignImage").value=creative_url;
+      mediaInput.dataset.existingUrl=creative_url;
       document.getElementById("adCreativePreview").textContent="Uploaded successfully. NOVAAI media URL generated and ready to save.";
     }catch(uploadError){adCampaignMessage("Media upload failed: "+(uploadError?.message||"Unknown error"));return;}
   }
-  if(!creative_url){adCampaignMessage("Upload an image/video or enter an existing public HTTPS media URL.");return;}
+  if(!creative_url){adCampaignMessage("Upload an image or video before saving the campaign.");return;}
   try{if(new URL(creative_url).protocol!=="https:"){adCampaignMessage("Media must be a valid public HTTPS URL.");return;}}catch(_){adCampaignMessage("Media must be a valid public HTTPS URL.");return;}
   const destinationKey=value("adCampaignDestination");
   const destination_url=adCampaignDestinationUrl(destinationKey);
