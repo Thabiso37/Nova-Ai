@@ -1281,7 +1281,6 @@ style="width:min(92vw,700px);max-height:85vh;overflow:auto;border:0;border-radiu
 <section id="wishlist" class="panel" style="margin:24px 0" data-nova-ad-area="wishlist">
   <h2>❤️ My Wishlist</h2>
   <p>Your saved products will appear here.</p>
-  <div id="wishlistAdSlot" class="nova-footer-ad" data-nova-ad-slot="wishlist_banner" role="region" aria-label="NOVAAI Wishlist advertising board"><div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker"></span><strong></strong><small></small><a href="#products"></a></div></div>
 </section>
 
 </main>
@@ -1549,9 +1548,6 @@ function clearWishlist(){
 function renderWishlist(){
   const section=document.getElementById("wishlist");
   if(!section)return;
-  // Preserve the admin-managed Wishlist campaign while refreshing saved products.
-  const wishlistAd=section.querySelector('[data-nova-ad-slot="wishlist_banner"]');
-  if(wishlistAd)wishlistAd.remove();
   let saved=[];
   try{saved=JSON.parse(localStorage.getItem("novaWishlist")||"[]");if(!Array.isArray(saved))saved=[];}catch(e){saved=[];}
   saved=[...new Set(saved.map(wishlistProductKey))];
@@ -2278,11 +2274,6 @@ function closeCart() {
 #wishlist .wishlist-ad-slot strong{font-size:clamp(15px,4vw,20px);line-height:1.2;color:#fff}
 #wishlist .wishlist-ad-slot small{font-size:10px;line-height:1.4;color:#e4edfb}
 #wishlist .wishlist-ad-slot a{display:inline-flex;margin-top:3px;padding:7px 10px;border-radius:7px;background:#f5b900;color:#10284b;text-decoration:none;font-size:10px;font-weight:900}
-</style>
-
-<style>
-/* Keep the Wishlist campaign at the bottom of the Wishlist section only. */
-body.wishlist-view #wishlistAdSlot{display:flex!important}
 </style>
 
 <style>
