@@ -196,7 +196,7 @@ footer {
     <form id="supportForm" action="mailto:novaaimarket.support@gmail.com" method="post" enctype="text/plain">
 
       <label for="category">Support Category</label>
-      <select id="category" required>
+      <select id="category" name="Category" required>
         <option value="">Choose a category</option>
         <option>Seller Account</option>
         <option>Seller Application</option>
@@ -210,6 +210,7 @@ footer {
       <label for="subject">Subject</label>
       <input
         id="subject"
+        name="Subject"
         type="text"
         maxlength="150"
         placeholder="What do you need help with?"
@@ -219,6 +220,7 @@ footer {
       <label for="description">Describe your problem</label>
       <textarea
         id="description"
+        name="Description"
         maxlength="5000"
         placeholder="Explain how we can help..."
         required
@@ -245,15 +247,7 @@ footer {
   © NOVAAI MARKET · Your Marketplace. Your Opportunity.
 </footer>
 
-<script>
-document.getElementById("supportForm").addEventListener(
-  "submit",
-  function(event) {
-    event.preventDefault();
-    alert("Your email application should open. If it does not, email novaaimarket.support@gmail.com directly.");
-  }
-);
-</script>
+
 
 </body>
 </html>
