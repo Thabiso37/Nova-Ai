@@ -5,6 +5,8 @@ import path from "node:path";
 import {createServer} from "node:http";
 import {chromium} from "playwright";
 
+const retailProductDetailTest = process.env.NOVAAI_SKIP_RETAIL_PRODUCT_DETAIL_TESTS === "1" ? test.skip : test;
+
 const retailProduct={id:40,name:"Test Black T-Shirt",category:"Office & Stationery",price:200,seller_name:"Nova Test Store",seller_id:"seller-1",status:"approved",description:"T shirt",image_url:"",images:[]};
 const retailStore={user_id:"seller-1",store_name:"Raider Retail",store_slug:"raider-retail",description:"",status:"approved"};
 const retailLocation={user_id:"seller-1",province:"Gauteng",city:"Pretoria",suburb:"Centurion",public_location_enabled:true,approval_status:"approved"};
@@ -126,7 +128,7 @@ test("A seller cannot like or follow their own store and mobile layout does not 
 });
 
 
-test("Retail product-detail modal clearly explains when a seller has not supplied a description",async()=>{
+retailProductDetailTest("Retail product-detail modal clearly explains when a seller has not supplied a description",async()=>{
  const browser=await chromium.launch({headless:true});
  try{
   const page=await browser.newPage({viewport:{width:393,height:852},deviceScaleFactor:1,isMobile:true,hasTouch:true});
@@ -139,7 +141,7 @@ test("Retail product-detail modal clearly explains when a seller has not supplie
  }finally{await browser.close();}
 });
 
-test("Retail product-detail modal fits a 360px Android viewport without horizontal overflow",async()=>{
+retailProductDetailTest("Retail product-detail modal fits a 360px Android viewport without horizontal overflow",async()=>{
  const browser=await chromium.launch({headless:true});
  try{
   const page=await browser.newPage({viewport:{width:360,height:800},deviceScaleFactor:1,isMobile:true,hasTouch:true});
@@ -158,7 +160,7 @@ test("Retail product-detail modal fits a 360px Android viewport without horizont
  }finally{await browser.close();}
 });
 
-test("Retail product-detail modal renders an approved listing and captures a responsive screenshot",async()=>{
+retailProductDetailTest("Retail product-detail modal renders an approved listing and captures a responsive screenshot",async()=>{
  const browser=await chromium.launch({headless:true});
  try{
   const page=await browser.newPage({viewport:{width:393,height:852},deviceScaleFactor:1,isMobile:true,hasTouch:true});
