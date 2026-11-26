@@ -2302,10 +2302,17 @@ body.wishlist-view #wishlistAdSlot{display:flex!important}
 /* Match only the bottom Shop advert to the top Retail board:
    75% campaign image on the left and 25% copy panel on the right. */
 #shopFooterAd{
+  position:relative;
+  left:50%;
+  transform:translateX(-50%);
   display:block;
-  width:100%;
+  box-sizing:border-box;
+  width:100vw;
+  max-width:none;
   height:clamp(190px,34vw,320px);
   min-height:190px;
+  max-height:320px;
+  margin:14px 0 20px;
   background:#10284b;
 }
 #shopFooterAd:after{display:none}
