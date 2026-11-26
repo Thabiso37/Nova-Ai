@@ -1083,6 +1083,94 @@ html.nova-ads-pending [data-nova-ad-slot] * {
   <article class="shop-tv-slide is-active" data-theme="blue" aria-hidden="false"><div class="shop-tv-copy"><h2></h2><p></p><a class="shop-tv-cta" href="#products" aria-label="View advertisement"></a></div><span class="shop-tv-art" aria-hidden="true"></span></article>
 </div>
 
+<style id="nova-shop-top-ad-base">
+/* Give the Retail top advertising board a measurable, visible frame before
+   the live campaign renderer captures its natural dimensions. */
+#shopTvAds.shop-tv-ads{
+  position:relative;
+  display:block;
+  width:100%;
+  height:clamp(190px,34vw,320px);
+  min-height:190px;
+  margin:14px auto 20px;
+  overflow:hidden;
+  isolation:isolate;
+  border:1px solid #d9e3f1;
+  border-radius:16px;
+  background:linear-gradient(120deg,#10284b,#174ea6);
+  box-shadow:0 8px 24px rgba(16,40,75,.12);
+}
+#shopTvAds .shop-tv-slide{
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+}
+#shopTvAds .shop-tv-art{
+  position:absolute;
+  inset:0 auto 0 0;
+  display:block;
+  width:75%;
+  height:100%;
+  overflow:hidden;
+  background:linear-gradient(135deg,#dce8f7,#8daed8);
+}
+#shopTvAds .shop-tv-copy{
+  position:absolute;
+  inset:0 0 0 auto;
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:flex-start;
+  gap:8px;
+  box-sizing:border-box;
+  width:25%;
+  min-width:0;
+  padding:24px 10px 10px;
+  overflow-wrap:anywhere;
+  color:#fff;
+  background:linear-gradient(145deg,#10284b,#174ea6);
+}
+#shopTvAds .shop-tv-copy h2{
+  margin:0;
+  color:#fff;
+  font-size:clamp(13px,2vw,22px);
+  line-height:1.15;
+  font-weight:900;
+}
+#shopTvAds .shop-tv-copy p{
+  margin:0;
+  color:#edf4ff;
+  font-size:clamp(10px,1.3vw,14px);
+  line-height:1.3;
+}
+#shopTvAds .shop-tv-cta{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  max-width:100%;
+  min-height:30px;
+  padding:6px 9px;
+  border-radius:7px;
+  color:#10284b;
+  background:#ffd34f;
+  font-size:clamp(9px,1.2vw,12px);
+  line-height:1.1;
+  font-weight:850;
+  text-decoration:none;
+}
+@media(max-width:480px){
+  #shopTvAds.shop-tv-ads{height:190px;min-height:190px;margin:10px auto 16px;border-radius:12px}
+  #shopTvAds .shop-tv-copy{gap:5px;padding:22px 5px 6px}
+  #shopTvAds .shop-tv-copy h2{font-size:12px}
+  #shopTvAds .shop-tv-copy p{font-size:10px}
+  #shopTvAds .shop-tv-cta{min-height:25px;padding:4px 5px;font-size:9px}
+}
+</style>
+
 <section id="shopCategories" class="shop-categories" aria-label="Shop by category">
   <div class="shop-categories-heading"><div><span>EXPLORE THE MARKETPLACE</span><h2>Shop by Category</h2></div><button type="button" id="showAllShopCategories">View all</button></div>
   <div id="shopCategoryTiles" class="shop-category-tiles" aria-live="polite"><p class="shop-category-loading">Loading live categories…</p></div>
