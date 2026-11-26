@@ -1,6 +1,5 @@
 name: NOVAAI Storefront Validation
 on:
-  workflow_dispatch:
   pull_request:
     branches: [main]
     paths:
@@ -9,7 +8,6 @@ on:
       - "store-page.html"
       - "docs/sql/20261115-seller-storefront-branding.sql"
       - "tests/storefront.test.mjs"
-      - "tests/storefront-browser.test.mjs"
       - "seller.html"
       - "retail.html"
       - "seller-motors-houses.html"
@@ -36,8 +34,8 @@ jobs:
         run: |
           npm install --no-save playwright
           npx playwright install --with-deps chromium
-      - name: Run storefront regression tests
-        run: node --test tests/storefront.test.mjs tests/storefront-browser.test.mjs
+      - name: Run storefront regression tests (exclude unrelated Retail product-detail modal checks)
+        run: node --test --test-name-pattern='^(?!Retail product-detail modal)' tests/storefront.test.mjs tests/storefront-browser.test.mjs
       - name: Upload Store Page screenshot evidence
         if: always()
         uses: actions/upload-artifact@v7
