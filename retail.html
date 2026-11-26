@@ -1576,7 +1576,16 @@ function renderWishlist(){
       </article>`;
     }).join(""):`<div class="wishlist-empty">Your wishlist is empty. Tap a heart on a product to save it.</div>`}
   `;
-  if(wishlistAd)section.appendChild(wishlistAd);
+  const wishlistAd=document.createElement("div");
+  wishlistAd.id="wishlistAdSlot";
+  wishlistAd.className="nova-footer-ad wishlist-ad-slot";
+  wishlistAd.dataset.novaAdSlot="wishlist_banner";
+  wishlistAd.dataset.novaAdFormat="carousel";
+  wishlistAd.dataset.novaAdVersion="1";
+  wishlistAd.setAttribute("role","region");
+  wishlistAd.setAttribute("aria-label","NOVAAI Wishlist advertising board");
+  wishlistAd.innerHTML='<div class="nova-footer-ad-image" aria-hidden="true"></div><div class="nova-footer-ad-copy"><span class="nova-footer-ad-kicker">SPONSORED</span><strong>Advertising space</strong><small>Promote your products to NOVAAI shoppers.</small><a href="./retail.html">Explore offers</a></div>';
+  section.appendChild(wishlistAd);
   section.querySelectorAll("[data-wishlist-open]").forEach(button=>{
     button.addEventListener("click",()=>{
       const product=products.find(item=>wishlistProductKey(item.dbId||item.id)===wishlistProductKey(button.dataset.wishlistOpen));
@@ -2275,7 +2284,7 @@ function closeCart() {
 
 
 <script src="./nearby-search.js"></script>
-<script src="./novaai-ad-slots.js?v=20261120-fast-first-paint-1" onerror="window.__novaAdsRevealBoards&&window.__novaAdsRevealBoards()"></script>
+<script src="./novaai-ad-slots.js?v=20261126-ad-boards-visible-1" onerror="window.__novaAdsRevealBoards&&window.__novaAdsRevealBoards()"></script>
 <script src="./novaai-share-visits.js?v=20261113-share-visits-1" defer></script>
 <style>
 /* Wishlist advertisement slot only — reserved for future admin-managed campaigns. */
