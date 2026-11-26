@@ -157,7 +157,7 @@ footer {
 
 <header>
   <div class="logo">NOVAAI</div>
-  <div class="edition">SUPPORT CENTRE · 2080 EDITION</div>
+  <div class="edition">SUPPORT CENTRE · NOVAAI MARKET</div>
 </header>
 
 <main class="container">
@@ -165,7 +165,7 @@ footer {
   <section class="welcome">
     <h1>Help & Support</h1>
     <p>
-      Welcome to NOVAAI Support. We are here to help
+      Welcome to NOVAAI MARKET Support. We are here to help
       with your seller account, marketplace access,
       applications and listings.
     </p>
@@ -191,12 +191,12 @@ footer {
   </section>
 
   <section class="card">
-    <h2>Submit a Support Request</h2>
+    <h2>Send a Support or Complaint Email</h2>
 
-    <form id="supportForm">
+    <form id="supportForm" action="mailto:novaaimarket.support@gmail.com" method="post" enctype="text/plain">
 
       <label for="category">Support Category</label>
-      <select id="category" required>
+      <select id="category" name="Category" required>
         <option value="">Choose a category</option>
         <option>Seller Account</option>
         <option>Seller Application</option>
@@ -210,6 +210,7 @@ footer {
       <label for="subject">Subject</label>
       <input
         id="subject"
+        name="Subject"
         type="text"
         maxlength="150"
         placeholder="What do you need help with?"
@@ -219,38 +220,25 @@ footer {
       <label for="description">Describe your problem</label>
       <textarea
         id="description"
+        name="Description"
         maxlength="5000"
         placeholder="Explain how we can help..."
         required
       ></textarea>
 
-      <div class="notice">
-        Support request submission is being prepared.
-        Your information will not be sent or stored by
-        this demonstration page.
-      </div>
+      <div class="notice">Selecting Send opens your email application with the information you entered. Your message is not submitted to or stored by this webpage. For privacy requests or general business enquiries, email novaaimarket@gmail.com. Do not include passwords, identity-document numbers or unnecessary sensitive information.</div>
 
-      <button class="submit" type="submit">
-        Submission Not Yet Connected
-      </button>
+      <button class="submit" type="submit">Open Email to Send Request</button>
 
     </form>
   </section>
 
   <section class="card">
-    <h2>My Support Requests</h2>
-    <p>
-      Your support request history and replies will
-      appear here once secure account integration
-      is connected.
-    </p>
+    <h2>What to Include</h2><p>Include the relevant listing URL or reference, the category of concern, the date and a clear description. For suspected fraud or safety issues, do not confront the person; report the concern and contact the appropriate authorities if there is immediate danger.</p>
   </section>
 
   <section class="notice">
-    NOVAAI is a marketplace intermediary. NOVAAI does
-    not hold products or customer or seller money.
-    Buyers and sellers arrange payments and delivery
-    directly with each other.
+    NOVAAI MARKET provides listings and advertising space. Buyers contact sellers directly, including through WhatsApp where enabled, and independently arrange their transaction, payment, collection and delivery. NOVAAI MARKET does not receive or hold buyer-to-seller transaction funds. Mandatory legal responsibilities and consumer rights are not excluded.
   </section>
 
 </main>
@@ -259,15 +247,7 @@ footer {
   © NOVAAI MARKET · Your Marketplace. Your Opportunity.
 </footer>
 
-<script>
-document.getElementById("supportForm").addEventListener(
-  "submit",
-  function(event) {
-    event.preventDefault();
-    alert("Support request submission is not connected yet.");
-  }
-);
-</script>
+
 
 </body>
 </html>
