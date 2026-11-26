@@ -8,6 +8,7 @@ on:
       - "store-page.html"
       - "docs/sql/20261115-seller-storefront-branding.sql"
       - "tests/storefront.test.mjs"
+      - "tests/storefront-browser.test.mjs"
       - "seller.html"
       - "retail.html"
       - "seller-motors-houses.html"
