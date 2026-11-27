@@ -1195,6 +1195,10 @@ html.nova-ads-pending [data-nova-ad-slot] * {
       <label for="customerAuthPassword">Password</label>
       <input id="customerAuthPassword" type="password" minlength="6" required>
 
+      <div id="customerRegistrationPrivacyNotice" class="notice" hidden style="font-size:12px;line-height:1.55;margin:10px 0;">
+        <strong>Customer registration privacy notice:</strong> When you register, NOVAAI MARKET collects your full name, email address and account password. Your details are used to create and secure your account and provide customer features such as account access and My Orders. Your account information is processed by our authentication, database and hosting service providers and is accessible to authorised administrators where necessary. Your password is handled by the authentication provider and is not displayed to sellers or other customers. If you do not provide the required details, you cannot create an account. You may request access to or correction of your personal information, or ask for deletion where legally permitted, by emailing <a href="mailto:novaaimarket@gmail.com">novaaimarket@gmail.com</a>. You may also raise a privacy complaint with the <a href="https://inforegulator.org.za/" target="_blank" rel="noopener noreferrer">Information Regulator</a>. Read the <a href="./legal-compliance.html#section-16" target="_blank" rel="noopener noreferrer">full Privacy Policy</a> for further details, including retention and your rights.
+      </div>
+
       <button type="submit" class="btn primary" id="customerAuthSubmit">Sign in</button>
     </form>
 
@@ -1820,6 +1824,7 @@ function renderCustomerAuthMode() {
 
   document.getElementById("customerNameField").classList.toggle("hidden", !registering);
   document.getElementById("customerAuthName").required = registering;
+  document.getElementById("customerRegistrationPrivacyNotice").hidden = !registering;
 
   document.getElementById("customerAuthSubmit").textContent =
     registering ? "Create account" : "Sign in";
