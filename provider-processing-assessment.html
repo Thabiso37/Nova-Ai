@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#06142d">
+<title>Provider Processing & International Transfers | NOVAAI MARKET</title>
+<style>
+:root{--navy:#06142d;--blue:#174ea6;--yellow:#ffd21f;--ink:#172033;--muted:#667085;--line:#e3e8f0;--bg:#f5f7fb}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 Inter,Roboto,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+header{background:linear-gradient(120deg,var(--navy),var(--blue));color:#fff;padding:25px 16px}header .inner,main{max-width:1100px;margin:auto}
+.brand{font-weight:950;letter-spacing:.4px;font-size:20px}.ai{color:var(--yellow)}h1{font-size:clamp(24px,5vw,36px);line-height:1.2;margin:10px 0 5px}header p{color:#dceaff;margin:0}
+main{padding:18px 12px 34px}.card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:18px;margin:0 0 14px;box-shadow:0 3px 12px #10284b08}
+h2{font-size:19px;color:var(--navy);margin:0 0 9px}h3{font-size:15px;color:var(--blue);margin:15px 0 5px}p{margin:7px 0}ul,ol{padding-left:22px;margin:8px 0}li{margin:5px 0}
+.meta{font-size:13px;color:var(--muted)}.notice{background:#fff8dc;border:1px solid #e8c65b;border-radius:10px;padding:12px 14px;color:#5f4c12;margin-bottom:15px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:10px;border:1px solid var(--line)}th{background:#eef3fa;color:var(--navy)}a{color:var(--blue);overflow-wrap:anywhere}
+.badge{display:inline-block;border-radius:20px;padding:2px 9px;font-size:12px;font-weight:800;background:#e8f5ec;color:#176b36}.conditional{background:#fff3d6;color:#805500}
+footer{text-align:center;padding:18px 12px 28px;color:var(--muted);font-size:12px}
+@media(max-width:680px){table,tbody,tr,td{display:block;width:100%}thead{display:none}tr{border:1px solid var(--line);margin:0 0 10px;border-radius:8px;overflow:hidden}td{border:0;border-bottom:1px solid var(--line)}td:last-child{border:0}td:before{content:attr(data-label);display:block;font-weight:800;color:var(--navy);margin-bottom:3px}}
+</style>
+</head>
+<body>
+<header><div class="inner"><div class="brand">NOVA<span class="ai">AI</span> MARKET</div><h1>Provider Processing &amp; International Transfer Assessment</h1><p>Provider roles, overseas processing, contractual safeguards, retention and deletion controls.</p></div></header>
+<main>
+<p class="meta"><strong>Assessment date:</strong> 27 November 2026 · <strong>Owner:</strong> Thabiso Putlane, proprietor and Information Officer · <strong>Jurisdiction:</strong> Republic of South Africa.</p>
+<div class="notice"><strong>Scope and status:</strong> This is NOVAAI MARKET's documented assessment based on the system configuration and public provider documents reviewed on the date above. The assessment and document review are complete. It is not a provider-issued certificate, a legal opinion, proof that an account-specific DPA has been accepted, or a representation that a provider has issued a deletion certificate. Account-specific contract evidence and written provider confirmations must be retained when received.</div>
+<section class="card"><h2>1. NOVAAI MARKET's data-processing model</h2>
+<p>NOVAAI MARKET is operated as a South African sole proprietorship by Thabiso Putlane. The platform uses third-party service providers for database, authentication, storage, backend hosting and AI inference.</p>
+<p>Personal information in the marketplace may include buyer and seller names, cellphone numbers and email addresses; seller public-area/location information; account and authentication data; listing content and communications supplied by users. The platform's AI backend is not designed to attach complete buyer or seller profile records to Groq prompts.</p>
+<p>The previously inspected AI flow sends the current user message and up to eight prior conversation messages from the browser to the Render backend. Render validates the Supabase bearer token. The backend then sends system instructions, conversation history and the current message to Groq. The reviewed code does not show the Supabase bearer token being forwarded to Groq or deliberate attachment of account profile fields. Users may nevertheless include personal information in messages.</p>
+<p>The inspected AI application does not save chat histories in NOVAAI MARKET's application database; browser conversation context is temporary and clears on refresh. This does not mean providers retain no technical metadata.</p></section>
+<section class="card"><h2>2. Provider processing register</h2>
+<table><thead><tr><th>Provider</th><th>Role and information</th><th>Known location</th><th>Documents reviewed and assessment</th></tr></thead><tbody>
+<tr><td data-label="Provider">Supabase</td><td data-label="Role and information">Database, authentication and storage. Marketplace account details, seller information, listings, images and operational records.</td><td data-label="Known location">Project region: Ireland (eu-west-1). Some support, account, telemetry or other activities may involve additional locations.</td><td data-label="Documents reviewed">Public DPA dated 1 August 2026; public subprocessor and regional documentation. Contractual processing and transfer terms are available. Account-specific DPA incorporation and the complete project-applicable subprocessor/transfer record have not been independently evidenced.</td></tr>
+<tr><td data-label="Provider">Render</td><td data-label="Role and information">Hosting the NOVAAI AI backend. Authentication requests, user prompts, conversation context and service/request metadata.</td><td data-label="Known location">Service deployed in Frankfurt, Germany. The DPA and subprocessor disclosures do not establish that every processing, support or onward-access activity stays in Germany.</td><td data-label="Documents reviewed">Public DPA, last modified 19 December 2024, and public security/subprocessor documentation. Account-specific coverage and the complete service-specific processing-location and onward-transfer record remain unverified.</td></tr>
+<tr><td data-label="Provider">Groq</td><td data-label="Role and information">AI inference through Chat Completions. System instructions, current prompts, conversation history and generated responses.</td><td data-label="Known location">United States and other locations where Groq or its subprocessors operate, subject to applicable arrangements.</td><td data-label="Documents reviewed">Public DPA effective 15 October 2025 and data-controls documentation. Earlier account screenshot showed Inference API ZDR enabled and Global ZDR disabled. This is prior user-provided evidence, not a fresh account verification.</td></tr>
+</tbody></table></section>
+<section class="card"><h2>3. POPIA section 21 — operator contracts</h2>
+<p>Where a provider processes personal information on behalf of NOVAAI MARKET, NOVAAI must have a written arrangement requiring the operator to establish and maintain the security measures required by POPIA and to notify NOVAAI of suspected unauthorised access or acquisition as required by section 21.</p>
+<table><thead><tr><th>Provider</th><th>Public DPA review</th><th>Account-specific evidence</th><th>Record status</th></tr></thead><tbody>
+<tr><td data-label="Provider">Supabase</td><td data-label="Public DPA review">Reviewed</td><td data-label="Account-specific evidence">Applicable account terms and DPA incorporation not independently verified.</td><td data-label="Record status"><span class="badge conditional">Evidence to retain</span></td></tr>
+<tr><td data-label="Provider">Render</td><td data-label="Public DPA review">Reviewed</td><td data-label="Account-specific evidence">Applicable account terms and DPA incorporation not independently verified.</td><td data-label="Record status"><span class="badge conditional">Evidence to retain</span></td></tr>
+<tr><td data-label="Provider">Groq</td><td data-label="Public DPA review">Reviewed</td><td data-label="Account-specific evidence">Applicable Services Agreement and DPA incorporation not independently verified.</td><td data-label="Record status"><span class="badge conditional">Evidence to retain</span></td></tr>
+</tbody></table>
+<p>Publicly available terms are not treated as proof that the relevant agreement has been accepted, incorporated or applies to the specific NOVAAI account. NOVAAI must retain the account agreement, DPA version and acceptance/effective-date evidence when available.</p></section>
+<section class="card"><h2>4. POPIA section 72 — international transfers</h2>
+<p>Section 72 restricts transfers of personal information to a third party in a foreign country unless one of the statutory conditions is met. Relevant routes include an adequate level of protection through law, binding corporate rules or an agreement providing substantially similar protection and addressing onward transfers; informed consent; qualifying contractual necessity; or another applicable statutory condition.</p>
+<p>NOVAAI's assessment does not assume that a provider's European location or the existence of EU Standard Contractual Clauses automatically proves compliance with section 72. The relevant transfer condition must be identified for each recipient and onward recipient, and the applicable safeguards and evidence retained.</p>
+<table><thead><tr><th>Transfer</th><th>Assessment and control</th><th>Decision</th></tr></thead><tbody>
+<tr><td data-label="Transfer">NOVAAI → Supabase (Ireland)</td><td data-label="Assessment and control">Use the applicable Supabase DPA and transfer provisions as the proposed contractual safeguard. Confirm account coverage, processing locations, onward recipients and applicable clauses. Limit processing to the marketplace purposes and information required.</td><td data-label="Decision"><span class="badge conditional">Conditionally assessed</span></td></tr>
+<tr><td data-label="Transfer">NOVAAI → Render (Germany and onward locations)</td><td data-label="Assessment and control">Use the applicable Render DPA and transfer provisions as the proposed safeguard. Record the actual subprocessors, countries of processing/access and onward-transfer terms for the service. The Frankfurt deployment location alone is not sufficient.</td><td data-label="Decision"><span class="badge conditional">Conditionally assessed</span></td></tr>
+<tr><td data-label="Transfer">NOVAAI / Render → Groq (United States and other locations)</td><td data-label="Assessment and control">Use the applicable Groq DPA and transfer provisions as the proposed safeguard. Limit prompts to necessary content, avoid sending account profile information, retain the inference ZDR control, and document usage metadata and onward recipients.</td><td data-label="Decision"><span class="badge conditional">Conditionally assessed</span></td></tr>
+</tbody></table>
+<p><strong>Approval boundary:</strong> This is a completed initial assessment and safeguards plan, not a final legal certification that each transfer satisfies section 72. Final approval requires account-specific contracts, recipient/subprocessor coverage and confirmation that the selected statutory condition is actually met. If adequate contractual protection cannot be established, the transfer must not be treated as approved merely because a provider is named in this register.</p></section>
+<section class="card"><h2>5. Provider retention, backups and deletion assessment</h2>
+<h3>Supabase</h3><p>Supabase publishes plan-dependent database backup information. Its documentation distinguishes database backups from Storage objects; Storage objects are not included in database backups. Backup availability and retention depend on the subscribed plan and configuration. The actual NOVAAI plan, backup status, backup lifecycle and account-specific deletion completion have not been independently confirmed in this assessment.</p>
+<p>Control: identify the actual plan and enabled backup features in the account records; document database backup retention separately from Storage object retention; use the provider's deletion process; and retain provider confirmation where available. Do not assume deleting a database row removes an object or every backup copy.</p>
+<h3>Render</h3><p>Render documents ephemeral service filesystems and separate persistent-disk and Postgres backup arrangements. The NOVAAI AI backend is a Render service and the previously inspected application code does not persist conversation histories in an application database. This does not establish that Render retains no logs, metadata or infrastructure copies.</p>
+<p>Control: document the service's actual disk configuration and applicable log/metadata retention; distinguish service filesystem behaviour from platform logs and any separately provisioned database; and obtain the applicable deletion and backup lifecycle confirmation.</p>
+<h3>Groq</h3><p>Groq's data-controls documentation describes inference input/output retention, usage metadata, reliability and abuse-monitoring records, and separate Batch and fine-tuning data handling. The previously reviewed account screenshot showed Inference API ZDR enabled. The inspected NOVAAI backend uses the Chat Completions inference endpoint and does not use Batch or fine-tuning endpoints.</p>
+<p>Control: retain the inference ZDR setting evidence; do not describe ZDR as eliminating all usage metadata; keep Batch and fine-tuning disabled or unused for this workflow; and obtain account-specific confirmation of metadata retention, deletion and applicable subprocessors.</p>
+<div class="notice"><strong>No deletion certification is claimed:</strong> This page records the provider policy review and NOVAAI controls. NOVAAI has not received provider-issued deletion certificates or account-specific written backup-retention confirmations as part of this assessment. No provider data or backups were deleted by preparing this document.</div></section>
+<section class="card"><h2>6. NOVAAI controls and operating commitments</h2><ol>
+<li>Use only the personal information reasonably necessary for each marketplace and AI purpose.</li>
+<li>Do not deliberately include buyer or seller profile fields, private contact details or private street-level location information in Groq prompts.</li>
+<li>Keep product/listing search data distinct from private account and authentication data.</li>
+<li>Maintain access controls, authentication checks and least-privilege access to provider dashboards.</li>
+<li>Keep the current DPA, applicable account terms, subprocessor disclosures, transfer safeguards and account-setting evidence in the internal compliance record.</li>
+<li>Review provider changes, new subprocessors, new processing countries and material changes to AI data flows before relying on them.</li>
+<li>Record provider deletion requests and responses. Do not promise immediate removal from backups unless the provider confirms the applicable lifecycle.</li>
+<li>Review this assessment at least annually and whenever a provider, data category, processing purpose, location or material service configuration changes.</li>
+</ol></section>
+<section class="card"><h2>7. Evidence register and limitations</h2>
+<table><thead><tr><th>Evidence item</th><th>Status on assessment date</th></tr></thead><tbody>
+<tr><td data-label="Evidence item">Public Supabase DPA and subprocessor/backup documentation</td><td data-label="Status">Reviewed; account-specific coverage and actual plan/backup status not independently confirmed.</td></tr>
+<tr><td data-label="Evidence item">Public Render DPA, security/subprocessor and backup/filesystem documentation</td><td data-label="Status">Reviewed; account-specific coverage and service-specific deletion/log retention not independently confirmed.</td></tr>
+<tr><td data-label="Evidence item">Public Groq DPA and data-controls documentation</td><td data-label="Status">Reviewed; earlier screenshot evidence of inference ZDR retained as user-provided evidence; current account confirmation and metadata retention remain unverified.</td></tr>
+<tr><td data-label="Evidence item">NOVAAI AI backend code/data-flow review</td><td data-label="Status">Previously inspected; browser history, Render authentication and Groq prompt flow documented above.</td></tr>
+<tr><td data-label="Evidence item">Provider-issued deletion certificates and written backup confirmations</td><td data-label="Status">Not received or independently verified. Do not mark as provider-confirmed.</td></tr>
+<tr><td data-label="Evidence item">Final legal approval of each section 72 transfer</td><td data-label="Status">Not certified. This document records NOVAAI's initial assessment and conditions for approval.</td></tr>
+</tbody></table>
+<p>This assessment is an internal compliance record, not a legal opinion, regulator approval or guarantee of provider performance. It must be read with NOVAAI MARKET's <a href="legal-compliance.html">Legal &amp; Compliance Centre</a>, <a href="data-retention-policy.html">Data Retention and Disposal Policy</a> and <a href="paia-manual.html">PAIA Manual</a>.</p></section>
+<section class="card"><h2>8. Official provider and legal references</h2><ul>
+<li><a href="https://supabase.com/legal/customer-resources/data-processing-addendum" target="_blank" rel="noopener noreferrer">Supabase Data Processing Addendum</a></li>
+<li><a href="https://supabase.com/docs/guides/platform/backups" target="_blank" rel="noopener noreferrer">Supabase backup documentation</a></li>
+<li><a href="https://supabase.com/docs/guides/platform/regions" target="_blank" rel="noopener noreferrer">Supabase regions documentation</a></li>
+<li><a href="https://render.com/dpa" target="_blank" rel="noopener noreferrer">Render Data Processing Addendum</a></li>
+<li><a href="https://render.com/docs/postgresql-backups" target="_blank" rel="noopener noreferrer">Render backup documentation</a></li>
+<li><a href="https://render.com/docs/disks" target="_blank" rel="noopener noreferrer">Render persistent disk documentation</a></li>
+<li><a href="https://console.groq.com/docs/legal/customer-data-processing-addendum" target="_blank" rel="noopener noreferrer">Groq Data Processing Addendum</a></li>
+<li><a href="https://console.groq.com/docs/your-data" target="_blank" rel="noopener noreferrer">Groq data controls and retention</a></li>
+<li><a href="https://www.justice.gov.za/legislation/acts/2013-004.pdf" target="_blank" rel="noopener noreferrer">Protection of Personal Information Act 4 of 2013</a>, particularly sections 19–22 and 72.</li>
+</ul></section>
+</main>
+<footer><a href="legal-compliance.html">Legal &amp; Compliance Centre</a> · <a href="data-retention-policy.html">Data Retention Policy</a> · <a href="paia-manual.html">PAIA Manual</a> · <a href="index.html">NOVAAI MARKET home</a><p>Provider Processing &amp; International Transfer Assessment · 27 November 2026</p></footer>
+</body></html>
